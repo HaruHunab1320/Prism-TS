@@ -77,6 +77,7 @@ const keywords: { [key: string]: TokenType } = {
   'to': TokenType.TO,
   'agents': TokenType.AGENTS,
   'agent': TokenType.AGENT,
+  'Agent': TokenType.AGENT,
   'function': TokenType.FUNCTION,
   'return': TokenType.RETURN,
   'let': TokenType.LET,

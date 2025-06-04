@@ -12,7 +12,8 @@ export type NodeType =
   | 'UncertainIfStatement'
   | 'ContextStatement'
   | 'AgentDeclaration'
-  | 'AssignmentStatement';
+  | 'AssignmentStatement'
+  | 'ExpressionStatement';
 
 export abstract class ASTNode {
   abstract type: NodeType;
@@ -56,7 +57,7 @@ export class ConfidenceExpression extends Expression {
   }
 }
 
-export type BinaryOperator = '+' | '-' | '*' | '/' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '&&' | '||' | '~>';
+export type BinaryOperator = '+' | '-' | '*' | '/' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '&&' | '||' | '~>' | '.';
 
 export class BinaryExpression extends Expression {
   type: NodeType = 'BinaryExpression';
@@ -172,6 +173,14 @@ export class AssignmentStatement extends Statement {
     public identifier: string,
     public value: Expression
   ) {
+    super();
+  }
+}
+
+export class ExpressionStatement extends Statement {
+  type: NodeType = 'ExpressionStatement';
+  
+  constructor(public expression: Expression) {
     super();
   }
 }
