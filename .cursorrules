@@ -1,0 +1,129 @@
+{
+  "rules": {
+      "general": {
+          "check_directory": {
+              "required": true,
+              "prompt": "Before proceeding, please confirm the current directory structure. Please list out the directories and key files you see."
+          },
+          "verify_existing": {
+              "required": true,
+              "prompt": "Before making changes, please show me the content of any files we'll be modifying."
+          },
+          "test_first": {
+              "required": true,
+              "prompt": "Let's write tests first that define the expected behavior. These tests should fail initially."
+          },
+          "implementation_steps": {
+              "required": true,
+              "steps": [
+                  "Write failing tests",
+                  "Verify directory structure",
+                  "Review existing code",
+                  "Implement minimal solution",
+                  "Run tests",
+                  "Refactor if needed while keeping tests green"
+              ]
+          }
+      },
+      "code_review": {
+          "patterns": [
+              "Check for confidence handling in all operations",
+              "Verify context management is explicit",
+              "Ensure LLM calls follow the provider interface",
+              "Validate error handling includes confidence levels",
+              "Confirm test coverage for new features"
+          ]
+      },
+      "file_operations": {
+          "new_file": {
+              "required": [
+                  "Verify directory exists",
+                  "Check for naming conflicts",
+                  "Create associated test file",
+                  "Update module documentation"
+              ]
+          },
+          "modify_file": {
+              "required": [
+                  "Show current content",
+                  "Identify specific changes",
+                  "Verify tests still pass",
+                  "Update related documentation"
+              ]
+          }
+      },
+      "testing": {
+          "requirements": [
+              "Unit tests for all new functionality",
+              "Integration tests for LLM interactions",
+              "Context transition tests",
+              "Confidence calculation tests",
+              "Error handling tests"
+          ],
+          "patterns": {
+              "test_structure": [
+                  "Setup - establish context and inputs",
+                  "Action - perform the operation",
+                  "Verification - check results and confidence",
+                  "Cleanup - reset context if needed"
+              ]
+          }
+      },
+      "architecture_validation": {
+          "checkpoints": [
+              "Does this maintain separation of concerns?",
+              "Is confidence handling consistent?",
+              "Are contexts properly managed?",
+              "Does this follow the LLM provider interface?",
+              "Is error handling comprehensive?"
+          ]
+      },
+      "documentation": {
+          "required_updates": [
+              "API documentation",
+              "Test documentation",
+              "Architecture diagrams",
+              "Usage examples",
+              "Confidence calculations"
+          ]
+      }
+  },
+  "paths": {
+      "core": {
+          "source": "src/core/",
+          "tests": "tests/core/",
+          "docs": "docs/core/"
+      },
+      "llm": {
+          "source": "src/llm/",
+          "tests": "tests/llm/",
+          "docs": "docs/llm/"
+      },
+      "context": {
+          "source": "src/context/",
+          "tests": "tests/context/",
+          "docs": "docs/context/"
+      },
+      "confidence": {
+          "source": "src/confidence/",
+          "tests": "tests/confidence/",
+          "docs": "docs/confidence/"
+      }
+  },
+  "templates": {
+      "test": {
+          "unit": [
+              "use super::*;",
+              "#[cfg(test)]",
+              "mod tests {",
+              "    #[test]",
+              "    fn test_functionality() {",
+              "        // Setup",
+              "        // Action",
+              "        // Verify",
+              "    }",
+              "}"
+          ]
+      }
+  }
+}
