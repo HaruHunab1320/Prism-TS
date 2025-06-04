@@ -240,6 +240,10 @@ export class Interpreter {
     this.defaultLLMProvider = name;
   }
 
+  getDefaultLLMProviderName(): string | undefined {
+    return this.defaultLLMProvider;
+  }
+
   private getDefaultLLMProvider(): LLMProvider | undefined {
     if (!this.defaultLLMProvider) {
       return undefined;
@@ -585,6 +589,10 @@ export class Runtime {
 
   setDefaultLLMProvider(name: string): void {
     this.interpreter.setDefaultLLMProvider(name);
+  }
+
+  getDefaultLLMProvider(): string | undefined {
+    return this.interpreter.getDefaultLLMProviderName();
   }
 }
 

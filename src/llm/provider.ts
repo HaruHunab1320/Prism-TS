@@ -10,6 +10,14 @@ export interface LLMOptions {
   [key: string]: unknown;
 }
 
+export interface ClaudeConfig {
+  model?: string;
+  baseUrl?: string;
+  timeout?: number;
+  apiVersion?: string;
+  maxRetries?: number;
+}
+
 export interface GeminiConfig {
   model?: string;
   baseUrl?: string;
@@ -148,6 +156,141 @@ export class MockLLMProvider implements LLMProvider {
   }
 }
 
+export class ClaudeProvider implements LLMProvider {
+  readonly name = 'Claude';
+  
+  constructor(
+    private apiKey: string,
+    private config: ClaudeConfig = {}
+  ) {
+    if (!apiKey) {
+      throw new LLMError('API key is required for Claude provider', 'MISSING_API_KEY');
+    }
+  }
+
+  async complete(request: LLMRequest): Promise<LLMResponse> {
+    const model = request.options.model || this.config.model || 'claude-3-haiku-20240307';
+    const timeout = request.options.timeout || this.config.timeout || 30000;
+    const baseUrl = this.config.baseUrl || 'https://api.anthropic.com';
+    const apiVersion = this.config.apiVersion || '2023-06-01';
+    
+    try {
+      const response = await this.makeApiCall('/v1/messages', {
+        model,
+        max_tokens: request.options.maxTokens || 1000,
+        temperature: request.options.temperature || 0.7,
+        top_p: request.options.topP,
+        messages: [
+          {
+            role: 'user',
+            content: request.prompt
+          }
+        ]
+      }, timeout, baseUrl, apiVersion);
+      
+      return this.parseClaudeResponse(response, model);
+    } catch (error) {
+      if (error instanceof LLMError) {
+        throw error;
+      }
+      throw new LLMError(
+        `Claude API error: ${(error as Error).message}`,
+        'API_ERROR',
+        { originalError: error }
+      );
+    }
+  }
+
+  async embed(_text: string): Promise<number[]> {
+    // Claude doesn't provide embeddings directly, so we'll use a placeholder
+    // In a real implementation, you might use a different service for embeddings
+    throw new LLMError(
+      'Claude does not provide embedding functionality. Use a dedicated embedding provider.',
+      'EMBEDDING_NOT_SUPPORTED'
+    );
+  }
+
+  private async makeApiCall(
+    endpoint: string, 
+    data: unknown, 
+    timeout: number,
+    baseUrl: string,
+    apiVersion: string
+  ): Promise<any> {
+    const { default: fetch } = await import('node-fetch');
+    const url = `${baseUrl}${endpoint}`;
+    
+    const requestConfig = {
+      method: 'POST' as const,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': this.apiKey,
+        'anthropic-version': apiVersion,
+        'User-Agent': 'Prism-TS/0.1.0'
+      },
+      body: JSON.stringify(data),
+      signal: timeout ? AbortSignal.timeout(timeout) : undefined
+    };
+
+    const response = await fetch(url, requestConfig);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error' } })) as any;
+      throw new LLMError(
+        `Claude API error (${response.status}): ${errorData.error?.message || response.statusText}`,
+        `HTTP_${response.status}`,
+        { 
+          status: response.status,
+          statusText: response.statusText,
+          errorData 
+        }
+      );
+    }
+
+    return response.json();
+  }
+
+  private parseClaudeResponse(response: any, model: string): LLMResponse {
+    if (!response.content || !Array.isArray(response.content) || response.content.length === 0) {
+      throw new LLMError('Invalid response format from Claude API', 'INVALID_RESPONSE');
+    }
+
+    // Extract text content from the first content block
+    const textContent = response.content.find((content: any) => content.type === 'text');
+    if (!textContent) {
+      throw new LLMError('No text content found in Claude response', 'NO_TEXT_CONTENT');
+    }
+
+    const content = textContent.text || '';
+    const tokensUsed = response.usage?.input_tokens + response.usage?.output_tokens || 0;
+    
+    // Estimate confidence based on response quality and stop reason
+    let confidenceValue = 0.85; // Default confidence for Claude responses
+    
+    if (response.stop_reason === 'end_turn') {
+      confidenceValue = 0.9; // High confidence for natural completion
+    } else if (response.stop_reason === 'max_tokens') {
+      confidenceValue = 0.75; // Lower confidence when truncated
+    } else if (response.stop_reason === 'stop_sequence') {
+      confidenceValue = 0.85; // Medium confidence for stop sequence
+    }
+    
+    return new LLMResponse(
+      content,
+      new ConfidenceValue(confidenceValue),
+      tokensUsed,
+      model,
+      {
+        stopReason: response.stop_reason,
+        usage: response.usage,
+        id: response.id,
+        type: response.type,
+        role: response.role
+      }
+    );
+  }
+}
+
 export class GeminiProvider implements LLMProvider {
   readonly name = 'Gemini';
   
@@ -163,24 +306,22 @@ export class GeminiProvider implements LLMProvider {
   }
 
   async complete(request: LLMRequest): Promise<LLMResponse> {
-    // In a real implementation, this would make HTTP requests to the Gemini API
-    // For now, we'll provide a basic structure
-    
     const model = request.options.model || this.config.model || 'gemini-pro';
     const timeout = request.options.timeout || this.config.timeout || 30000;
+    const baseUrl = this.config.baseUrl || 'https://generativelanguage.googleapis.com';
+    const apiVersion = this.config.apiVersion || 'v1';
     
     try {
-      // Simulate API call structure
-      const response = await this.makeApiCall('generateContent', {
+      const response = await this.makeGeminiApiCall(`${baseUrl}/${apiVersion}/models/${model}:generateContent`, {
         contents: [{ parts: [{ text: request.prompt }] }],
         generationConfig: {
-          maxOutputTokens: request.options.maxTokens,
-          temperature: request.options.temperature,
-          topP: request.options.topP,
+          maxOutputTokens: request.options.maxTokens || 1000,
+          temperature: request.options.temperature || 0.7,
+          topP: request.options.topP || 0.95,
         },
       }, timeout);
       
-      return this.parseResponse(response, model);
+      return this.parseGeminiResponse(response, model);
     } catch (error) {
       if (error instanceof LLMError) {
         throw error;
@@ -194,11 +335,12 @@ export class GeminiProvider implements LLMProvider {
   }
 
   async embed(text: string): Promise<number[]> {
-    // In a real implementation, this would call the Gemini embedding API
+    const baseUrl = this.config.baseUrl || 'https://generativelanguage.googleapis.com';
+    const apiVersion = this.config.apiVersion || 'v1';
+    
     try {
-      const response = await this.makeApiCall('embedContent', {
+      const response = await this.makeGeminiApiCall(`${baseUrl}/${apiVersion}/models/embedding-001:embedContent`, {
         content: { parts: [{ text }] },
-        model: 'models/embedding-001',
       });
       
       return response.embedding?.values || [];
@@ -211,53 +353,39 @@ export class GeminiProvider implements LLMProvider {
     }
   }
 
-  private async makeApiCall(endpoint: string, _data: unknown, timeout?: number): Promise<any> {
-    // Mock implementation - in reality this would use fetch or axios
-    // to make HTTP requests to the Gemini API
+  private async makeGeminiApiCall(url: string, data: unknown, timeout?: number): Promise<any> {
+    const { default: fetch } = await import('node-fetch');
+    const fullUrl = `${url}?key=${this.apiKey}`;
     
-    // const baseUrl = this.config.baseUrl || 'https://generativelanguage.googleapis.com';
-    // const apiVersion = this.config.apiVersion || 'v1';
-    // const url = `${baseUrl}/${apiVersion}/models/${endpoint}`;
+    const requestConfig = {
+      method: 'POST' as const,
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Prism-TS/0.1.0'
+      },
+      body: JSON.stringify(data),
+      signal: timeout ? AbortSignal.timeout(timeout) : undefined
+    };
+
+    const response = await fetch(fullUrl, requestConfig);
     
-    // Simulate API response for testing
-    return new Promise((resolve, reject) => {
-      const timer = timeout ? setTimeout(() => {
-        reject(new LLMError('Request timeout', 'TIMEOUT'));
-      }, timeout) : null;
-      
-      // Simulate API delay
-      setTimeout(() => {
-        if (timer) clearTimeout(timer);
-        
-        if (endpoint === 'generateContent') {
-          resolve({
-            candidates: [{
-              content: {
-                parts: [{ text: 'Mock Gemini response' }]
-              },
-              finishReason: 'STOP',
-              safetyRatings: [],
-            }],
-            usageMetadata: {
-              promptTokenCount: 10,
-              candidatesTokenCount: 15,
-              totalTokenCount: 25,
-            }
-          });
-        } else if (endpoint === 'embedContent') {
-          resolve({
-            embedding: {
-              values: Array(768).fill(0).map(() => Math.random() - 0.5)
-            }
-          });
-        } else {
-          reject(new LLMError('Unknown endpoint', 'UNKNOWN_ENDPOINT'));
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error' } })) as any;
+      throw new LLMError(
+        `Gemini API error (${response.status}): ${errorData.error?.message || response.statusText}`,
+        `HTTP_${response.status}`,
+        { 
+          status: response.status,
+          statusText: response.statusText,
+          errorData 
         }
-      }, 100);
-    });
+      );
+    }
+
+    return response.json();
   }
 
-  private parseResponse(response: any, model: string): LLMResponse {
+  private parseGeminiResponse(response: any, model: string): LLMResponse {
     const candidate = response.candidates?.[0];
     if (!candidate) {
       throw new LLMError('No response candidate received', 'NO_CANDIDATE');

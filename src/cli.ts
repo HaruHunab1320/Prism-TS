@@ -2,18 +2,31 @@
 
 import * as readline from 'readline';
 import { PrismREPL } from './repl';
-import { MockLLMProvider } from './llm';
-import { ConfidenceValue } from './confidence';
+import { LLMConfigManager } from './llm';
 
 async function startREPL() {
   // Create REPL instance
   const repl = new PrismREPL();
   
-  // Set up default mock LLM provider
-  const mockProvider = new MockLLMProvider();
-  mockProvider.setMockResponse('I am a mock AI assistant. In a real setup, this would connect to actual LLM APIs.', new ConfidenceValue(0.85));
-  repl.registerLLMProvider('mock', mockProvider);
-  repl.setDefaultLLMProvider('mock');
+  // Set up LLM providers from environment
+  const providers = LLMConfigManager.createFromEnvironment();
+  const defaultProvider = LLMConfigManager.getDefaultProvider();
+  
+  // Register all available providers
+  for (const [name, provider] of Object.entries(providers)) {
+    repl.registerLLMProvider(name, provider);
+  }
+  
+  // Set default provider
+  repl.setDefaultLLMProvider(defaultProvider);
+  
+  // Show provider status
+  const availableProviders = LLMConfigManager.getAvailableProviders();
+  if (availableProviders.length === 1 && availableProviders[0] === 'mock') {
+    console.log('⚠️  Only mock LLM provider available. Set CLAUDE_API_KEY or GEMINI_API_KEY for real AI integration.');
+  } else {
+    console.log(`🤖 LLM providers: ${availableProviders.join(', ')} (default: ${defaultProvider})`);
+  }
 
   // Create readline interface
   const rl = readline.createInterface({
@@ -35,7 +48,7 @@ async function startREPL() {
       
       if (result.success) {
         if (result.value) {
-          if (result.type === 'help' || result.type === 'vars' || result.type === 'history' || result.type === 'stats') {
+          if (result.type === 'help' || result.type === 'vars' || result.type === 'history' || result.type === 'stats' || result.type === 'llm') {
             console.log(result.value);
           } else {
             console.log(`${result.value} (${result.type})`);

@@ -1,0 +1,85 @@
+// Prism Language Test Session
+// Testing all major features of our new programming language!
+
+// 1. Basic Arithmetic and Variables
+x = 10
+y = 20
+sum = x + y
+product = x * y
+division = y / x
+comparison = x > 5
+
+// 2. String Operations
+greeting = "Hello"
+name = "Prism"
+message = greeting + ", " + name + "!"
+
+// 3. Confidence-Aware Computing
+dataQuality = 0.85
+measurement = 42 ~> dataQuality
+confident_calc = measurement * 2
+
+// Confidence propagation
+sensor1 = 100 ~> 0.9
+sensor2 = 200 ~> 0.8
+average = (sensor1 + sensor2) / 2
+
+// 4. Boolean Logic
+isValid = true
+isEnabled = false
+shouldProcess = isValid && !isEnabled
+canProceed = x > 5 || y < 10
+
+// 5. Control Flow
+result = 0
+if (x > 5) {
+  result = 100
+} else {
+  result = 50
+}
+
+// 6. Uncertain If with Confidence Levels
+diagnosis = "possible flu" ~> 0.75
+uncertain if (diagnosis ~> 0.8) {
+  high { 
+    treatment = "Start antiviral medication"
+    confidence_level = "HIGH"
+  }
+  medium {
+    treatment = "Monitor symptoms for 24 hours"
+    confidence_level = "MEDIUM"
+  }
+  low {
+    treatment = "Recommend rest and fluids"
+    confidence_level = "LOW"
+  }
+}
+
+// 7. LLM Integration (Mock)
+ai_greeting = llm("Say hello in a creative way")
+analysis = llm("Analyze the number: " + x)
+
+// 8. Complex Expressions
+complex = ((x + y) * 2 - 10) / 3
+chained = x + y * 2 + product / sum
+
+// 9. Context Usage
+in context DataAnalysis {
+  data_result = 123
+  analysis_complete = true
+}
+
+// 10. Agent Declaration
+agents {
+  analyzer: Agent { confidence: 0.95 }
+  reporter: Agent { confidence: 0.85 }
+}
+
+// Final comprehensive test
+final_score = 0
+if (shouldProcess && result > 50) {
+  final_score = result + complex
+}
+
+// Test confidence combination
+combined_confidence = (sensor1 + sensor2) ~> 0.7

@@ -1,0 +1,80 @@
+// 🌟 Prism Language Showcase 🌟
+// Demonstrating the power of confidence-aware AI programming
+
+// Scenario: Medical Diagnosis System with Confidence Handling
+
+// 1. Gather patient symptoms with varying confidence levels
+temperature = 38.5 ~> 0.95  // High confidence thermometer reading
+cough_severity = 7 ~> 0.8   // Self-reported, medium confidence
+fatigue_level = 8 ~> 0.7    // Subjective, lower confidence
+
+// 2. Combine symptoms for initial assessment
+// Confidence automatically propagates (uses minimum)
+symptom_score = (temperature - 37) * 10 + cough_severity + fatigue_level
+
+// 3. Get AI diagnosis with built-in confidence
+diagnosis = llm("Patient has temperature " + temperature + ", cough severity " + cough_severity + "/10, fatigue " + fatigue_level + "/10. What's your diagnosis?")
+
+// 4. Smart branching based on diagnosis confidence
+treatment_plan = ""
+urgency = ""
+
+uncertain if (diagnosis ~> 0.8) {
+  high {
+    // High confidence - proceed with treatment
+    treatment_plan = "Initiate standard treatment protocol"
+    urgency = "NORMAL"
+    followup = llm("Generate detailed treatment plan for: " + diagnosis)
+  }
+  medium {
+    // Medium confidence - gather more data
+    treatment_plan = "Order additional tests: CBC, chest X-ray"
+    urgency = "MODERATE"
+    additional_questions = llm("What additional symptoms should we check for?")
+  }
+  low {
+    // Low confidence - escalate to human expert
+    treatment_plan = "Schedule consultation with specialist"
+    urgency = "ESCALATED"
+    referral = "Dr. Smith - Internal Medicine"
+  }
+}
+
+// 5. Context-aware processing
+in context MedicalRecords {
+  // This context has access to patient history
+  patient_id = "P-12345"
+  history_relevant = llm("Is patient history relevant for: " + diagnosis)
+}
+
+// 6. Multi-agent coordination for second opinion
+agents {
+  primary_physician: Agent { confidence: 0.9 }
+  specialist: Agent { confidence: 0.95 }
+  ai_assistant: Agent { confidence: 0.85 }
+}
+
+// 7. Risk assessment with confidence thresholds
+risk_factors = 3 ~> 0.8
+age_factor = 1.5 ~> 0.9
+combined_risk = risk_factors * age_factor
+
+high_risk = false
+uncertain if (combined_risk ~> 0.7) {
+  high { high_risk = true }
+  low { high_risk = false }
+}
+
+// 8. Generate final report
+report = "=== Medical Assessment Report ===\n"
+report = report + "Symptom Score: " + symptom_score + "\n"
+report = report + "Treatment Plan: " + treatment_plan + "\n"
+report = report + "Urgency Level: " + urgency + "\n"
+report = report + "High Risk Patient: " + high_risk + "\n"
+
+// This demonstrates:
+// - Confidence propagation through calculations
+// - Uncertain control flow based on AI confidence
+// - Context-aware execution environments
+// - Agent coordination capabilities
+// - Real-world decision making with uncertainty

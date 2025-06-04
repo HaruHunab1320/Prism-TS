@@ -1,6 +1,6 @@
 import { parse } from '../core/parser';
 import { Runtime, Value, NumberValue, StringValue, BooleanValue, ConfidenceValue as RuntimeConfidenceValue } from '../core/runtime';
-import { LLMProvider } from '../llm';
+import { LLMProvider, LLMConfigManager } from '../llm';
 
 export interface REPLSuccessResult {
   success: true;
@@ -146,6 +146,13 @@ export class PrismREPL {
           type: 'stats',
         };
 
+      case ':llm':
+        return {
+          success: true,
+          value: this.getLLMText(),
+          type: 'llm',
+        };
+
       case ':exit':
       case ':quit':
         return {
@@ -234,6 +241,7 @@ Commands:
   :clear    - Clear session (reset all variables)
   :history  - Show evaluation history
   :stats    - Show session statistics
+  :llm      - Show LLM provider information
   :exit     - Exit the REPL
 
 Language Features:
@@ -314,6 +322,36 @@ Happy coding with Prism! 🚀
 📊  Success Rate: ${stats.totalEvaluations > 0 ? ((stats.successfulEvaluations / stats.totalEvaluations) * 100).toFixed(1) : 0}%
 🗃️  Variables Defined: ${stats.variablesCount}
 🕐  Started: ${stats.startTime.toLocaleString()}
+    `.trim();
+  }
+
+  private getLLMText(): string {
+    const availableProviders = LLMConfigManager.getAvailableProviders();
+    const defaultProvider = LLMConfigManager.getDefaultProvider();
+    const currentProvider = this.runtime.getDefaultLLMProvider();
+    
+    return `
+🤖 LLM Provider Information
+
+Available Providers: ${availableProviders.join(', ')}
+Default Provider: ${defaultProvider}
+Current Provider: ${currentProvider || 'none'}
+
+Provider Status:
+${availableProviders.map(name => {
+  const status = name === 'mock' ? '🧪 Mock (testing only)' : 
+                 name === 'claude' ? '🤖 Claude (Anthropic)' :
+                 name === 'gemini' ? '🌟 Gemini (Google)' : name;
+  const current = name === currentProvider ? ' ← current' : '';
+  return `  • ${name}: ${status}${current}`;
+}).join('\n')}
+
+Configuration Help:
+${LLMConfigManager.showConfigHelp()}
+
+Usage in Prism:
+  result = llm("Your prompt here")
+  response = llm("Question", { model: "claude-3-sonnet", temperature: 0.5 })
     `.trim();
   }
 
