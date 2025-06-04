@@ -22,6 +22,8 @@ export enum TokenType {
   RETURN = 'RETURN',
   LET = 'LET',
   CONST = 'CONST',
+  TRUE = 'TRUE',
+  FALSE = 'FALSE',
 
   // Operators
   PLUS = 'PLUS',
@@ -82,6 +84,8 @@ const keywords: { [key: string]: TokenType } = {
   'return': TokenType.RETURN,
   'let': TokenType.LET,
   'const': TokenType.CONST,
+  'true': TokenType.TRUE,
+  'false': TokenType.FALSE,
 };
 
 export class Tokenizer {

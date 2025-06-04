@@ -6,6 +6,7 @@ import {
   IdentifierExpression,
   NumberLiteral,
   StringLiteral,
+  BooleanLiteral,
   BinaryExpression,
   UnaryExpression,
   CallExpression,
@@ -374,6 +375,14 @@ export class Parser {
     
     if (this.match(TokenType.STRING)) {
       return new StringLiteral(this.previous().value);
+    }
+    
+    if (this.match(TokenType.TRUE)) {
+      return new BooleanLiteral(true);
+    }
+    
+    if (this.match(TokenType.FALSE)) {
+      return new BooleanLiteral(false);
     }
     
     if (this.match(TokenType.IDENTIFIER)) {

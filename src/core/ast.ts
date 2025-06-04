@@ -3,6 +3,7 @@ export type NodeType =
   | 'IdentifierExpression'
   | 'NumberLiteral'
   | 'StringLiteral'
+  | 'BooleanLiteral'
   | 'ConfidenceExpression'
   | 'BinaryExpression'
   | 'UnaryExpression'
@@ -42,6 +43,14 @@ export class StringLiteral extends Expression {
   type: NodeType = 'StringLiteral';
   
   constructor(public value: string) {
+    super();
+  }
+}
+
+export class BooleanLiteral extends Expression {
+  type: NodeType = 'BooleanLiteral';
+  
+  constructor(public value: boolean) {
     super();
   }
 }
