@@ -18,3 +18,4 @@ export {
 export * from './context';
 export * from './llm';
 export * from './agents';
+export * from './repl';

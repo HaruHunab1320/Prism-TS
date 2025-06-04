@@ -4,6 +4,9 @@
   "description": "A programming language for orchestrating LLMs and AI agents",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "prism": "dist/cli.js"
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest",
