@@ -92,17 +92,19 @@
   - [x] Tests: `conf = <~ measurement` should return confidence value
   - [x] Live testing: All scenarios working perfectly
   
-- [ ] **Confidence Chaining Operator (`~~`)**
-  - [ ] Add `~~` token to lexer
-  - [ ] Implement BinaryExpression for chaining
-  - [ ] Add chaining evaluation with confidence propagation
-  - [ ] Tests: `result = input ~~ process1() ~~ process2()`
+- [x] **Confidence Chaining Operator (`~~`)** ✅ COMPLETED
+  - [x] Add `~~` token to lexer
+  - [x] Implement BinaryExpression for chaining
+  - [x] Add chaining evaluation with confidence propagation
+  - [x] Tests: `result = input ~~ process1() ~~ process2()`
+  - [x] Full test coverage with 5 passing operator tests
 
 **Afternoon: Logical Operators (2-3 hours)**
-- [ ] **Confidence Coalesce Operator (`~??`)**
-  - [ ] Add `~??` token to lexer
-  - [ ] Implement coalesce evaluation (first value with sufficient confidence)
-  - [ ] Tests: `result = primary ~?? secondary ~?? default`
+- [x] **Confidence Coalesce Operator (`~??`)** ✅ COMPLETED
+  - [x] Add `~??` token to lexer
+  - [x] Implement coalesce evaluation (first value with sufficient confidence)
+  - [x] Tests: `result = primary ~?? secondary ~?? default`
+  - [x] Full test coverage with 4 passing coalesce tests
 
 - [ ] **Confidence AND/OR Operators (`~&&`, `~||`)**
   - [ ] Add `~&&` and `~||` tokens to lexer

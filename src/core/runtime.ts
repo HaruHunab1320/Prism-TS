@@ -422,6 +422,14 @@ export class Interpreter {
         // Property access - simplified implementation
         return right;
 
+      case '~~':
+        // Confidence chaining - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confidence chaining requires confident values', node);
+
+      case '~??':
+        // Confidence coalesce - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confidence coalesce requires confident values', node);
+
       default:
         throw new RuntimeError(`Unknown binary operator: ${operator}`, node);
     }
@@ -433,6 +441,16 @@ export class Interpreter {
     right: Value,
     node: BinaryExpression
   ): Value {
+    // Special handling for confidence chaining operator (~~)
+    if (operator === '~~') {
+      return this.applyConfidenceChaining(left, right, node);
+    }
+
+    // Special handling for confidence coalesce operator (~??)
+    if (operator === '~??') {
+      return this.applyConfidenceCoalesce(left, right, node);
+    }
+
     // Extract values and confidences
     const leftValue = left instanceof ConfidenceValue ? left.value : left;
     const rightValue = right instanceof ConfidenceValue ? right.value : right;
@@ -447,6 +465,43 @@ export class Interpreter {
     const combinedConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
 
     return new ConfidenceValue(result, combinedConfidence);
+  }
+
+  private applyConfidenceChaining(left: Value, right: Value, _node: BinaryExpression): Value {
+    // For confidence chaining, the left value becomes the input to the right operation
+    // The right side should typically be a function call or another confident expression
+    
+    // For now, we'll implement a simple chaining where we take the minimum confidence
+    // and pass the left value's underlying value to the right operation
+    
+    const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
+    const rightConf = right instanceof ConfidenceValue ? right.confidence : new ConfidenceLib(1.0);
+    
+    // Combine confidences using minimum (most conservative approach)
+    const chainedConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
+    
+    // For chaining, we return the right value with the chained confidence
+    const resultValue = right instanceof ConfidenceValue ? right.value : right;
+    
+    return new ConfidenceValue(resultValue, chainedConfidence);
+  }
+
+  private applyConfidenceCoalesce(left: Value, right: Value, _node: BinaryExpression): Value {
+    // For confidence coalesce (~??), return the left value if it has sufficient confidence,
+    // otherwise return the right value. This allows for fallback chains.
+    
+    const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
+    
+    // Define threshold for "sufficient confidence" - using medium confidence (0.5) as default
+    const SUFFICIENT_CONFIDENCE_THRESHOLD = 0.5;
+    
+    // If left value has sufficient confidence, return it
+    if (leftConf.value >= SUFFICIENT_CONFIDENCE_THRESHOLD) {
+      return left;
+    }
+    
+    // Otherwise, return the right value (which becomes the new candidate)
+    return right;
   }
 
   private async interpretUnaryExpression(node: UnaryExpression): Promise<Value> {

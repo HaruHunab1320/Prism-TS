@@ -237,7 +237,7 @@ export class Parser {
   }
 
   private confidenceExpression(): Expression | null {
-    const expr = this.logicalOr();
+    let expr = this.logicalOr();
     
     if (this.match(TokenType.CONFIDENCE_ARROW)) {
       const confidence = this.primary();
@@ -247,13 +247,32 @@ export class Parser {
       throw new ParseError("Expected expression after '~>'", this.previous());
     }
     
+    // Handle confidence chaining operator (~~)
+    while (this.match(TokenType.CONFIDENCE_CHAIN)) {
+      const operator = this.previous().value as BinaryOperator;
+      const right = this.logicalOr();
+      expr = new BinaryExpression(operator, expr!, right!);
+    }
+    
     return expr;
   }
 
   private logicalOr(): Expression | null {
-    let expr = this.logicalAnd();
+    let expr = this.coalesce();
     
     while (this.match(TokenType.OR)) {
+      const operator = this.previous().value as BinaryOperator;
+      const right = this.coalesce();
+      expr = new BinaryExpression(operator, expr!, right!);
+    }
+    
+    return expr;
+  }
+
+  private coalesce(): Expression | null {
+    let expr = this.logicalAnd();
+    
+    while (this.match(TokenType.CONFIDENCE_COALESCE)) {
       const operator = this.previous().value as BinaryOperator;
       const right = this.logicalAnd();
       expr = new BinaryExpression(operator, expr!, right!);

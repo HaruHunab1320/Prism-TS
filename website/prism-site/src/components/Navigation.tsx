@@ -40,6 +40,12 @@ const Navigation: React.FC = () => {
           >
             Playground
           </Link>
+          <Link 
+            to="/demo" 
+            className={`nav-link ${isActive('/demo') ? 'active' : ''}`}
+          >
+            Live Demo
+          </Link>
         </div>
 
         <div className="nav-actions">

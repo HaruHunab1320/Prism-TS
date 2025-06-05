@@ -66,7 +66,7 @@ export class ConfidenceExpression extends Expression {
   }
 }
 
-export type BinaryOperator = '+' | '-' | '*' | '/' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '&&' | '||' | '~>' | '.';
+export type BinaryOperator = '+' | '-' | '*' | '/' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '&&' | '||' | '~>' | '~~' | '~??' | '.';
 
 export class BinaryExpression extends Expression {
   type: NodeType = 'BinaryExpression';

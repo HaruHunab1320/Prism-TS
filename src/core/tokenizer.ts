@@ -39,6 +39,8 @@ export enum TokenType {
   GREATER_EQUAL = 'GREATER_EQUAL',
   CONFIDENCE_ARROW = 'CONFIDENCE_ARROW',
   CONFIDENCE_EXTRACT = 'CONFIDENCE_EXTRACT',
+  CONFIDENCE_CHAIN = 'CONFIDENCE_CHAIN',
+  CONFIDENCE_COALESCE = 'CONFIDENCE_COALESCE',
   AND = 'AND',
   OR = 'OR',
   NOT = 'NOT',
@@ -184,6 +186,15 @@ export class Tokenizer {
       if (this.peek() === '>') {
         this.advance();
         return this.makeToken(TokenType.CONFIDENCE_ARROW, '~>', startColumn);
+      }
+      if (this.peek() === '?' && this.peekNext() === '?') {
+        this.advance(); // consume first ?
+        this.advance(); // consume second ?
+        return this.makeToken(TokenType.CONFIDENCE_COALESCE, '~??', startColumn);
+      }
+      if (this.peek() === '~') {
+        this.advance();
+        return this.makeToken(TokenType.CONFIDENCE_CHAIN, '~~', startColumn);
       }
       return this.makeToken(TokenType.TILDE, '~', startColumn);
     }
