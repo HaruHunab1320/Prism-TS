@@ -53,6 +53,9 @@ export enum TokenType {
   CONFIDENCE_LESS = 'CONFIDENCE_LESS',
   CONFIDENCE_GREATER_EQUAL = 'CONFIDENCE_GREATER_EQUAL',
   CONFIDENCE_LESS_EQUAL = 'CONFIDENCE_LESS_EQUAL',
+  CONFIDENCE_DOT = 'CONFIDENCE_DOT',
+  PARALLEL_CONFIDENCE = 'PARALLEL_CONFIDENCE',
+  THRESHOLD_GATE = 'THRESHOLD_GATE',
   AND = 'AND',
   OR = 'OR',
   NOT = 'NOT',
@@ -214,6 +217,17 @@ export class Tokenizer {
         this.advance(); // consume second &
         return this.makeToken(TokenType.CONFIDENCE_AND, '~&&', startColumn);
       }
+      if (this.peek() === '@' && this.peekNext() === '>') {
+        this.advance(); // consume @
+        this.advance(); // consume >
+        return this.makeToken(TokenType.THRESHOLD_GATE, '~@>', startColumn);
+      }
+      if (this.peek() === '|' && this.peekNext() === '|' && this.peekThird() === '>') {
+        this.advance(); // consume first |
+        this.advance(); // consume second |
+        this.advance(); // consume >
+        return this.makeToken(TokenType.PARALLEL_CONFIDENCE, '~||>', startColumn);
+      }
       if (this.peek() === '|' && this.peekNext() === '|') {
         this.advance(); // consume first |
         this.advance(); // consume second |
@@ -253,6 +267,10 @@ export class Tokenizer {
       if (this.peek() === '<') {
         this.advance();
         return this.makeToken(TokenType.CONFIDENCE_LESS, '~<', startColumn);
+      }
+      if (this.peek() === '.') {
+        this.advance();
+        return this.makeToken(TokenType.CONFIDENCE_DOT, '~.', startColumn);
       }
       if (this.peek() === '~') {
         this.advance();
@@ -396,6 +414,11 @@ export class Tokenizer {
   private peekNext(): string {
     if (this.position + 1 >= this.input.length) return '\0';
     return this.input[this.position + 1];
+  }
+
+  private peekThird(): string {
+    if (this.position + 2 >= this.input.length) return '\0';
+    return this.input[this.position + 2];
   }
 
   private isDigit(char: string): boolean {

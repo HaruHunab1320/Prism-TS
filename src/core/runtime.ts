@@ -334,6 +334,13 @@ export class Interpreter {
   }
 
   private async interpretBinaryExpression(node: BinaryExpression): Promise<Value> {
+    // Special handling for property access operators where right side shouldn't be evaluated
+    if (node.operator === '.' || node.operator === '~.') {
+      const left = await this.interpret(node.left);
+      // Don't evaluate right side - it's a property name, not an expression
+      return this.applyBinaryOperator(node.operator, left, node.right as IdentifierExpression, node);
+    }
+
     const left = await this.interpret(node.left);
     const right = await this.interpret(node.right);
 
@@ -343,12 +350,25 @@ export class Interpreter {
   private applyBinaryOperator(
     operator: BinaryOperator,
     left: Value,
-    right: Value,
+    right: Value | IdentifierExpression,
     node: BinaryExpression
   ): Value {
+    // Handle property access operators early (they have special right-side handling)
+    if (operator === '.') {
+      return right as Value;
+    }
+    if (operator === '~.') {
+      return this.applyConfidentPropertyAccess(left, right as IdentifierExpression, node);
+    }
+
+    // Ensure right is a Value for all other operators
+    if (!(right instanceof NumberValue || right instanceof StringValue || right instanceof BooleanValue || right instanceof ConfidenceValue || right instanceof FunctionValue)) {
+      throw new RuntimeError(`Invalid right operand for operator ${operator}`, node);
+    }
+
     // Handle confidence propagation
     if (left instanceof ConfidenceValue || right instanceof ConfidenceValue) {
-      return this.applyBinaryOperatorWithConfidence(operator, left, right, node);
+      return this.applyBinaryOperatorWithConfidence(operator, left, right as Value, node);
     }
 
     switch (operator) {
@@ -418,10 +438,6 @@ export class Interpreter {
       case '||':
         return new BooleanValue(left.isTruthy() || right.isTruthy());
 
-      case '.':
-        // Property access - simplified implementation
-        return right;
-
       case '~~':
         // Confidence chaining - should not reach here as it's handled with confidence
         throw new RuntimeError('Confidence chaining requires confident values', node);
@@ -474,6 +490,14 @@ export class Interpreter {
         // Confident less equal - should not reach here as it's handled with confidence
         throw new RuntimeError('Confident less equal requires confident values', node);
 
+      case '~||>':
+        // Parallel confidence - should not reach here as it's handled with confidence
+        throw new RuntimeError('Parallel confidence requires confident values', node);
+
+      case '~@>':
+        // Threshold gate - should not reach here as it's handled with confidence
+        throw new RuntimeError('Threshold gate requires confident values', node);
+
       default:
         throw new RuntimeError(`Unknown binary operator: ${operator}`, node);
     }
@@ -508,6 +532,16 @@ export class Interpreter {
     // Special handling for confident comparison operators (~==, ~!=, ~<, ~>=, ~<=)
     if (operator === '~==' || operator === '~!=' || operator === '~<' || operator === '~>=' || operator === '~<=') {
       return this.applyConfidentComparison(operator, left, right, node);
+    }
+
+    // Special handling for parallel confidence operator (~||>)
+    if (operator === '~||>') {
+      return this.applyParallelConfidence(left, right, node);
+    }
+
+    // Special handling for threshold gate operator (~@>)
+    if (operator === '~@>') {
+      return this.applyThresholdGate(left, right, node);
     }
 
     // Extract values and confidences
@@ -683,6 +717,63 @@ export class Interpreter {
     const resultConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
     
     return new ConfidenceValue(new BooleanValue(result), resultConfidence);
+  }
+
+  private applyConfidentPropertyAccess(left: Value, right: IdentifierExpression, _node: BinaryExpression): Value {
+    // For confident property access (~.), we implement safe navigation with confidence propagation
+    // Since we don't have full object support yet, this is a simplified implementation
+    
+    const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
+    
+    // For now, since we don't have object types, we'll implement this as a pass-through
+    // that propagates confidence. In a full implementation, this would:
+    // 1. Check if the property exists
+    // 2. Return undefined/null if it doesn't (with reduced confidence)
+    // 3. Return the property value with combined confidence if it does
+    
+    // Extract the property name from the identifier
+    const propertyName = right.name;
+    const placeholderValue = new StringValue(`${left.toString()}.${propertyName}`);
+    
+    // Reduce confidence slightly for property access uncertainty
+    const PROPERTY_ACCESS_CONFIDENCE_FACTOR = 0.9;
+    const reducedConfidence = new ConfidenceLib(leftConf.value * PROPERTY_ACCESS_CONFIDENCE_FACTOR);
+    
+    return new ConfidenceValue(placeholderValue, reducedConfidence);
+  }
+
+  private applyParallelConfidence(left: Value, right: Value, _node: BinaryExpression): Value {
+    // For parallel confidence (~||>), we simulate executing multiple operations
+    // and selecting the result with the highest confidence
+    
+    const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
+    const rightConf = right instanceof ConfidenceValue ? right.confidence : new ConfidenceLib(1.0);
+    
+    // Select the value with higher confidence
+    if (leftConf.value >= rightConf.value) {
+      return left;
+    } else {
+      return right;
+    }
+  }
+
+  private applyThresholdGate(left: Value, right: Value, _node: BinaryExpression): Value {
+    // For threshold gate (~@>), execute the right operand only if the left operand
+    // meets a confidence threshold. This is useful for conditional execution based on certainty.
+    
+    const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
+    
+    // Define threshold for execution - using medium confidence (0.7) as default
+    const EXECUTION_THRESHOLD = 0.7;
+    
+    // If left value meets the confidence threshold, return the right value
+    if (leftConf.value >= EXECUTION_THRESHOLD) {
+      return right;
+    } else {
+      // If threshold not met, return the left value with reduced confidence
+      const reducedConfidence = new ConfidenceLib(leftConf.value * 0.5);
+      return new ConfidenceValue(left instanceof ConfidenceValue ? left.value : left, reducedConfidence);
+    }
   }
 
   private async interpretUnaryExpression(node: UnaryExpression): Promise<Value> {

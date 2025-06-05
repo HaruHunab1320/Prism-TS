@@ -260,7 +260,7 @@ export class Parser {
   private logicalOr(): Expression | null {
     let expr = this.coalesce();
     
-    while (this.match(TokenType.OR, TokenType.CONFIDENCE_OR)) {
+    while (this.match(TokenType.OR, TokenType.CONFIDENCE_OR, TokenType.PARALLEL_CONFIDENCE, TokenType.THRESHOLD_GATE)) {
       const operator = this.previous().value as BinaryOperator;
       const right = this.coalesce();
       expr = new BinaryExpression(operator, expr!, right!);
@@ -362,6 +362,9 @@ export class Parser {
       } else if (this.match(TokenType.DOT)) {
         const name = this.consume(TokenType.IDENTIFIER, "Expected property name after '.'").value;
         current = new BinaryExpression('.', current, new IdentifierExpression(name));
+      } else if (this.match(TokenType.CONFIDENCE_DOT)) {
+        const name = this.consume(TokenType.IDENTIFIER, "Expected property name after '~.'").value;
+        current = new BinaryExpression('~.', current, new IdentifierExpression(name));
       } else {
         break;
       }

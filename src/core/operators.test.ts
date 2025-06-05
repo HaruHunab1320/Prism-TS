@@ -317,4 +317,74 @@ describe('Confidence Operators', () => {
       expect(result.toString()).toContain('70.0%');
     });
   });
+
+  describe('Threshold Gate Operator (~@>)', () => {
+    it('should execute right operand when threshold is met', async () => {
+      const program = parse(`
+        highConfidence = "condition met" ~> 0.9
+        action = "perform action" ~> 0.8
+        highConfidence ~@> action
+      `);
+      const result = await runtime.execute(program);
+      expect(result.toString()).toContain('perform action');
+      expect(result.toString()).toContain('80.0%');
+    });
+
+    it('should not execute right operand when threshold is not met', async () => {
+      const program = parse(`
+        lowConfidence = "uncertain condition" ~> 0.5
+        action = "risky action" ~> 0.9
+        lowConfidence ~@> action
+      `);
+      const result = await runtime.execute(program);
+      expect(result.toString()).toContain('uncertain condition');
+      expect(result.toString()).toContain('25.0%'); // reduced confidence (0.5 * 0.5)
+    });
+
+    it('should handle regular values as full confidence', async () => {
+      const program = parse(`
+        certainCondition = "definitely true"
+        action = "safe action" ~> 0.8
+        certainCondition ~@> action
+      `);
+      const result = await runtime.execute(program);
+      expect(result.toString()).toContain('safe action');
+      expect(result.toString()).toContain('80.0%');
+    });
+
+    it('should work with exactly threshold confidence', async () => {
+      const program = parse(`
+        exactThreshold = "borderline case" ~> 0.7
+        action = "threshold action" ~> 0.6
+        exactThreshold ~@> action
+      `);
+      const result = await runtime.execute(program);
+      expect(result.toString()).toContain('threshold action');
+      expect(result.toString()).toContain('60.0%');
+    });
+
+    it('should support chained threshold gates', async () => {
+      const program = parse(`
+        condition1 = "first check" ~> 0.9
+        condition2 = "second check" ~> 0.8
+        finalAction = "execute" ~> 0.7
+        condition1 ~@> condition2 ~@> finalAction
+      `);
+      const result = await runtime.execute(program);
+      expect(result.toString()).toContain('execute');
+      expect(result.toString()).toContain('70.0%');
+    });
+
+    it('should handle AI model threshold patterns', async () => {
+      const program = parse(`
+        modelConfidence = "AI prediction" ~> 0.85
+        humanReview = "needs review" ~> 0.6
+        autoApprove = "auto approved" ~> 0.95
+        modelConfidence ~@> autoApprove
+      `);
+      const result = await runtime.execute(program);
+      expect(result.toString()).toContain('auto approved');
+      expect(result.toString()).toContain('95.0%');
+    });
+  });
 });

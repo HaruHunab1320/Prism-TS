@@ -37,9 +37,10 @@ describe('AST Nodes', () => {
 
     it('should create confidence expressions', () => {
       const expr = new NumberLiteral(42);
-      const confident = new ConfidenceExpression(expr, 0.95);
+      const confidenceValue = new NumberLiteral(0.95);
+      const confident = new ConfidenceExpression(expr, confidenceValue);
       expect(confident.expression).toBe(expr);
-      expect(confident.confidence).toBe(0.95);
+      expect(confident.confidence).toBe(confidenceValue);
       expect(confident.type).toBe('ConfidenceExpression');
     });
 
@@ -99,7 +100,7 @@ describe('AST Nodes', () => {
     it('should create uncertain if statements', () => {
       const condition = new ConfidenceExpression(
         new CallExpression(new IdentifierExpression('analyze'), []),
-        0.8
+        new NumberLiteral(0.8)
       );
       const branches = {
         high: new BlockStatement([]),

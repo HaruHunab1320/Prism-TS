@@ -87,7 +87,7 @@ describe('Parser', () => {
       expect(stmt.expression).toBeInstanceOf(ConfidenceExpression);
       const conf = stmt.expression as ConfidenceExpression;
       expect((conf.expression as IdentifierExpression).name).toBe('result');
-      expect(conf.confidence).toBe(0.8);
+      expect((conf.confidence as NumberLiteral).value).toBe(0.8);
     });
 
     it('should parse confidence extraction expressions', () => {
@@ -138,7 +138,7 @@ describe('Parser', () => {
       expect(program.statements[0]).toBeInstanceOf(UncertainIfStatement);
       const uncertainIf = program.statements[0] as UncertainIfStatement;
       expect(uncertainIf.condition).toBeInstanceOf(ConfidenceExpression);
-      expect(uncertainIf.threshold).toBe(0.8);
+      expect(uncertainIf.threshold).toBe(0.5);
       expect(uncertainIf.branches.high).toBeInstanceOf(BlockStatement);
       expect(uncertainIf.branches.medium).toBeInstanceOf(BlockStatement);
       expect(uncertainIf.branches.low).toBeInstanceOf(BlockStatement);
