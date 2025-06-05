@@ -106,25 +106,29 @@
   - [x] Tests: `result = primary ~?? secondary ~?? default`
   - [x] Full test coverage with 4 passing coalesce tests
 
-- [ ] **Confidence AND/OR Operators (`~&&`, `~||`)**
-  - [ ] Add `~&&` and `~||` tokens to lexer
-  - [ ] Implement confident logical operations
-  - [ ] Tests: boolean logic with confidence requirements
+- [x] **Confidence AND/OR Operators (`~&&`, `~||`)** ✅ COMPLETED  
+  - [x] Add `~&&` and `~||` tokens to lexer
+  - [x] Implement confident logical operations
+  - [x] Tests: boolean logic with confidence requirements
+  - [x] Full test coverage with 5 passing logical operator tests
 
 #### **Day 2 Tasks - Arithmetic & Comparison**
 
 **Morning: Arithmetic Operators (2-3 hours)**
-- [ ] **Confident Arithmetic (`~+`, `~-`, `~*`, `~/`)**
-  - [ ] Add arithmetic operator tokens to lexer
-  - [ ] Implement confidence-aware arithmetic evaluation
-  - [ ] Confidence propagation rules for each operation
-  - [ ] Tests: `total = measurement1 ~+ measurement2`
+- [x] **Confident Arithmetic (`~+`, `~-`, `~*`, `~/`)** ✅ COMPLETED
+  - [x] Add arithmetic operator tokens to lexer
+  - [x] Implement confidence-aware arithmetic evaluation
+  - [x] Confidence propagation rules for each operation
+  - [x] Tests: `total = measurement1 ~+ measurement2`
+  - [x] Full test coverage with 6 passing arithmetic tests
 
 **Afternoon: Comparison & Access (2-3 hours)**
-- [ ] **Confident Comparisons (`~==`, `~!=`, `~>`, `~<`)**
-  - [ ] Add comparison operator tokens
-  - [ ] Implement confident comparison evaluation
-  - [ ] Tests: `if (score ~> threshold) { }`
+- [x] **Confident Comparisons (`~==`, `~!=`, `~<`, `~>=`, `~<=`)** ✅ COMPLETED
+  - [x] Add comparison operator tokens
+  - [x] Implement confident comparison evaluation
+  - [x] Tests: `if (score ~>= threshold) { }`
+  - [x] Full test coverage with 7 passing comparison tests
+  - [x] Fixed tokenizer precedence for `~>=` vs `~>` conflict
 
 - [ ] **Confident Property Access (`~.`)**
   - [ ] Add `~.` token for safe navigation

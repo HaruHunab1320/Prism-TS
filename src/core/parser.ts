@@ -260,7 +260,7 @@ export class Parser {
   private logicalOr(): Expression | null {
     let expr = this.coalesce();
     
-    while (this.match(TokenType.OR)) {
+    while (this.match(TokenType.OR, TokenType.CONFIDENCE_OR)) {
       const operator = this.previous().value as BinaryOperator;
       const right = this.coalesce();
       expr = new BinaryExpression(operator, expr!, right!);
@@ -284,7 +284,7 @@ export class Parser {
   private logicalAnd(): Expression | null {
     let expr = this.equality();
     
-    while (this.match(TokenType.AND)) {
+    while (this.match(TokenType.AND, TokenType.CONFIDENCE_AND)) {
       const operator = this.previous().value as BinaryOperator;
       const right = this.equality();
       expr = new BinaryExpression(operator, expr!, right!);
@@ -296,7 +296,7 @@ export class Parser {
   private equality(): Expression | null {
     let expr = this.comparison();
     
-    while (this.match(TokenType.NOT_EQUAL, TokenType.EQUAL_EQUAL)) {
+    while (this.match(TokenType.NOT_EQUAL, TokenType.EQUAL_EQUAL, TokenType.CONFIDENCE_EQUAL, TokenType.CONFIDENCE_NOT_EQUAL)) {
       const operator = this.previous().value as BinaryOperator;
       const right = this.comparison();
       expr = new BinaryExpression(operator, expr!, right!);
@@ -308,7 +308,8 @@ export class Parser {
   private comparison(): Expression | null {
     let expr = this.term();
     
-    while (this.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+    while (this.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL, 
+                      TokenType.CONFIDENCE_GREATER_EQUAL, TokenType.CONFIDENCE_LESS, TokenType.CONFIDENCE_LESS_EQUAL)) {
       const operator = this.previous().value as BinaryOperator;
       const right = this.term();
       expr = new BinaryExpression(operator, expr!, right!);
@@ -320,7 +321,7 @@ export class Parser {
   private term(): Expression | null {
     let expr = this.factor();
     
-    while (this.match(TokenType.MINUS, TokenType.PLUS)) {
+    while (this.match(TokenType.MINUS, TokenType.PLUS, TokenType.CONFIDENCE_MINUS, TokenType.CONFIDENCE_PLUS)) {
       const operator = this.previous().value as BinaryOperator;
       const right = this.factor();
       expr = new BinaryExpression(operator, expr!, right!);
@@ -332,7 +333,7 @@ export class Parser {
   private factor(): Expression | null {
     let expr = this.unary();
     
-    while (this.match(TokenType.SLASH, TokenType.STAR)) {
+    while (this.match(TokenType.SLASH, TokenType.STAR, TokenType.CONFIDENCE_SLASH, TokenType.CONFIDENCE_STAR)) {
       const operator = this.previous().value as BinaryOperator;
       const right = this.unary();
       expr = new BinaryExpression(operator, expr!, right!);

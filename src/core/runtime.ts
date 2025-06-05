@@ -430,6 +430,50 @@ export class Interpreter {
         // Confidence coalesce - should not reach here as it's handled with confidence
         throw new RuntimeError('Confidence coalesce requires confident values', node);
 
+      case '~&&':
+        // Confidence AND - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confidence AND requires confident values', node);
+
+      case '~||':
+        // Confidence OR - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confidence OR requires confident values', node);
+
+      case '~+':
+        // Confident addition - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confident addition requires confident values', node);
+
+      case '~-':
+        // Confident subtraction - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confident subtraction requires confident values', node);
+
+      case '~*':
+        // Confident multiplication - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confident multiplication requires confident values', node);
+
+      case '~/':
+        // Confident division - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confident division requires confident values', node);
+
+      case '~==':
+        // Confident equality - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confident equality requires confident values', node);
+
+      case '~!=':
+        // Confident not equal - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confident not equal requires confident values', node);
+
+      case '~<':
+        // Confident less than - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confident less than requires confident values', node);
+
+      case '~>=':
+        // Confident greater equal - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confident greater equal requires confident values', node);
+
+      case '~<=':
+        // Confident less equal - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confident less equal requires confident values', node);
+
       default:
         throw new RuntimeError(`Unknown binary operator: ${operator}`, node);
     }
@@ -449,6 +493,21 @@ export class Interpreter {
     // Special handling for confidence coalesce operator (~??)
     if (operator === '~??') {
       return this.applyConfidenceCoalesce(left, right, node);
+    }
+
+    // Special handling for confident logical operators (~&&, ~||)
+    if (operator === '~&&' || operator === '~||') {
+      return this.applyConfidentLogical(operator, left, right, node);
+    }
+
+    // Special handling for confident arithmetic operators (~+, ~-, ~*, ~/)
+    if (operator === '~+' || operator === '~-' || operator === '~*' || operator === '~/') {
+      return this.applyConfidentArithmetic(operator, left, right, node);
+    }
+
+    // Special handling for confident comparison operators (~==, ~!=, ~<, ~>=, ~<=)
+    if (operator === '~==' || operator === '~!=' || operator === '~<' || operator === '~>=' || operator === '~<=') {
+      return this.applyConfidentComparison(operator, left, right, node);
     }
 
     // Extract values and confidences
@@ -502,6 +561,128 @@ export class Interpreter {
     
     // Otherwise, return the right value (which becomes the new candidate)
     return right;
+  }
+
+  private applyConfidentLogical(operator: '~&&' | '~||', left: Value, right: Value, _node: BinaryExpression): Value {
+    // For confident logical operations, we need to consider both the boolean result
+    // and the confidence propagation
+    
+    const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
+    const rightConf = right instanceof ConfidenceValue ? right.confidence : new ConfidenceLib(1.0);
+    
+    // Extract the boolean values
+    const leftBool = left.isTruthy();
+    const rightBool = right.isTruthy();
+    
+    let resultBool: boolean;
+    let resultConfidence: ConfidenceLib;
+    
+    if (operator === '~&&') {
+      // Confident AND: both must be true AND confident
+      resultBool = leftBool && rightBool;
+      // For AND, take minimum confidence (both must be confident)
+      resultConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
+    } else { // operator === '~||'
+      // Confident OR: at least one must be true with confidence
+      resultBool = leftBool || rightBool;
+      // For OR, take maximum confidence (best of the two)
+      resultConfidence = leftConf.max ? leftConf.max(rightConf) : leftConf;
+    }
+    
+    return new ConfidenceValue(new BooleanValue(resultBool), resultConfidence);
+  }
+
+  private applyConfidentArithmetic(operator: '~+' | '~-' | '~*' | '~/', left: Value, right: Value, node: BinaryExpression): Value {
+    // For confident arithmetic operations, we perform the arithmetic and propagate confidence
+    
+    const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
+    const rightConf = right instanceof ConfidenceValue ? right.confidence : new ConfidenceLib(1.0);
+    
+    // Extract the numeric values
+    const leftValue = left instanceof ConfidenceValue ? left.value : left;
+    const rightValue = right instanceof ConfidenceValue ? right.value : right;
+    
+    // Ensure we have numeric values
+    if (!(leftValue instanceof NumberValue) || !(rightValue instanceof NumberValue)) {
+      throw new RuntimeError(`Confident arithmetic requires numeric values`, node);
+    }
+    
+    let result: number;
+    const leftNum = leftValue.value;
+    const rightNum = rightValue.value;
+    
+    // Perform the arithmetic operation
+    switch (operator) {
+      case '~+':
+        result = leftNum + rightNum;
+        break;
+      case '~-':
+        result = leftNum - rightNum;
+        break;
+      case '~*':
+        result = leftNum * rightNum;
+        break;
+      case '~/':
+        if (rightNum === 0) {
+          throw new RuntimeError('Division by zero in confident arithmetic', node);
+        }
+        result = leftNum / rightNum;
+        break;
+    }
+    
+    // For arithmetic operations, use minimum confidence (error propagation principle)
+    const resultConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
+    
+    return new ConfidenceValue(new NumberValue(result), resultConfidence);
+  }
+
+  private applyConfidentComparison(operator: '~==' | '~!=' | '~<' | '~>=' | '~<=', left: Value, right: Value, node: BinaryExpression): Value {
+    // For confident comparison operations, we perform the comparison and propagate confidence
+    
+    const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
+    const rightConf = right instanceof ConfidenceValue ? right.confidence : new ConfidenceLib(1.0);
+    
+    // Extract the underlying values
+    const leftValue = left instanceof ConfidenceValue ? left.value : left;
+    const rightValue = right instanceof ConfidenceValue ? right.value : right;
+    
+    let result: boolean;
+    
+    // Perform the comparison operation based on the operator
+    switch (operator) {
+      case '~==':
+        result = leftValue.equals(rightValue);
+        break;
+      case '~!=':
+        result = !leftValue.equals(rightValue);
+        break;
+      case '~<':
+        // For less than, we need numeric values
+        if (!(leftValue instanceof NumberValue) || !(rightValue instanceof NumberValue)) {
+          throw new RuntimeError(`Confident less than requires numeric values`, node);
+        }
+        result = leftValue.value < rightValue.value;
+        break;
+      case '~>=':
+        // For greater equal, we need numeric values  
+        if (!(leftValue instanceof NumberValue) || !(rightValue instanceof NumberValue)) {
+          throw new RuntimeError(`Confident greater equal requires numeric values`, node);
+        }
+        result = leftValue.value >= rightValue.value;
+        break;
+      case '~<=':
+        // For less equal, we need numeric values
+        if (!(leftValue instanceof NumberValue) || !(rightValue instanceof NumberValue)) {
+          throw new RuntimeError(`Confident less equal requires numeric values`, node);
+        }
+        result = leftValue.value <= rightValue.value;
+        break;
+    }
+    
+    // For comparison operations, use minimum confidence (both values must be confident for reliable comparison)
+    const resultConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
+    
+    return new ConfidenceValue(new BooleanValue(result), resultConfidence);
   }
 
   private async interpretUnaryExpression(node: UnaryExpression): Promise<Value> {

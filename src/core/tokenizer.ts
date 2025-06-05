@@ -41,6 +41,18 @@ export enum TokenType {
   CONFIDENCE_EXTRACT = 'CONFIDENCE_EXTRACT',
   CONFIDENCE_CHAIN = 'CONFIDENCE_CHAIN',
   CONFIDENCE_COALESCE = 'CONFIDENCE_COALESCE',
+  CONFIDENCE_AND = 'CONFIDENCE_AND',
+  CONFIDENCE_OR = 'CONFIDENCE_OR',
+  CONFIDENCE_PLUS = 'CONFIDENCE_PLUS',
+  CONFIDENCE_MINUS = 'CONFIDENCE_MINUS',
+  CONFIDENCE_STAR = 'CONFIDENCE_STAR',
+  CONFIDENCE_SLASH = 'CONFIDENCE_SLASH',
+  CONFIDENCE_EQUAL = 'CONFIDENCE_EQUAL',
+  CONFIDENCE_NOT_EQUAL = 'CONFIDENCE_NOT_EQUAL',
+  CONFIDENCE_GREATER = 'CONFIDENCE_GREATER',
+  CONFIDENCE_LESS = 'CONFIDENCE_LESS',
+  CONFIDENCE_GREATER_EQUAL = 'CONFIDENCE_GREATER_EQUAL',
+  CONFIDENCE_LESS_EQUAL = 'CONFIDENCE_LESS_EQUAL',
   AND = 'AND',
   OR = 'OR',
   NOT = 'NOT',
@@ -183,6 +195,11 @@ export class Tokenizer {
     }
 
     if (char === '~') {
+      if (this.peek() === '>' && this.peekNext() === '=') {
+        this.advance(); // consume >
+        this.advance(); // consume =
+        return this.makeToken(TokenType.CONFIDENCE_GREATER_EQUAL, '~>=', startColumn);
+      }
       if (this.peek() === '>') {
         this.advance();
         return this.makeToken(TokenType.CONFIDENCE_ARROW, '~>', startColumn);
@@ -191,6 +208,51 @@ export class Tokenizer {
         this.advance(); // consume first ?
         this.advance(); // consume second ?
         return this.makeToken(TokenType.CONFIDENCE_COALESCE, '~??', startColumn);
+      }
+      if (this.peek() === '&' && this.peekNext() === '&') {
+        this.advance(); // consume first &
+        this.advance(); // consume second &
+        return this.makeToken(TokenType.CONFIDENCE_AND, '~&&', startColumn);
+      }
+      if (this.peek() === '|' && this.peekNext() === '|') {
+        this.advance(); // consume first |
+        this.advance(); // consume second |
+        return this.makeToken(TokenType.CONFIDENCE_OR, '~||', startColumn);
+      }
+      if (this.peek() === '+') {
+        this.advance();
+        return this.makeToken(TokenType.CONFIDENCE_PLUS, '~+', startColumn);
+      }
+      if (this.peek() === '-') {
+        this.advance();
+        return this.makeToken(TokenType.CONFIDENCE_MINUS, '~-', startColumn);
+      }
+      if (this.peek() === '*') {
+        this.advance();
+        return this.makeToken(TokenType.CONFIDENCE_STAR, '~*', startColumn);
+      }
+      if (this.peek() === '/') {
+        this.advance();
+        return this.makeToken(TokenType.CONFIDENCE_SLASH, '~/', startColumn);
+      }
+      if (this.peek() === '=' && this.peekNext() === '=') {
+        this.advance(); // consume first =
+        this.advance(); // consume second =
+        return this.makeToken(TokenType.CONFIDENCE_EQUAL, '~==', startColumn);
+      }
+      if (this.peek() === '!' && this.peekNext() === '=') {
+        this.advance(); // consume !
+        this.advance(); // consume =
+        return this.makeToken(TokenType.CONFIDENCE_NOT_EQUAL, '~!=', startColumn);
+      }
+      if (this.peek() === '<' && this.peekNext() === '=') {
+        this.advance(); // consume <
+        this.advance(); // consume =
+        return this.makeToken(TokenType.CONFIDENCE_LESS_EQUAL, '~<=', startColumn);
+      }
+      if (this.peek() === '<') {
+        this.advance();
+        return this.makeToken(TokenType.CONFIDENCE_LESS, '~<', startColumn);
       }
       if (this.peek() === '~') {
         this.advance();
