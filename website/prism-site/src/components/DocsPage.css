@@ -1,0 +1,176 @@
+.docs-page {
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.docs-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.docs-sidebar {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  height: fit-content;
+  position: sticky;
+  top: 100px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.docs-sidebar h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.docs-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.docs-nav li {
+  margin-bottom: 0.5rem;
+}
+
+.nav-item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.nav-item:hover {
+  background: #f8f9fa;
+  color: #333;
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 500;
+}
+
+.docs-content {
+  background: white;
+  border-radius: 8px;
+  padding: 3rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  min-height: 80vh;
+}
+
+.docs-content h1 {
+  color: #333;
+  margin-bottom: 1.5rem;
+  font-size: 2.5rem;
+  border-bottom: 3px solid #667eea;
+  padding-bottom: 0.5rem;
+}
+
+.docs-content h2 {
+  color: #333;
+  margin: 2rem 0 1rem 0;
+  font-size: 1.8rem;
+}
+
+.docs-content h3 {
+  color: #555;
+  margin: 1.5rem 0 0.75rem 0;
+  font-size: 1.3rem;
+}
+
+.docs-content p {
+  line-height: 1.7;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.docs-content ul, .docs-content ol {
+  margin-bottom: 1.5rem;
+  padding-left: 2rem;
+}
+
+.docs-content li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+  color: #666;
+}
+
+.docs-content li strong {
+  color: #333;
+}
+
+/* Only apply to inline code, not code blocks */
+.docs-content p code,
+.docs-content li code,
+.docs-content h1 code,
+.docs-content h2 code,
+.docs-content h3 code,
+.docs-content h4 code {
+  background: #f4f4f4;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  font-size: 0.9em;
+  color: #e91e63;
+}
+
+.docs-content a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.docs-content a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .docs-container {
+    grid-template-columns: 200px 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+  
+  .docs-content {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .docs-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .docs-sidebar {
+    position: static;
+    order: 2;
+  }
+  
+  .docs-content {
+    order: 1;
+    padding: 1.5rem;
+  }
+  
+  .docs-content h1 {
+    font-size: 2rem;
+  }
+  
+  .docs-content h2 {
+    font-size: 1.5rem;
+  }
+}

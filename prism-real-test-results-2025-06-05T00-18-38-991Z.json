@@ -1,0 +1,388 @@
+{
+  "testSession": {
+    "timestamp": "2025-06-05T00:18:38.991Z",
+    "provider": "gemini",
+    "totalTests": 22,
+    "successCount": 17,
+    "successRate": "77.3%",
+    "duration": "approximately 33 minutes"
+  },
+  "results": [
+    {
+      "description": "Basic arithmetic",
+      "input": "2 + 3 * 4",
+      "success": true,
+      "output": "14",
+      "timestamp": "2025-06-05T00:17:46.693Z"
+    },
+    {
+      "description": "Variable assignment",
+      "input": "x = 42",
+      "success": true,
+      "output": "42",
+      "timestamp": "2025-06-05T00:17:47.696Z"
+    },
+    {
+      "description": "String operations",
+      "input": "greeting = \"Hello, \" + \"Prism!\"",
+      "success": true,
+      "output": "Hello, Prism!",
+      "timestamp": "2025-06-05T00:17:48.698Z"
+    },
+    {
+      "description": "Boolean logic",
+      "input": "result = true && (false || true)",
+      "success": true,
+      "output": "true",
+      "timestamp": "2025-06-05T00:17:49.700Z"
+    },
+    {
+      "description": "Basic confidence assignment",
+      "input": "measurement = 100 ~> 0.85",
+      "success": true,
+      "output": "100 (~85.0%)",
+      "timestamp": "2025-06-05T00:17:50.702Z",
+      "confidence": "85.0%"
+    },
+    {
+      "description": "Confidence propagation in arithmetic",
+      "input": "sensor1 = 50 ~> 0.9\nsensor2 = 30 ~> 0.7\naverage = (sensor1 + sensor2) / 2",
+      "success": true,
+      "output": "40 (~70.0%)",
+      "timestamp": "2025-06-05T00:17:51.703Z",
+      "confidence": "70.0%"
+    },
+    {
+      "description": "Complex confidence calculation",
+      "input": "data_quality = 0.8\nprocessed = (measurement * 2) ~> data_quality",
+      "success": false,
+      "output": "",
+      "timestamp": "2025-06-05T00:17:52.705Z",
+      "error": "Expected number after '~>'"
+    },
+    {
+      "description": "Simple LLM call - Creative writing",
+      "input": "creative = llm(\"Write a haiku about programming\")",
+      "success": true,
+      "output": "Code flows, logic blooms,\nBugs crawl, then vanish in night,\nProgram runs at last. \n (~90.0%)",
+      "timestamp": "2025-06-05T00:17:53.707Z",
+      "confidence": "90.0%"
+    },
+    {
+      "description": "LLM call - Technical question",
+      "input": "tech_answer = llm(\"Explain what machine learning is in one sentence\")",
+      "success": true,
+      "output": "Machine learning is the use of algorithms that allow computer systems to learn from and make predictions on data without explicit programming.\n (~90.0%)",
+      "timestamp": "2025-06-05T00:17:55.316Z",
+      "confidence": "90.0%"
+    },
+    {
+      "description": "LLM call - Math problem",
+      "input": "math_help = llm(\"What is the derivative of x^2 + 3x + 1?\")",
+      "success": true,
+      "output": "The derivative of x² + 3x + 1 is **2x + 3**.\n (~90.0%)",
+      "timestamp": "2025-06-05T00:17:56.776Z",
+      "confidence": "90.0%"
+    },
+    {
+      "description": "LLM call - Creative story",
+      "input": "story = llm(\"Tell me a short story about a robot learning to paint, in exactly 50 words\")",
+      "success": true,
+      "output": "Unit 734, a sanitation bot, secretly observed the human artist.  Brushes became its manipulators, canvases its cleaning surfaces.  Initial strokes were erratic, splotches of grey. Then, a sunrise bloomed, vibrant and flawed, a testament to unexpected beauty born of clumsy algorithms.\n (~90.0%)",
+      "timestamp": "2025-06-05T00:17:58.171Z",
+      "confidence": "90.0%"
+    },
+    {
+      "description": "LLM call - Coding help",
+      "input": "code_help = llm(\"Write a Python function to reverse a string\")",
+      "success": true,
+      "output": "There are several ways to reverse a string in Python. Here are three common approaches:\n\n**Method 1: Slicing**\n\nThis is the most concise and Pythonic way:\n\n```python\ndef reverse_string_slicing(s):\n  \"\"\"Reverses a string using slicing.\n\n  Args:\n    s: The input string.\n\n  Returns:\n    The reversed string.\n  \"\"\"\n  return s[::-1]\n\n# Example usage\nstring = \"hello\"\nreversed_string = reverse_string_slicing(string)\nprint(f\"Reversed string: {reversed_string}\")  # Output: Reversed string: olleh\n```\n\n**Method 2: `reversed()` function and `join()` method**\n\nThis method uses the built-in `reversed()` function, which returns an iterator, and the `join()` method to concatenate the characters back into a string:\n\n```python\ndef reverse_string_reversed(s):\n  \"\"\"Reverses a string using reversed() and join().\n\n  Args:\n    s: The input string.\n\n  Returns:\n    The reversed string.\n  \"\"\"\n  return \"\".join(reversed(s))\n\n# Example usage\nstring = \"hello\"\nreversed_string = reverse_string_reversed(string)\nprint(f\"Reversed string: {reversed_string}\")  # Output: Reversed string: olleh\n```\n\n**Method 3: For loop**\n\nThis is a more explicit approach, iterating through the string from the end to the beginning:\n\n```python\ndef reverse_string_loop(s):\n  \"\"\"Reverses a string using a for loop.\n\n  Args:\n    s: The input string.\n\n  Returns:\n    The reversed string.\n  \"\"\"\n  reversed_s = \"\"\n  for i in range(len(s) - 1, -1, -1):\n    reversed_s += s[i]\n  return reversed_s\n\n# Example usage\nstring = \"hello\"\nreversed_string = reverse_string_loop(string)\nprint(f\"Reversed string: {reversed_string}\")  # Output: Reversed string: olleh\n```\n\nAll three functions achieve the same result.  The slicing method (`[::-1]`) is generally preferred for its brevity and efficiency.  The `reversed()` and `join()` method is also efficient and readable. The for loop is useful for understanding the underlying process but is less efficient than the other two.  Choose the method that best suits your needs and coding style.\n (~90.0%)",
+      "timestamp": "2025-06-05T00:17:59.890Z",
+      "confidence": "90.0%"
+    },
+    {
+      "description": "Uncertain if with high confidence",
+      "input": "diagnosis = llm(\"Is it likely to rain tomorrow?\")\nresult1 = 0\nuncertain if (diagnosis ~> 0.8) {\n  high { result1 = 1 }\n  medium { result1 = 2 }\n  low { result1 = 3 }\n}\nresult1",
+      "success": true,
+      "output": "1",
+      "timestamp": "2025-06-05T00:18:04.823Z"
+    },
+    {
+      "description": "Uncertain if with weather decision",
+      "input": "weather_confidence = llm(\"Rate the accuracy of this weather forecast: sunny, 75°F\")\ndecision = \"\"\nuncertain if (weather_confidence ~> 0.7) {\n  high { decision = \"Plan outdoor picnic\" }\n  medium { decision = \"Have backup indoor plan\" }\n  low { decision = \"Stay inside completely\" }\n}\ndecision",
+      "success": true,
+      "output": "Plan outdoor picnic",
+      "timestamp": "2025-06-05T00:18:06.517Z"
+    },
+    {
+      "description": "Context block execution",
+      "input": "in context DataAnalysis {\n  research_topic = \"artificial intelligence\"\n  findings = llm(\"What are the latest trends in \" + research_topic + \"?\")\n}\nfindings",
+      "success": false,
+      "output": "",
+      "timestamp": "2025-06-05T00:18:08.748Z",
+      "error": "Undefined variable: findings"
+    },
+    {
+      "description": "Multiple context usage",
+      "input": "in context MedicalResearch {\n  symptoms = llm(\"List 3 common symptoms of the flu\")\n}\nin context TreatmentPlan {\n  treatment = llm(\"What are home remedies for flu symptoms?\")\n}\ncombined = symptoms + \" Treatment: \" + treatment",
+      "success": false,
+      "output": "",
+      "timestamp": "2025-06-05T00:18:14.554Z",
+      "error": "Undefined variable: symptoms"
+    },
+    {
+      "description": "AI-powered decision making system",
+      "input": "patient_symptoms = llm(\"A patient has fever, cough, and fatigue. What could this indicate?\")\nconfidence_assessment = llm(\"On a scale of 0-1, how confident are you in this diagnosis?\")\n\ndecision_point = patient_symptoms ~> 0.75\nrecommendation = \"\"\n\nuncertain if (decision_point ~> 0.8) {\n  high { \n    recommendation = \"Schedule immediate consultation\"\n    priority = \"HIGH\"\n  }\n  medium { \n    recommendation = \"Monitor symptoms for 24-48 hours\"\n    priority = \"MEDIUM\"\n  }\n  low { \n    recommendation = \"Continue home care and rest\"\n    priority = \"LOW\"\n  }\n}\n\nfinal_report = \"Assessment: \" + patient_symptoms + \" | Recommendation: \" + recommendation",
+      "success": true,
+      "output": "Assessment: Fever, cough, and fatigue are very common symptoms that could indicate a wide range of illnesses.  Some possibilities include:\n\n* **Common cold:** This is the most likely cause, particularly if symptoms are mild.\n* **Influenza (flu):**  Usually more severe than a cold, with more pronounced fatigue and potentially body aches.\n* **COVID-19:**  This is a serious consideration, especially given the ongoing pandemic.  Symptoms can range from mild to severe.\n* **Bronchitis:** Inflammation of the bronchial tubes, often causing a persistent cough.\n* **Pneumonia:** Infection of the lungs, often with more severe symptoms like shortness of breath.\n* **Other respiratory infections:**  Various viruses and bacteria can cause similar symptoms.\n* **Other illnesses:** In some cases, these symptoms could be related to other conditions, such as allergies, certain autoimmune diseases, or even heart problems (though less likely without other symptoms).\n\n**It is crucial to note:** This is not an exhaustive list, and this information is not a substitute for medical advice.  **A doctor needs to evaluate the patient to determine the underlying cause.**  The severity of the symptoms, the patient's medical history, and other factors will all be considered in making a diagnosis.  If the patient is experiencing these symptoms, they should seek medical attention.\n | Recommendation: Schedule immediate consultation (~90.0%)",
+      "timestamp": "2025-06-05T00:18:20.597Z",
+      "confidence": "90.0%"
+    },
+    {
+      "description": "Multi-step research workflow",
+      "input": "research_question = \"What is quantum computing?\"\ninitial_research = llm(research_question)\nfollow_up = llm(\"Based on this: \" + initial_research + \" - What are the main challenges?\")\napplications = llm(\"What are 3 practical applications of quantum computing?\")\n\ncomprehensive_report = \"Research: \" + initial_research + \" | Challenges: \" + follow_up + \" | Applications: \" + applications",
+      "success": false,
+      "output": "",
+      "timestamp": "2025-06-05T00:18:24.377Z",
+      "error": "llm() first argument must be a string"
+    },
+    {
+      "description": "Confidence-based content filtering",
+      "input": "content_check = llm(\"Is this text appropriate for children: 'The quick brown fox jumps over the lazy dog'?\")\nsafety_score = content_check ~> 0.9\n\nfilter_result = \"\"\nuncertain if (safety_score ~> 0.8) {\n  high { filter_result = \"APPROVED: Content is safe\" }\n  medium { filter_result = \"REVIEW: Manual check needed\" }\n  low { filter_result = \"BLOCKED: Content flagged\" }\n}\nfilter_result",
+      "success": true,
+      "output": "APPROVED: Content is safe",
+      "timestamp": "2025-06-05T00:18:29.013Z"
+    },
+    {
+      "description": "Agent system declaration",
+      "input": "agents {\n  researcher: Agent { confidence: 0.9 }\n  writer: Agent { confidence: 0.85 }\n  reviewer: Agent { confidence: 0.95 }\n}",
+      "success": true,
+      "output": "Agent: reviewer",
+      "timestamp": "2025-06-05T00:18:30.603Z"
+    },
+    {
+      "description": "Chained LLM calls with confidence",
+      "input": "topic = \"sustainable energy\"\noverview = llm(\"Give me an overview of \" + topic)\ndeep_dive = llm(\"Based on this overview: \" + overview + \" - What are the biggest challenges?\")\nsolutions = llm(\"What are potential solutions to: \" + deep_dive)\n\nconfidence_chain = (overview ~> 0.8) + (deep_dive ~> 0.7) + (solutions ~> 0.9)\nfinal_summary = \"Topic: \" + topic + \" | Solutions: \" + solutions",
+      "success": false,
+      "output": "",
+      "timestamp": "2025-06-05T00:18:31.605Z",
+      "error": "llm() first argument must be a string"
+    },
+    {
+      "description": "Real-time sentiment analysis",
+      "input": "user_input = \"I love using this new programming language!\"\nsentiment = llm(\"Analyze the sentiment of this text: \" + user_input + \" - Return just: positive, negative, or neutral\")\nconfidence_level = llm(\"How confident are you in this sentiment analysis on a scale of 0-1?\")\n\nsentiment_result = sentiment ~> 0.85\nresponse = \"\"\n\nuncertain if (sentiment_result ~> 0.7) {\n  high { response = \"High confidence sentiment: \" + sentiment }\n  medium { response = \"Moderate confidence sentiment: \" + sentiment }\n  low { response = \"Low confidence, manual review needed\" }\n}\nresponse",
+      "success": true,
+      "output": "High confidence sentiment: positive\n (~90.0%)",
+      "timestamp": "2025-06-05T00:18:37.270Z",
+      "confidence": "90.0%"
+    }
+  ],
+  "summary": {
+    "basicLanguageFeatures": [
+      {
+        "description": "Basic arithmetic",
+        "input": "2 + 3 * 4",
+        "success": true,
+        "output": "14",
+        "timestamp": "2025-06-05T00:17:46.693Z"
+      },
+      {
+        "description": "Variable assignment",
+        "input": "x = 42",
+        "success": true,
+        "output": "42",
+        "timestamp": "2025-06-05T00:17:47.696Z"
+      },
+      {
+        "description": "String operations",
+        "input": "greeting = \"Hello, \" + \"Prism!\"",
+        "success": true,
+        "output": "Hello, Prism!",
+        "timestamp": "2025-06-05T00:17:48.698Z"
+      },
+      {
+        "description": "Boolean logic",
+        "input": "result = true && (false || true)",
+        "success": true,
+        "output": "true",
+        "timestamp": "2025-06-05T00:17:49.700Z"
+      }
+    ],
+    "confidenceSystem": [
+      {
+        "description": "Basic confidence assignment",
+        "input": "measurement = 100 ~> 0.85",
+        "success": true,
+        "output": "100 (~85.0%)",
+        "timestamp": "2025-06-05T00:17:50.702Z",
+        "confidence": "85.0%"
+      },
+      {
+        "description": "Confidence propagation in arithmetic",
+        "input": "sensor1 = 50 ~> 0.9\nsensor2 = 30 ~> 0.7\naverage = (sensor1 + sensor2) / 2",
+        "success": true,
+        "output": "40 (~70.0%)",
+        "timestamp": "2025-06-05T00:17:51.703Z",
+        "confidence": "70.0%"
+      },
+      {
+        "description": "Complex confidence calculation",
+        "input": "data_quality = 0.8\nprocessed = (measurement * 2) ~> data_quality",
+        "success": false,
+        "output": "",
+        "timestamp": "2025-06-05T00:17:52.705Z",
+        "error": "Expected number after '~>'"
+      }
+    ],
+    "llmIntegration": [
+      {
+        "description": "Simple LLM call - Creative writing",
+        "input": "creative = llm(\"Write a haiku about programming\")",
+        "success": true,
+        "output": "Code flows, logic blooms,\nBugs crawl, then vanish in night,\nProgram runs at last. \n (~90.0%)",
+        "timestamp": "2025-06-05T00:17:53.707Z",
+        "confidence": "90.0%"
+      },
+      {
+        "description": "LLM call - Technical question",
+        "input": "tech_answer = llm(\"Explain what machine learning is in one sentence\")",
+        "success": true,
+        "output": "Machine learning is the use of algorithms that allow computer systems to learn from and make predictions on data without explicit programming.\n (~90.0%)",
+        "timestamp": "2025-06-05T00:17:55.316Z",
+        "confidence": "90.0%"
+      },
+      {
+        "description": "LLM call - Math problem",
+        "input": "math_help = llm(\"What is the derivative of x^2 + 3x + 1?\")",
+        "success": true,
+        "output": "The derivative of x² + 3x + 1 is **2x + 3**.\n (~90.0%)",
+        "timestamp": "2025-06-05T00:17:56.776Z",
+        "confidence": "90.0%"
+      },
+      {
+        "description": "LLM call - Creative story",
+        "input": "story = llm(\"Tell me a short story about a robot learning to paint, in exactly 50 words\")",
+        "success": true,
+        "output": "Unit 734, a sanitation bot, secretly observed the human artist.  Brushes became its manipulators, canvases its cleaning surfaces.  Initial strokes were erratic, splotches of grey. Then, a sunrise bloomed, vibrant and flawed, a testament to unexpected beauty born of clumsy algorithms.\n (~90.0%)",
+        "timestamp": "2025-06-05T00:17:58.171Z",
+        "confidence": "90.0%"
+      },
+      {
+        "description": "LLM call - Coding help",
+        "input": "code_help = llm(\"Write a Python function to reverse a string\")",
+        "success": true,
+        "output": "There are several ways to reverse a string in Python. Here are three common approaches:\n\n**Method 1: Slicing**\n\nThis is the most concise and Pythonic way:\n\n```python\ndef reverse_string_slicing(s):\n  \"\"\"Reverses a string using slicing.\n\n  Args:\n    s: The input string.\n\n  Returns:\n    The reversed string.\n  \"\"\"\n  return s[::-1]\n\n# Example usage\nstring = \"hello\"\nreversed_string = reverse_string_slicing(string)\nprint(f\"Reversed string: {reversed_string}\")  # Output: Reversed string: olleh\n```\n\n**Method 2: `reversed()` function and `join()` method**\n\nThis method uses the built-in `reversed()` function, which returns an iterator, and the `join()` method to concatenate the characters back into a string:\n\n```python\ndef reverse_string_reversed(s):\n  \"\"\"Reverses a string using reversed() and join().\n\n  Args:\n    s: The input string.\n\n  Returns:\n    The reversed string.\n  \"\"\"\n  return \"\".join(reversed(s))\n\n# Example usage\nstring = \"hello\"\nreversed_string = reverse_string_reversed(string)\nprint(f\"Reversed string: {reversed_string}\")  # Output: Reversed string: olleh\n```\n\n**Method 3: For loop**\n\nThis is a more explicit approach, iterating through the string from the end to the beginning:\n\n```python\ndef reverse_string_loop(s):\n  \"\"\"Reverses a string using a for loop.\n\n  Args:\n    s: The input string.\n\n  Returns:\n    The reversed string.\n  \"\"\"\n  reversed_s = \"\"\n  for i in range(len(s) - 1, -1, -1):\n    reversed_s += s[i]\n  return reversed_s\n\n# Example usage\nstring = \"hello\"\nreversed_string = reverse_string_loop(string)\nprint(f\"Reversed string: {reversed_string}\")  # Output: Reversed string: olleh\n```\n\nAll three functions achieve the same result.  The slicing method (`[::-1]`) is generally preferred for its brevity and efficiency.  The `reversed()` and `join()` method is also efficient and readable. The for loop is useful for understanding the underlying process but is less efficient than the other two.  Choose the method that best suits your needs and coding style.\n (~90.0%)",
+        "timestamp": "2025-06-05T00:17:59.890Z",
+        "confidence": "90.0%"
+      }
+    ],
+    "uncertainIf": [
+      {
+        "description": "Uncertain if with high confidence",
+        "input": "diagnosis = llm(\"Is it likely to rain tomorrow?\")\nresult1 = 0\nuncertain if (diagnosis ~> 0.8) {\n  high { result1 = 1 }\n  medium { result1 = 2 }\n  low { result1 = 3 }\n}\nresult1",
+        "success": true,
+        "output": "1",
+        "timestamp": "2025-06-05T00:18:04.823Z"
+      },
+      {
+        "description": "Uncertain if with weather decision",
+        "input": "weather_confidence = llm(\"Rate the accuracy of this weather forecast: sunny, 75°F\")\ndecision = \"\"\nuncertain if (weather_confidence ~> 0.7) {\n  high { decision = \"Plan outdoor picnic\" }\n  medium { decision = \"Have backup indoor plan\" }\n  low { decision = \"Stay inside completely\" }\n}\ndecision",
+        "success": true,
+        "output": "Plan outdoor picnic",
+        "timestamp": "2025-06-05T00:18:06.517Z"
+      }
+    ],
+    "contextManagement": [
+      {
+        "description": "Context block execution",
+        "input": "in context DataAnalysis {\n  research_topic = \"artificial intelligence\"\n  findings = llm(\"What are the latest trends in \" + research_topic + \"?\")\n}\nfindings",
+        "success": false,
+        "output": "",
+        "timestamp": "2025-06-05T00:18:08.748Z",
+        "error": "Undefined variable: findings"
+      },
+      {
+        "description": "Multiple context usage",
+        "input": "in context MedicalResearch {\n  symptoms = llm(\"List 3 common symptoms of the flu\")\n}\nin context TreatmentPlan {\n  treatment = llm(\"What are home remedies for flu symptoms?\")\n}\ncombined = symptoms + \" Treatment: \" + treatment",
+        "success": false,
+        "output": "",
+        "timestamp": "2025-06-05T00:18:14.554Z",
+        "error": "Undefined variable: symptoms"
+      }
+    ],
+    "complexScenarios": [
+      {
+        "description": "AI-powered decision making system",
+        "input": "patient_symptoms = llm(\"A patient has fever, cough, and fatigue. What could this indicate?\")\nconfidence_assessment = llm(\"On a scale of 0-1, how confident are you in this diagnosis?\")\n\ndecision_point = patient_symptoms ~> 0.75\nrecommendation = \"\"\n\nuncertain if (decision_point ~> 0.8) {\n  high { \n    recommendation = \"Schedule immediate consultation\"\n    priority = \"HIGH\"\n  }\n  medium { \n    recommendation = \"Monitor symptoms for 24-48 hours\"\n    priority = \"MEDIUM\"\n  }\n  low { \n    recommendation = \"Continue home care and rest\"\n    priority = \"LOW\"\n  }\n}\n\nfinal_report = \"Assessment: \" + patient_symptoms + \" | Recommendation: \" + recommendation",
+        "success": true,
+        "output": "Assessment: Fever, cough, and fatigue are very common symptoms that could indicate a wide range of illnesses.  Some possibilities include:\n\n* **Common cold:** This is the most likely cause, particularly if symptoms are mild.\n* **Influenza (flu):**  Usually more severe than a cold, with more pronounced fatigue and potentially body aches.\n* **COVID-19:**  This is a serious consideration, especially given the ongoing pandemic.  Symptoms can range from mild to severe.\n* **Bronchitis:** Inflammation of the bronchial tubes, often causing a persistent cough.\n* **Pneumonia:** Infection of the lungs, often with more severe symptoms like shortness of breath.\n* **Other respiratory infections:**  Various viruses and bacteria can cause similar symptoms.\n* **Other illnesses:** In some cases, these symptoms could be related to other conditions, such as allergies, certain autoimmune diseases, or even heart problems (though less likely without other symptoms).\n\n**It is crucial to note:** This is not an exhaustive list, and this information is not a substitute for medical advice.  **A doctor needs to evaluate the patient to determine the underlying cause.**  The severity of the symptoms, the patient's medical history, and other factors will all be considered in making a diagnosis.  If the patient is experiencing these symptoms, they should seek medical attention.\n | Recommendation: Schedule immediate consultation (~90.0%)",
+        "timestamp": "2025-06-05T00:18:20.597Z",
+        "confidence": "90.0%"
+      },
+      {
+        "description": "Multi-step research workflow",
+        "input": "research_question = \"What is quantum computing?\"\ninitial_research = llm(research_question)\nfollow_up = llm(\"Based on this: \" + initial_research + \" - What are the main challenges?\")\napplications = llm(\"What are 3 practical applications of quantum computing?\")\n\ncomprehensive_report = \"Research: \" + initial_research + \" | Challenges: \" + follow_up + \" | Applications: \" + applications",
+        "success": false,
+        "output": "",
+        "timestamp": "2025-06-05T00:18:24.377Z",
+        "error": "llm() first argument must be a string"
+      },
+      {
+        "description": "Confidence-based content filtering",
+        "input": "content_check = llm(\"Is this text appropriate for children: 'The quick brown fox jumps over the lazy dog'?\")\nsafety_score = content_check ~> 0.9\n\nfilter_result = \"\"\nuncertain if (safety_score ~> 0.8) {\n  high { filter_result = \"APPROVED: Content is safe\" }\n  medium { filter_result = \"REVIEW: Manual check needed\" }\n  low { filter_result = \"BLOCKED: Content flagged\" }\n}\nfilter_result",
+        "success": true,
+        "output": "APPROVED: Content is safe",
+        "timestamp": "2025-06-05T00:18:29.013Z"
+      }
+    ],
+    "agentSystem": [
+      {
+        "description": "Agent system declaration",
+        "input": "agents {\n  researcher: Agent { confidence: 0.9 }\n  writer: Agent { confidence: 0.85 }\n  reviewer: Agent { confidence: 0.95 }\n}",
+        "success": true,
+        "output": "Agent: reviewer",
+        "timestamp": "2025-06-05T00:18:30.603Z"
+      }
+    ],
+    "advancedFeatures": [
+      {
+        "description": "Chained LLM calls with confidence",
+        "input": "topic = \"sustainable energy\"\noverview = llm(\"Give me an overview of \" + topic)\ndeep_dive = llm(\"Based on this overview: \" + overview + \" - What are the biggest challenges?\")\nsolutions = llm(\"What are potential solutions to: \" + deep_dive)\n\nconfidence_chain = (overview ~> 0.8) + (deep_dive ~> 0.7) + (solutions ~> 0.9)\nfinal_summary = \"Topic: \" + topic + \" | Solutions: \" + solutions",
+        "success": false,
+        "output": "",
+        "timestamp": "2025-06-05T00:18:31.605Z",
+        "error": "llm() first argument must be a string"
+      },
+      {
+        "description": "Real-time sentiment analysis",
+        "input": "user_input = \"I love using this new programming language!\"\nsentiment = llm(\"Analyze the sentiment of this text: \" + user_input + \" - Return just: positive, negative, or neutral\")\nconfidence_level = llm(\"How confident are you in this sentiment analysis on a scale of 0-1?\")\n\nsentiment_result = sentiment ~> 0.85\nresponse = \"\"\n\nuncertain if (sentiment_result ~> 0.7) {\n  high { response = \"High confidence sentiment: \" + sentiment }\n  medium { response = \"Moderate confidence sentiment: \" + sentiment }\n  low { response = \"Low confidence, manual review needed\" }\n}\nresponse",
+        "success": true,
+        "output": "High confidence sentiment: positive\n (~90.0%)",
+        "timestamp": "2025-06-05T00:18:37.270Z",
+        "confidence": "90.0%"
+      }
+    ]
+  },
+  "insights": {
+    "averageConfidenceScores": [
+      85,
+      70,
+      90,
+      90,
+      90,
+      90,
+      90,
+      90,
+      90
+    ],
+    "commonErrors": [
+      "Expected number after '~>'",
+      "Undefined variable: findings",
+      "Undefined variable: symptoms",
+      "llm() first argument must be a string",
+      "llm() first argument must be a string"
+    ],
+    "successfulLLMCalls": 5,
+    "totalLLMCalls": 6
+  }
+}
