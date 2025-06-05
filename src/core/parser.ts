@@ -132,11 +132,7 @@ export class Parser {
     this.consume(TokenType.LEFT_PAREN, "Expected '(' after 'uncertain if'");
     
     const condition = this.expression();
-    let threshold = 0.5; // default
-    
-    if (condition instanceof ConfidenceExpression) {
-      threshold = condition.confidence;
-    }
+    const threshold = 0.5; // default threshold, actual evaluation happens at runtime
     
     this.consume(TokenType.RIGHT_PAREN, "Expected ')' after condition");
     this.consume(TokenType.LEFT_BRACE, "Expected '{' after condition");
@@ -245,10 +241,10 @@ export class Parser {
     
     if (this.match(TokenType.CONFIDENCE_ARROW)) {
       const confidence = this.primary();
-      if (confidence instanceof NumberLiteral) {
-        return new ConfidenceExpression(expr!, confidence.value);
+      if (confidence) {
+        return new ConfidenceExpression(expr!, confidence);
       }
-      throw new ParseError("Expected number after '~>'", this.previous());
+      throw new ParseError("Expected expression after '~>'", this.previous());
     }
     
     return expr;

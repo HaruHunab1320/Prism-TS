@@ -60,7 +60,7 @@ export class ConfidenceExpression extends Expression {
   
   constructor(
     public expression: Expression,
-    public confidence: number
+    public confidence: Expression
   ) {
     super();
   }

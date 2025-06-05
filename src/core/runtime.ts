@@ -184,6 +184,11 @@ export class Environment {
 
     this.variables.set(name, value);
   }
+
+  // Method to get all variables in current scope (for context copying)
+  getAllVariables(): Map<string, Value> {
+    return new Map(this.variables);
+  }
 }
 
 export class Interpreter {
@@ -206,7 +211,15 @@ export class Interpreter {
       }
 
       const promptValue = args[0];
-      if (!(promptValue instanceof StringValue)) {
+      let promptString: string;
+      
+      // Handle different value types for the prompt
+      if (promptValue instanceof StringValue) {
+        promptString = promptValue.value;
+      } else if (promptValue instanceof ConfidenceValue && promptValue.value instanceof StringValue) {
+        // Handle confident string values
+        promptString = (promptValue.value as StringValue).value;
+      } else {
         throw new RuntimeError('llm() first argument must be a string');
       }
 
@@ -216,7 +229,7 @@ export class Interpreter {
       }
 
       try {
-        const request = new LLMRequest(promptValue.value);
+        const request = new LLMRequest(promptString);
         const response = await provider.complete(request);
         
         return new ConfidenceValue(
@@ -475,8 +488,19 @@ export class Interpreter {
 
   private async interpretConfidenceExpression(node: ConfidenceExpression): Promise<Value> {
     const expression = await this.interpret(node.expression);
-    const confidence = new ConfidenceLib(node.confidence);
+    const confidenceValue = await this.interpret(node.confidence);
     
+    // Extract numeric value from the confidence expression
+    let confidenceNumber: number;
+    if (confidenceValue instanceof NumberValue) {
+      confidenceNumber = confidenceValue.value;
+    } else if (confidenceValue instanceof ConfidenceValue && confidenceValue.value instanceof NumberValue) {
+      confidenceNumber = (confidenceValue.value as NumberValue).value;
+    } else {
+      throw new RuntimeError('Confidence value must be a number', node);
+    }
+    
+    const confidence = new ConfidenceLib(confidenceNumber);
     return new ConfidenceValue(expression, confidence);
   }
 
@@ -529,7 +553,20 @@ export class Interpreter {
     this.contextManager.enterContext(node.contextName);
 
     try {
-      const result = await this.interpret(node.body);
+      let result: Value;
+      
+      // Special handling for context: if body is a BlockStatement, 
+      // execute its statements directly without creating a new scope
+      if (node.body.type === 'BlockStatement') {
+        const blockBody = node.body as BlockStatement;
+        result = new NumberValue(0); // default
+        
+        for (const statement of blockBody.statements) {
+          result = await this.interpret(statement);
+        }
+      } else {
+        result = await this.interpret(node.body);
+      }
       
       // Handle context shifting
       if (node.shiftTo) {
@@ -541,6 +578,7 @@ export class Interpreter {
       this.contextManager.exitContext();
     }
   }
+
 
   private async interpretAgentDeclaration(node: AgentDeclaration): Promise<Value> {
     // For now, just return a placeholder value
