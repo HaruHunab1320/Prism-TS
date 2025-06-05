@@ -217,7 +217,17 @@ export class ClaudeProvider implements LLMProvider {
     baseUrl: string,
     apiVersion: string
   ): Promise<any> {
-    const { default: fetch } = await import('node-fetch');
+    // Try to use Node.js built-in fetch (Node 18+), fallback to node-fetch
+    let fetch: any;
+    try {
+      fetch = globalThis.fetch;
+      if (!fetch) {
+        fetch = (await import('node-fetch')).default;
+      }
+    } catch {
+      fetch = (await import('node-fetch')).default;
+    }
+    
     const url = `${baseUrl}${endpoint}`;
     
     const requestConfig = {
@@ -306,10 +316,10 @@ export class GeminiProvider implements LLMProvider {
   }
 
   async complete(request: LLMRequest): Promise<LLMResponse> {
-    const model = request.options.model || this.config.model || 'gemini-pro';
+    const model = request.options.model || this.config.model || 'gemini-1.5-flash';
     const timeout = request.options.timeout || this.config.timeout || 30000;
     const baseUrl = this.config.baseUrl || 'https://generativelanguage.googleapis.com';
-    const apiVersion = this.config.apiVersion || 'v1';
+    const apiVersion = this.config.apiVersion || 'v1beta';
     
     try {
       const response = await this.makeGeminiApiCall(`${baseUrl}/${apiVersion}/models/${model}:generateContent`, {
@@ -336,7 +346,7 @@ export class GeminiProvider implements LLMProvider {
 
   async embed(text: string): Promise<number[]> {
     const baseUrl = this.config.baseUrl || 'https://generativelanguage.googleapis.com';
-    const apiVersion = this.config.apiVersion || 'v1';
+    const apiVersion = this.config.apiVersion || 'v1beta';
     
     try {
       const response = await this.makeGeminiApiCall(`${baseUrl}/${apiVersion}/models/embedding-001:embedContent`, {
@@ -354,7 +364,17 @@ export class GeminiProvider implements LLMProvider {
   }
 
   private async makeGeminiApiCall(url: string, data: unknown, timeout?: number): Promise<any> {
-    const { default: fetch } = await import('node-fetch');
+    // Try to use Node.js built-in fetch (Node 18+), fallback to node-fetch
+    let fetch: any;
+    try {
+      fetch = globalThis.fetch;
+      if (!fetch) {
+        fetch = (await import('node-fetch')).default;
+      }
+    } catch {
+      fetch = (await import('node-fetch')).default;
+    }
+    
     const fullUrl = `${url}?key=${this.apiKey}`;
     
     const requestConfig = {

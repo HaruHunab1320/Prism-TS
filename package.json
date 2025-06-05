@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "@types/node-fetch": "^2.6.12",
+    "dotenv": "^16.5.0",
     "node-fetch": "^3.3.2"
   }
 }

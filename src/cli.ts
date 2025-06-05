@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 
+// Load environment variables from .env file early
+try {
+  require('dotenv').config();
+} catch {
+  // dotenv not available or .env file doesn't exist, continue without it
+}
+
 import * as readline from 'readline';
 import { PrismREPL } from './repl';
 import { LLMConfigManager } from './llm';

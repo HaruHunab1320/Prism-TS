@@ -329,6 +329,7 @@ Happy coding with Prism! 🚀
     const availableProviders = LLMConfigManager.getAvailableProviders();
     const defaultProvider = LLMConfigManager.getDefaultProvider();
     const currentProvider = this.runtime.getDefaultLLMProvider();
+    const configStatus = LLMConfigManager.getConfigStatus();
     
     return `
 🤖 LLM Provider Information
@@ -337,13 +338,11 @@ Available Providers: ${availableProviders.join(', ')}
 Default Provider: ${defaultProvider}
 Current Provider: ${currentProvider || 'none'}
 
-Provider Status:
-${availableProviders.map(name => {
-  const status = name === 'mock' ? '🧪 Mock (testing only)' : 
-                 name === 'claude' ? '🤖 Claude (Anthropic)' :
-                 name === 'gemini' ? '🌟 Gemini (Google)' : name;
-  const current = name === currentProvider ? ' ← current' : '';
-  return `  • ${name}: ${status}${current}`;
+🔍 Configuration Status:
+${configStatus.map(item => {
+  const current = item.provider === currentProvider ? ' ← current' : '';
+  const details = item.details ? `\n    ${item.details}` : '';
+  return `  • ${item.provider}: ${item.status}${current}${details}`;
 }).join('\n')}
 
 Configuration Help:

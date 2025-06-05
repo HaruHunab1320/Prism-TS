@@ -1,5 +1,12 @@
 import { ClaudeProvider, GeminiProvider, MockLLMProvider, LLMProvider, LLMError } from './provider';
 
+// Load environment variables from .env file
+try {
+  require('dotenv').config();
+} catch {
+  // dotenv not available or .env file doesn't exist, continue without it
+}
+
 export interface LLMProviderConfig {
   type: 'claude' | 'gemini' | 'mock';
   apiKey?: string;
@@ -116,6 +123,68 @@ export class LLMConfigManager {
     return errors;
   }
 
+  static validateApiKey(provider: 'claude' | 'gemini', apiKey: string): boolean {
+    if (!apiKey || typeof apiKey !== 'string') {
+      return false;
+    }
+
+    switch (provider) {
+      case 'claude':
+        // Claude API keys typically start with 'sk-ant-'
+        return apiKey.startsWith('sk-ant-') && apiKey.length > 20;
+      case 'gemini':
+        // Gemini API keys are typically 39 characters and start with 'AIza'
+        return apiKey.startsWith('AIza') && apiKey.length === 39;
+      default:
+        return false;
+    }
+  }
+
+  static getConfigStatus(): { provider: string; status: string; details?: string }[] {
+    const status: { provider: string; status: string; details?: string }[] = [];
+
+    // Check Claude
+    const claudeKey = this.getApiKey('claude');
+    if (claudeKey) {
+      status.push({
+        provider: 'claude',
+        status: this.validateApiKey('claude', claudeKey) ? '✅ Valid' : '⚠️  Invalid format',
+        details: this.validateApiKey('claude', claudeKey) ? undefined : 'Expected format: sk-ant-...'
+      });
+    } else {
+      status.push({
+        provider: 'claude',
+        status: '❌ Missing',
+        details: 'Set CLAUDE_API_KEY or ANTHROPIC_API_KEY'
+      });
+    }
+
+    // Check Gemini
+    const geminiKey = this.getApiKey('gemini');
+    if (geminiKey) {
+      status.push({
+        provider: 'gemini',
+        status: this.validateApiKey('gemini', geminiKey) ? '✅ Valid' : '⚠️  Invalid format',
+        details: this.validateApiKey('gemini', geminiKey) ? undefined : 'Expected format: AIza... (39 chars)'
+      });
+    } else {
+      status.push({
+        provider: 'gemini',
+        status: '❌ Missing',
+        details: 'Set GEMINI_API_KEY or GOOGLE_API_KEY'
+      });
+    }
+
+    // Mock is always available
+    status.push({
+      provider: 'mock',
+      status: '✅ Available',
+      details: 'Testing provider (always available)'
+    });
+
+    return status;
+  }
+
   static getAvailableProviders(): string[] {
     const providers: string[] = ['mock'];
 
@@ -134,27 +203,45 @@ export class LLMConfigManager {
     return `
 LLM Provider Configuration Help:
 
-Environment Variables:
+🔧 Configuration Methods:
+  1. Environment Variables (recommended for production)
+  2. .env file (recommended for development)
+
+📝 Environment Variables:
   CLAUDE_API_KEY or ANTHROPIC_API_KEY - Your Anthropic Claude API key
   GEMINI_API_KEY or GOOGLE_API_KEY     - Your Google Gemini API key
 
-Available Providers:
-  - claude: Claude 3 models from Anthropic
-  - gemini: Gemini models from Google
-  - mock:   Mock provider for testing (always available)
-
-Current Status:
-  Available providers: ${this.getAvailableProviders().join(', ')}
-  Default provider: ${this.getDefaultProvider()}
-
-To set up a provider:
-  1. Get an API key from the provider
-  2. Set the appropriate environment variable
+📁 .env File Setup:
+  1. Copy .env.example to .env
+  2. Add your API keys to the .env file
   3. Restart Prism
 
-Example:
-  export CLAUDE_API_KEY="your-api-key-here"
-  export GEMINI_API_KEY="your-api-key-here"
+🌐 Get API Keys:
+  Claude:  https://console.anthropic.com/
+  Gemini:  https://aistudio.google.com/app/apikey
+
+🔍 Current Status:
+  Available providers: ${this.getAvailableProviders().join(', ')}
+  Default provider: ${this.getDefaultProvider()}
+  .env file: ${this.checkEnvFile() ? '✅ Found' : '❌ Not found'}
+
+💡 Quick Setup:
+  # Using environment variables
+  export CLAUDE_API_KEY="your-claude-api-key"
+  export GEMINI_API_KEY="your-gemini-api-key"
+  
+  # Or create .env file
+  cp .env.example .env
+  # Edit .env file with your API keys
 `;
+  }
+
+  private static checkEnvFile(): boolean {
+    try {
+      const fs = require('fs');
+      return fs.existsSync('.env');
+    } catch {
+      return false;
+    }
   }
 }
