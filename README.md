@@ -15,6 +15,7 @@ Prism is a domain-specific programming language that makes working with AI model
 - **🎯 Confidence-Aware Values**: Every value can carry confidence information (`100 ~> 0.85`)
 - **🤔 Uncertain Control Flow**: Branch logic based on confidence levels (`uncertain if`)
 - **🧠 Native LLM Integration**: Built-in `llm()` function with automatic confidence handling
+- **⚡ Rich Operator Set**: Comprehensive uncertainty-aware operators (`~~`, `~??`, `~@>`, `~||>`, etc.)
 - **📦 Context Management**: Isolated execution environments for complex AI workflows
 - **🔗 Real AI Providers**: Support for Claude (Anthropic) and Gemini (Google)
 - **✅ 100% Test Coverage**: Production-ready with comprehensive validation
@@ -24,9 +25,26 @@ Prism is a domain-specific programming language that makes working with AI model
 **✅ v1.0 Production Ready** - 100% success rate on comprehensive test suite with real AI integration
 
 - 22/22 tests passing with real Gemini API
+- **Complete operator set**: 18 confidence-aware operators implemented and tested
 - All language features fully implemented
 - TypeScript runtime with complete AST
 - Interactive REPL with live AI capabilities
+
+### Implemented Operators
+
+| Operator | Purpose | Example |
+|----------|---------|---------|
+| `~>` | Confidence assignment | `value ~> 0.85` |
+| `<~` | Confidence extraction | `<~ confident_value` |
+| `~~` | Confidence chaining | `input ~~ process ~~ output` |
+| `~??` | Confidence coalesce | `uncertain ~?? fallback` |
+| `~&&` | Confident AND | `condition1 ~&& condition2` |
+| `~\|\|` | Confident OR | `option1 ~\|\| option2` |
+| `~+`, `~-`, `~*`, `~/` | Confident arithmetic | `measurement1 ~+ measurement2` |
+| `~==`, `~!=`, `~<`, `~>=`, `~<=` | Confident comparison | `sensor ~>= threshold` |
+| `~.` | Confident property access | `object ~. property` |
+| `~\|\|>` | Parallel confidence | `model1 ~\|\|> model2` |
+| `~@>` | Threshold gate | `condition ~@> action` |
 
 ## 🏃‍♂️ Quick Start
 
@@ -119,6 +137,52 @@ data_quality = 0.85
 processed = measurement ~> data_quality
 ```
 
+### Confidence Operators
+
+Prism provides a rich set of uncertainty-aware operators for sophisticated AI workflows:
+
+#### Core Operators
+```prism
+// Confidence Extraction - Extract confidence level from values
+confidence_level = <~ measurement  // Returns 0.9
+
+// Confidence Chaining - Chain operations with confidence propagation
+result = input ~~ process ~~ validate  // Chains with minimum confidence
+
+// Confidence Coalesce - Fallback for low-confidence values
+reliable = uncertain_data ~?? fallback_data  // Uses fallback if confidence < 0.5
+```
+
+#### Logical & Arithmetic
+```prism
+// Confident logical operations
+decision = condition1 ~&& condition2  // AND with confidence propagation
+choice = option1 ~|| option2          // OR with maximum confidence
+
+// Confident arithmetic with uncertainty handling
+total = measurement1 ~+ measurement2  // Addition with minimum confidence
+average = sum ~/ count               // Division with confidence propagation
+```
+
+#### Comparison & Navigation
+```prism
+// Confident comparisons
+valid = sensor_reading ~>= threshold  // Comparison with confidence
+equal = expected ~== actual          // Equality with uncertainty
+
+// Safe property access
+property = object ~. field           // Confident navigation with fallback
+```
+
+#### Advanced Control Flow
+```prism
+// Parallel Confidence - Select highest confidence result
+best = model1_prediction ~||> model2_prediction  // Ensemble selection
+
+// Threshold Gate - Conditional execution based on confidence
+action = high_confidence_condition ~@> risky_operation  // Execute only if confident
+```
+
 ### LLM Integration
 
 The `llm()` function is a built-in that calls your configured AI provider:
@@ -182,19 +246,26 @@ final_report = summary + " | Actions: " + recommendations
 ### AI-Powered Decision System
 
 ```prism
-// Medical triage system
+// Medical triage system with confidence operators
 symptoms = llm("Patient reports: fever, cough, fatigue. Assessment?")
 confidence_check = llm("Rate diagnostic confidence 0-1 for: " + symptoms)
 
-decision_point = symptoms ~> 0.75
+// Use confidence coalesce for fallback assessment
+primary_assessment = symptoms ~?? "Unable to assess - insufficient data"
 
-uncertain if (decision_point ~> 0.8) {
+// Extract confidence for decision making
+assessment_confidence = <~ primary_assessment
+
+// Use threshold gate for automated vs manual routing
+automated_decision = primary_assessment ~@> "Proceed with automated triage"
+
+uncertain if (primary_assessment ~> 0.8) {
   high { 
     action = "Emergency consultation"
     timeframe = "Immediate"
   }
   medium { 
-    action = "Schedule appointment"
+    action = "Schedule appointment" 
     timeframe = "24-48 hours"
   }
   low { 
@@ -203,18 +274,32 @@ uncertain if (decision_point ~> 0.8) {
   }
 }
 
-report = "Assessment: " + symptoms + " | Action: " + action
+report = "Assessment: " + primary_assessment + " | Confidence: " + assessment_confidence + " | Action: " + action
 ```
 
 ### Content Filtering Pipeline
 
 ```prism
 content = "User submitted content here..."
-safety_check = llm("Is this appropriate for children: " + content)
-safety_score = safety_check ~> 0.9
 
-filter_result = ""
-uncertain if (safety_score ~> 0.8) {
+// Multi-model ensemble for better accuracy
+safety_model1 = llm("Rate content safety 0-1: " + content) 
+safety_model2 = llm("Child-appropriate content check: " + content)
+toxicity_check = llm("Detect toxic language in: " + content)
+
+// Use parallel confidence to select best assessment
+best_safety = safety_model1 ~||> safety_model2
+
+// Combine with toxicity using confident AND
+final_safety = best_safety ~&& toxicity_check
+
+// Use confidence coalesce for fallback decision
+safety_decision = final_safety ~?? "MANUAL_REVIEW: Unable to assess"
+
+// Threshold gate for automated approval
+auto_approve = final_safety ~@> "AUTO_APPROVED: High confidence safe content"
+
+uncertain if (final_safety ~> 0.8) {
   high { filter_result = "APPROVED: Content is safe" }
   medium { filter_result = "REVIEW: Manual check needed" }
   low { filter_result = "BLOCKED: Content flagged" }

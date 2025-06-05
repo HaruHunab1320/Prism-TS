@@ -8,12 +8,13 @@ A comprehensive guide to programming in Prism - the AI orchestration language wi
 2. [Basic Concepts](#basic-concepts)
 3. [Data Types](#data-types)
 4. [Confidence System](#confidence-system)
-5. [Control Flow](#control-flow)
-6. [LLM Integration](#llm-integration)
-7. [Context Management](#context-management)
-8. [Best Practices](#best-practices)
-9. [Advanced Patterns](#advanced-patterns)
-10. [Troubleshooting](#troubleshooting)
+5. [Confidence Operators](#confidence-operators)
+6. [Control Flow](#control-flow)
+7. [LLM Integration](#llm-integration)
+8. [Context Management](#context-management)
+9. [Best Practices](#best-practices)
+10. [Advanced Patterns](#advanced-patterns)
+11. [Troubleshooting](#troubleshooting)
 
 ## Introduction
 
@@ -152,6 +153,290 @@ measurement = sensor_reading ~> data_quality
 // Confidence can be computed
 reliability = calculate_reliability()
 result = processed_data ~> reliability
+```
+
+## Confidence Operators
+
+Prism provides a comprehensive set of operators designed specifically for uncertainty-aware programming. These operators allow you to manipulate, combine, and control the flow of confident values in sophisticated ways.
+
+### Core Operators
+
+#### Confidence Assignment (`~>`)
+
+Assigns a confidence level to any value:
+
+```prism
+// Basic confidence assignment
+measurement = 100 ~> 0.85
+text_data = "analysis result" ~> 0.7
+
+// Dynamic confidence from variables
+quality_score = 0.9
+processed = raw_data ~> quality_score
+
+// Confidence from expressions
+confidence_level = calculate_accuracy()
+prediction = model_output ~> confidence_level
+```
+
+#### Confidence Extraction (`<~`)
+
+Extracts the confidence level from confident values:
+
+```prism
+// Extract confidence as a number
+measurement = 100 ~> 0.85
+confidence_value = <~ measurement  // Returns 0.85
+
+// Use extracted confidence in calculations
+threshold = 0.8
+is_reliable = (<~ measurement) >= threshold
+
+// Extract from LLM responses
+response = llm("Analyze this data")
+response_confidence = <~ response
+```
+
+#### Confidence Chaining (`~~`)
+
+Chains operations while propagating confidence using minimum confidence:
+
+```prism
+// Basic chaining
+input = data ~> 0.9
+processed = input ~~ transform ~~ validate  // Confidence: min(0.9, transform_conf, validate_conf)
+
+// Multi-step processing pipeline
+raw_data = sensor_reading ~> 0.8
+analysis = raw_data ~~ clean ~~ normalize ~~ analyze
+
+// Chaining with LLM calls
+initial = llm("First analysis") 
+refined = initial ~~ llm("Refine this analysis")
+final = refined ~~ llm("Final conclusions")
+```
+
+#### Confidence Coalesce (`~??`)
+
+Provides fallback for low-confidence values (threshold: 0.5):
+
+```prism
+// Basic coalesce - use backup if primary has low confidence
+primary = uncertain_source ~> 0.3
+backup = reliable_source ~> 0.9
+result = primary ~?? backup  // Uses backup (primary confidence < 0.5)
+
+// Chain multiple fallbacks
+result = source1 ~?? source2 ~?? source3 ~?? "default value"
+
+// LLM fallback pattern
+ai_response = llm("Complex analysis")
+fallback = "Analysis unavailable"
+safe_result = ai_response ~?? fallback
+```
+
+### Logical Operators
+
+#### Confident AND (`~&&`)
+
+Logical AND with confidence propagation (minimum confidence):
+
+```prism
+// Both conditions must be true and confident
+condition1 = check1 ~> 0.9
+condition2 = check2 ~> 0.7
+combined = condition1 ~&& condition2  // true with 70% confidence
+
+// Multi-condition validation
+valid_data = data_complete ~&& data_accurate ~&& data_recent
+
+// Safety checks
+safety_check = system_stable ~&& permissions_valid ~&& resources_available
+```
+
+#### Confident OR (`~||`)
+
+Logical OR with confidence propagation (maximum confidence):
+
+```prism
+// At least one condition must be true
+option1 = check1 ~> 0.6
+option2 = check2 ~> 0.8
+choice = option1 ~|| option2  // Uses higher confidence (80%)
+
+// Multiple backup options
+available = server1_up ~|| server2_up ~|| server3_up
+
+// Decision alternatives
+proceed = user_approved ~|| auto_approved ~|| emergency_override
+```
+
+### Arithmetic Operators
+
+All arithmetic operators propagate confidence using minimum confidence:
+
+#### Confident Addition (`~+`)
+
+```prism
+// Add measurements with uncertainty
+temp1 = 20.5 ~> 0.9
+temp2 = 22.1 ~> 0.8
+average_temp = (temp1 ~+ temp2) ~/ 2  // Confidence: 80%
+
+// Accumulate uncertain values
+total = value1 ~+ value2 ~+ value3
+```
+
+#### Confident Subtraction (`~-`)
+
+```prism
+// Calculate differences with uncertainty
+baseline = 100 ~> 0.9
+measurement = 85 ~> 0.7
+difference = measurement ~- baseline  // -15 (~70.0%)
+```
+
+#### Confident Multiplication (`~*`)
+
+```prism
+// Scale with uncertainty
+base_value = 50 ~> 0.8
+multiplier = 1.5 ~> 0.9
+scaled = base_value ~* multiplier  // 75 (~80.0%)
+```
+
+#### Confident Division (`~/)
+
+```prism
+// Division with error propagation
+distance = 120 ~> 0.9
+time = 4 ~> 0.7
+speed = distance ~/ time  // 30 (~70.0%)
+```
+
+### Comparison Operators
+
+All comparison operators propagate confidence using minimum confidence:
+
+```prism
+// Confident equality
+expected = 42 ~> 0.9
+actual = 42 ~> 0.8
+is_equal = expected ~== actual  // true (~80.0%)
+
+// Confident inequality
+is_different = value1 ~!= value2
+
+// Confident ordering
+is_greater = sensor_reading ~> threshold_value
+is_valid = measurement ~>= minimum_required ~&& measurement ~<= maximum_allowed
+```
+
+### Navigation Operators
+
+#### Confident Property Access (`~.`)
+
+Safe property access with confidence reduction (90% factor):
+
+```prism
+// Safe navigation with uncertainty
+user_data = fetch_user() ~> 0.9
+user_name = user_data ~. name  // Confidence reduced to ~81%
+
+// Chained property access
+profile = user ~. profile ~. settings ~. theme
+
+// Fallback pattern
+display_name = user ~. profile ~. display_name ~?? user ~. username ~?? "Anonymous"
+```
+
+### Advanced Control Flow Operators
+
+#### Parallel Confidence (`~||>`)
+
+Selects the result with the highest confidence (ensemble pattern):
+
+```prism
+// AI model ensemble
+model1_prediction = llm("Model 1 analysis: " + data) 
+model2_prediction = llm("Model 2 analysis: " + data)
+model3_prediction = llm("Model 3 analysis: " + data)
+
+// Select best prediction
+best_prediction = model1_prediction ~||> model2_prediction ~||> model3_prediction
+
+// Multi-source data fusion
+source1 = sensor1_reading ~> 0.7
+source2 = sensor2_reading ~> 0.9
+source3 = calculated_value ~> 0.6
+most_reliable = source1 ~||> source2 ~||> source3  // Uses source2
+```
+
+#### Threshold Gate (`~@>`)
+
+Conditional execution based on confidence threshold (70% default):
+
+```prism
+// Execute action only if condition is confident enough
+condition = safety_check ~> 0.85
+action = "proceed with operation"
+result = condition ~@> action  // Executes action (85% > 70%)
+
+// Automated decision making
+ai_confidence = llm("Risk assessment") 
+auto_approval = "automatically approved"
+decision = ai_confidence ~@> auto_approval
+
+// Multi-level gating
+primary_check = validate_input()
+secondary_check = primary_check ~@> verify_security()
+final_action = secondary_check ~@> execute_operation()
+
+// Threshold-based workflow
+low_confidence_input = uncertain_data ~> 0.5
+risky_operation = "dangerous action"
+safe_result = low_confidence_input ~@> risky_operation  // Returns input with reduced confidence
+```
+
+### Operator Precedence
+
+Prism operators follow this precedence order (highest to lowest):
+
+1. **Property Access**: `.`, `~.`
+2. **Unary**: `!`, `-`, `~`, `<~`
+3. **Multiplicative**: `*`, `/`, `~*`, `~/`
+4. **Additive**: `+`, `-`, `~+`, `~-`
+5. **Comparison**: `<`, `<=`, `>`, `>=`, `~<`, `~<=`, `~>=`
+6. **Equality**: `==`, `!=`, `~==`, `~!=`
+7. **Logical AND**: `&&`, `~&&`
+8. **Confidence Coalesce**: `~??`
+9. **Logical OR**: `||`, `~||`, `~||>`
+10. **Threshold Gate**: `~@>`
+11. **Confidence Chaining**: `~~`
+12. **Confidence Assignment**: `~>`
+
+```prism
+// Precedence example
+result = a ~+ b ~* c ~> 0.8 ~?? fallback ~@> action
+// Evaluates as: ((a ~+ (b ~* c)) ~> 0.8) ~?? fallback) ~@> action
+```
+
+### Operator Combinations
+
+Combine operators for sophisticated uncertainty handling:
+
+```prism
+// Multi-stage processing with fallbacks
+processed = (raw_data ~~ clean ~~ validate) ~?? backup_data ~@> final_action
+
+// Ensemble with threshold control
+best_model = (model1 ~||> model2 ~||> model3) ~@> production_deployment
+
+// Confidence-aware aggregation
+reliable_average = (sensor1 ~+ sensor2 ~+ sensor3) ~/ 3 ~@> control_system
+
+// Safe navigation with fallbacks
+user_preference = user ~. settings ~. theme ~?? "default" ~@> apply_theme()
 ```
 
 ## Control Flow
@@ -473,21 +758,27 @@ uncertain if (final_confidence ~> 0.8) {
 }
 ```
 
-### 2. Confidence Voting
+### 2. AI Ensemble with Parallel Confidence
 
 ```prism
-// Multiple AI opinions
-opinion1 = llm("Expert 1 perspective: " + question)
-opinion2 = llm("Expert 2 perspective: " + question)  
-opinion3 = llm("Expert 3 perspective: " + question)
+// Multiple AI model ensemble using parallel confidence
+model1 = llm("GPT analysis: " + question)
+model2 = llm("Claude analysis: " + question)  
+model3 = llm("Gemini analysis: " + question)
 
-// Aggregate opinions
-consensus = llm("Synthesize these expert opinions: " + opinion1 + " | " + opinion2 + " | " + opinion3)
+// Select best result automatically
+best_analysis = model1 ~||> model2 ~||> model3
 
-uncertain if (consensus ~> 0.8) {
-  high { high_confidence_decision() }
-  medium { moderate_confidence_decision() }
-  low { seek_additional_opinions() }
+// Chain with validation
+validated = best_analysis ~~ llm("Validate this analysis: " + best_analysis)
+
+// Use threshold gate for automated vs manual processing
+final_decision = validated ~@> "auto_process" ~?? "manual_review_required"
+
+uncertain if (final_decision ~> 0.8) {
+  high { automated_processing(final_decision) }
+  medium { human_in_the_loop(final_decision) }
+  low { escalate_to_expert(final_decision) }
 }
 ```
 
@@ -513,7 +804,59 @@ uncertain if (initial_attempt ~> 0.7) {
 }
 ```
 
-### 4. Confidence Cascading
+### 4. Advanced Operator Composition
+
+```prism
+// Sophisticated uncertainty handling with multiple operators
+raw_sensor_data = collect_sensor_readings()
+
+// Multi-step processing with confidence tracking
+cleaned = raw_sensor_data ~~ data_cleaning_pipeline
+validated = cleaned ~~ validation_checks
+calibrated = validated ~~ calibration_adjustments
+
+// Extract confidence for decision making
+processing_confidence = <~ calibrated
+
+// Parallel model ensemble for analysis
+analysis1 = llm("Statistical analysis: " + calibrated)
+analysis2 = llm("ML model prediction: " + calibrated) 
+analysis3 = llm("Expert system analysis: " + calibrated)
+
+// Select best analysis result
+best_analysis = analysis1 ~||> analysis2 ~||> analysis3
+
+// Combine processing and analysis confidence
+combined_result = calibrated ~&& best_analysis
+
+// Multi-level threshold gating
+preliminary_decision = combined_result ~@> "preliminary_approval"
+management_review = preliminary_decision ~@> "management_approved" 
+final_authorization = management_review ~@> "fully_authorized"
+
+// Confidence-aware fallback chain
+reliable_decision = final_authorization ~?? preliminary_decision ~?? "manual_review_required"
+
+// Extract final confidence for reporting
+final_confidence = <~ reliable_decision
+
+uncertain if (reliable_decision ~> 0.9) {
+  high { 
+    execute_automated_action(reliable_decision)
+    log_high_confidence_decision(final_confidence)
+  }
+  medium { 
+    schedule_human_review(reliable_decision)
+    log_medium_confidence_decision(final_confidence)
+  }
+  low { 
+    escalate_to_expert_panel(reliable_decision)
+    log_low_confidence_decision(final_confidence)
+  }
+}
+```
+
+### 5. Confidence Cascading
 
 ```prism
 // Start with high-level analysis
