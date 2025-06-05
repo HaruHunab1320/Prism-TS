@@ -63,6 +63,14 @@ describe('Tokenizer', () => {
         { type: TokenType.EOF, value: '', line: 1, column: 2 },
       ]);
     });
+
+    it('should tokenize confidence extraction operator', () => {
+      const tokens = tokenize('<~');
+      expect(tokens).toEqual([
+        { type: TokenType.CONFIDENCE_EXTRACT, value: '<~', line: 1, column: 0 },
+        { type: TokenType.EOF, value: '', line: 1, column: 2 },
+      ]);
+    });
   });
 
   describe('Keywords', () => {

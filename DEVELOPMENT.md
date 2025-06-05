@@ -78,7 +78,90 @@
 - ✅ Interactive REPL with CLI tool
 - ✅ Complete test coverage (154 passing tests)
 
-### 🔄 Future Enhancements
+### 🔄 Current Phase: Operator System Extension (Days 1-2)
+
+**Goal:** Extend the core language with comprehensive uncertainty-aware operators before building TypeScript library.
+
+#### **Day 1 Tasks - Core Confidence Operators**
+
+**Morning: Extraction & Chaining (2-3 hours)**
+- [x] **Confidence Extraction Operator (`<~`)** ✅ COMPLETED
+  - [x] Add `<~` token to lexer
+  - [x] Implement UnaryExpression node for extraction  
+  - [x] Add extraction evaluation to interpreter
+  - [x] Tests: `conf = <~ measurement` should return confidence value
+  - [x] Live testing: All scenarios working perfectly
+  
+- [ ] **Confidence Chaining Operator (`~~`)**
+  - [ ] Add `~~` token to lexer
+  - [ ] Implement BinaryExpression for chaining
+  - [ ] Add chaining evaluation with confidence propagation
+  - [ ] Tests: `result = input ~~ process1() ~~ process2()`
+
+**Afternoon: Logical Operators (2-3 hours)**
+- [ ] **Confidence Coalesce Operator (`~??`)**
+  - [ ] Add `~??` token to lexer
+  - [ ] Implement coalesce evaluation (first value with sufficient confidence)
+  - [ ] Tests: `result = primary ~?? secondary ~?? default`
+
+- [ ] **Confidence AND/OR Operators (`~&&`, `~||`)**
+  - [ ] Add `~&&` and `~||` tokens to lexer
+  - [ ] Implement confident logical operations
+  - [ ] Tests: boolean logic with confidence requirements
+
+#### **Day 2 Tasks - Arithmetic & Comparison**
+
+**Morning: Arithmetic Operators (2-3 hours)**
+- [ ] **Confident Arithmetic (`~+`, `~-`, `~*`, `~/`)**
+  - [ ] Add arithmetic operator tokens to lexer
+  - [ ] Implement confidence-aware arithmetic evaluation
+  - [ ] Confidence propagation rules for each operation
+  - [ ] Tests: `total = measurement1 ~+ measurement2`
+
+**Afternoon: Comparison & Access (2-3 hours)**
+- [ ] **Confident Comparisons (`~==`, `~!=`, `~>`, `~<`)**
+  - [ ] Add comparison operator tokens
+  - [ ] Implement confident comparison evaluation
+  - [ ] Tests: `if (score ~> threshold) { }`
+
+- [ ] **Confident Property Access (`~.`)**
+  - [ ] Add `~.` token for safe navigation
+  - [ ] Implement confident member access
+  - [ ] Tests: `value = data~.field~.subfield`
+
+#### **Day 3 Tasks - Advanced Operators (Optional)**
+
+**Morning: Parallel & Special Operators (2-3 hours)**
+- [ ] **Parallel Confidence Operator (`~||>`)**
+  - [ ] Add `~||>` token for parallel execution
+  - [ ] Implement parallel operation with best confidence selection
+  - [ ] Tests: `best = ~||> [fast(), accurate(), thorough()]`
+
+- [ ] **Threshold Gate Operator (`~@>`)**
+  - [ ] Add `~@>` token for threshold gating
+  - [ ] Implement conditional execution based on confidence
+  - [ ] Tests: `result = data ~@> 0.8 ~> expensiveOperation()`
+
+#### **Testing & Validation**
+- [ ] **Update REPL** to handle all new operators
+- [ ] **Add comprehensive tests** for operator interactions
+- [ ] **Performance testing** for complex operator chains
+- [ ] **Documentation updates** with examples for each operator
+
+#### **Integration Goals**
+- [ ] **Real-world example** using multiple operators together
+- [ ] **Medical diagnosis system** rewritten with new operators
+- [ ] **Content moderation** enhanced with operator chains
+- [ ] **Demo updates** showcasing operator power
+
+### 🎯 **Post-Operator Phase: TypeScript Library (Days 3-5)**
+
+Once operators are complete:
+- [ ] **Library Architecture Design**
+- [ ] **Core Confident<T> Type Implementation**
+- [ ] **Operator Method Implementations**
+- [ ] **Babel Plugin for Syntax Sugar**
+- [ ] **NPM Package Setup**
 
 ---
 

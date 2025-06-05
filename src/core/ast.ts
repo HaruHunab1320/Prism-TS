@@ -80,7 +80,7 @@ export class BinaryExpression extends Expression {
   }
 }
 
-export type UnaryOperator = '-' | '!' | '~';
+export type UnaryOperator = '-' | '!' | '~' | '<~';
 
 export class UnaryExpression extends Expression {
   type: NodeType = 'UnaryExpression';

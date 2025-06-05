@@ -4,6 +4,7 @@ import {
   NumberLiteral,
   StringLiteral,
   BinaryExpression,
+  UnaryExpression,
   CallExpression,
   ConfidenceExpression,
   AssignmentStatement,
@@ -87,6 +88,15 @@ describe('Parser', () => {
       const conf = stmt.expression as ConfidenceExpression;
       expect((conf.expression as IdentifierExpression).name).toBe('result');
       expect(conf.confidence).toBe(0.8);
+    });
+
+    it('should parse confidence extraction expressions', () => {
+      const program = parse('<~ measurement');
+      const stmt = program.statements[0] as ExpressionStatement;
+      expect(stmt.expression).toBeInstanceOf(UnaryExpression);
+      const unary = stmt.expression as UnaryExpression;
+      expect(unary.operator).toBe('<~');
+      expect((unary.operand as IdentifierExpression).name).toBe('measurement');
     });
   });
 

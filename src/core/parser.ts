@@ -323,7 +323,7 @@ export class Parser {
   }
 
   private unary(): Expression | null {
-    if (this.match(TokenType.NOT, TokenType.MINUS, TokenType.TILDE)) {
+    if (this.match(TokenType.NOT, TokenType.MINUS, TokenType.TILDE, TokenType.CONFIDENCE_EXTRACT)) {
       const operator = this.previous().value as UnaryOperator;
       const right = this.unary();
       return new UnaryExpression(operator, right!);

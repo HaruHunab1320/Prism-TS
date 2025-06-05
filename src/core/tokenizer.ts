@@ -38,6 +38,7 @@ export enum TokenType {
   LESS_EQUAL = 'LESS_EQUAL',
   GREATER_EQUAL = 'GREATER_EQUAL',
   CONFIDENCE_ARROW = 'CONFIDENCE_ARROW',
+  CONFIDENCE_EXTRACT = 'CONFIDENCE_EXTRACT',
   AND = 'AND',
   OR = 'OR',
   NOT = 'NOT',
@@ -163,6 +164,10 @@ export class Tokenizer {
       if (this.peek() === '=') {
         this.advance();
         return this.makeToken(TokenType.LESS_EQUAL, '<=', startColumn);
+      }
+      if (this.peek() === '~') {
+        this.advance();
+        return this.makeToken(TokenType.CONFIDENCE_EXTRACT, '<~', startColumn);
       }
       return this.makeToken(TokenType.LESS, '<', startColumn);
     }

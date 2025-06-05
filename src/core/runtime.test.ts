@@ -246,6 +246,28 @@ describe('Runtime System', () => {
       // Should use minimum confidence
       expect((result as ConfidentRuntimeValue).confidence.value).toBe(0.8);
     });
+
+    it('should extract confidence with <~ operator', async () => {
+      const program = parse(`
+        measurement = 100 ~> 0.85
+        <~ measurement
+      `);
+      const result = await runtime.execute(program);
+      
+      expect(result.type).toBe('number');
+      expect((result as NumberValue).value).toBe(0.85);
+    });
+
+    it('should return 1.0 confidence for non-confident values', async () => {
+      const program = parse(`
+        regularValue = 42
+        <~ regularValue
+      `);
+      const result = await runtime.execute(program);
+      
+      expect(result.type).toBe('number');
+      expect((result as NumberValue).value).toBe(1.0);
+    });
   });
 
   describe('Context Operations', () => {

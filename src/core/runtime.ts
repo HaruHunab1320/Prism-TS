@@ -466,6 +466,15 @@ export class Interpreter {
         // Bitwise NOT - for now, just return the operand
         return operand;
 
+      case '<~':
+        // Confidence extraction - extract confidence from ConfidenceValue
+        if (operand instanceof ConfidenceValue) {
+          const confidenceValue = operand.confidence.value;
+          return new NumberValue(confidenceValue);
+        }
+        // For non-confident values, return default confidence (1.0)
+        return new NumberValue(1.0);
+
       default:
         throw new RuntimeError(`Unknown unary operator: ${node.operator}`, node);
     }
