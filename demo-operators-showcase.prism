@@ -1,0 +1,114 @@
+// 🎯 Comprehensive Confidence Operators Showcase
+// Demonstrating all 18 operators in practical scenarios
+
+// ========== CONFIDENCE ASSIGNMENT OPERATOR (~>) ==========
+temperature = 22.5 ~> 0.9
+user_rating = 4.2 ~> 0.85
+system_status = "operational" ~> 0.95
+
+// ========== CONFIDENCE EXTRACTION OPERATOR (<~) ==========
+temp_confidence = <~ temperature
+rating_confidence = <~ user_rating
+status_confidence = <~ system_status
+
+// ========== AI MODEL ENSEMBLE ==========
+model1_prediction = llm("Model 1 analysis")
+model2_prediction = llm("Model 2 analysis") 
+model3_prediction = llm("Model 3 analysis")
+
+// ========== PARALLEL CONFIDENCE OPERATOR (~||>) ==========
+best_prediction = model1_prediction ~||> model2_prediction ~||> model3_prediction
+
+// ========== CONFIDENCE CHAINING OPERATOR (~~) ==========
+processing_chain = temperature ~~ user_rating ~~ system_status
+
+// ========== CONFIDENT ARITHMETIC OPERATORS (~+, ~-, ~*, ~/) ==========
+total_score = temperature ~+ user_rating
+score_difference = user_rating ~- temperature  
+weighted_score = total_score ~* 1.5
+average_score = total_score ~/ 2
+
+// ========== CONFIDENT COMPARISON OPERATORS (~==, ~!=, ~>, ~<, ~>=, ~<=) ==========
+temp_equals_rating = temperature ~== user_rating
+temp_not_equal = temperature ~!= user_rating
+temp_greater = temperature ~> 20
+rating_less = user_rating ~< 5
+temp_greater_equal = temperature ~>= 22
+rating_less_equal = user_rating ~<= 4.5
+
+// ========== CONFIDENT LOGICAL OPERATORS (~&&, ~||) ==========
+system_healthy = (temperature ~> 20) ~&& (user_rating ~> 4)
+acceptable_conditions = (temperature ~> 15) ~|| (user_rating ~> 3.5)
+
+// ========== CONFIDENCE COALESCE OPERATOR (~??) ==========
+primary_data = temperature ~> 0.3  // Low confidence
+backup_data = 25.0 ~> 0.9          // High confidence 
+reliable_temperature = primary_data ~?? backup_data
+
+fallback_chain = model1_prediction ~?? model2_prediction ~?? "default_response"
+
+// ========== THRESHOLD GATE OPERATOR (~@>) ==========
+high_confidence_action = system_status ~@> "execute_operation"
+conditional_processing = best_prediction ~@> "automated_approval"
+safety_gate = system_healthy ~@> "proceed_with_automation"
+
+// ========== CONFIDENT PROPERTY ACCESS OPERATOR (~.) ==========
+system_property = system_status ~. priority
+prediction_metadata = best_prediction ~. confidence_level
+
+// ========== COMPLEX OPERATOR COMBINATIONS ==========
+
+// Multi-level confidence processing
+complex_analysis = (temperature ~~ user_rating) ~||> (system_status ~~ best_prediction)
+robust_decision = complex_analysis ~?? reliable_temperature ~@> "final_approval"
+
+// Confidence-aware risk assessment
+risk_base = temperature ~+ user_rating
+risk_adjusted = risk_base ~* 1.2
+risk_threshold = risk_adjusted ~> 50
+safety_approved = risk_threshold ~&& system_healthy
+
+// Advanced fallback with threshold control
+primary_assessment = safety_approved ~@> "high_confidence_approval"
+secondary_assessment = primary_assessment ~?? acceptable_conditions
+final_decision = secondary_assessment ~@> "execute_with_monitoring"
+
+// ========== UNCERTAINTY-AWARE BRANCHING ==========
+uncertain if (robust_decision ~> 0.8) {
+  high {
+    decision = "✅ HIGH_CONFIDENCE: All systems optimal"
+    action = "automated_processing"
+    monitoring = "minimal"
+  }
+  medium {
+    decision = "⚠️ MEDIUM_CONFIDENCE: Proceed with caution"  
+    action = "supervised_processing"
+    monitoring = "enhanced"
+  }
+  low {
+    decision = "🔍 LOW_CONFIDENCE: Manual review required"
+    action = "manual_processing" 
+    monitoring = "continuous"
+  }
+}
+
+// ========== COMPREHENSIVE OPERATOR SUMMARY ==========
+operator_showcase = "🎯 CONFIDENCE OPERATORS DEMONSTRATED:" +
+  " | ~> Assignment: " + temp_confidence +
+  " | <~ Extraction: " + temp_confidence + 
+  " | ~~ Chaining: " + (<~ processing_chain) +
+  " | ~?? Coalesce: " + (<~ reliable_temperature) +
+  " | ~||> Parallel: " + (<~ best_prediction) +
+  " | ~@> Threshold: " + (<~ safety_gate) +
+  " | ~+ Addition: " + (<~ total_score) +
+  " | ~* Multiplication: " + (<~ weighted_score) +
+  " | ~/ Division: " + (<~ average_score) +
+  " | ~> Comparison: " + temp_greater +
+  " | ~&& Logical AND: " + system_healthy +
+  " | ~|| Logical OR: " + acceptable_conditions +
+  " | ~. Property: " + system_property
+
+// Final comprehensive result
+final_showcase = operator_showcase + " | DECISION: " + decision + " | ACTION: " + action
+
+final_showcase

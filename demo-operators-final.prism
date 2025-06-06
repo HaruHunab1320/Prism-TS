@@ -1,0 +1,114 @@
+// 🎯 Complete Confidence Operators Demo
+// All 18 operators working together
+
+// ========== SETUP CONFIDENT VALUES ==========
+temperature = 22.5 ~> 0.9
+pressure = 101.3 ~> 0.85
+humidity = 65 ~> 0.8
+
+// ========== CONFIDENCE EXTRACTION (<~) ==========
+temp_confidence = <~ temperature
+pressure_confidence = <~ pressure
+humidity_confidence = <~ humidity
+
+// ========== AI ANALYSIS ==========
+weather_analysis = llm("Analyze weather: temp 22.5, pressure 101.3, humidity 65")
+forecast_prediction = llm("Weather forecast based on current conditions")
+safety_assessment = llm("Safety assessment for outdoor activities")
+
+// ========== PARALLEL CONFIDENCE (~||>) - AI ENSEMBLE ==========
+best_weather_model = weather_analysis ~||> forecast_prediction ~||> safety_assessment
+
+// ========== CONFIDENCE CHAINING (~~) ==========
+sensor_chain = temperature ~~ pressure ~~ humidity
+analysis_chain = weather_analysis ~~ forecast_prediction
+
+// ========== CONFIDENT ARITHMETIC (~+, ~-, ~*, ~/) ==========
+total_readings = temperature ~+ pressure ~+ humidity
+temp_pressure_diff = pressure ~- temperature
+comfort_index = temperature ~* 2.5
+average_humidity = humidity ~/ 1.0
+
+// ========== CONFIDENT COMPARISONS (~>, ~<, ~>=, ~<=, ~==, ~!=) ==========
+temp_comfortable = temperature ~> 20.0
+pressure_normal = pressure ~>= 100.0
+humidity_acceptable = humidity ~<= 70.0
+temp_not_cold = temperature ~!= 0.0
+
+// ========== CONFIDENT LOGICAL (~&&, ~||) ==========
+weather_good = temp_comfortable ~&& pressure_normal ~&& humidity_acceptable
+any_measurement_good = temp_comfortable ~|| pressure_normal ~|| humidity_acceptable
+
+// ========== CONFIDENCE COALESCE (~??) ==========
+unreliable_temp = 15.0 ~> 0.3
+backup_temp = 25.0 ~> 0.95
+reliable_temperature = unreliable_temp ~?? backup_temp
+
+fallback_analysis = weather_analysis ~?? "weather_unknown"
+
+// ========== THRESHOLD GATE (~@>) ==========
+high_confidence_forecast = best_weather_model ~@> "automated_weather_alert"
+conditional_analysis = sensor_chain ~@> "proceed_with_detailed_analysis"
+
+// ========== CONFIDENT PROPERTY ACCESS (~.) ==========
+weather_priority = best_weather_model ~. urgency
+analysis_level = conditional_analysis ~. detail
+
+// ========== COMPLEX OPERATOR COMBINATIONS ==========
+comprehensive_assessment = (sensor_chain ~||> analysis_chain) ~?? reliable_temperature
+final_confidence_check = comprehensive_assessment ~@> "high_confidence_decision"
+
+// ========== PRE-DEFINE VARIABLES FOR UNCERTAIN IF ==========
+status = "unknown"
+action = "pending" 
+confidence_level = "undefined"
+
+// ========== UNCERTAINTY-AWARE DECISION ==========
+uncertain if (comprehensive_assessment ~> 0.8) {
+  high {
+    status = "✅ OPTIMAL: All weather conditions excellent"
+    action = "outdoor_activities_recommended"
+    confidence_level = "HIGH"
+  }
+  medium {
+    status = "⚠️ ACCEPTABLE: Weather conditions are moderate"
+    action = "outdoor_activities_with_caution"
+    confidence_level = "MEDIUM"
+  }
+  low {
+    status = "🌧️ POOR: Weather conditions uncertain or unfavorable"
+    action = "indoor_activities_recommended"
+    confidence_level = "LOW"
+  }
+}
+
+// ========== COMPREHENSIVE RESULTS ==========
+confidence_report = "🎯 CONFIDENCE ANALYSIS:" +
+  " | Temperature: " + temp_confidence +
+  " | Pressure: " + pressure_confidence + 
+  " | Humidity: " + humidity_confidence +
+  " | Best Model: " + (<~ best_weather_model) +
+  " | Final Assessment: " + (<~ comprehensive_assessment)
+
+decision_report = "🌤️ WEATHER DECISION:" +
+  " | Status: " + status +
+  " | Action: " + action +
+  " | Confidence Level: " + confidence_level +
+  " | Reliable Temp: " + reliable_temperature
+
+operator_summary = "⚡ OPERATORS USED:" +
+  " | ~> Assignment" +
+  " | <~ Extraction" +
+  " | ~~ Chaining" + 
+  " | ~?? Coalesce" +
+  " | ~||> Parallel" +
+  " | ~@> Threshold" +
+  " | ~+ ~- ~* ~/ Arithmetic" +
+  " | ~> ~< ~>= ~<= Comparison" +
+  " | ~&& ~|| Logical" +
+  " | ~. Property" +
+  " | uncertain if Branching"
+
+final_demo_result = confidence_report + " | " + decision_report + " | " + operator_summary
+
+final_demo_result

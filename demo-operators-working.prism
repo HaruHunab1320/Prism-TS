@@ -1,0 +1,89 @@
+// 🎯 Working Demo of All Confidence Operators
+// Each operator demonstrated with correct usage
+
+// ========== BASIC CONFIDENT VALUES ==========
+sensor_reading = 42.5 ~> 0.9
+user_score = 85 ~> 0.8
+system_health = 95 ~> 0.95
+
+// ========== CONFIDENCE EXTRACTION (<~) ==========
+sensor_conf = <~ sensor_reading
+user_conf = <~ user_score
+system_conf = <~ system_health
+
+// ========== AI MODEL RESPONSES ==========
+ai_analysis = llm("Analyze sensor data: 42.5")
+ai_prediction = llm("Predict user behavior: 85")
+ai_recommendation = llm("System health check: 95")
+
+// ========== PARALLEL CONFIDENCE (~||>) ==========
+best_ai_result = ai_analysis ~||> ai_prediction ~||> ai_recommendation
+
+// ========== CONFIDENCE CHAINING (~~) ==========
+chained_analysis = sensor_reading ~~ user_score ~~ system_health
+
+// ========== CONFIDENT ARITHMETIC (~+, ~-, ~*, ~/) ==========
+total_score = sensor_reading ~+ user_score
+score_diff = user_score ~- sensor_reading
+weighted_total = total_score ~* 1.2
+average_score = total_score ~/ 2
+
+// ========== CONFIDENT COMPARISONS (~>, ~<, ~>=, ~<=, ~==, ~!=) ==========
+sensor_high = sensor_reading ~> 40
+user_acceptable = user_score ~>= 70
+scores_equal = sensor_reading ~== user_score
+scores_different = sensor_reading ~!= user_score
+
+// ========== CONFIDENT LOGICAL (~&&, ~||) ==========
+system_good = sensor_high ~&& user_acceptable
+any_good = sensor_high ~|| user_acceptable
+
+// ========== CONFIDENCE COALESCE (~??) ==========
+low_confidence_data = 30 ~> 0.2
+high_confidence_backup = 50 ~> 0.9
+reliable_data = low_confidence_data ~?? high_confidence_backup
+
+// ========== THRESHOLD GATE (~@>) ==========
+high_conf_action = system_health ~@> "execute_critical_operation"
+conditional_process = chained_analysis ~@> "automated_decision"
+
+// ========== CONFIDENT PROPERTY ACCESS (~.) ==========
+system_priority = system_health ~. priority
+data_metadata = reliable_data ~. timestamp
+
+// ========== COMPLEX COMBINATIONS ==========
+comprehensive_score = (sensor_reading ~+ user_score) ~* 1.1
+final_assessment = comprehensive_score ~?? system_health
+automated_action = final_assessment ~@> "proceed_automatically"
+
+// ========== UNCERTAINTY-AWARE DECISION ==========
+uncertain if (final_assessment ~> 0.8) {
+  high {
+    status = "✅ EXCELLENT: High confidence in all metrics"
+    action = "full_automation"
+  }
+  medium {
+    status = "⚠️ GOOD: Medium confidence, proceed with monitoring"
+    action = "supervised_automation"
+  }
+  low {
+    status = "🔍 CAUTION: Low confidence, manual oversight required"
+    action = "manual_control"
+  }
+}
+
+// ========== COMPREHENSIVE REPORT ==========
+confidence_summary = "Sensor: " + sensor_conf + 
+                    " | User: " + user_conf + 
+                    " | System: " + system_conf +
+                    " | Final: " + (<~ final_assessment)
+
+operation_summary = "Status: " + status + 
+                   " | Action: " + action +
+                   " | Scores: " + comprehensive_score +
+                   " | Reliable Data: " + reliable_data
+
+final_report = "🎯 CONFIDENCE OPERATORS DEMO COMPLETE | " + 
+               confidence_summary + " | " + operation_summary
+
+final_report

@@ -1,0 +1,109 @@
+// 🛡️ AI Content Moderation Demo - Showcasing All Confidence Operators
+// Simplified version focusing on operator demonstration
+
+// ========== INPUT DATA ==========
+content = "Check out this amazing product! Get 50% off now!"
+user_trust_level = 0.6 ~> 0.8
+platform_reliability = 0.9 ~> 0.95
+
+// ========== AI ANALYSIS WITH CONFIDENCE ==========
+
+// Multiple AI models with different confidence levels
+spam_analysis = llm("Analyze spam likelihood: " + content)
+toxicity_analysis = llm("Check toxicity: " + content)
+sentiment_analysis = llm("Analyze sentiment: " + content)
+
+// Assign confidence scores to demonstrate operators
+spam_score = 0.3 ~> 0.85
+toxicity_score = 0.1 ~> 0.9
+sentiment_score = 0.8 ~> 0.7
+
+// ========== CONFIDENCE EXTRACTION OPERATOR (<~) ==========
+spam_confidence = <~ spam_score
+toxicity_confidence = <~ toxicity_score 
+sentiment_confidence = <~ sentiment_score
+
+// ========== PARALLEL CONFIDENCE OPERATOR (~||>) ==========
+// Select best model result based on confidence
+best_spam_model = spam_analysis ~||> llm("Secondary spam check: " + content)
+best_toxicity_model = toxicity_analysis ~||> llm("Secondary toxicity check: " + content)
+
+// ========== CONFIDENT ARITHMETIC OPERATORS (~+, ~*, ~/) ==========
+// Calculate risk scores with uncertainty propagation
+base_risk_score = spam_score ~+ toxicity_score
+risk_multiplier = 1.5 ~> 0.9
+total_risk = base_risk_score ~* risk_multiplier
+
+// ========== CONFIDENT COMPARISON OPERATORS (~>, ~<) ==========
+high_spam_risk = spam_score ~> 0.5
+low_toxicity = toxicity_score ~< 0.2
+good_sentiment = sentiment_score ~> 0.6
+
+// ========== CONFIDENT LOGICAL OPERATORS (~&&, ~||) ==========
+content_safe = low_toxicity ~&& (~high_spam_risk)
+content_positive = good_sentiment ~|| (~high_spam_risk)
+
+// ========== CONFIDENCE CHAINING OPERATOR (~~) ==========
+processed_analysis = spam_analysis ~~ toxicity_analysis ~~ sentiment_analysis
+
+// ========== CONFIDENCE COALESCE OPERATOR (~??) ==========
+reliable_assessment = processed_analysis ~?? best_spam_model
+backup_decision = reliable_assessment ~?? "MANUAL_REVIEW_NEEDED"
+
+// ========== THRESHOLD GATE OPERATOR (~@>) ==========
+auto_approval = backup_decision ~@> "AUTO_APPROVED"
+escalated_review = backup_decision ~@> "ESCALATED_TO_HUMAN"
+
+// ========== CONFIDENT PROPERTY ACCESS OPERATOR (~.) ==========
+decision_priority = auto_approval ~. level ~?? "standard"
+review_urgency = escalated_review ~. priority ~?? "normal"
+
+// ========== UNCERTAINTY-AWARE DECISION LOGIC ==========
+uncertain if (backup_decision ~> 0.8) {
+  high {
+    final_action = "✅ APPROVED"
+    confidence_level = "HIGH"
+    automated = true
+    risk_assessment = "Low risk - safe to proceed"
+    
+    // Use threshold gate for additional processing
+    additional_monitoring = backup_decision ~@> "enhanced_monitoring"
+  }
+  medium {
+    final_action = "⚠️ REVIEW_REQUIRED" 
+    confidence_level = "MEDIUM"
+    automated = false
+    risk_assessment = "Medium risk - human review needed"
+    
+    // Use confidence coalesce for fallback
+    review_action = backup_decision ~?? "standard_review"
+  }
+  low {
+    final_action = "🚫 REJECTED"
+    confidence_level = "LOW" 
+    automated = true
+    risk_assessment = "High risk - auto-reject for safety"
+    
+    // Chain additional analysis
+    rejection_reason = processed_analysis ~~ llm("Explain rejection: " + content)
+  }
+}
+
+// ========== COMPREHENSIVE REPORTING ==========
+confidence_report = "Decision: " + final_action + 
+                   " | Confidence: " + confidence_level +
+                   " | Spam: " + spam_confidence +
+                   " | Toxicity: " + toxicity_confidence +
+                   " | Sentiment: " + sentiment_confidence
+
+risk_report = "Risk Assessment: " + risk_assessment +
+             " | Total Risk: " + total_risk +
+             " | Automated: " + automated
+
+final_report = "🛡️ CONTENT MODERATION REPORT | " + 
+               confidence_report + " | " + 
+               risk_report + " | " +
+               "Content: '" + content + "'"
+
+// Return comprehensive analysis showcasing all operators
+final_report

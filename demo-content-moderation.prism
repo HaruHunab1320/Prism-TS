@@ -1,0 +1,141 @@
+// 🛡️ AI-Powered Content Moderation System with Confidence Operators
+// This demo showcases all Prism operators in a real-world content moderation pipeline
+
+// ========== INPUT DATA ==========
+content = "Check out this amazing product! Get 50% off now! Limited time offer!!!"
+user_history = "new_user" ~> 0.6
+platform_context = "e-commerce_reviews" ~> 0.9
+
+// ========== MULTI-MODEL AI ANALYSIS ==========
+
+// Use multiple AI models for comprehensive analysis  
+spam_detector = llm("Rate spam likelihood 0-1: " + content)
+sentiment_analyzer = llm("Analyze sentiment (positive/negative/neutral): " + content) 
+toxicity_checker = llm("Rate toxicity level 0-1: " + content)
+promotional_detector = llm("Rate promotional content likelihood 0-1: " + content)
+
+// Simulate numeric confidence scores (in real usage, these would be extracted from LLM responses)
+spam_score = 0.3 ~> 0.85
+toxicity_score = 0.1 ~> 0.9
+promotional_score = 0.7 ~> 0.8
+
+// ========== CONFIDENCE EXTRACTION & TRACKING ==========
+
+// Extract confidence levels for decision transparency
+spam_confidence = <~ spam_score
+sentiment_confidence = <~ sentiment_analyzer  
+toxicity_confidence = <~ toxicity_score
+promotional_confidence = <~ promotional_score
+
+// ========== PARALLEL CONFIDENCE ENSEMBLE ==========
+
+// Use parallel confidence to select best spam assessment
+primary_spam_check = spam_detector
+secondary_spam_check = llm("Secondary spam analysis: " + content)
+best_spam_assessment = primary_spam_check ~||> secondary_spam_check
+
+// ========== CONFIDENT LOGICAL OPERATIONS ==========
+
+// Combine multiple safety checks with confidence propagation
+safety_check = (toxicity_score ~< 0.3) ~&& (spam_score ~< 0.4)
+promotional_check = promotional_score ~> 0.6
+
+// Content is problematic if it's unsafe OR overly promotional
+content_issues = (~safety_check) ~|| promotional_check
+
+// ========== CONFIDENT ARITHMETIC & COMPARISON ==========
+
+// Calculate composite risk score using confident arithmetic  
+base_risk = spam_score ~+ toxicity_score ~+ promotional_score
+risk_multiplier = 1.2 ~> 0.95
+total_risk = base_risk ~* risk_multiplier
+
+// Adjust risk based on user history confidence
+user_history_score = <~ user_history
+user_risk_factor = user_history_score ~< 0.7  // New/unknown users are riskier
+user_risk_addition = 0.3 ~> 0.8
+adjusted_risk = total_risk ~+ (user_risk_addition)
+
+// ========== CONFIDENCE CHAINING PIPELINE ==========
+
+// Multi-step validation pipeline with confidence chaining
+initial_assessment = best_spam_assessment ~~ toxicity_score
+detailed_analysis = initial_assessment ~~ llm("Detailed content analysis: " + content)
+final_assessment = detailed_analysis ~~ llm("Final moderation decision for: " + content)
+
+// ========== CONFIDENCE COALESCE FALLBACKS ==========
+
+// Robust fallback chain for critical decisions
+primary_decision = final_assessment ~?? initial_assessment
+backup_decision = primary_decision ~?? "MANUAL_REVIEW_REQUIRED"
+safe_decision = backup_decision ~?? "REJECT_BY_DEFAULT"
+
+// ========== THRESHOLD GATE CONDITIONAL EXECUTION ==========
+
+// Use threshold gates for automated vs manual processing
+auto_approve = safe_decision ~@> "AUTO_APPROVED"
+auto_reject = content_issues ~@> "AUTO_REJECTED" 
+escalate_decision = backup_decision ~@> "ESCALATED_TO_HUMAN"
+
+// ========== CONFIDENT PROPERTY ACCESS ==========
+
+// Safe navigation through complex decision structure (simulated)
+decision_metadata = auto_approve ~. priority ~?? "standard"
+processing_queue = escalate_decision ~. urgency ~?? "normal"
+
+// ========== COMPREHENSIVE DECISION LOGIC ==========
+
+uncertain if (safe_decision ~> 0.85) {
+  high {
+    // High confidence - can safely automate
+    action = auto_approve ~?? "APPROVED_HIGH_CONFIDENCE"
+    review_required = false
+    escalation_level = "none"
+    
+    // Extract final confidence for logging
+    decision_confidence = <~ safe_decision
+    
+    result = "✅ APPROVED: " + content + " (Confidence: " + decision_confidence + ")"
+  }
+  medium {
+    // Medium confidence - flag for review but lean towards approval
+    action = "APPROVED_WITH_MONITORING"
+    review_required = true
+    escalation_level = "automated_monitoring"
+    
+    // Use threshold gate to determine monitoring level
+    monitoring_action = safe_decision ~@> "light_monitoring" ~?? "enhanced_monitoring"
+    
+    result = "⚠️ APPROVED_WITH_REVIEW: " + content + " (Monitor: " + monitoring_action + ")"
+  }
+  low {
+    // Low confidence - require human review or reject
+    human_review_needed = safe_decision ~@> "HUMAN_REVIEW" ~?? "AUTO_REJECT"
+    action = escalate_decision ~?? human_review_needed
+    review_required = true
+    escalation_level = "human_expert"
+    
+    result = "🔍 REQUIRES_REVIEW: " + content + " (Action: " + action + ")"
+  }
+}
+
+// ========== COMPREHENSIVE REPORTING ==========
+
+// Generate detailed report using all extracted data
+risk_analysis = "Risk Score: " + adjusted_risk + 
+                " | Spam: " + spam_confidence + 
+                " | Toxicity: " + toxicity_confidence + 
+                " | Promotional: " + promotional_confidence
+
+confidence_analysis = "Decision Confidence: " + (<~ safe_decision) +
+                     " | User History: " + (<~ user_history) +
+                     " | Platform Context: " + (<~ platform_context)
+
+moderation_report = result + 
+                   " | " + risk_analysis + 
+                   " | " + confidence_analysis +
+                   " | Review Required: " + review_required +
+                   " | Escalation: " + escalation_level
+
+// Final result showcasing all operators working together
+moderation_report
