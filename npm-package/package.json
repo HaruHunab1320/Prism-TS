@@ -1,7 +1,7 @@
 {
-  "name": "prism-ts",
-  "version": "0.1.0-alpha",
-  "description": "A programming language for orchestrating LLMs and AI agents",
+  "name": "prism-uncertainty",
+  "version": "1.0.1",
+  "description": "The language where AI meets certainty - handle uncertainty natively with 18 confidence-aware operators",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
