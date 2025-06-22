@@ -130,7 +130,7 @@ decision`;
                 <div className="step-content">
                   <h4>Clone the Repository</h4>
                   <CodeBlock 
-                    code="git clone https://github.com/your-username/prism-ts.git\ncd prism-ts\nnpm install" 
+                    code="git clone https://github.com/HaruHunab1320/Prism-TS.git\ncd prism-ts\nnpm install" 
                     language="bash" 
                   />
                 </div>

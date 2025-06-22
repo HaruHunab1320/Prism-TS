@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import CodeBlock from './CodeBlock';
 import './DocsPage.css';
 
@@ -7,10 +8,13 @@ const DocsPage: React.FC = () => {
 
   const sections = [
     { id: 'getting-started', title: 'Getting Started' },
+    { id: 'npm-package', title: 'NPM Package' },
     { id: 'installation', title: 'Installation' },
+    { id: 'typescript-integration', title: 'TypeScript Integration' },
     { id: 'configuration', title: 'Configuration' },
     { id: 'language-basics', title: 'Language Basics' },
     { id: 'confidence-system', title: 'Confidence System' },
+    { id: 'operators', title: 'All Operators' },
     { id: 'llm-integration', title: 'LLM Integration' },
     { id: 'control-flow', title: 'Control Flow' },
     { id: 'context-management', title: 'Context Management' },
@@ -39,38 +43,161 @@ const DocsPage: React.FC = () => {
         <main className="docs-content">
           {activeSection === 'getting-started' && (
             <section>
-              <h1>Getting Started with Prism-TS</h1>
+              <h1>Getting Started with Prism</h1>
               <p>
-                Prism-TS is a programming language designed for orchestrating Large Language Models 
-                with built-in confidence handling and uncertainty-aware control flow.
+                Prism is a programming language where AI meets certainty. With 18 confidence-aware operators,
+                native LLM integration, and uncertainty as a first-class citizen, Prism lets you write AI 
+                applications that are 69% shorter than traditional approaches.
               </p>
               
+              <h2>Two Ways to Use Prism</h2>
+              
+              <h3>1. As an NPM Package (Recommended)</h3>
+              <p>Use Prism in your existing TypeScript/JavaScript projects:</p>
+              <CodeBlock 
+                code={`npm install prism-uncertainty
+
+// In your TypeScript file
+import { Prism } from 'prism-uncertainty';
+
+const prism = new Prism();
+const result = await prism.execute('42 ~> 0.9');`}
+                language="bash"
+              />
+              
+              <h3>2. As a Standalone Language</h3>
+              <p>Clone the repository and use the REPL:</p>
+              <CodeBlock 
+                code={`git clone https://github.com/HaruHunab1320/Prism-TS
+cd prism-ts
+npm install
+npm run repl`}
+                language="bash"
+              />
+
               <h2>What Makes Prism Special?</h2>
               <ul>
-                <li><strong>Uncertainty as a First-Class Citizen</strong>: Handle AI uncertainty naturally</li>
-                <li><strong>Confidence Propagation</strong>: Automatic uncertainty tracking through operations</li>
-                <li><strong>Uncertain Control Flow</strong>: Branch logic based on confidence levels</li>
-                <li><strong>Native LLM Integration</strong>: Built-in AI provider support</li>
+                <li><strong>18 Confidence-Aware Operators</strong>: From ~{'>'} to ~||{'>'}, every operator understands uncertainty</li>
+                <li><strong>Zero Boilerplate</strong>: No manual confidence tracking classes or methods</li>
+                <li><strong>TypeScript Integration</strong>: Use Prism logic in your existing codebase</li>
+                <li><strong>Native LLM Support</strong>: Built-in integration with Gemini and Claude</li>
               </ul>
 
               <h2>Your First Program</h2>
               <CodeBlock 
-                code={`// Assign confidence to a value
-measurement = 100 ~> 0.85
+                code={`// AI ensemble with confidence selection
+gpt = llm("Analyze with GPT") 
+claude = llm("Analyze with Claude")
+gemini = llm("Analyze with Gemini")
 
-// Call an LLM with automatic confidence handling
-analysis = llm("Analyze this measurement: " + measurement)
+// Automatically select highest confidence result
+best = gpt ~||> claude ~||> gemini
 
-// Branch based on confidence level
-uncertain if (analysis ~> 0.8) {
-  high { decision = "High confidence result" }
-  medium { decision = "Medium confidence result" }
-  low { decision = "Low confidence result" }
-}
-
-decision`}
+// Execute only if confident enough
+action = best ~@> "approve" ~?? "manual_review"`}
                 language="prism"
                 title="hello-world.prism"
+              />
+            </section>
+          )}
+
+          {activeSection === 'npm-package' && (
+            <section>
+              <h1>NPM Package: prism-uncertainty</h1>
+              
+              <div style={{
+                background: 'rgba(139, 92, 246, 0.1)',
+                border: '1px solid rgba(139, 92, 246, 0.3)',
+                borderRadius: '8px',
+                padding: '1rem',
+                marginBottom: '2rem'
+              }}>
+                <strong>Latest Version:</strong> v1.0.1<br />
+                <strong>Package:</strong> <a href="https://www.npmjs.com/package/prism-uncertainty" target="_blank" rel="noopener noreferrer">prism-uncertainty</a><br />
+                <strong>License:</strong> MIT
+              </div>
+              
+              <h2>Installation</h2>
+              <CodeBlock 
+                code={`# Using npm
+npm install prism-uncertainty
+
+# Using yarn
+yarn add prism-uncertainty
+
+# Using pnpm
+pnpm add prism-uncertainty`}
+                language="bash"
+              />
+              
+              <h2>Basic Usage</h2>
+              <CodeBlock 
+                code={`import { Prism } from 'prism-uncertainty';
+
+// Create a Prism instance
+const prism = new Prism({
+  geminiApiKey: 'your-api-key',    // Optional
+  anthropicApiKey: 'your-api-key'  // Optional
+});
+
+// Execute Prism code
+const result = await prism.execute(\`
+  temperature = 22.5 ~> 0.9
+  analysis = llm("Is this good weather?")
+  decision = analysis ~@> "Go outside!" ~?? "Stay in"
+  decision
+\`);
+
+console.log(result); // Confident decision`}
+                language="typescript"
+              />
+              
+              <h2>Quick Execution</h2>
+              <p>For one-off executions, use the convenience function:</p>
+              <CodeBlock 
+                code={`import { runPrism } from 'prism-uncertainty';
+
+const result = await runPrism(\`
+  // Run multiple models in parallel
+  best = model1 ~||> model2 ~||> model3
+  best
+\`);`}
+                language="typescript"
+              />
+              
+              <h2>Execute Files</h2>
+              <CodeBlock 
+                code={`// Execute a .prism file
+const result = await prism.executeFile('./analysis.prism');`}
+                language="typescript"
+              />
+              
+              <h2>Package Exports</h2>
+              <p>The package exports all core types and utilities:</p>
+              <CodeBlock 
+                code={`import {
+  // Main API
+  Prism,
+  runPrism,
+  
+  // Types
+  ConfidenceValue,
+  Value,
+  NumberValue,
+  StringValue,
+  BooleanValue,
+  
+  // Core components
+  Tokenizer,
+  Parser,
+  Runtime,
+  
+  // Utilities
+  isHighConfidence,
+  isMediumConfidence,
+  isLowConfidence
+} from 'prism-uncertainty';`}
+                language="typescript"
               />
             </section>
           )}
@@ -79,17 +206,30 @@ decision`}
             <section>
               <h1>Installation</h1>
               
-              <h2>Prerequisites</h2>
+              <h2>Option 1: NPM Package (Recommended)</h2>
+              <p>Use Prism in your existing TypeScript/JavaScript projects:</p>
+              <CodeBlock 
+                code={`npm install prism-uncertainty
+
+# Or globally for CLI access
+npm install -g prism-uncertainty`}
+                language="bash"
+              />
+              
+              <h2>Option 2: From Source</h2>
+              <p>For contributing or using the latest development version:</p>
+              
+              <h3>Prerequisites</h3>
               <ul>
                 <li>Node.js 16+ and npm</li>
                 <li>TypeScript knowledge (helpful but not required)</li>
                 <li>API keys for AI providers (Gemini or Claude)</li>
               </ul>
 
-              <h2>Clone and Setup</h2>
+              <h3>Clone and Setup</h3>
               <CodeBlock 
                 code={`# Clone the repository
-git clone https://github.com/your-username/prism-ts.git
+git clone https://github.com/HaruHunab1320/Prism-TS.git
 cd prism-ts
 
 # Install dependencies
@@ -102,6 +242,19 @@ npm test`}
               />
 
               <h2>Verify Installation</h2>
+              
+              <h3>NPM Package</h3>
+              <CodeBlock 
+                code={`# If installed globally
+prism --version
+
+# In your code
+import { Prism } from 'prism-uncertainty';
+const prism = new Prism();`}
+                language="bash"
+              />
+              
+              <h3>From Source</h3>
               <CodeBlock 
                 code={`# Start the REPL
 npm run repl
@@ -112,6 +265,161 @@ Type 'exit' to quit, 'help' for commands
 
 prism>`}
                 language="bash"
+              />
+            </section>
+          )}
+
+          {activeSection === 'typescript-integration' && (
+            <section>
+              <h1>TypeScript Integration</h1>
+              
+              <h2>Type-Safe Prism Usage</h2>
+              <p>The prism-uncertainty package includes full TypeScript definitions for type-safe development.</p>
+              
+              <h2>Creating Wrapper Functions</h2>
+              <CodeBlock 
+                code={`import { Prism, ConfidenceValue } from 'prism-uncertainty';
+
+interface AnalysisResult {
+  decision: string;
+  confidence: number;
+  reasoning?: string;
+}
+
+async function analyzeWithConfidence(
+  data: string,
+  threshold: number = 0.8
+): Promise<AnalysisResult> {
+  const prism = new Prism();
+  
+  const result = await prism.execute(\`
+    analysis = llm("Analyze: \${data}")
+    conf = <~ analysis
+    
+    uncertain if (analysis ~> \${threshold}) {
+      high { 
+        decision = "approved"
+        reasoning = "High confidence"
+      }
+      medium { 
+        decision = "review"
+        reasoning = "Medium confidence"
+      }
+      low { 
+        decision = "rejected"
+        reasoning = "Low confidence"
+      }
+    }
+    
+    decision + "|" + conf + "|" + reasoning
+  \`);
+  
+  const [decision, conf, reasoning] = result.toString().split('|');
+  
+  return {
+    decision,
+    confidence: parseFloat(conf),
+    reasoning
+  };
+}`}
+                language="typescript"
+              />
+              
+              <h2>React Hook Example</h2>
+              <CodeBlock 
+                code={`import { useState, useEffect } from 'react';
+import { Prism } from 'prism-uncertainty';
+
+function usePrism(code: string, deps: any[] = []) {
+  const [result, setResult] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  
+  useEffect(() => {
+    const execute = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const prism = new Prism();
+        const output = await prism.execute(code);
+        setResult(output);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    execute();
+  }, deps);
+  
+  return { result, loading, error };
+}
+
+// Usage
+function MyComponent() {
+  const { result, loading, error } = usePrism(\`
+    analysis = llm("Analyze market trends")
+    confidence = <~ analysis
+    decision = analysis ~@> "invest" ~?? "wait"
+    decision
+  \`);
+  
+  if (loading) return <div>Analyzing...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  
+  return <div>Decision: {result?.toString()}</div>;
+}`}
+                language="typescript"
+              />
+              
+              <h2>Express.js API Example</h2>
+              <CodeBlock 
+                code={`import express from 'express';
+import { Prism } from 'prism-uncertainty';
+
+const app = express();
+app.use(express.json());
+
+app.post('/api/analyze', async (req, res) => {
+  const { code, data } = req.body;
+  
+  try {
+    const prism = new Prism();
+    const result = await prism.execute(code);
+    
+    res.json({
+      success: true,
+      result: result.toString(),
+      type: result.constructor.name
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+});`}
+                language="typescript"
+              />
+              
+              <h2>Type Guards</h2>
+              <CodeBlock 
+                code={`import { ConfidenceValue, NumberValue } from 'prism-uncertainty';
+
+function isConfidentNumber(value: any): value is ConfidenceValue {
+  return value instanceof ConfidenceValue && 
+         value.value instanceof NumberValue;
+}
+
+// Usage
+const result = await prism.execute('42 ~> 0.9');
+if (isConfidentNumber(result)) {
+  console.log('Number:', result.value.value);
+  console.log('Confidence:', result.confidence);
+}`}
+                language="typescript"
               />
             </section>
           )}
@@ -209,6 +517,134 @@ result = 42
 */`}
                 language="prism"
               />
+            </section>
+          )}
+
+          {activeSection === 'operators' && (
+            <section>
+              <h1>All 18 Confidence-Aware Operators</h1>
+              
+              <p>
+                Prism provides 18 operators designed specifically for handling uncertainty in AI applications.
+                Each operator propagates confidence automatically, eliminating manual tracking.
+              </p>
+              
+              <h2>Core Operators</h2>
+              
+              <h3>~{'>'} (Confidence Assignment)</h3>
+              <CodeBlock 
+                code={`temperature = 22.5 ~> 0.9  // 22.5 with 90% confidence`}
+                language="prism"
+              />
+              
+              <h3>&lt;~ (Confidence Extraction)</h3>
+              <CodeBlock 
+                code={`temp = 100 ~> 0.85
+conf = <~ temp  // Returns 0.85`}
+                language="prism"
+              />
+              
+              <h3>~~ (Confidence Chaining)</h3>
+              <CodeBlock 
+                code={`result = input ~~ process ~~ validate  // Min confidence`}
+                language="prism"
+              />
+              
+              <h3>~?? (Confidence Coalesce)</h3>
+              <CodeBlock 
+                code={`result = uncertain_data ~?? fallback  // Use fallback if < 50%`}
+                language="prism"
+              />
+              
+              <h2>Logical Operators</h2>
+              
+              <h3>~&& (Confident AND)</h3>
+              <CodeBlock 
+                code={`decision = condition1 ~&& condition2  // AND with min confidence`}
+                language="prism"
+              />
+              
+              <h3>~|| (Confident OR)</h3>
+              <CodeBlock 
+                code={`choice = option1 ~|| option2  // OR with max confidence`}
+                language="prism"
+              />
+              
+              <h2>Arithmetic Operators</h2>
+              
+              <h3>~+, ~-, ~*, ~/ (Confident Arithmetic)</h3>
+              <CodeBlock 
+                code={`sum = (10 ~> 0.9) ~+ (20 ~> 0.7)   // 30 (~70.0%)
+diff = (30 ~> 0.9) ~- (10 ~> 0.8)  // 20 (~80.0%)
+prod = (5 ~> 0.9) ~* (4 ~> 0.8)    // 20 (~80.0%)
+quot = (20 ~> 0.9) ~/ (4 ~> 0.8)   // 5 (~80.0%)`}
+                language="prism"
+              />
+              
+              <h2>Comparison Operators</h2>
+              
+              <h3>~==, ~!=, ~{'>'}, ~{'>'}=, ~&lt;, ~&lt;= (Confident Comparisons)</h3>
+              <CodeBlock 
+                code={`equal = value1 ~== value2      // Equality with confidence
+notEqual = value1 ~!= value2   // Inequality with confidence
+greater = value1 ~> value2      // Greater than with confidence
+greaterEq = value1 ~>= value2   // Greater or equal with confidence
+less = value1 ~< value2         // Less than with confidence
+lessEq = value1 ~<= value2      // Less or equal with confidence`}
+                language="prism"
+              />
+              
+              <h2>Advanced Operators</h2>
+              
+              <h3>~. (Confident Property Access)</h3>
+              <CodeBlock 
+                code={`property = object ~. field  // Safe navigation with fallback`}
+                language="prism"
+              />
+              
+              <h3>~||{'>'} (Parallel Confidence)</h3>
+              <CodeBlock 
+                code={`// Select highest confidence result (ensemble pattern)
+best = model1 ~||> model2 ~||> model3`}
+                language="prism"
+              />
+              
+              <h3>~@{'>'} (Threshold Gate)</h3>
+              <CodeBlock 
+                code={`// Execute right side only if left confidence >= 0.7
+action = condition ~@> "proceed" ~?? "abort"`}
+                language="prism"
+              />
+              
+              <h2>Complete Example</h2>
+              <CodeBlock 
+                code={`// AI content moderation system
+content = "User submitted text..."
+spam = llm("Is this spam?") 
+toxic = llm("Is this toxic?")
+quality = llm("Rate quality 0-1")
+
+// Combine checks with confidence
+safety = spam ~&& toxic
+final = safety ~||> quality
+
+// Threshold-based decision
+decision = final ~@> "auto_approve" ~?? "manual_review"
+
+// Branch on final confidence
+uncertain if (final ~> 0.8) {
+  high { status = "✅ Approved" }
+  medium { status = "⚠️ Review" }
+  low { status = "❌ Blocked" }
+}`}
+                language="prism"
+              />
+              
+              <p>
+                <Link to="/operators" style={{ marginTop: '2rem', display: 'inline-block' }}>
+                  View interactive operator documentation →
+                </Link>
+              </p>
             </section>
           )}
 
@@ -454,7 +890,7 @@ explanation = llm("Explain " + topic)
 
               <h2>Operators</h2>
               
-              <h3>Confidence Assignment (~&gt;)</h3>
+              <h3>Confidence Assignment (~{'>'})</h3>
               <CodeBlock 
                 code={`// Syntax: expression ~> confidence_value
 measurement = 100 ~> 0.85

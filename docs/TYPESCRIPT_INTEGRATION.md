@@ -492,6 +492,6 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
 ## Support
 
-- GitHub Issues: [Report bugs](https://github.com/your-username/prism-ts/issues)
-- Documentation: [Full docs](https://github.com/your-username/prism-ts/docs)
+- GitHub Issues: [Report bugs](https://github.com/HaruHunab1320/Prism-TS/issues)
+- Documentation: [Full docs](https://github.com/HaruHunab1320/Prism-TS/docs)
 - NPM Package: [prism-uncertainty](https://www.npmjs.com/package/prism-uncertainty)

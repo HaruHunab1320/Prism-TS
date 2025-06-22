@@ -256,6 +256,6 @@ Built by developers who believe AI programming should be as natural as the uncer
 
 [![NPM](https://img.shields.io/badge/npm-prism--uncertainty-red?style=for-the-badge)](https://www.npmjs.com/package/prism-uncertainty)
 [![Docs](https://img.shields.io/badge/Read-Documentation-blue?style=for-the-badge)](docs/LANGUAGE_GUIDE.md)
-[![GitHub](https://img.shields.io/badge/Star-on%20GitHub-yellow?style=for-the-badge)](https://github.com/your-username/prism-ts)
+[![GitHub](https://img.shields.io/badge/Star-on%20GitHub-yellow?style=for-the-badge)](https://github.com/HaruHunab1320/Prism-TS)
 
 </div>

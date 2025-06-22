@@ -1,151 +1,246 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import CodeBlock from './CodeBlock';
 import './PlaygroundPage.css';
 
+// Mock Prism execution for demo purposes
+// In a real implementation, this would use the prism-uncertainty package
+const mockPrismExecute = async (code: string): Promise<{ result: string; error?: string }> => {
+  // Simulate execution delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Simple mock execution logic
+  try {
+    if (code.includes('llm(')) {
+      if (code.includes('weather') || code.includes('rain')) {
+        return { result: 'Based on current patterns: 65% chance of rain with moderate confidence (~75.0%)' };
+      } else if (code.includes('artificial intelligence')) {
+        return { result: '"Artificial intelligence is the simulation of human intelligence by machines, encompassing learning, reasoning, and self-correction." (~88.0%)' };
+      } else if (code.includes('machine learning')) {
+        return { result: '"Machine learning is a subset of AI that enables systems to learn and improve from experience without explicit programming." (~90.0%)' };
+      } else if (code.includes('renewable energy')) {
+        return { result: 'Comprehensive analysis: Renewable energy sources offer sustainable alternatives with growing efficiency (~87.0%)' };
+      } else if (code.includes('plastic waste')) {
+        return { result: 'Solution: Implement circular economy principles with biodegradable alternatives (~82.0%)' };
+      } else if (code.includes('content moderation')) {
+        return { result: 'Content flagged for review - confidence threshold met (~85.0%)' };
+      } else if (code.includes('AI safety')) {
+        return { result: 'Critical: Implement robust alignment and monitoring systems (~91.0%)' };
+      }
+    }
+    
+    if (code.includes('uncertain if')) {
+      if (code.includes('high {')) {
+        return { result: 'Decision: Proceed with high confidence action (~85.0%)' };
+      }
+    }
+    
+    if (code.includes('~>')) {
+      const match = code.match(/(\d+(?:\.\d+)?)\s*~>\s*(\d+(?:\.\d+)?)/);
+      if (match) {
+        return { result: `${match[1]} (~${parseFloat(match[2]) * 100}%)` };
+      }
+    }
+    
+    if (code.includes('~||>')) {
+      return { result: 'Best model selected: Result with highest confidence (~92.0%)' };
+    }
+    
+    if (code.includes('~@>')) {
+      return { result: 'Threshold gate activated: Action executed (~78.0%)' };
+    }
+    
+    // Default response
+    return { result: '42 (~95.0%)' };
+  } catch (error) {
+    return { result: '', error: 'Execution error: ' + error };
+  }
+};
+
 const PlaygroundPage: React.FC = () => {
   const [code, setCode] = useState(`// Welcome to the Prism Playground!
-// Try running some Prism code examples
+// Try running some examples to see uncertainty-aware programming in action
 
-// Example 1: Basic confidence assignment
-measurement = 100 ~> 0.85
-result = measurement * 2
+// Basic confidence assignment
+temperature = 22.5 ~> 0.9
+analysis = llm("Is this good weather for a picnic?")
 
-// Example 2: LLM integration  
-analysis = llm("What is artificial intelligence?")
-
-// Example 3: Uncertainty-aware control flow
-uncertain if (analysis ~> 0.8) {
-  high { 
-    decision = "High confidence result"
-    action = "Proceed with analysis"
-  }
-  medium { 
-    decision = "Medium confidence result"
-    action = "Review manually"
-  }
-  low { 
-    decision = "Low confidence result"
-    action = "Gather more data"
-  }
-}
+// Make decision based on analysis
+decision = analysis ~@> "Perfect weather!" ~?? "Check forecast"
 
 decision`);
   
   const [output, setOutput] = useState('');
+  const [error, setError] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [selectedExample, setSelectedExample] = useState('');
 
   const examples = [
     {
-      id: 'basic',
-      title: 'Basic Confidence',
-      code: `// Basic confidence assignment and operations
-value = 100 ~> 0.9
-doubled = value * 2
-result = doubled + 50
+      id: 'confidence-basics',
+      title: '🎯 Confidence Basics',
+      code: `// Confidence assignment and propagation
+sensor1 = 100 ~> 0.95  // High confidence reading
+sensor2 = 98 ~> 0.7    // Medium confidence reading
 
-result`
+// Operations preserve confidence
+average = (sensor1 + sensor2) / 2
+confidence = <~ average
+
+"Average: " + average + " with confidence: " + confidence`
     },
     {
-      id: 'llm-simple', 
-      title: 'Simple LLM Call',
-      code: `// Basic LLM interaction
-question = "What is machine learning?"
-answer = llm(question)
+      id: 'ai-ensemble',
+      title: '🤖 AI Ensemble',
+      code: `// Run multiple AI models in parallel
+prompt = "Analyze market trends for renewable energy"
 
-answer`
+gpt = llm("GPT analysis: " + prompt)
+claude = llm("Claude analysis: " + prompt) 
+gemini = llm("Gemini analysis: " + prompt)
+
+// Select highest confidence result
+best = gpt ~||> claude ~||> gemini
+
+"Best analysis selected with confidence: " + (<~ best)`
     },
     {
-      id: 'uncertain-if',
-      title: 'Uncertain Control Flow',
-      code: `// Demonstrate uncertain if statements
-prediction = llm("Will it rain tomorrow?") ~> 0.7
+      id: 'content-moderation',
+      title: '🛡️ Content Moderation',
+      code: `// AI-powered content moderation system
+content = "User submitted message..."
 
-uncertain if (prediction ~> 0.6) {
+// Run safety checks
+spam = llm("Is this spam? " + content) ~> 0.9
+toxic = llm("Is this toxic? " + content) ~> 0.85
+quality = llm("Rate content quality: " + content)
+
+// Combine checks with confidence
+safety = spam ~&& toxic
+final = safety ~||> quality
+
+// Threshold-based decision
+uncertain if (final ~> 0.7) {
   high { 
-    recommendation = "Take an umbrella"
-    confidence_level = "high"
+    status = "✅ Auto-approved"
+    action = "publish"
   }
   medium { 
-    recommendation = "Check weather again"
-    confidence_level = "medium"
+    status = "⚠️ Manual review needed"
+    action = "queue"
   }
   low { 
-    recommendation = "Weather unclear"
-    confidence_level = "low"
+    status = "❌ Blocked"
+    action = "reject"
   }
 }
 
-"Recommendation: " + recommendation + " (confidence: " + confidence_level + ")"`
+status + " - Action: " + action`
     },
     {
-      id: 'context',
-      title: 'Context Management',
-      code: `// Context-based execution
-topic = "renewable energy"
+      id: 'medical-diagnosis',
+      title: '🏥 Medical Assistant',
+      code: `// AI-assisted medical diagnosis
+symptoms = "fever, cough, fatigue"
 
-in context Research {
-  overview = llm("Provide overview of: " + topic)
-  benefits = llm("What are benefits of: " + topic)
+// Get initial assessment
+initial = llm("Assess symptoms: " + symptoms)
+confidence = <~ initial
+
+// Validate with second opinion
+second = llm("Confirm assessment: " + initial)
+
+// Combine opinions
+consensus = initial ~&& second
+
+// Risk-based recommendations
+uncertain if (consensus ~> 0.8) {
+  high {
+    recommendation = "Schedule immediate consultation"
+    urgency = "HIGH"
+  }
+  medium {
+    recommendation = "Monitor for 24 hours"
+    urgency = "MODERATE"
+  }
+  low {
+    recommendation = "Rest and hydrate"
+    urgency = "LOW"
+  }
 }
 
-in context Analysis {
-  challenges = llm("What challenges exist with: " + topic)
-  solutions = llm("Solutions for: " + challenges)
-}
-
-report = "Topic: " + topic + " | Overview: " + overview + " | Benefits: " + benefits + " | Solutions: " + solutions
-
-report`
+"Recommendation: " + recommendation + " (Urgency: " + urgency + ")"`
     },
     {
-      id: 'chained-llm',
-      title: 'Chained LLM Calls',
-      code: `// Chained AI reasoning
-problem = "How to reduce plastic waste?"
+      id: 'research-chain',
+      title: '🔬 Research Chain',
+      code: `// Multi-step AI research workflow
+topic = "quantum computing applications"
 
-step1 = llm("Break down the problem: " + problem)
-step2 = llm("Based on analysis: " + step1 + " - what are practical solutions?")
-step3 = llm("From these solutions: " + step2 + " - which is most feasible?")
+// Research pipeline with confidence chaining
+overview = llm("Provide overview of: " + topic)
+applications = llm("Based on: " + overview + " - list key applications")
+challenges = llm("What challenges exist for: " + applications)
+solutions = llm("Propose solutions for: " + challenges)
 
-final_answer = "Problem: " + problem + " | Best solution: " + step3
+// Chain confidence through pipeline
+final = overview ~~ applications ~~ challenges ~~ solutions
 
-final_answer`
+"Research complete with confidence: " + (<~ final)`
+    },
+    {
+      id: 'operators-showcase',
+      title: '✨ All Operators',
+      code: `// Showcase all 18 confidence operators
+
+// Core operators
+value = 100 ~> 0.9          // Confidence assignment
+conf = <~ value             // Confidence extraction
+chain = a ~~ b ~~ c         // Confidence chaining
+safe = risky ~?? fallback   // Confidence coalesce
+
+// Logical operators
+both = cond1 ~&& cond2      // Confident AND
+either = opt1 ~|| opt2      // Confident OR
+
+// Arithmetic operators
+sum = (10 ~> 0.9) ~+ (20 ~> 0.8)
+diff = val1 ~- val2
+prod = val1 ~* val2
+quot = val1 ~/ val2
+
+// Comparison operators
+equal = x ~== y
+greater = x ~> y
+less = x ~< y
+
+// Advanced operators
+prop = object ~. field       // Safe navigation
+best = m1 ~||> m2 ~||> m3   // Parallel selection
+gate = check ~@> action      // Threshold gate
+
+"Operators demonstrated!"`
     }
   ];
 
   const runCode = async () => {
     setIsRunning(true);
     setOutput('');
+    setError('');
     
-    // Simulate code execution with delay
-    setTimeout(() => {
-      // Mock output based on code content
-      if (code.includes('llm(')) {
-        if (code.includes('rain')) {
-          setOutput(`Recommendation: Take an umbrella (confidence: high) (~85.0%)`);
-        } else if (code.includes('artificial intelligence')) {
-          setOutput(`"Artificial intelligence (AI) is a branch of computer science focused on creating systems that can perform tasks that typically require human intelligence, such as learning, reasoning, problem-solving, and understanding language." (~88.0%)`);
-        } else if (code.includes('machine learning')) {
-          setOutput(`"Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed for every task." (~90.0%)`);
-        } else if (code.includes('renewable energy')) {
-          setOutput(`"Topic: renewable energy | Overview: Renewable energy refers to energy sources that are naturally replenished... | Benefits: Environmental sustainability, energy independence... | Solutions: Government incentives, technology advancement..." (~87.0%)`);
-        } else if (code.includes('plastic waste')) {
-          setOutput(`"Problem: How to reduce plastic waste? | Best solution: Implement comprehensive recycling programs combined with biodegradable alternatives and consumer education campaigns" (~82.0%)`);
-        } else {
-          setOutput(`"This is a sample LLM response with natural language processing capabilities." (~85.0%)`);
-        }
-      } else if (code.includes('uncertain if')) {
-        setOutput(`"High confidence result" (~89.0%)`);
-      } else if (code.includes('measurement')) {
-        setOutput(`250 (~85.0%)`);
-      } else if (code.includes('value')) {
-        setOutput(`250 (~90.0%)`);
+    try {
+      const result = await mockPrismExecute(code);
+      
+      if (result.error) {
+        setError(result.error);
       } else {
-        setOutput(`42 (~95.0%)`);
+        setOutput(result.result);
       }
+    } catch (err) {
+      setError('Unexpected error: ' + err);
+    } finally {
       setIsRunning(false);
-    }, 1500);
+    }
   };
 
   const loadExample = (exampleId: string) => {
@@ -154,26 +249,28 @@ final_answer`
       setCode(example.code);
       setSelectedExample(exampleId);
       setOutput('');
+      setError('');
     }
   };
 
   const resetPlayground = () => {
     setCode(`// Welcome to the Prism Playground!
-// Try running some Prism code examples
+// Try running some examples
 
 measurement = 100 ~> 0.85
 result = measurement * 2
 
 result`);
     setOutput('');
+    setError('');
     setSelectedExample('');
   };
 
   return (
     <div className="playground-page">
       <div className="playground-header">
-        <h1>Prism Playground</h1>
-        <p>Try Prism language features in real-time. Write code and see how uncertainty-aware programming works.</p>
+        <h1>🌟 Prism Playground</h1>
+        <p>Experience uncertainty-aware programming in your browser. Write code and see how Prism handles confidence!</p>
       </div>
 
       <div className="playground-container">
@@ -193,17 +290,19 @@ result`);
           
           <div className="playground-actions">
             <button className="reset-button" onClick={resetPlayground}>
-              Reset Playground
+              🔄 Reset Playground
             </button>
           </div>
 
           <div className="playground-help">
-            <h4>Quick Tips</h4>
+            <h4>Quick Reference</h4>
             <ul>
-              <li><code>~&gt;</code> assigns confidence to values</li>
-              <li><code>llm()</code> calls AI with automatic confidence</li>
-              <li><code>uncertain if</code> branches by confidence level</li>
-              <li><code>in context</code> creates isolated execution</li>
+              <li><code>~&gt;</code> assigns confidence</li>
+              <li><code>&lt;~</code> extracts confidence</li>
+              <li><code>llm()</code> AI integration</li>
+              <li><code>uncertain if</code> confidence branching</li>
+              <li><code>~||&gt;</code> parallel selection</li>
+              <li><code>~@&gt;</code> threshold gate</li>
             </ul>
           </div>
         </div>
@@ -211,13 +310,13 @@ result`);
         <div className="playground-main">
           <div className="code-editor-section">
             <div className="editor-header">
-              <h3>Code Editor</h3>
+              <h3>📝 Code Editor</h3>
               <button 
                 className={`run-button ${isRunning ? 'running' : ''}`}
                 onClick={runCode}
                 disabled={isRunning}
               >
-                {isRunning ? 'Running...' : 'Run Code'}
+                {isRunning ? '⏳ Running...' : '▶️ Run Code'}
               </button>
             </div>
             
@@ -232,11 +331,11 @@ result`);
 
           <div className="output-section">
             <div className="output-header">
-              <h3>Output</h3>
-              {output && (
+              <h3>📊 Output</h3>
+              {(output || error) && (
                 <button 
                   className="clear-output"
-                  onClick={() => setOutput('')}
+                  onClick={() => { setOutput(''); setError(''); }}
                 >
                   Clear
                 </button>
@@ -249,13 +348,17 @@ result`);
                   <div className="spinner"></div>
                   <span>Executing Prism code...</span>
                 </div>
+              ) : error ? (
+                <div className="error-output">
+                  {error}
+                </div>
               ) : output ? (
                 <div className="output-content">
-                  <CodeBlock code={output} language="output" />
+                  <CodeBlock code={output} language="prism" />
                 </div>
               ) : (
                 <div className="output-placeholder">
-                  Click "Run Code" to see the output
+                  Click "Run Code" to see the output with confidence values
                 </div>
               )}
             </div>
@@ -265,34 +368,48 @@ result`);
 
       <div className="playground-info">
         <div className="info-section">
-          <h3>About the Playground</h3>
+          <h3>🎮 About the Playground</h3>
+          
+          <div className="execution-notice">
+            <span className="execution-notice-icon">ℹ️</span>
+            <span className="execution-notice-text">
+              This is a simulated environment. For real AI integration, install the npm package or clone the repository.
+            </span>
+          </div>
+          
           <p>
-            This playground simulates Prism language execution. In a real implementation, 
-            your code would be executed by the Prism interpreter with actual AI provider integration.
+            The Prism Playground demonstrates the core concepts of uncertainty-aware programming. 
+            Every computation maintains confidence values automatically, enabling smarter AI applications.
           </p>
           
           <div className="feature-highlights">
             <div className="feature">
-              <strong>🎯 Confidence Values:</strong> Every result shows its confidence level in parentheses
+              <strong>🎯 Automatic Confidence Tracking</strong>
+              Every value shows its confidence level in the output
             </div>
             <div className="feature">
-              <strong>🤔 Uncertainty Handling:</strong> Automatic branching based on confidence thresholds
+              <strong>🤔 Uncertainty-Aware Branching</strong>
+              Make decisions based on confidence thresholds
             </div>
             <div className="feature">
-              <strong>🧠 AI Integration:</strong> Native LLM calls with built-in uncertainty tracking
+              <strong>🧠 Native AI Integration</strong>
+              LLM calls with built-in confidence handling
             </div>
             <div className="feature">
-              <strong>📦 Context Management:</strong> Isolated execution environments for complex workflows
+              <strong>🔗 18 Specialized Operators</strong>
+              Purpose-built for AI orchestration workflows
             </div>
           </div>
         </div>
 
         <div className="next-steps">
-          <h3>Next Steps</h3>
+          <h3>🚀 Next Steps</h3>
           <ul>
-            <li>Check out the <a href="/docs">Documentation</a> for complete language reference</li>
-            <li>Explore more <a href="/examples">Examples</a> for real-world use cases</li>
-            <li>Clone the repository to try Prism locally with real AI providers</li>
+            <li>Install the <Link to="/docs#npm-package">npm package</Link> for TypeScript projects</li>
+            <li>Read the complete <Link to="/docs">Documentation</Link></li>
+            <li>Explore <Link to="/operators">all 18 operators</Link> in detail</li>
+            <li>View real-world <Link to="/examples">Examples</Link></li>
+            <li>Join our <a href="https://github.com/HaruHunab1320/Prism-TS" target="_blank" rel="noopener noreferrer">GitHub</a> community</li>
           </ul>
         </div>
       </div>

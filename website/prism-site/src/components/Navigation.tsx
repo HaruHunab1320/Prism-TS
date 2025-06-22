@@ -11,8 +11,7 @@ const Navigation: React.FC = () => {
     <nav className="navigation">
       <div className="nav-container">
         <Link to="/" className="nav-logo">
-          <span className="logo-icon">🌟</span>
-          <span className="logo-text">Prism-TS</span>
+          <span className="logo-text gradient-text">Prism</span>
         </Link>
         
         <div className="nav-links">
@@ -26,7 +25,13 @@ const Navigation: React.FC = () => {
             to="/docs" 
             className={`nav-link ${isActive('/docs') ? 'active' : ''}`}
           >
-            Documentation
+            Docs
+          </Link>
+          <Link 
+            to="/operators" 
+            className={`nav-link ${isActive('/operators') ? 'active' : ''}`}
+          >
+            Operators
           </Link>
           <Link 
             to="/examples" 
@@ -40,18 +45,20 @@ const Navigation: React.FC = () => {
           >
             Playground
           </Link>
-          <Link 
-            to="/demo" 
-            className={`nav-link ${isActive('/demo') ? 'active' : ''}`}
-          >
-            Live Demo
-          </Link>
         </div>
 
         <div className="nav-actions">
           <a 
-            href="https://github.com/your-username/prism-ts" 
-            className="nav-github"
+            href="https://www.npmjs.com/package/prism-uncertainty" 
+            className="nav-link nav-npm"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            npm
+          </a>
+          <a 
+            href="https://github.com/HaruHunab1320/Prism-TS" 
+            className="nav-link nav-github"
             target="_blank"
             rel="noopener noreferrer"
           >
