@@ -2,6 +2,18 @@
 
 All notable changes to prism-uncertainty will be documented in this file.
 
+## [1.0.3] - 2024-06-22
+
+### Fixed
+- LLM providers now properly initialize when API keys are provided
+- Fixed "No LLM provider configured" error when using geminiApiKey or anthropicApiKey options
+- Providers are automatically registered and set as default when API keys are available
+
+## [1.0.2] - 2024-06-22
+
+### Fixed
+- Updated GitHub repository URL in documentation to correct address
+
 ## [1.0.1] - 2024-06-06
 
 ### Added

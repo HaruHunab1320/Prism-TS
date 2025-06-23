@@ -34,6 +34,7 @@ export * from './llm';
 import { Tokenizer } from './core/tokenizer';
 import { Parser } from './core/parser';
 import { Runtime } from './core/runtime';
+import { GeminiProvider, ClaudeProvider } from './llm/provider';
 
 export interface PrismOptions {
   anthropicApiKey?: string;
@@ -53,6 +54,35 @@ export class Prism {
     }
     if (options.anthropicApiKey || process.env.ANTHROPIC_API_KEY) {
       process.env.ANTHROPIC_API_KEY = options.anthropicApiKey || process.env.ANTHROPIC_API_KEY;
+    }
+    
+    // Initialize LLM providers
+    this.initializeLLMProviders();
+  }
+
+  private initializeLLMProviders(): void {
+    // Initialize Gemini provider if API key is available
+    if (process.env.GEMINI_API_KEY) {
+      const geminiProvider = new GeminiProvider(
+        process.env.GEMINI_API_KEY,
+        {} // config
+      );
+      this.runtime.registerLLMProvider('gemini', geminiProvider);
+      this.runtime.setDefaultLLMProvider('gemini');
+    }
+    
+    // Initialize Claude provider if API key is available
+    if (process.env.ANTHROPIC_API_KEY) {
+      const claudeProvider = new ClaudeProvider(
+        process.env.ANTHROPIC_API_KEY,
+        {} // config
+      );
+      this.runtime.registerLLMProvider('claude', claudeProvider);
+      
+      // If no default provider set yet, use Claude
+      if (!this.runtime.getDefaultLLMProvider()) {
+        this.runtime.setDefaultLLMProvider('claude');
+      }
     }
   }
 

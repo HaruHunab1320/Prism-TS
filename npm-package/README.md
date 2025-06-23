@@ -2,7 +2,7 @@
 
 The official npm package for Prism - the language where AI meets certainty.
 
-**Latest: v1.0.2** - Fixed documentation links
+**Latest: v1.0.3** - Fixed LLM provider initialization
 
 ## Installation
 
