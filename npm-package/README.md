@@ -2,7 +2,7 @@
 
 The official npm package for Prism - the language where AI meets certainty.
 
-**Latest: v1.0.3** - Fixed LLM provider initialization
+**Latest: v1.0.4** - Critical improvements for real-world usage
 
 ## Installation
 
@@ -104,6 +104,20 @@ console.log(result); // "auto_approve" or "manual_review"
 ## Documentation
 
 Full documentation: https://github.com/HaruHunab1320/Prism-TS
+
+## What's New in v1.0.4
+
+- **Multiline strings** with ``` for code snippets and complex prompts
+- **Escape sequences** (\n, \t, \", \\) now work properly
+- **Better error messages** showing exactly where parsing failed
+
+## Coming Soon (v1.1.0)
+
+- Ternary operators: `result = condition ? "yes" : "no"`
+- Arrays and list operations
+- String interpolation: `msg = "Hello ${name}"`
+- Object/dictionary support
+- Pattern matching
 
 ## License
 

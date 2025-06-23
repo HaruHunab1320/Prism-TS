@@ -2,6 +2,103 @@
 
 All notable changes to prism-uncertainty will be documented in this file.
 
+## [1.0.7] - 2024-06-22
+
+### Added
+- **String interpolation** with `${}` syntax inside strings
+- Support for complex expressions in interpolations
+- Nested interpolations with proper quote handling
+- Interpolation in multiline strings
+- Confidence value formatting in interpolations
+
+### Example
+```prism
+// Basic interpolation
+name = "Alice"
+greeting = "Hello, ${name}!"
+
+// Complex expressions
+user = { name: "Bob", age: 30 }
+info = "${user.name} is ${user.age} years old"
+
+// With ternary operators
+score = 85
+grade = "Your grade: ${score >= 90 ? "A" : "B"}"
+
+// Multiline with interpolation
+report = ```
+User: ${name}
+Score: ${score}
+Grade: ${grade}
+```
+```
+
+## [1.0.6] - 2024-06-22
+
+### Added
+- **Arrays and lists** with literal syntax `[1, 2, 3]`
+- **Objects/dictionaries** with literal syntax `{ key: value }`
+- **Array methods**: length property, index access `array[0]`
+- **Object property access** with dot notation `object.property`
+- **Built-in array functions**: `map()`, `filter()`, `reduce()`
+- Support for nested data structures and confidence propagation
+
+### Example
+```prism
+// Arrays and objects
+scores = [85 ~> 0.9, 92 ~> 0.8, 78 ~> 0.7]
+firstScore = scores[0]       # 85 (~90%)
+count = scores.length        # 3
+
+person = {
+  name: "Alice",
+  scores: scores,
+  metadata: { verified: true }
+}
+name = person.name           # "Alice"
+verified = person.metadata.verified  # true
+```
+
+## [1.0.5] - 2024-06-22
+
+### Added
+- **Ternary operator** support (`condition ? true : false`)
+- Support for nested ternary expressions
+- Reduces need for verbose if-else statements
+
+### Example
+```prism
+status = age >= 18 ? "adult" : "minor"
+grade = score >= 90 ? "A" : (score >= 80 ? "B" : "C")
+action = confidence > 0.8 ? "auto-approve" : "manual-review"
+```
+
+## [1.0.4] - 2024-06-22
+
+### Added
+- **Multiline string support** with triple backticks (```) - enables passing code snippets to LLMs
+- **Standard escape sequences** in strings (\n, \t, \", \\, etc.)
+- **Enhanced error messages** showing line content and error position
+
+### Fixed
+- String literals now properly handle escape sequences instead of throwing errors
+- Parse errors now show helpful context including the problematic line and column marker
+
+### Example
+```prism
+// New multiline strings for code analysis
+code = ```
+function getUserData(userId) {
+  const query = "SELECT * FROM users WHERE id = " + userId;
+  return db.execute(query);
+}
+```
+analysis = llm("Find security issues in: " + code)
+
+// Escape sequences now work
+query = "SELECT * FROM users WHERE name = \"John\""
+```
+
 ## [1.0.3] - 2024-06-22
 
 ### Fixed

@@ -14,6 +14,7 @@ import {
   AgentDeclaration,
   BlockStatement,
   ExpressionStatement,
+  PropertyAccess,
 } from './ast';
 
 describe('Parser', () => {
@@ -180,7 +181,10 @@ describe('Parser', () => {
     it('should parse chained method calls', () => {
       const program = parse('obj.method().property');
       const stmt = program.statements[0] as ExpressionStatement;
-      expect(stmt.expression).toBeInstanceOf(BinaryExpression);
+      expect(stmt.expression).toBeInstanceOf(PropertyAccess);
+      const propAccess = stmt.expression as PropertyAccess;
+      expect(propAccess.property).toBe('property');
+      expect(propAccess.object).toBeInstanceOf(CallExpression);
     });
 
     it('should parse nested function calls', () => {

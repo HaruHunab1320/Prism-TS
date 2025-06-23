@@ -93,7 +93,7 @@ export class Prism {
     const tokenizer = new Tokenizer(code);
     const tokens = tokenizer.tokenize();
     
-    const parser = new Parser(tokens);
+    const parser = new Parser(tokens, code);
     const ast = parser.parse();
     
     const result = await this.runtime.execute(ast);

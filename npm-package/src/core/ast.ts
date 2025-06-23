@@ -3,11 +3,17 @@ export type NodeType =
   | 'IdentifierExpression'
   | 'NumberLiteral'
   | 'StringLiteral'
+  | 'InterpolatedString'
   | 'BooleanLiteral'
+  | 'ArrayLiteral'
+  | 'ObjectLiteral'
+  | 'PropertyAccess'
+  | 'IndexAccess'
   | 'ConfidenceExpression'
   | 'BinaryExpression'
   | 'UnaryExpression'
   | 'CallExpression'
+  | 'TernaryExpression'
   | 'BlockStatement'
   | 'IfStatement'
   | 'UncertainIfStatement'
@@ -43,6 +49,17 @@ export class StringLiteral extends Expression {
   type: NodeType = 'StringLiteral';
   
   constructor(public value: string) {
+    super();
+  }
+}
+
+export class InterpolatedString extends Expression {
+  type: NodeType = 'InterpolatedString';
+  
+  constructor(
+    public parts: string[],
+    public expressions: Expression[]
+  ) {
     super();
   }
 }
@@ -105,6 +122,56 @@ export class CallExpression extends Expression {
   
   get arguments(): Expression[] {
     return this.args;
+  }
+}
+
+export class TernaryExpression extends Expression {
+  type: NodeType = 'TernaryExpression';
+  
+  constructor(
+    public condition: Expression,
+    public trueBranch: Expression,
+    public falseBranch: Expression
+  ) {
+    super();
+  }
+}
+
+export class ArrayLiteral extends Expression {
+  type: NodeType = 'ArrayLiteral';
+  
+  constructor(public elements: Expression[]) {
+    super();
+  }
+}
+
+export class ObjectLiteral extends Expression {
+  type: NodeType = 'ObjectLiteral';
+  
+  constructor(public properties: Array<{ key: string; value: Expression }>) {
+    super();
+  }
+}
+
+export class PropertyAccess extends Expression {
+  type: NodeType = 'PropertyAccess';
+  
+  constructor(
+    public object: Expression,
+    public property: string
+  ) {
+    super();
+  }
+}
+
+export class IndexAccess extends Expression {
+  type: NodeType = 'IndexAccess';
+  
+  constructor(
+    public object: Expression,
+    public index: Expression
+  ) {
+    super();
   }
 }
 
