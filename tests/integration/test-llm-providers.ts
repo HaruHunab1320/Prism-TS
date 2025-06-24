@@ -1,5 +1,5 @@
-import { PrismREPL } from './src/repl';
-import { LLMConfigManager } from './src/llm';
+import { PrismREPL } from '../../src/repl';
+import { LLMConfigManager } from '../../src/llm';
 
 async function testLLMProviders() {
   console.log('🧪 Testing LLM Provider Integration\n');

@@ -1,5 +1,5 @@
-import { PrismREPL } from './src/repl';
-import { LLMConfigManager } from './src/llm';
+import { PrismREPL } from '../../src/repl';
+import { LLMConfigManager } from '../../src/llm';
 
 async function testScopingFixes() {
   console.log('🔧 Testing Prism Scoping Bug Fixes 🔧\n');

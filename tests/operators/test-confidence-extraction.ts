@@ -1,5 +1,5 @@
-import { createRuntime } from './src/core/runtime';
-import { parse } from './src/core/parser';
+import { createRuntime } from '../../src/core/runtime';
+import { parse } from '../../src/core/parser';
 
 async function testConfidenceExtraction() {
   console.log('🧪 Testing Confidence Extraction Operator (<~)');

@@ -1,5 +1,5 @@
-import { PrismREPL } from './src/repl';
-import { LLMConfigManager } from './src/llm';
+import { PrismREPL } from '../../src/repl';
+import { LLMConfigManager } from '../../src/llm';
 
 async function testRealGemini() {
   console.log('🧪 Testing Real Gemini API Integration\n');

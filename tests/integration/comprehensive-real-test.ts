@@ -1,5 +1,5 @@
-import { PrismREPL } from './src/repl';
-import { LLMConfigManager } from './src/llm';
+import { PrismREPL } from '../../src/repl';
+import { LLMConfigManager } from '../../src/llm';
 import * as fs from 'fs';
 
 interface TestResult {

@@ -1,0 +1,65 @@
+# Prism Arrays and Objects Showcase
+
+# Arrays - Basic operations
+numbers = [1, 2, 3, 4, 5]
+mixed = [42, "hello", true, 3.14]
+nested = [[1, 2], [3, 4], [5, 6]]
+
+# Array access
+first = numbers[0]           # 1
+last = numbers[4]            # 5
+length = numbers.length      # 5
+
+# Arrays with confidence
+scores = [85 ~> 0.9, 92 ~> 0.8, 78 ~> 0.7]
+firstScore = scores[0]       # 85 (~90%)
+
+# Objects - Basic operations  
+person = {
+  name: "Alice",
+  age: 30,
+  active: true
+}
+
+# Object property access
+name = person.name           # "Alice"
+age = person.age            # 30
+
+# Nested objects
+company = {
+  name: "TechCorp",
+  employees: [
+    { name: "Bob", role: "Developer" },
+    { name: "Carol", role: "Designer" }
+  ],
+  stats: {
+    revenue: 1000000,
+    growth: 0.15
+  }
+}
+
+# Complex access
+devName = company.employees[0].name     # "Bob"
+revenue = company.stats.revenue          # 1000000
+
+# Objects with confidence
+analysis = {
+  sentiment: "positive" ~> 0.85,
+  score: 95 ~> 0.9,
+  categories: ["tech", "ai", "innovation"]
+} ~> 0.8
+
+# Combining with ternary operators
+status = scores.length >= 3 ? "sufficient data" : "need more data"
+grade = scores[0] >= 90 ? "A" : (scores[0] >= 80 ? "B" : "C")
+
+# Practical example: Processing results
+results = [
+  { id: 1, value: 100, confidence: 0.9 },
+  { id: 2, value: 85, confidence: 0.7 },
+  { id: 3, value: 92, confidence: 0.8 }
+]
+
+# Extract specific data
+firstResult = results[0].value          # 100
+highConfidence = results[0].confidence > 0.8 ? "reliable" : "uncertain"

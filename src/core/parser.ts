@@ -6,10 +6,16 @@ import {
   IdentifierExpression,
   NumberLiteral,
   StringLiteral,
+  InterpolatedString,
   BooleanLiteral,
   BinaryExpression,
   UnaryExpression,
   CallExpression,
+  TernaryExpression,
+  ArrayLiteral,
+  ObjectLiteral,
+  PropertyAccess,
+  IndexAccess,
   ConfidenceExpression,
   AssignmentStatement,
   IfStatement,
@@ -25,18 +31,43 @@ import {
 } from './ast';
 
 export class ParseError extends Error {
-  constructor(message: string, public token: Token) {
-    super(message);
+  constructor(message: string, public token: Token, public sourceCode?: string) {
+    const errorMessage = ParseError.formatError(message, token, sourceCode);
+    super(errorMessage);
     this.name = 'ParseError';
+  }
+  
+  private static formatError(message: string, token: Token, sourceCode?: string): string {
+    let errorMsg = `ParseError at line ${token.line}, column ${token.column}: ${message}`;
+    
+    if (sourceCode) {
+      const lines = sourceCode.split('\n');
+      const errorLine = lines[token.line - 1];
+      
+      if (errorLine) {
+        errorMsg += '\n\n';
+        errorMsg += `  ${token.line} | ${errorLine}\n`;
+        errorMsg += `      ${' '.repeat(token.column)}^`;
+        
+        // Add some context - show the token that caused the error
+        if (token.type !== TokenType.EOF) {
+          errorMsg += `\n\nFound: '${token.value}' (${TokenType[token.type]})`;
+        }
+      }
+    }
+    
+    return errorMsg;
   }
 }
 
 export class Parser {
   private tokens: Token[];
   private current: number = 0;
+  private sourceCode?: string;
 
-  constructor(tokens: Token[]) {
+  constructor(tokens: Token[], sourceCode?: string) {
     this.tokens = tokens;
+    this.sourceCode = sourceCode;
   }
 
   parse(): Program {
@@ -159,7 +190,7 @@ export class Parser {
         branches.low = new BlockStatement(statements);
         this.consume(TokenType.RIGHT_BRACE, "Expected '}' after low branch");
       } else {
-        throw new ParseError("Expected 'high', 'medium', or 'low' branch", this.peek());
+        throw new ParseError("Expected 'high', 'medium', or 'low' branch", this.peek(), this.sourceCode);
       }
     }
     
@@ -238,7 +269,31 @@ export class Parser {
   }
 
   private expression(): Expression | null {
-    return this.confidenceExpression();
+    return this.ternary();
+  }
+
+  private ternary(): Expression | null {
+    let expr = this.confidenceExpression();
+    
+    if (this.match(TokenType.QUESTION)) {
+      const trueBranch = this.expression();
+      if (!trueBranch) {
+        throw new ParseError("Expected expression after '?'", this.previous(), this.sourceCode);
+      }
+      
+      if (!this.match(TokenType.COLON)) {
+        throw new ParseError("Expected ':' after true branch of ternary operator", this.peek(), this.sourceCode);
+      }
+      
+      const falseBranch = this.expression();
+      if (!falseBranch) {
+        throw new ParseError("Expected expression after ':'", this.previous(), this.sourceCode);
+      }
+      
+      return new TernaryExpression(expr!, trueBranch, falseBranch);
+    }
+    
+    return expr;
   }
 
   private confidenceExpression(): Expression | null {
@@ -249,7 +304,7 @@ export class Parser {
       if (confidence) {
         return new ConfidenceExpression(expr!, confidence);
       }
-      throw new ParseError("Expected expression after '~>'", this.previous());
+      throw new ParseError("Expected expression after '~>'", this.previous(), this.sourceCode);
     }
     
     // Handle confidence chaining operator (~~)
@@ -366,10 +421,17 @@ export class Parser {
         current = this.finishCall(current);
       } else if (this.match(TokenType.DOT)) {
         const name = this.consume(TokenType.IDENTIFIER, "Expected property name after '.'").value;
-        current = new BinaryExpression('.', current, new IdentifierExpression(name));
+        current = new PropertyAccess(current, name);
       } else if (this.match(TokenType.CONFIDENCE_DOT)) {
         const name = this.consume(TokenType.IDENTIFIER, "Expected property name after '~.'").value;
         current = new BinaryExpression('~.', current, new IdentifierExpression(name));
+      } else if (this.match(TokenType.LEFT_BRACKET)) {
+        const index = this.expression();
+        if (!index) {
+          throw new ParseError("Expected expression in brackets", this.peek(), this.sourceCode);
+        }
+        this.consume(TokenType.RIGHT_BRACKET, "Expected ']' after index");
+        current = new IndexAccess(current, index);
       } else {
         break;
       }
@@ -401,6 +463,10 @@ export class Parser {
       return new StringLiteral(this.previous().value);
     }
     
+    if (this.match(TokenType.INTERPOLATED_STRING)) {
+      return this.parseInterpolatedString(this.previous());
+    }
+    
     if (this.match(TokenType.TRUE)) {
       return new BooleanLiteral(true);
     }
@@ -419,7 +485,87 @@ export class Parser {
       return expr;
     }
     
-    throw new ParseError("Expected expression", this.peek());
+    if (this.match(TokenType.LEFT_BRACKET)) {
+      return this.arrayLiteral();
+    }
+    
+    // Check for object literal by looking ahead for object-like pattern
+    if (this.check(TokenType.LEFT_BRACE)) {
+      // Save current position
+      const savedPosition = this.current;
+      this.advance(); // consume {
+      
+      // Check if it's an object literal or block statement
+      let isObject = false;
+      if (this.check(TokenType.RIGHT_BRACE)) {
+        // Empty braces - could be either, treat as object
+        isObject = true;
+      } else if (this.check(TokenType.IDENTIFIER) || this.check(TokenType.STRING)) {
+        // Save position and check for colon after identifier/string
+        const checkPos = this.current;
+        this.advance();
+        if (this.check(TokenType.COLON)) {
+          isObject = true;
+        }
+        this.current = checkPos;
+      }
+      
+      // Restore position
+      this.current = savedPosition;
+      
+      if (isObject) {
+        this.advance(); // consume {
+        return this.objectLiteral();
+      }
+    }
+    
+    throw new ParseError("Expected expression", this.peek(), this.sourceCode);
+  }
+  
+  private arrayLiteral(): ArrayLiteral {
+    const elements: Expression[] = [];
+    
+    if (!this.check(TokenType.RIGHT_BRACKET)) {
+      do {
+        const elem = this.expression();
+        if (elem) {
+          elements.push(elem);
+        }
+      } while (this.match(TokenType.COMMA));
+    }
+    
+    this.consume(TokenType.RIGHT_BRACKET, "Expected ']' after array elements");
+    return new ArrayLiteral(elements);
+  }
+  
+  private objectLiteral(): ObjectLiteral {
+    const properties: Array<{ key: string; value: Expression }> = [];
+    
+    if (!this.check(TokenType.RIGHT_BRACE)) {
+      do {
+        let key: string;
+        
+        if (this.match(TokenType.IDENTIFIER)) {
+          key = this.previous().value;
+        } else if (this.match(TokenType.STRING)) {
+          key = this.previous().value;
+        } else {
+          throw new ParseError("Expected property name", this.peek(), this.sourceCode);
+        }
+        
+        this.consume(TokenType.COLON, "Expected ':' after property name");
+        
+        const value = this.expression();
+        if (!value) {
+          throw new ParseError("Expected expression after ':'", this.previous(), this.sourceCode);
+        }
+        
+        properties.push({ key, value });
+      } while (this.match(TokenType.COMMA));
+    }
+    
+    this.consume(TokenType.RIGHT_BRACE, "Expected '}' after object properties");
+    return new ObjectLiteral(properties);
   }
 
   private match(...types: TokenType[]): boolean {
@@ -456,7 +602,7 @@ export class Parser {
 
   private consume(type: TokenType, message: string): Token {
     if (this.check(type)) return this.advance();
-    throw new ParseError(message, this.peek());
+    throw new ParseError(message, this.peek(), this.sourceCode);
   }
 
   private synchronize(): void {
@@ -475,6 +621,84 @@ export class Parser {
       
       this.advance();
     }
+  }
+  
+  private parseInterpolatedString(token: Token): InterpolatedString {
+    const value = token.value;
+    const parts: string[] = [];
+    const expressions: Expression[] = [];
+    
+    let current = 0;
+    let partStart = 0;
+    
+    while (current < value.length) {
+      if (value[current] === '$' && value[current + 1] === '{') {
+        // Found interpolation start
+        // Save the string part before interpolation
+        parts.push(value.substring(partStart, current));
+        
+        // Find the end of interpolation
+        current += 2; // Skip ${
+        let braceCount = 1;
+        let exprStart = current;
+        
+        let inString = false;
+        let stringDelimiter = '';
+        
+        while (current < value.length && braceCount > 0) {
+          const ch = value[current];
+          
+          // Handle string literals to ignore braces inside strings
+          if ((ch === '"' || ch === "'") && (current === 0 || value[current - 1] !== '\\')) {
+            if (!inString) {
+              inString = true;
+              stringDelimiter = ch;
+            } else if (ch === stringDelimiter) {
+              inString = false;
+            }
+          }
+          
+          // Only count braces when not inside a string
+          if (!inString) {
+            if (ch === '{') braceCount++;
+            else if (ch === '}') braceCount--;
+          }
+          
+          if (braceCount > 0) current++;
+        }
+        
+        if (braceCount !== 0) {
+          throw new ParseError('Unclosed interpolation in string', token, this.sourceCode);
+        }
+        
+        // Parse the expression inside ${}
+        const exprCode = value.substring(exprStart, current);
+        
+        // Check for empty expression
+        if (exprCode.trim() === '') {
+          throw new ParseError('Empty interpolation expression', token, this.sourceCode);
+        }
+        
+        const exprTokens = tokenize(exprCode);
+        const exprParser = new Parser(exprTokens, exprCode);
+        const expr = exprParser.expression();
+        
+        if (!expr) {
+          throw new ParseError('Invalid interpolation expression', token, this.sourceCode);
+        }
+        
+        expressions.push(expr);
+        current++; // Skip closing }
+        partStart = current;
+      } else {
+        current++;
+      }
+    }
+    
+    // Add the final part after the last interpolation
+    parts.push(value.substring(partStart));
+    
+    return new InterpolatedString(parts, expressions);
   }
 }
 

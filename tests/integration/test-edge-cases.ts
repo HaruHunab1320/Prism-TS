@@ -1,6 +1,6 @@
-import { PrismREPL } from './src/repl';
-import { MockLLMProvider } from './src/llm';
-import { ConfidenceValue } from './src/confidence';
+import { PrismREPL } from '../../src/repl';
+import { MockLLMProvider } from '../../src/llm';
+import { ConfidenceValue } from '../../src/confidence';
 
 async function runEdgeCaseTests() {
   console.log('🧪 Testing Prism Language Edge Cases and Stress Scenarios 🧪\n');

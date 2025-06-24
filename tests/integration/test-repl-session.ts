@@ -1,6 +1,6 @@
-import { PrismREPL } from './src/repl';
-import { MockLLMProvider } from './src/llm';
-import { ConfidenceValue } from './src/confidence';
+import { PrismREPL } from '../../src/repl';
+import { MockLLMProvider } from '../../src/llm';
+import { ConfidenceValue } from '../../src/confidence';
 
 async function runComprehensiveTest() {
   console.log('🚀 Starting Comprehensive Prism Language Test Session 🚀\n');

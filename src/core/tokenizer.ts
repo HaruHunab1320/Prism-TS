@@ -2,6 +2,7 @@ export enum TokenType {
   // Literals
   NUMBER = 'NUMBER',
   STRING = 'STRING',
+  INTERPOLATED_STRING = 'INTERPOLATED_STRING',
   IDENTIFIER = 'IDENTIFIER',
 
   // Keywords
@@ -72,6 +73,7 @@ export enum TokenType {
   DOT = 'DOT',
   COLON = 'COLON',
   SEMICOLON = 'SEMICOLON',
+  QUESTION = 'QUESTION',
 
   // Special
   EOF = 'EOF',
@@ -158,6 +160,7 @@ export class Tokenizer {
       case '.': return this.makeToken(TokenType.DOT, '.', startColumn);
       case ':': return this.makeToken(TokenType.COLON, ':', startColumn);
       case ';': return this.makeToken(TokenType.SEMICOLON, ';', startColumn);
+      case '?': return this.makeToken(TokenType.QUESTION, '?', startColumn);
     }
 
     // Two character tokens
@@ -293,6 +296,13 @@ export class Tokenizer {
     if (char === '"') {
       return this.string(startColumn);
     }
+    
+    // Multiline string literals
+    if (char === '`' && this.peek() === '`' && this.peekNext() === '`') {
+      this.advance(); // consume second `
+      this.advance(); // consume third `
+      return this.multilineString(startColumn);
+    }
 
     // Number literals
     if (this.isDigit(char)) {
@@ -309,13 +319,52 @@ export class Tokenizer {
 
   private string(startColumn: number): Token {
     const value: string[] = [];
+    let hasInterpolation = false;
+    let braceDepth = 0;
     
-    while (!this.isAtEnd() && this.peek() !== '"') {
+    while (!this.isAtEnd()) {
       const char = this.peek();
-      if (char === '\n') {
-        this.line++;
-        this.advance();
-        this.column = 0;
+      
+      // Check if we're at the closing quote (only when not inside interpolation)
+      if (char === '"' && braceDepth === 0) {
+        break;
+      }
+      
+      // Handle escape sequences
+      if (char === '\\') {
+        this.advance(); // consume backslash
+        if (this.isAtEnd()) {
+          throw new Error(`Unterminated escape sequence at line ${this.line}`);
+        }
+        
+        const escaped = this.advance();
+        switch (escaped) {
+          case 'n': value.push('\n'); break;
+          case 't': value.push('\t'); break;
+          case 'r': value.push('\r'); break;
+          case '\\': value.push('\\'); break;
+          case '"': value.push('"'); break;
+          case '\'': value.push('\''); break;
+          default:
+            // For unknown escape sequences, just include the character
+            value.push(escaped);
+        }
+      } else if (char === '$' && this.peekNext() === '{') {
+        // String interpolation detected
+        hasInterpolation = true;
+        value.push(this.advance()); // $
+        value.push(this.advance()); // {
+        braceDepth++;
+      } else if (char === '{' && braceDepth > 0) {
+        // Track nested braces inside interpolation
+        value.push(this.advance());
+        braceDepth++;
+      } else if (char === '}' && braceDepth > 0) {
+        // Track closing braces
+        value.push(this.advance());
+        braceDepth--;
+      } else if (char === '\n') {
+        throw new Error(`Unexpected newline in string at line ${this.line}`);
       } else {
         value.push(this.advance());
       }
@@ -328,7 +377,57 @@ export class Tokenizer {
     // Consume closing quote
     this.advance();
 
-    return this.makeToken(TokenType.STRING, value.join(''), startColumn);
+    const tokenType = hasInterpolation ? TokenType.INTERPOLATED_STRING : TokenType.STRING;
+    return this.makeToken(tokenType, value.join(''), startColumn);
+  }
+  
+  private multilineString(startColumn: number): Token {
+    const value: string[] = [];
+    const startLine = this.line;
+    let hasInterpolation = false;
+    let braceDepth = 0;
+    
+    while (!this.isAtEnd()) {
+      // Check for closing ``` (only when not inside interpolation)
+      if (this.peek() === '`' && this.peekNext() === '`' && this.peekThird() === '`' && braceDepth === 0) {
+        this.advance(); // consume first `
+        this.advance(); // consume second `
+        this.advance(); // consume third `
+        break;
+      }
+      
+      // Check for interpolation
+      if (this.peek() === '$' && this.peekNext() === '{') {
+        hasInterpolation = true;
+        value.push(this.advance()); // $
+        value.push(this.advance()); // {
+        braceDepth++;
+      } else if (this.peek() === '{' && braceDepth > 0) {
+        // Track nested braces inside interpolation
+        value.push(this.advance());
+        braceDepth++;
+      } else if (this.peek() === '}' && braceDepth > 0) {
+        // Track closing braces
+        value.push(this.advance());
+        braceDepth--;
+      } else {
+        const char = this.advance();
+        if (char === '\n') {
+          this.line++;
+          this.column = 0;
+        }
+        value.push(char);
+      }
+    }
+    
+    if (this.isAtEnd() && !(this.input[this.position - 3] === '`' && 
+                            this.input[this.position - 2] === '`' && 
+                            this.input[this.position - 1] === '`')) {
+      throw new Error(`Unterminated multiline string starting at line ${startLine}, column ${startColumn}`);
+    }
+    
+    const tokenType = hasInterpolation ? TokenType.INTERPOLATED_STRING : TokenType.STRING;
+    return this.makeToken(tokenType, value.join(''), startColumn);
   }
 
   private number(startColumn: number): Token {

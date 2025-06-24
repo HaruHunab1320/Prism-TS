@@ -4,10 +4,16 @@ import {
   IdentifierExpression,
   NumberLiteral,
   StringLiteral,
+  InterpolatedString,
   BooleanLiteral,
   BinaryExpression,
   UnaryExpression,
   CallExpression,
+  TernaryExpression,
+  ArrayLiteral,
+  ObjectLiteral,
+  PropertyAccess,
+  IndexAccess,
   ConfidenceExpression,
   AssignmentStatement,
   IfStatement,
@@ -119,6 +125,62 @@ export class ConfidenceValue extends Value {
 
   toString(): string {
     return `${this.value.toString()} (~${this.confidence.toString()})`;
+  }
+}
+
+export class ArrayValue extends Value {
+  type = 'array';
+  value: Value[];
+
+  constructor(public elements: Value[]) {
+    super();
+    this.value = elements;
+  }
+
+  equals(other: Value): boolean {
+    if (!(other instanceof ArrayValue)) return false;
+    if (this.elements.length !== other.elements.length) return false;
+    return this.elements.every((elem, i) => elem.equals(other.elements[i]));
+  }
+
+  isTruthy(): boolean {
+    return true;
+  }
+
+  toString(): string {
+    return `[${this.elements.map(e => e.toString()).join(', ')}]`;
+  }
+}
+
+export class ObjectValue extends Value {
+  type = 'object';
+  value: Map<string, Value>;
+
+  constructor(public properties: Map<string, Value>) {
+    super();
+    this.value = properties;
+  }
+
+  equals(other: Value): boolean {
+    if (!(other instanceof ObjectValue)) return false;
+    if (this.properties.size !== other.properties.size) return false;
+    
+    for (const [key, value] of this.properties) {
+      const otherValue = other.properties.get(key);
+      if (!otherValue || !value.equals(otherValue)) return false;
+    }
+    return true;
+  }
+
+  isTruthy(): boolean {
+    return true;
+  }
+
+  toString(): string {
+    const props = Array.from(this.properties.entries())
+      .map(([k, v]) => `${k}: ${v.toString()}`)
+      .join(', ');
+    return `{ ${props} }`;
   }
 }
 
@@ -272,6 +334,8 @@ export class Interpreter {
         return this.interpretNumberLiteral(node as NumberLiteral);
       case 'StringLiteral':
         return this.interpretStringLiteral(node as StringLiteral);
+      case 'InterpolatedString':
+        return this.interpretInterpolatedString(node as InterpolatedString);
       case 'BooleanLiteral':
         return this.interpretBooleanLiteral(node as BooleanLiteral);
       case 'IdentifierExpression':
@@ -282,6 +346,16 @@ export class Interpreter {
         return this.interpretUnaryExpression(node as UnaryExpression);
       case 'CallExpression':
         return this.interpretCallExpression(node as CallExpression);
+      case 'TernaryExpression':
+        return this.interpretTernaryExpression(node as TernaryExpression);
+      case 'ArrayLiteral':
+        return this.interpretArrayLiteral(node as ArrayLiteral);
+      case 'ObjectLiteral':
+        return this.interpretObjectLiteral(node as ObjectLiteral);
+      case 'PropertyAccess':
+        return this.interpretPropertyAccess(node as PropertyAccess);
+      case 'IndexAccess':
+        return this.interpretIndexAccess(node as IndexAccess);
       case 'ConfidenceExpression':
         return this.interpretConfidenceExpression(node as ConfidenceExpression);
       case 'AssignmentStatement':
@@ -319,6 +393,27 @@ export class Interpreter {
 
   private async interpretStringLiteral(node: StringLiteral): Promise<Value> {
     return new StringValue(node.value);
+  }
+  
+  private async interpretInterpolatedString(node: InterpolatedString): Promise<Value> {
+    let result = '';
+    
+    // Interpolated strings have n parts and n-1 expressions
+    // Example: "Hello ${name}, you are ${age} years old"
+    // parts: ["Hello ", ", you are ", " years old"]
+    // expressions: [name, age]
+    
+    for (let i = 0; i < node.parts.length; i++) {
+      result += node.parts[i];
+      
+      // Add the evaluated expression if there is one
+      if (i < node.expressions.length) {
+        const exprValue = await this.interpret(node.expressions[i]);
+        result += exprValue.toString();
+      }
+    }
+    
+    return new StringValue(result);
   }
 
   private async interpretBooleanLiteral(node: BooleanLiteral): Promise<Value> {
@@ -362,7 +457,9 @@ export class Interpreter {
     }
 
     // Ensure right is a Value for all other operators
-    if (!(right instanceof NumberValue || right instanceof StringValue || right instanceof BooleanValue || right instanceof ConfidenceValue || right instanceof FunctionValue)) {
+    if (!(right instanceof NumberValue || right instanceof StringValue || right instanceof BooleanValue || 
+          right instanceof ConfidenceValue || right instanceof FunctionValue || 
+          right instanceof ArrayValue || right instanceof ObjectValue)) {
       throw new RuntimeError(`Invalid right operand for operator ${operator}`, node);
     }
 
@@ -820,6 +917,111 @@ export class Interpreter {
     }
 
     return await callee.value(args);
+  }
+
+  private async interpretTernaryExpression(node: TernaryExpression): Promise<Value> {
+    const condition = await this.interpret(node.condition);
+    
+    // Check if condition is truthy
+    if (condition.isTruthy()) {
+      return await this.interpret(node.trueBranch);
+    } else {
+      return await this.interpret(node.falseBranch);
+    }
+  }
+
+  private async interpretArrayLiteral(node: ArrayLiteral): Promise<Value> {
+    const elements: Value[] = [];
+    for (const elem of node.elements) {
+      elements.push(await this.interpret(elem));
+    }
+    return new ArrayValue(elements);
+  }
+  
+  private async interpretObjectLiteral(node: ObjectLiteral): Promise<Value> {
+    const properties = new Map<string, Value>();
+    for (const { key, value } of node.properties) {
+      properties.set(key, await this.interpret(value));
+    }
+    return new ObjectValue(properties);
+  }
+  
+  private async interpretPropertyAccess(node: PropertyAccess): Promise<Value> {
+    const object = await this.interpret(node.object);
+    
+    // Handle array methods
+    if (object instanceof ArrayValue) {
+      if (node.property === 'length') {
+        return new NumberValue(object.elements.length);
+      }
+      // Array methods are handled as built-in functions, not properties
+      // They would be called with syntax like: map(array, fn)
+    }
+    
+    // Handle object property access
+    if (object instanceof ObjectValue) {
+      const value = object.properties.get(node.property);
+      if (!value) {
+        throw new RuntimeError(`Property '${node.property}' does not exist`, node);
+      }
+      return value;
+    }
+    
+    // Handle confidence values by accessing property on underlying value
+    if (object instanceof ConfidenceValue) {
+      const innerValue = object.value;
+      
+      if (innerValue instanceof ArrayValue && node.property === 'length') {
+        return new NumberValue(innerValue.elements.length);
+      }
+      
+      if (innerValue instanceof ObjectValue) {
+        const value = innerValue.properties.get(node.property);
+        if (!value) {
+          throw new RuntimeError(`Property '${node.property}' does not exist`, node);
+        }
+        // Wrap result in confidence value with same confidence
+        return new ConfidenceValue(value, object.confidence);
+      }
+    }
+    
+    throw new RuntimeError(`Cannot access property '${node.property}' on ${object.type}`, node);
+  }
+  
+  private async interpretIndexAccess(node: IndexAccess): Promise<Value> {
+    const object = await this.interpret(node.object);
+    const index = await this.interpret(node.index);
+    
+    if (object instanceof ArrayValue) {
+      if (!(index instanceof NumberValue)) {
+        throw new RuntimeError('Array index must be a number', node);
+      }
+      
+      const idx = Math.floor(index.value);
+      if (idx < 0 || idx >= object.elements.length) {
+        throw new RuntimeError(`Array index ${idx} out of bounds`, node);
+      }
+      
+      return object.elements[idx];
+    }
+    
+    // Handle confidence values
+    if (object instanceof ConfidenceValue && object.value instanceof ArrayValue) {
+      // Index access on confident array
+      if (!(index instanceof NumberValue)) {
+        throw new RuntimeError('Array index must be a number', node);
+      }
+      
+      const innerArray = object.value as ArrayValue;
+      const idx = Math.floor(index.value);
+      if (idx < 0 || idx >= innerArray.elements.length) {
+        throw new RuntimeError(`Array index ${idx} out of bounds`, node);
+      }
+      
+      return new ConfidenceValue(innerArray.elements[idx], object.confidence);
+    }
+    
+    throw new RuntimeError(`Cannot index ${object.type}`, node);
   }
 
   private async interpretConfidenceExpression(node: ConfidenceExpression): Promise<Value> {
