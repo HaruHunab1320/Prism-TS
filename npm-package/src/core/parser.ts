@@ -28,6 +28,7 @@ import {
   AgentConfig,
   BinaryOperator,
   UnaryOperator,
+  LambdaExpression,
 } from './ast';
 
 export class ParseError extends Error {
@@ -393,7 +394,7 @@ export class Parser {
   private factor(): Expression | null {
     let expr = this.unary();
     
-    while (this.match(TokenType.SLASH, TokenType.STAR, TokenType.CONFIDENCE_SLASH, TokenType.CONFIDENCE_STAR)) {
+    while (this.match(TokenType.SLASH, TokenType.STAR, TokenType.PERCENT, TokenType.CONFIDENCE_SLASH, TokenType.CONFIDENCE_STAR)) {
       const operator = this.previous().value as BinaryOperator;
       const right = this.unary();
       expr = new BinaryExpression(operator, expr!, right!);
@@ -476,10 +477,61 @@ export class Parser {
     }
     
     if (this.match(TokenType.IDENTIFIER)) {
-      return new IdentifierExpression(this.previous().value);
+      const identifier = this.previous().value;
+      
+      // Check for single-parameter lambda without parentheses
+      if (this.check(TokenType.ARROW)) {
+        this.advance(); // consume =>
+        const body = this.ternary();
+        if (!body) {
+          throw new ParseError("Expected expression after '=>'", this.previous(), this.sourceCode);
+        }
+        return new LambdaExpression([identifier], body);
+      }
+      
+      return new IdentifierExpression(identifier);
     }
     
     if (this.match(TokenType.LEFT_PAREN)) {
+      // Check if this could be a lambda expression
+      const savedPosition = this.current;
+      
+      // Try to parse as lambda parameters
+      const params: string[] = [];
+      let isLambda = false;
+      
+      // Empty params () =>
+      if (this.check(TokenType.RIGHT_PAREN)) {
+        this.advance();
+        if (this.check(TokenType.ARROW)) {
+          isLambda = true;
+        }
+      } else if (this.check(TokenType.IDENTIFIER)) {
+        // Single param (x) => or multiple (x, y) =>
+        do {
+          if (this.match(TokenType.IDENTIFIER)) {
+            params.push(this.previous().value);
+          } else {
+            break;
+          }
+        } while (this.match(TokenType.COMMA));
+        
+        if (this.match(TokenType.RIGHT_PAREN) && this.check(TokenType.ARROW)) {
+          isLambda = true;
+        }
+      }
+      
+      if (isLambda) {
+        this.consume(TokenType.ARROW, "Expected '=>' after lambda parameters");
+        const body = this.ternary(); // Parse lambda body
+        if (!body) {
+          throw new ParseError("Expected expression after '=>'", this.previous(), this.sourceCode);
+        }
+        return new LambdaExpression(params, body);
+      }
+      
+      // Not a lambda, restore position and parse as grouped expression
+      this.current = savedPosition;
       const expr = this.expression();
       this.consume(TokenType.RIGHT_PAREN, "Expected ')' after expression");
       return expr;

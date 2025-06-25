@@ -14,6 +14,7 @@ export type NodeType =
   | 'UnaryExpression'
   | 'CallExpression'
   | 'TernaryExpression'
+  | 'LambdaExpression'
   | 'BlockStatement'
   | 'IfStatement'
   | 'UncertainIfStatement'
@@ -83,7 +84,7 @@ export class ConfidenceExpression extends Expression {
   }
 }
 
-export type BinaryOperator = '+' | '-' | '*' | '/' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '&&' | '||' | '~>' | '~~' | '~??' | '~&&' | '~||' | '~||>' | '~@>' | '~+' | '~-' | '~*' | '~/' | '~==' | '~!=' | '~<' | '~>=' | '~<=' | '~.' | '.';
+export type BinaryOperator = '+' | '-' | '*' | '/' | '%' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '&&' | '||' | '~>' | '~~' | '~??' | '~&&' | '~||' | '~||>' | '~@>' | '~+' | '~-' | '~*' | '~/' | '~==' | '~!=' | '~<' | '~>=' | '~<=' | '~.' | '.';
 
 export class BinaryExpression extends Expression {
   type: NodeType = 'BinaryExpression';
@@ -132,6 +133,17 @@ export class TernaryExpression extends Expression {
     public condition: Expression,
     public trueBranch: Expression,
     public falseBranch: Expression
+  ) {
+    super();
+  }
+}
+
+export class LambdaExpression extends Expression {
+  type: NodeType = 'LambdaExpression';
+  
+  constructor(
+    public parameters: string[],
+    public body: Expression
   ) {
     super();
   }

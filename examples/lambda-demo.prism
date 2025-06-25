@@ -1,0 +1,51 @@
+// Lambda Expressions Demo
+// Prism now supports lambda expressions with arrow syntax
+
+// Single parameter lambda (no parentheses needed)
+double = x => x * 2
+result1 = double(21)  // 42
+
+// Multiple parameters (parentheses required)
+add = (x, y) => x + y
+result2 = add(15, 27)  // 42
+
+// Zero parameters
+getRandom = () => 42
+result3 = getRandom()  // 42
+
+// Using lambdas with array methods
+numbers = [1, 2, 3, 4, 5] ~> 0.95
+
+// Map: transform each element
+squared = map(numbers, x => x * x)  // [1, 4, 9, 16, 25]
+
+// Filter: keep elements that match predicate
+evens = filter(numbers, x => x % 2 == 0)  // [2, 4]
+
+// Reduce: combine elements into single value
+sum = reduce(numbers, (acc, x, idx) => acc + x, 0)  // 15
+
+// Complex expressions in lambdas
+abs = x => x < 0 ? -x : x
+distance = abs(-42)  // 42
+
+// Lambda closures capture outer scope
+multiplier = 10
+scale = x => x * multiplier
+scaled = scale(4.2)  // 42
+
+// Nested lambdas (currying)
+makeAdder = x => (y => x + y)
+add10 = makeAdder(10)
+result4 = add10(32)  // 42
+
+// Chaining operations
+data = [1, 2, 3, 4, 5, 6]
+processed = map(
+  filter(data, x => x % 2 == 0),  // First filter evens: [2, 4, 6]
+  x => x * x                        // Then square them: [4, 16, 36]
+)
+
+// Confidence preservation
+confidentData = [10, 20, 30] ~> 0.8
+doubled = map(confidentData, x => x * 2)  // Result maintains 0.8 confidence

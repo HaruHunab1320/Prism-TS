@@ -43,6 +43,27 @@ This document tracks features implemented in the npm-package that need to be syn
 | Interpolation in multiline strings | ✅ | ✅ | tokenizer.ts |
 | Complex expression support | ✅ | ✅ | parser.ts |
 
+### v1.0.8 Features (Synced ✅)
+
+| Feature | NPM Package | Core Language | Files to Sync |
+|---------|-------------|---------------|---------------|
+| Array methods implementation | ✅ | ✅ | runtime.ts |
+| map(array, fn) function | ✅ | ✅ | runtime.ts |
+| filter(array, predicate) function | ✅ | ✅ | runtime.ts |
+| reduce(array, reducer, init?) function | ✅ | ✅ | runtime.ts |
+
+### v1.0.9 Features (Synced ✅)
+
+| Feature | NPM Package | Core Language | Files to Sync |
+|---------|-------------|---------------|---------------|
+| Lambda expressions `x => x * 2` | ✅ | ✅ | tokenizer.ts, ast.ts, parser.ts, runtime.ts |
+| Arrow function syntax `=>` | ✅ | ✅ | tokenizer.ts |
+| Single param without parens | ✅ | ✅ | parser.ts |
+| Multiple params `(x, y) => x + y` | ✅ | ✅ | parser.ts |
+| Zero params `() => 42` | ✅ | ✅ | parser.ts |
+| Closures and scope capture | ✅ | ✅ | runtime.ts |
+| Modulo operator `%` | ✅ | ✅ | tokenizer.ts, ast.ts, runtime.ts |
+
 ### Files Modified in NPM Package
 
 1. **src/core/tokenizer.ts**
@@ -53,6 +74,8 @@ This document tracks features implemented in the npm-package that need to be syn
    - Added LEFT_BRACKET and RIGHT_BRACKET tokens
    - Added INTERPOLATED_STRING token type
    - Enhanced string parsing with brace depth tracking
+   - Added ARROW token type for lambda expressions
+   - Added PERCENT token type for modulo operator
 
 2. **src/core/parser.ts**
    - Enhanced `ParseError` class with context formatting
@@ -63,20 +86,30 @@ This document tracks features implemented in the npm-package that need to be syn
    - Updated `call()` to handle property and index access
    - Enhanced `primary()` to detect object literals vs blocks
    - Added `parseInterpolatedString()` method with proper quote handling
+   - Added lambda expression parsing for all three syntaxes
+   - Updated `primary()` to detect single param lambdas
+   - Updated parenthesized expressions to detect multi-param lambdas
+   - Added PERCENT to `factor()` method for modulo
 
 3. **src/core/ast.ts**
    - Added TernaryExpression node
    - Added ArrayLiteral, ObjectLiteral nodes
    - Added PropertyAccess, IndexAccess nodes
    - Added InterpolatedString node with parts and expressions
+   - Added LambdaExpression node type
+   - Added LambdaExpression class with parameters and body
+   - Added '%' to BinaryOperator type
 
 4. **src/core/runtime.ts**
    - Added ArrayValue and ObjectValue classes
    - Added array/object interpretation methods
    - Enhanced property/index access handling
-   - Added built-in array methods (map, filter, reduce)
+   - Added built-in array methods (map, filter, reduce) as global functions
    - Fixed confidence propagation through data structures
    - Added `interpretInterpolatedString()` method
+   - Added `interpretLambdaExpression()` method with closure support
+   - Updated array methods to work with lambda functions
+   - Added modulo operator implementation
 
 5. **src/index.ts**
    - Added `initializeLLMProviders()` method
@@ -90,6 +123,8 @@ This document tracks features implemented in the npm-package that need to be syn
 - `src/core/ternary.test.ts` - Ternary operator tests
 - `src/core/arrays.test.ts` - Arrays and objects tests
 - `src/core/string-interpolation.test.ts` - String interpolation tests (272 tests total)
+- `src/core/array-methods.test.ts` - Array methods tests
+- `src/core/lambda.test.ts` - Lambda expression tests
 
 ## Sync Strategy
 
@@ -98,23 +133,26 @@ This document tracks features implemented in the npm-package that need to be syn
 3. Update any import paths if needed
 4. Add new tests to core test suite
 
-## Sync Completion Summary (2025-06-23)
+## Sync Completion Summary (2025-06-24)
 
 ✅ **All features successfully synced from npm-package to core!**
 
 ### What was synced:
 1. **Core files**: tokenizer.ts, parser.ts, ast.ts, runtime.ts, index.ts
-2. **Test files**: 6 new test files added
+2. **Test files**: 8 new test files added
    - tokenizer.multiline.test.ts
    - parser.errors.test.ts
    - ternary.test.ts
    - arrays.test.ts
    - string-interpolation.test.ts
    - confidence-manipulation.test.ts
-3. **Example files**: 3 new examples added
+   - array-methods.test.ts
+   - lambda.test.ts
+3. **Example files**: 4 new examples added
    - arrays-and-objects.prism
    - string-interpolation.prism
    - new-features-demo.prism
+   - lambda-demo.prism
 
 ### Features now available in core:
 - Multiline strings with ```
@@ -125,11 +163,16 @@ This document tracks features implemented in the npm-package that need to be syn
 - Objects/dictionaries
 - String interpolation
 - Built-in array methods (map, filter, reduce)
+- Lambda expressions with arrow syntax
+- Closures and scope capture
+- Modulo operator (%)
 
 ### Test Results:
 - Arrays test: ✅ 29/29 passing
 - String interpolation test: ✅ 15/15 passing
-- Total new tests added: 44 tests
+- Array methods test: ✅ 10/10 passing
+- Lambda test: ✅ 12/12 passing
+- Total new tests added: 66 tests
 
 ## Next Features (v1.1.0)
 

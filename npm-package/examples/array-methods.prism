@@ -1,0 +1,23 @@
+// Array Methods Example
+// Prism provides built-in array functions: map, filter, reduce
+
+// Example data
+numbers = [1, 2, 3, 4, 5] ~> 0.9
+
+// Since Prism doesn't have lambda syntax yet, we'll define helper functions
+// In a real implementation, we'd use agent-based transformations
+
+// Example 1: Double all numbers
+// In JavaScript: numbers.map(x => x * 2)
+// In Prism: map(numbers, double) where double is defined elsewhere
+
+// Example 2: Filter even numbers  
+// In JavaScript: numbers.filter(x => x % 2 === 0)
+// In Prism: filter(numbers, isEven) where isEven is defined elsewhere
+
+// Example 3: Sum all numbers
+// In JavaScript: numbers.reduce((a, b) => a + b, 0)
+// In Prism: reduce(numbers, sum, 0) where sum is defined elsewhere
+
+// For now, you need to pre-define functions or use agents for transformations
+// Future versions will support inline lambda expressions

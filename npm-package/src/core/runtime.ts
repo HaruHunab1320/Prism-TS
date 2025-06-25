@@ -23,6 +23,7 @@ import {
   BlockStatement,
   ExpressionStatement,
   BinaryOperator,
+  LambdaExpression,
 } from './ast';
 import { ConfidenceValue as ConfidenceLib, ConfidenceLevel } from '../confidence';
 import { Context, ContextManager } from '../context';
@@ -302,6 +303,119 @@ export class Interpreter {
         throw new RuntimeError(`LLM call failed: ${(error as Error).message}`);
       }
     }));
+
+    // Add array built-in functions
+    this.environment.define('map', new FunctionValue('map', async (args) => {
+      if (args.length !== 2) {
+        throw new RuntimeError('map() requires exactly 2 arguments: array and function');
+      }
+
+      const arrayArg = args[0];
+      const fnArg = args[1];
+
+      // Extract array from confident value if needed
+      const array = arrayArg instanceof ConfidenceValue ? arrayArg.value : arrayArg;
+      const confidence = arrayArg instanceof ConfidenceValue ? arrayArg.confidence : new ConfidenceLib(1.0);
+
+      if (!(array instanceof ArrayValue)) {
+        throw new RuntimeError('First argument to map() must be an array');
+      }
+
+      if (!(fnArg instanceof FunctionValue)) {
+        throw new RuntimeError('Second argument to map() must be a function');
+      }
+
+      const results: Value[] = [];
+      for (const element of array.elements) {
+        const result = await fnArg.value([element]);
+        results.push(result);
+      }
+
+      const resultArray = new ArrayValue(results);
+      return arrayArg instanceof ConfidenceValue 
+        ? new ConfidenceValue(resultArray, confidence)
+        : resultArray;
+    }));
+
+    this.environment.define('filter', new FunctionValue('filter', async (args) => {
+      if (args.length !== 2) {
+        throw new RuntimeError('filter() requires exactly 2 arguments: array and predicate');
+      }
+
+      const arrayArg = args[0];
+      const predicateArg = args[1];
+
+      // Extract array from confident value if needed
+      const array = arrayArg instanceof ConfidenceValue ? arrayArg.value : arrayArg;
+      const confidence = arrayArg instanceof ConfidenceValue ? arrayArg.confidence : new ConfidenceLib(1.0);
+
+      if (!(array instanceof ArrayValue)) {
+        throw new RuntimeError('First argument to filter() must be an array');
+      }
+
+      if (!(predicateArg instanceof FunctionValue)) {
+        throw new RuntimeError('Second argument to filter() must be a function');
+      }
+
+      const results: Value[] = [];
+      for (const element of array.elements) {
+        const predicateResult = await predicateArg.value([element]);
+        if (predicateResult.isTruthy()) {
+          results.push(element);
+        }
+      }
+
+      const resultArray = new ArrayValue(results);
+      return arrayArg instanceof ConfidenceValue 
+        ? new ConfidenceValue(resultArray, confidence)
+        : resultArray;
+    }));
+
+    this.environment.define('reduce', new FunctionValue('reduce', async (args) => {
+      if (args.length < 2 || args.length > 3) {
+        throw new RuntimeError('reduce() requires 2 or 3 arguments: array, reducer, and optional initial value');
+      }
+
+      const arrayArg = args[0];
+      const reducerArg = args[1];
+      const initialValue = args.length === 3 ? args[2] : undefined;
+
+      // Extract array from confident value if needed
+      const array = arrayArg instanceof ConfidenceValue ? arrayArg.value : arrayArg;
+      const confidence = arrayArg instanceof ConfidenceValue ? arrayArg.confidence : new ConfidenceLib(1.0);
+
+      if (!(array instanceof ArrayValue)) {
+        throw new RuntimeError('First argument to reduce() must be an array');
+      }
+
+      if (!(reducerArg instanceof FunctionValue)) {
+        throw new RuntimeError('Second argument to reduce() must be a function');
+      }
+
+      if (array.elements.length === 0 && initialValue === undefined) {
+        throw new RuntimeError('reduce() of empty array with no initial value');
+      }
+
+      let accumulator: Value;
+      let startIndex: number;
+
+      if (initialValue !== undefined) {
+        accumulator = initialValue;
+        startIndex = 0;
+      } else {
+        accumulator = array.elements[0];
+        startIndex = 1;
+      }
+
+      for (let i = startIndex; i < array.elements.length; i++) {
+        accumulator = await reducerArg.value([accumulator, array.elements[i], new NumberValue(i)]);
+      }
+
+      // Preserve confidence if the original array was confident
+      return arrayArg instanceof ConfidenceValue && !(accumulator instanceof ConfidenceValue)
+        ? new ConfidenceValue(accumulator, confidence)
+        : accumulator;
+    }));
   }
 
   registerLLMProvider(name: string, provider: LLMProvider): void {
@@ -356,6 +470,8 @@ export class Interpreter {
         return this.interpretPropertyAccess(node as PropertyAccess);
       case 'IndexAccess':
         return this.interpretIndexAccess(node as IndexAccess);
+      case 'LambdaExpression':
+        return this.interpretLambdaExpression(node as LambdaExpression);
       case 'ConfidenceExpression':
         return this.interpretConfidenceExpression(node as ConfidenceExpression);
       case 'AssignmentStatement':
@@ -498,6 +614,15 @@ export class Interpreter {
           return new NumberValue(left.value / right.value);
         }
         throw new RuntimeError(`Cannot apply / to ${left.type} and ${right.type}`, node);
+
+      case '%':
+        if (left instanceof NumberValue && right instanceof NumberValue) {
+          if (right.value === 0) {
+            throw new RuntimeError('Modulo by zero', node);
+          }
+          return new NumberValue(left.value % right.value);
+        }
+        throw new RuntimeError(`Cannot apply % to ${left.type} and ${right.type}`, node);
 
       case '>':
         if (left instanceof NumberValue && right instanceof NumberValue) {
@@ -1022,6 +1147,36 @@ export class Interpreter {
     }
     
     throw new RuntimeError(`Cannot index ${object.type}`, node);
+  }
+  
+  private async interpretLambdaExpression(node: LambdaExpression): Promise<Value> {
+    // Create a closure that captures the current environment
+    const closureEnv = this.environment;
+    
+    return new FunctionValue(`lambda`, async (args: Value[]) => {
+      if (args.length !== node.parameters.length) {
+        throw new RuntimeError(`Lambda expects ${node.parameters.length} arguments, got ${args.length}`);
+      }
+      
+      // Create new environment for lambda execution
+      const lambdaEnv = new Environment(closureEnv);
+      
+      // Bind parameters to arguments
+      for (let i = 0; i < node.parameters.length; i++) {
+        lambdaEnv.define(node.parameters[i], args[i]);
+      }
+      
+      // Execute lambda body in the new environment
+      const previousEnv = this.environment;
+      this.environment = lambdaEnv;
+      
+      try {
+        const result = await this.interpret(node.body);
+        return result;
+      } finally {
+        this.environment = previousEnv;
+      }
+    });
   }
 
   private async interpretConfidenceExpression(node: ConfidenceExpression): Promise<Value> {
