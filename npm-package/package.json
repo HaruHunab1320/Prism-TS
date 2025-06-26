@@ -1,6 +1,6 @@
 {
   "name": "prism-uncertainty",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "The language where AI meets certainty - handle uncertainty natively with 18 confidence-aware operators",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
