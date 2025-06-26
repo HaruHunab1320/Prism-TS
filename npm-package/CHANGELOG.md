@@ -2,6 +2,63 @@
 
 All notable changes to prism-uncertainty will be documented in this file.
 
+## [1.0.9] - 2024-06-26
+
+### Added
+- **Lambda expressions** with arrow syntax (`=>`)
+- Support for single parameter without parentheses: `x => x * 2`
+- Support for multiple parameters: `(x, y) => x + y`
+- Support for zero parameters: `() => 42`
+- **Closures** - lambdas can capture variables from outer scope
+- **Modulo operator** (`%`) for remainder operations
+- Integration of lambdas with array methods for functional programming
+
+### Example
+```prism
+// Lambda expressions
+double = x => x * 2
+add = (x, y) => x + y
+getRandom = () => 42
+
+// With array methods
+numbers = [1, 2, 3, 4, 5]
+squared = map(numbers, x => x * x)        // [1, 4, 9, 16, 25]
+evens = filter(numbers, x => x % 2 == 0)  // [2, 4]
+sum = reduce(numbers, (a, b) => a + b, 0) // 15
+
+// Closures
+multiplier = 10
+scale = x => x * multiplier
+scaled = scale(5)  // 50
+
+// Currying
+makeAdder = x => (y => x + y)
+add10 = makeAdder(10)
+result = add10(32)  // 42
+```
+
+## [1.0.8] - 2024-06-25
+
+### Added
+- **Array methods** as built-in global functions
+- `map(array, fn)` - transform each element
+- `filter(array, predicate)` - keep elements matching predicate
+- `reduce(array, reducer, initialValue?)` - combine elements into single value
+- Confidence preservation through array transformations
+- Support for index parameter in reduce function
+
+### Example
+```prism
+// Array methods with confidence
+data = [10, 20, 30] ~> 0.8
+doubled = map(data, x => x * 2)           // [20, 40, 60] ~> 0.8
+filtered = filter(data, x => x > 15)      // [20, 30] ~> 0.8
+sum = reduce(data, (acc, val) => acc + val, 0)  // 60 ~> 0.8
+
+// With index in reduce
+indexed = reduce(data, (acc, val, idx) => acc + (val * idx), 0)
+```
+
 ## [1.0.7] - 2024-06-22
 
 ### Added

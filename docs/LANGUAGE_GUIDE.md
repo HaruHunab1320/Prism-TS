@@ -46,12 +46,49 @@ measurement = 72.5 ~> 0.9
 ```prism
 // Arithmetic
 result = (10 + 5) * 2
+remainder = 17 % 5  // Modulo operator: 2
 
-// String concatenation
-greeting = "Hello, " + name
+// String concatenation and interpolation
+greeting = "Hello, " + name  // Traditional concatenation
+interpolated_greeting = "Hello, ${name}!"  // String interpolation
+complex_interpolation = "User ${name} is ${age} years old"
 
 // Boolean operations
 is_valid = age > 18 && active
+
+// Ternary operator
+status = is_valid ? "approved" : "rejected"
+greeting_type = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening"
+
+// Lambda expressions
+square = x => x * x
+add = (a, b) => a + b
+greet = name => "Hello, ${name}!"
+
+// Using lambdas
+result = square(5)  // 25
+sum = add(3, 7)  // 10
+
+// Array method examples
+numbers = [1, 2, 3, 4, 5]
+
+// Map - transform each element
+squared = numbers.map(x => x * x)  // [1, 4, 9, 16, 25]
+doubled = numbers.map(x => x * 2)  // [2, 4, 6, 8, 10]
+
+// Filter - select elements that match condition
+evens = numbers.filter(x => x % 2 == 0)  // [2, 4]
+above_three = numbers.filter(x => x > 3)  // [4, 5]
+
+// Reduce - aggregate to single value
+sum = numbers.reduce((acc, x) => acc + x, 0)  // 15
+product = numbers.reduce((acc, x) => acc * x, 1)  // 120
+
+// Chaining array methods
+result = numbers
+  .filter(x => x % 2 == 0)  // Get evens: [2, 4]
+  .map(x => x * x)           // Square them: [4, 16]
+  .reduce((a, b) => a + b, 0) // Sum: 20
 ```
 
 ### Comments
@@ -81,7 +118,14 @@ scientific = 1.23e-4
 simple = "Hello World"
 escaped = "Line 1\nLine 2\tTabbed"
 concatenated = "Hello" + " " + "World"
-interpolated = "Age: " + age
+interpolated = "Age: ${age}"  // String interpolation with ${}
+
+// Multiline strings with triple backticks
+multiline = ```
+  This is a multiline string
+  that preserves formatting
+  and line breaks
+```
 ```
 
 ### Booleans
@@ -90,6 +134,44 @@ interpolated = "Age: " + age
 truth = true
 falsehood = false
 computed = 5 > 3  // true
+```
+
+### Arrays
+
+```prism
+numbers = [1, 2, 3, 4, 5]
+strings = ["apple", "banana", "cherry"]
+mixed = [42, "hello", true, 3.14]
+empty_array = []
+
+// Array access
+first_item = numbers[0]  // 1
+last_item = strings[strings.length - 1]  // "cherry"
+```
+
+### Objects
+
+```prism
+person = {
+  name: "Alice",
+  age: 30,
+  active: true
+}
+
+// Object property access
+person_name = person.name  // "Alice"
+person_age = person["age"]  // 30
+
+// Nested objects
+company = {
+  name: "TechCorp",
+  address: {
+    street: "123 Main St",
+    city: "San Francisco",
+    zip: "94105"
+  },
+  employees: [person]
+}
 ```
 
 ### Confident Values
@@ -516,8 +598,14 @@ answer = llm("What is machine learning?")
 
 ```prism
 topic = "quantum computing"
-question = "Explain " + topic + " in simple terms"
+question = "Explain ${topic} in simple terms"  // Using string interpolation
 explanation = llm(question)
+
+// Complex prompt with multiple variables
+user_level = "beginner"
+language = "English"
+prompt = "Explain ${topic} for a ${user_level} in ${language}"
+result = llm(prompt)
 ```
 
 ### Prompt Engineering Patterns
@@ -525,23 +613,25 @@ explanation = llm(question)
 #### Chain of Thought
 ```prism
 problem = "Calculate the area of a circle with radius 5"
-thinking = llm("Think step by step: " + problem)
-solution = llm("Based on this reasoning: " + thinking + " - provide the final answer")
+thinking = llm("Think step by step: ${problem}")
+solution = llm("Based on this reasoning: ${thinking} - provide the final answer")
 ```
 
 #### Few-Shot Examples
 ```prism
-examples = "Example 1: Input 'happy' -> Output: positive\nExample 2: Input 'sad' -> Output: negative"
+examples = ```
+Example 1: Input 'happy' -> Output: positive
+Example 2: Input 'sad' -> Output: negative
+```
 user_input = "I love this product!"
-sentiment = llm(examples + "\nClassify: " + user_input + " -> Output:")
+sentiment = llm("${examples}\nClassify: ${user_input} -> Output:")
 ```
 
 #### Role-Based Prompting
 ```prism
 role = "You are an expert financial advisor"
-context = role + ". A client asks: "
 question = "Should I invest in tech stocks?"
-advice = llm(context + question)
+advice = llm("${role}. A client asks: ${question}")
 ```
 
 ### Chained LLM Calls
@@ -549,11 +639,16 @@ advice = llm(context + question)
 ```prism
 // Research workflow
 initial_research = llm("What is artificial intelligence?")
-deep_dive = llm("Based on: " + initial_research + " - what are the main challenges?")
-solutions = llm("For these challenges: " + deep_dive + " - what are potential solutions?")
+deep_dive = llm("Based on: ${initial_research} - what are the main challenges?")
+solutions = llm("For these challenges: ${deep_dive} - what are potential solutions?")
 
 // Combine results
-comprehensive_report = initial_research + " | Challenges: " + deep_dive + " | Solutions: " + solutions
+comprehensive_report = "${initial_research} | Challenges: ${deep_dive} | Solutions: ${solutions}"
+
+// Using array methods with LLM calls
+topics = ["AI", "quantum computing", "blockchain"]
+research_results = topics.map(topic => llm("Explain ${topic} in one paragraph"))
+summary = research_results.reduce((acc, result) => "${acc}\n\n${result}", "")
 ```
 
 ### Confidence-Aware LLM Usage
@@ -595,7 +690,7 @@ in context Analysis {
 }
 
 // Variables from contexts are accessible
-final_report = "Sentiment: " + sentiment + " | Themes: " + themes
+final_report = "Sentiment: ${sentiment} | Themes: ${themes}"
 ```
 
 ### Context Isolation
@@ -615,7 +710,7 @@ in context TreatmentPlanning {
 }
 
 // Create comprehensive treatment plan
-treatment_plan = initial_diagnosis + " | Treatment: " + treatment + " | Medication: " + medication
+treatment_plan = "${initial_diagnosis} | Treatment: ${treatment} | Medication: ${medication}"
 ```
 
 ### Context Shifting
@@ -636,7 +731,7 @@ in context OuterContext {
   global_setting = "shared_value"
   
   in context InnerContext {
-    local_data = llm("Process with: " + global_setting)
+    local_data = llm("Process with: ${global_setting}")
     result = analyze(local_data)
   }
   
@@ -694,7 +789,19 @@ Design clear, specific prompts:
 
 ```prism
 // Good: Specific and clear
-good_prompt = "Analyze the sentiment of this customer review and respond with exactly one word: positive, negative, or neutral. Review: " + review_text
+good_prompt = "Analyze the sentiment of this customer review and respond with exactly one word: positive, negative, or neutral. Review: ${review_text}"
+
+// Using multiline strings for complex prompts
+detailed_prompt = ```
+You are a sentiment analysis expert. Analyze the following review:
+
+${review_text}
+
+Provide your analysis in the following format:
+- Sentiment: [positive/negative/neutral]
+- Confidence: [high/medium/low]
+- Key factors: [list main factors]
+```
 
 // Avoid: Vague and ambiguous
 bad_prompt = "What do you think about this?"
@@ -745,8 +852,8 @@ combined = source1 + source2  // Confidence: 70%
 ```prism
 // Progressive confidence building
 initial_assessment = llm("Initial analysis of data")
-validation = llm("Validate this analysis: " + initial_assessment)
-cross_check = llm("Cross-check against known patterns: " + validation)
+validation = llm("Validate this analysis: ${initial_assessment}")
+cross_check = llm("Cross-check against known patterns: ${validation}")
 
 // Combine confidences for final decision
 final_confidence = combine_confidences(initial_assessment, validation, cross_check)
@@ -762,15 +869,22 @@ uncertain if (final_confidence ~> 0.8) {
 
 ```prism
 // Multiple AI model ensemble using parallel confidence
-model1 = llm("GPT analysis: " + question)
-model2 = llm("Claude analysis: " + question)  
-model3 = llm("Gemini analysis: " + question)
+model1 = llm("GPT analysis: ${question}")
+model2 = llm("Claude analysis: ${question}")  
+model3 = llm("Gemini analysis: ${question}")
 
-// Select best result automatically
+// Using array methods for ensemble
+models = ["GPT", "Claude", "Gemini"]
+analyses = models.map(model => llm("${model} analysis: ${question}"))
+best_from_array = analyses.reduce((best, current) => 
+  (<~ current) > (<~ best) ? current : best
+)
+
+// Or select best result automatically with operator
 best_analysis = model1 ~||> model2 ~||> model3
 
 // Chain with validation
-validated = best_analysis ~~ llm("Validate this analysis: " + best_analysis)
+validated = best_analysis ~~ llm("Validate this analysis: ${best_analysis}")
 
 // Use threshold gate for automated vs manual processing
 final_decision = validated ~@> "auto_process" ~?? "manual_review_required"
@@ -785,7 +899,7 @@ uncertain if (final_decision ~> 0.8) {
 ### 3. Adaptive Prompting
 
 ```prism
-initial_attempt = llm("Solve this problem: " + problem)
+initial_attempt = llm("Solve this problem: ${problem}")
 
 uncertain if (initial_attempt ~> 0.7) {
   high {
@@ -793,12 +907,12 @@ uncertain if (initial_attempt ~> 0.7) {
   }
   medium {
     // Try with more context
-    enhanced_prompt = "Think step by step and solve: " + problem
+    enhanced_prompt = "Think step by step and solve: ${problem}"
     solution = llm(enhanced_prompt)
   }
   low {
     // Try with examples
-    with_examples = examples + "\nNow solve: " + problem
+    with_examples = "${examples}\nNow solve: ${problem}"
     solution = llm(with_examples)
   }
 }
@@ -819,9 +933,15 @@ calibrated = validated ~~ calibration_adjustments
 processing_confidence = <~ calibrated
 
 // Parallel model ensemble for analysis
-analysis1 = llm("Statistical analysis: " + calibrated)
-analysis2 = llm("ML model prediction: " + calibrated) 
-analysis3 = llm("Expert system analysis: " + calibrated)
+analysis1 = llm("Statistical analysis: ${calibrated}")
+analysis2 = llm("ML model prediction: ${calibrated}") 
+analysis3 = llm("Expert system analysis: ${calibrated}")
+
+// Using lambda with array methods for dynamic analysis
+analysis_types = ["Statistical", "ML model", "Expert system"]
+analyses = analysis_types.map(type => 
+  llm("${type} analysis: ${calibrated}")
+)
 
 // Select best analysis result
 best_analysis = analysis1 ~||> analysis2 ~||> analysis3
@@ -860,12 +980,12 @@ uncertain if (reliable_decision ~> 0.9) {
 
 ```prism
 // Start with high-level analysis
-overview = llm("High-level analysis of: " + data)
+overview = llm("High-level analysis of: ${data}")
 
 uncertain if (overview ~> 0.8) {
   high {
     // Proceed to detailed analysis
-    detailed = llm("Detailed analysis based on: " + overview)
+    detailed = llm("Detailed analysis based on: ${overview}")
     
     uncertain if (detailed ~> 0.7) {
       high { 
@@ -899,13 +1019,17 @@ uncertain if (overview ~> 0.8) {
 **Solutions**:
 ```prism
 // Be more specific in prompts
-specific_prompt = "Answer with exactly one word: yes or no. Question: " + question
+specific_prompt = "Answer with exactly one word: yes or no. Question: ${question}"
 
-// Provide examples
-few_shot_prompt = examples + "\nQuestion: " + question
+// Provide examples using multiline strings
+few_shot_examples = ```
+Example 1: Is 2+2=4? Answer: yes
+Example 2: Is the sky green? Answer: no
+```
+few_shot_prompt = "${few_shot_examples}\nQuestion: ${question}"
 
 // Use step-by-step reasoning
-chain_of_thought = "Think step by step: " + question
+chain_of_thought = "Think step by step: ${question}"
 ```
 
 #### 2. Context Variable Access
@@ -961,8 +1085,20 @@ if (!provider_status) {
 ### Performance Considerations
 
 1. **Minimize LLM calls**: Batch operations when possible
+   ```prism
+   // Instead of multiple calls
+   result1 = llm("Analyze A")
+   result2 = llm("Analyze B")
+   result3 = llm("Analyze C")
+   
+   // Use array methods for batch processing
+   items = ["A", "B", "C"]
+   results = items.map(item => llm("Analyze ${item}"))
+   ```
+
 2. **Context reuse**: Reuse contexts for related operations
 3. **Confidence caching**: Cache confident results
 4. **Prompt optimization**: Use shorter, more focused prompts
+5. **Array operations**: Use map, filter, reduce for efficient data processing
 
 This guide covers the essential patterns and practices for effective Prism programming. For more examples and advanced use cases, see the examples directory and test files in the repository.

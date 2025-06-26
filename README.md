@@ -33,10 +33,10 @@ const prism = new Prism({
   geminiApiKey: 'your-api-key' // or use GEMINI_API_KEY env var
 });
 
-// Execute Prism code
+// Execute Prism code with modern features
 const result = await prism.execute(`
   temperature = 22.5 ~> 0.9
-  weather = llm("Is " + temperature + "°C good for outdoor activities?")
+  weather = llm("Is ${temperature}°C good for outdoor activities?")
   decision = weather ~@> "Go outside!" ~?? "Stay indoors"
   decision
 `);
@@ -106,6 +106,22 @@ uncertain if (analysis ~> 0.8) {
 result = (sensor1 ~+ sensor2) ~* factor  // Min confidence propagated
 ```
 
+### 🆕 Modern Language Features
+```prism
+// Lambda expressions
+doubled = map([1, 2, 3], x => x * 2)
+
+// String interpolation
+message = "Temperature: ${temp}°C, Status: ${status}"
+
+// Ternary operators
+result = age >= 18 ? "Adult" : "Minor"
+
+// Arrays and objects
+data = { name: "Alice", scores: [95, 87, 92] }
+avg = reduce(data.scores, (a, b) => a + b, 0) / 3
+```
+
 ## 📦 Installation Options
 
 ### From NPM (Recommended)
@@ -143,6 +159,30 @@ uncertain if (analysis ~> 0.9) {
   medium { flag_for_review() }
   low { allow_transaction() }
 }
+```
+
+### Data Processing with Lambdas
+```prism
+// Process sensor data with confidence
+sensors = [22.5, 23.1, 22.8] ~> 0.95
+processed = map(sensors, x => x * 1.8 + 32)  // Convert to Fahrenheit
+valid = filter(processed, x => x > 70 && x < 75)
+average = reduce(valid, (sum, val) => sum + val, 0) / valid.length
+```
+
+### Modern String Templates
+```prism
+// Multi-line report generation
+user = { name: "Alice", role: "Admin" }
+report = ```
+Daily Report
+============
+Generated for: ${user.name}
+Role: ${user.role}
+Timestamp: ${llm("current time")}
+
+Status: ${status ~> 0.8 ? "Operational" : "Needs Review"}
+```
 ```
 
 ## 🏗️ Project Structure
@@ -185,7 +225,7 @@ npm test operators.test.ts
 npm test -- --coverage
 ```
 
-**Current Status**: ✅ 191/191 tests passing
+**Current Status**: ✅ 343/343 tests passing
 
 ## 🛠️ Development
 
