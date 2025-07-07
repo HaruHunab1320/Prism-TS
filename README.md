@@ -120,6 +120,15 @@ result = age >= 18 ? "Adult" : "Minor"
 // Arrays and objects
 data = { name: "Alice", scores: [95, 87, 92] }
 avg = reduce(data.scores, (a, b) => a + b, 0) / 3
+
+// Null support
+user = { name: "Bob", email: null }
+safeEmail = user.email != null ? user.email : "no-email@example.com"
+
+// Compound assignments
+score = 100
+score += 50  // 150
+score *= 2   // 300
 ```
 
 ## 📦 Installation Options

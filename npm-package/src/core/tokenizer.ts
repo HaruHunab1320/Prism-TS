@@ -25,6 +25,7 @@ export enum TokenType {
   CONST = 'CONST',
   TRUE = 'TRUE',
   FALSE = 'FALSE',
+  NULL = 'NULL',
 
   // Operators
   PLUS = 'PLUS',
@@ -35,6 +36,11 @@ export enum TokenType {
   EQUAL = 'EQUAL',
   EQUAL_EQUAL = 'EQUAL_EQUAL',
   NOT_EQUAL = 'NOT_EQUAL',
+  PLUS_EQUAL = 'PLUS_EQUAL',
+  MINUS_EQUAL = 'MINUS_EQUAL',
+  STAR_EQUAL = 'STAR_EQUAL',
+  SLASH_EQUAL = 'SLASH_EQUAL',
+  PERCENT_EQUAL = 'PERCENT_EQUAL',
   LESS = 'LESS',
   GREATER = 'GREATER',
   LESS_EQUAL = 'LESS_EQUAL',
@@ -108,6 +114,7 @@ const keywords: { [key: string]: TokenType } = {
   'const': TokenType.CONST,
   'true': TokenType.TRUE,
   'false': TokenType.FALSE,
+  'null': TokenType.NULL,
 };
 
 export class Tokenizer {
@@ -146,13 +153,38 @@ export class Tokenizer {
     const startColumn = this.column;
     const char = this.advance();
 
-    // Single character tokens
+    // Single character tokens (with compound assignment checks)
     switch (char) {
-      case '+': return this.makeToken(TokenType.PLUS, '+', startColumn);
-      case '-': return this.makeToken(TokenType.MINUS, '-', startColumn);
-      case '*': return this.makeToken(TokenType.STAR, '*', startColumn);
-      case '/': return this.makeToken(TokenType.SLASH, '/', startColumn);
-      case '%': return this.makeToken(TokenType.PERCENT, '%', startColumn);
+      case '+': 
+        if (this.peek() === '=') {
+          this.advance();
+          return this.makeToken(TokenType.PLUS_EQUAL, '+=', startColumn);
+        }
+        return this.makeToken(TokenType.PLUS, '+', startColumn);
+      case '-': 
+        if (this.peek() === '=') {
+          this.advance();
+          return this.makeToken(TokenType.MINUS_EQUAL, '-=', startColumn);
+        }
+        return this.makeToken(TokenType.MINUS, '-', startColumn);
+      case '*': 
+        if (this.peek() === '=') {
+          this.advance();
+          return this.makeToken(TokenType.STAR_EQUAL, '*=', startColumn);
+        }
+        return this.makeToken(TokenType.STAR, '*', startColumn);
+      case '/': 
+        if (this.peek() === '=') {
+          this.advance();
+          return this.makeToken(TokenType.SLASH_EQUAL, '/=', startColumn);
+        }
+        return this.makeToken(TokenType.SLASH, '/', startColumn);
+      case '%': 
+        if (this.peek() === '=') {
+          this.advance();
+          return this.makeToken(TokenType.PERCENT_EQUAL, '%=', startColumn);
+        }
+        return this.makeToken(TokenType.PERCENT, '%', startColumn);
       case '(': return this.makeToken(TokenType.LEFT_PAREN, '(', startColumn);
       case ')': return this.makeToken(TokenType.RIGHT_PAREN, ')', startColumn);
       case '{': return this.makeToken(TokenType.LEFT_BRACE, '{', startColumn);

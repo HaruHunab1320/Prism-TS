@@ -8,6 +8,7 @@ import {
   StringLiteral,
   InterpolatedString,
   BooleanLiteral,
+  NullLiteral,
   BinaryExpression,
   UnaryExpression,
   CallExpression,
@@ -254,12 +255,44 @@ export class Parser {
   private expressionStatement(): Statement {
     const expr = this.expression();
     
-    // Check if this is an assignment
-    if (expr instanceof IdentifierExpression && this.match(TokenType.EQUAL)) {
-      const value = this.expression();
-      // Consume optional semicolon
-      this.match(TokenType.SEMICOLON);
-      return new AssignmentStatement(expr.name, value!);
+    // Check if this is an assignment or compound assignment
+    if (expr instanceof IdentifierExpression) {
+      if (this.match(TokenType.EQUAL)) {
+        const value = this.expression();
+        // Consume optional semicolon
+        this.match(TokenType.SEMICOLON);
+        return new AssignmentStatement(expr.name, value!);
+      } else if (this.match(TokenType.PLUS_EQUAL)) {
+        // x += y becomes x = x + y
+        const right = this.expression();
+        const value = new BinaryExpression('+', expr, right!);
+        this.match(TokenType.SEMICOLON);
+        return new AssignmentStatement(expr.name, value);
+      } else if (this.match(TokenType.MINUS_EQUAL)) {
+        // x -= y becomes x = x - y
+        const right = this.expression();
+        const value = new BinaryExpression('-', expr, right!);
+        this.match(TokenType.SEMICOLON);
+        return new AssignmentStatement(expr.name, value);
+      } else if (this.match(TokenType.STAR_EQUAL)) {
+        // x *= y becomes x = x * y
+        const right = this.expression();
+        const value = new BinaryExpression('*', expr, right!);
+        this.match(TokenType.SEMICOLON);
+        return new AssignmentStatement(expr.name, value);
+      } else if (this.match(TokenType.SLASH_EQUAL)) {
+        // x /= y becomes x = x / y
+        const right = this.expression();
+        const value = new BinaryExpression('/', expr, right!);
+        this.match(TokenType.SEMICOLON);
+        return new AssignmentStatement(expr.name, value);
+      } else if (this.match(TokenType.PERCENT_EQUAL)) {
+        // x %= y becomes x = x % y
+        const right = this.expression();
+        const value = new BinaryExpression('%', expr, right!);
+        this.match(TokenType.SEMICOLON);
+        return new AssignmentStatement(expr.name, value);
+      }
     }
     
     // Consume optional semicolon
@@ -474,6 +507,10 @@ export class Parser {
     
     if (this.match(TokenType.FALSE)) {
       return new BooleanLiteral(false);
+    }
+    
+    if (this.match(TokenType.NULL)) {
+      return new NullLiteral();
     }
     
     if (this.match(TokenType.IDENTIFIER)) {

@@ -6,6 +6,7 @@ import {
   StringLiteral,
   InterpolatedString,
   BooleanLiteral,
+  NullLiteral,
   BinaryExpression,
   UnaryExpression,
   CallExpression,
@@ -101,6 +102,27 @@ export class BooleanValue extends Value {
 
   toString(): string {
     return this.value.toString();
+  }
+}
+
+export class NullValue extends Value {
+  type = 'null';
+  value = null;
+
+  constructor() {
+    super();
+  }
+
+  equals(other: Value): boolean {
+    return other instanceof NullValue;
+  }
+
+  isTruthy(): boolean {
+    return false;
+  }
+
+  toString(): string {
+    return 'null';
   }
 }
 
@@ -452,6 +474,8 @@ export class Interpreter {
         return this.interpretInterpolatedString(node as InterpolatedString);
       case 'BooleanLiteral':
         return this.interpretBooleanLiteral(node as BooleanLiteral);
+      case 'NullLiteral':
+        return this.interpretNullLiteral(node as NullLiteral);
       case 'IdentifierExpression':
         return this.interpretIdentifier(node as IdentifierExpression);
       case 'BinaryExpression':
@@ -536,6 +560,10 @@ export class Interpreter {
     return new BooleanValue(node.value);
   }
 
+  private async interpretNullLiteral(_node: NullLiteral): Promise<Value> {
+    return new NullValue();
+  }
+
   private async interpretIdentifier(node: IdentifierExpression): Promise<Value> {
     try {
       return this.environment.get(node.name);
@@ -575,7 +603,7 @@ export class Interpreter {
     // Ensure right is a Value for all other operators
     if (!(right instanceof NumberValue || right instanceof StringValue || right instanceof BooleanValue || 
           right instanceof ConfidenceValue || right instanceof FunctionValue || 
-          right instanceof ArrayValue || right instanceof ObjectValue)) {
+          right instanceof ArrayValue || right instanceof ObjectValue || right instanceof NullValue)) {
       throw new RuntimeError(`Invalid right operand for operator ${operator}`, node);
     }
 

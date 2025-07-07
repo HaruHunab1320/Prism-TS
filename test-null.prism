@@ -1,0 +1,13 @@
+# Test null support in Prism
+
+# Try using null as a value
+value = null
+
+# Try using null in an object
+obj = {
+  name: "test",
+  empty: null
+}
+
+# Try comparison with null
+isNull = value == null

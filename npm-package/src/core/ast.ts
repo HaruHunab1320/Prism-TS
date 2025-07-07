@@ -5,6 +5,7 @@ export type NodeType =
   | 'StringLiteral'
   | 'InterpolatedString'
   | 'BooleanLiteral'
+  | 'NullLiteral'
   | 'ArrayLiteral'
   | 'ObjectLiteral'
   | 'PropertyAccess'
@@ -69,6 +70,14 @@ export class BooleanLiteral extends Expression {
   type: NodeType = 'BooleanLiteral';
   
   constructor(public value: boolean) {
+    super();
+  }
+}
+
+export class NullLiteral extends Expression {
+  type: NodeType = 'NullLiteral';
+  
+  constructor() {
     super();
   }
 }

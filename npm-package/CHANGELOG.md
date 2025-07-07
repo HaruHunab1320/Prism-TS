@@ -2,6 +2,43 @@
 
 All notable changes to prism-uncertainty will be documented in this file.
 
+## [1.0.11] - 2024-06-27
+
+### Added
+- **Null literal support** - `null` is now a proper value type
+- Null can be used in variables, arrays, objects, and comparisons
+- Null works with all operators including ternary and logical operators
+- Null integrates with confidence system
+- Array methods handle null values properly
+- **Compound assignment operators** - `+=`, `-=`, `*=`, `/=`, `%=`
+- Compound assignments work with numbers, strings, and confidence values
+- String concatenation with `+=` operator
+
+### Example
+```prism
+// Basic null usage
+value = null
+isEmpty = value == null  // true
+
+// Null in data structures
+user = { name: "Alice", email: null }
+data = [1, null, 3, null, 5]
+
+// Null handling with array methods
+validData = filter(data, x => x != null)  // [1, 3, 5]
+mapped = map(data, x => x != null ? x * 2 : 0)  // [2, 0, 6, 0, 10]
+
+// Null with confidence
+uncertain = null ~> 0.5
+fallback = uncertain ~?? "default"  // Uses fallback due to low confidence
+
+// Compound assignments
+score = 100
+score += 50  // 150
+message = "Hello"
+message += " World"  // "Hello World"
+```
+
 ## [1.0.9] - 2024-06-26
 
 ### Added

@@ -39,6 +39,18 @@ active = true
 
 // Confidence assignment
 measurement = 72.5 ~> 0.9
+
+// Compound assignments
+count = 10
+count += 5   // count = count + 5 (now 15)
+count -= 3   // count = count - 3 (now 12)
+count *= 2   // count = count * 2 (now 24)
+count /= 4   // count = count / 4 (now 6)
+count %= 4   // count = count % 4 (now 2)
+
+// String concatenation with +=
+message = "Hello"
+message += " World"  // message = "Hello World"
 ```
 
 ### Expressions
@@ -89,6 +101,11 @@ result = numbers
   .filter(x => x % 2 == 0)  // Get evens: [2, 4]
   .map(x => x * x)           // Square them: [4, 16]
   .reduce((a, b) => a + b, 0) // Sum: 20
+
+// Working with null values
+data = [1, null, 3, null, 5]
+clean_data = data.filter(x => x != null)  // [1, 3, 5]
+safe_doubles = data.map(x => x != null ? x * 2 : 0)  // [2, 0, 6, 0, 10]
 ```
 
 ### Comments
@@ -136,6 +153,25 @@ falsehood = false
 computed = 5 > 3  // true
 ```
 
+### Null
+
+```prism
+// Null represents the absence of a value
+empty = null
+
+// Null is falsy in conditionals
+if (null) {
+  // This won't execute
+} else {
+  // This will execute
+}
+
+// Null comparisons
+value = null
+isNull = value == null  // true
+notNull = value != null // false
+```
+
 ### Arrays
 
 ```prism
@@ -170,7 +206,8 @@ company = {
     city: "San Francisco",
     zip: "94105"
   },
-  employees: [person]
+  employees: [person],
+  website: null  // Can use null for missing values
 }
 ```
 

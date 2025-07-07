@@ -83,6 +83,8 @@ Convenience function for one-off execution.
 - 🔄 Built-in array methods (map, filter, reduce)
 - 🚀 Lambda expressions with arrow syntax
 - 🎯 Closures and functional programming
+- ⬜ Null support for representing absence of values
+- ➕ Compound assignment operators (+=, -=, *=, /=, %=)
 
 ## Example: AI Model Ensemble
 
@@ -184,6 +186,51 @@ user = {
 // Access nested properties
 avg = reduce(user.scores, (a, b) => a + b, 0) / 3
 status = user.active ? "Active" : "Inactive"
+```
+
+### Null Handling
+
+```prism
+// Null represents absence of value
+profile = {
+  username: "alice",
+  email: null,
+  phone: null
+}
+
+// Check for null values
+hasEmail = profile.email != null
+displayEmail = profile.email != null ? profile.email : "No email provided"
+
+// Filter out nulls from arrays
+data = [1, null, 3, null, 5]
+validData = filter(data, x => x != null)  // [1, 3, 5]
+
+// Null with confidence
+maybeValue = null ~> 0.3
+fallback = maybeValue ~?? "default"  // Uses "default" due to low confidence
+```
+
+### Compound Assignments
+
+```prism
+// Numeric operations
+score = 100
+score += 25   // score = 125
+score -= 10   // score = 115
+score *= 2    // score = 230
+score /= 5    // score = 46
+score %= 10   // score = 6
+
+// String concatenation
+greeting = "Hello"
+greeting += ", "
+greeting += "World!"  // "Hello, World!"
+
+// With confidence values
+measurement = 50 ~> 0.9
+adjustment = 10 ~> 0.7
+measurement += adjustment  // 60 with 0.7 confidence (minimum)
 ```
 
 ## Documentation
