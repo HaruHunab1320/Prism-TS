@@ -121,9 +121,14 @@ result = age >= 18 ? "Adult" : "Minor"
 data = { name: "Alice", scores: [95, 87, 92] }
 avg = reduce(data.scores, (a, b) => a + b, 0) / 3
 
-// Null support
-user = { name: "Bob", email: null }
-safeEmail = user.email != null ? user.email : "no-email@example.com"
+// Null and undefined support
+user = { name: "Bob", email: null, phone: undefined }
+safeEmail = user?.email ?? "no-email@example.com"
+safePhone = user?.phone ?? "no-phone"
+
+// Optional chaining prevents errors
+config = null
+port = config?.server?.port ?? 3000  // No error, uses default
 
 // Compound assignments
 score = 100

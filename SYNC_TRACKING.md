@@ -89,6 +89,21 @@ This document tracks features implemented in the npm-package that need to be syn
 | String concatenation with += | ✅ | ✅ | runtime.ts |
 | Compound ops with confidence | ✅ | ✅ | runtime.ts |
 
+### v1.0.13 Features (Synced ✅)
+
+| Feature | NPM Package | Core Language | Files to Sync |
+|---------|-------------|---------------|---------------|
+| Optional chaining operator (?.) | ✅ | ✅ | tokenizer.ts, ast.ts, parser.ts, runtime.ts |
+| OptionalChainAccess AST node | ✅ | ✅ | ast.ts |
+| Optional chain parsing | ✅ | ✅ | parser.ts |
+| Optional chain runtime | ✅ | ✅ | runtime.ts |
+| Undefined literal support | ✅ | ✅ | tokenizer.ts, ast.ts, parser.ts, runtime.ts |
+| UNDEFINED token type | ✅ | ✅ | tokenizer.ts |
+| UndefinedLiteral AST node | ✅ | ✅ | ast.ts |
+| UndefinedValue runtime class | ✅ | ✅ | runtime.ts |
+| Undefined vs null distinction | ✅ | ✅ | runtime.ts |
+| Optional chain with undefined | ✅ | ✅ | runtime.ts |
+
 ### Files Modified in NPM Package
 
 1. **src/core/tokenizer.ts**

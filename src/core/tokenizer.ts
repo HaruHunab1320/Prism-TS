@@ -26,6 +26,7 @@ export enum TokenType {
   TRUE = 'TRUE',
   FALSE = 'FALSE',
   NULL = 'NULL',
+  UNDEFINED = 'UNDEFINED',
 
   // Operators
   PLUS = 'PLUS',
@@ -68,6 +69,7 @@ export enum TokenType {
   OR = 'OR',
   NOT = 'NOT',
   TILDE = 'TILDE',
+  OPTIONAL_CHAIN = 'OPTIONAL_CHAIN',
 
   // Delimiters
   LEFT_PAREN = 'LEFT_PAREN',
@@ -115,6 +117,7 @@ const keywords: { [key: string]: TokenType } = {
   'true': TokenType.TRUE,
   'false': TokenType.FALSE,
   'null': TokenType.NULL,
+  'undefined': TokenType.UNDEFINED,
 };
 
 export class Tokenizer {
@@ -195,7 +198,12 @@ export class Tokenizer {
       case '.': return this.makeToken(TokenType.DOT, '.', startColumn);
       case ':': return this.makeToken(TokenType.COLON, ':', startColumn);
       case ';': return this.makeToken(TokenType.SEMICOLON, ';', startColumn);
-      case '?': return this.makeToken(TokenType.QUESTION, '?', startColumn);
+      case '?': 
+        if (this.peek() === '.') {
+          this.advance();
+          return this.makeToken(TokenType.OPTIONAL_CHAIN, '?.', startColumn);
+        }
+        return this.makeToken(TokenType.QUESTION, '?', startColumn);
     }
 
     // Two character tokens

@@ -9,6 +9,7 @@ import {
   InterpolatedString,
   BooleanLiteral,
   NullLiteral,
+  UndefinedLiteral,
   BinaryExpression,
   UnaryExpression,
   CallExpression,
@@ -16,6 +17,7 @@ import {
   ArrayLiteral,
   ObjectLiteral,
   PropertyAccess,
+  OptionalChainAccess,
   IndexAccess,
   ConfidenceExpression,
   AssignmentStatement,
@@ -456,6 +458,9 @@ export class Parser {
       } else if (this.match(TokenType.DOT)) {
         const name = this.consume(TokenType.IDENTIFIER, "Expected property name after '.'").value;
         current = new PropertyAccess(current, name);
+      } else if (this.match(TokenType.OPTIONAL_CHAIN)) {
+        const name = this.consume(TokenType.IDENTIFIER, "Expected property name after '?.'").value;
+        current = new OptionalChainAccess(current, name);
       } else if (this.match(TokenType.CONFIDENCE_DOT)) {
         const name = this.consume(TokenType.IDENTIFIER, "Expected property name after '~.'").value;
         current = new BinaryExpression('~.', current, new IdentifierExpression(name));
@@ -511,6 +516,10 @@ export class Parser {
     
     if (this.match(TokenType.NULL)) {
       return new NullLiteral();
+    }
+    
+    if (this.match(TokenType.UNDEFINED)) {
+      return new UndefinedLiteral();
     }
     
     if (this.match(TokenType.IDENTIFIER)) {

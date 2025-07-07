@@ -7,6 +7,7 @@ import {
   InterpolatedString,
   BooleanLiteral,
   NullLiteral,
+  UndefinedLiteral,
   BinaryExpression,
   UnaryExpression,
   CallExpression,
@@ -14,6 +15,7 @@ import {
   ArrayLiteral,
   ObjectLiteral,
   PropertyAccess,
+  OptionalChainAccess,
   IndexAccess,
   ConfidenceExpression,
   AssignmentStatement,
@@ -123,6 +125,27 @@ export class NullValue extends Value {
 
   toString(): string {
     return 'null';
+  }
+}
+
+export class UndefinedValue extends Value {
+  type = 'undefined';
+  value = undefined;
+
+  constructor() {
+    super();
+  }
+
+  equals(other: Value): boolean {
+    return other instanceof UndefinedValue;
+  }
+
+  isTruthy(): boolean {
+    return false;
+  }
+
+  toString(): string {
+    return 'undefined';
   }
 }
 
@@ -476,6 +499,8 @@ export class Interpreter {
         return this.interpretBooleanLiteral(node as BooleanLiteral);
       case 'NullLiteral':
         return this.interpretNullLiteral(node as NullLiteral);
+      case 'UndefinedLiteral':
+        return this.interpretUndefinedLiteral(node as UndefinedLiteral);
       case 'IdentifierExpression':
         return this.interpretIdentifier(node as IdentifierExpression);
       case 'BinaryExpression':
@@ -492,6 +517,8 @@ export class Interpreter {
         return this.interpretObjectLiteral(node as ObjectLiteral);
       case 'PropertyAccess':
         return this.interpretPropertyAccess(node as PropertyAccess);
+      case 'OptionalChainAccess':
+        return this.interpretOptionalChainAccess(node as OptionalChainAccess);
       case 'IndexAccess':
         return this.interpretIndexAccess(node as IndexAccess);
       case 'LambdaExpression':
@@ -564,6 +591,10 @@ export class Interpreter {
     return new NullValue();
   }
 
+  private async interpretUndefinedLiteral(_node: UndefinedLiteral): Promise<Value> {
+    return new UndefinedValue();
+  }
+
   private async interpretIdentifier(node: IdentifierExpression): Promise<Value> {
     try {
       return this.environment.get(node.name);
@@ -603,7 +634,8 @@ export class Interpreter {
     // Ensure right is a Value for all other operators
     if (!(right instanceof NumberValue || right instanceof StringValue || right instanceof BooleanValue || 
           right instanceof ConfidenceValue || right instanceof FunctionValue || 
-          right instanceof ArrayValue || right instanceof ObjectValue || right instanceof NullValue)) {
+          right instanceof ArrayValue || right instanceof ObjectValue || right instanceof NullValue || 
+          right instanceof UndefinedValue)) {
       throw new RuntimeError(`Invalid right operand for operator ${operator}`, node);
     }
 
@@ -1139,6 +1171,56 @@ export class Interpreter {
     }
     
     throw new RuntimeError(`Cannot access property '${node.property}' on ${object.type}`, node);
+  }
+
+  private async interpretOptionalChainAccess(node: OptionalChainAccess): Promise<Value> {
+    const object = await this.interpret(node.object);
+    
+    // If object is null or undefined, return null instead of throwing
+    if (object instanceof NullValue || object instanceof UndefinedValue) {
+      return new NullValue();
+    }
+    
+    // Handle array methods
+    if (object instanceof ArrayValue) {
+      if (node.property === 'length') {
+        return new NumberValue(object.elements.length);
+      }
+    }
+    
+    // Handle object property access
+    if (object instanceof ObjectValue) {
+      const value = object.properties.get(node.property);
+      if (!value) {
+        return new NullValue();
+      }
+      return value;
+    }
+    
+    // Handle confidence values by accessing property on underlying value
+    if (object instanceof ConfidenceValue) {
+      const innerValue = object.value;
+      
+      if (innerValue instanceof NullValue || innerValue instanceof UndefinedValue) {
+        return new NullValue();
+      }
+      
+      if (innerValue instanceof ArrayValue && node.property === 'length') {
+        return new NumberValue(innerValue.elements.length);
+      }
+      
+      if (innerValue instanceof ObjectValue) {
+        const value = innerValue.properties.get(node.property);
+        if (!value) {
+          return new NullValue();
+        }
+        // Wrap result in confidence value with same confidence
+        return new ConfidenceValue(value, object.confidence);
+      }
+    }
+    
+    // For other types, return null instead of throwing
+    return new NullValue();
   }
   
   private async interpretIndexAccess(node: IndexAccess): Promise<Value> {

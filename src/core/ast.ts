@@ -6,9 +6,11 @@ export type NodeType =
   | 'InterpolatedString'
   | 'BooleanLiteral'
   | 'NullLiteral'
+  | 'UndefinedLiteral'
   | 'ArrayLiteral'
   | 'ObjectLiteral'
   | 'PropertyAccess'
+  | 'OptionalChainAccess'
   | 'IndexAccess'
   | 'ConfidenceExpression'
   | 'BinaryExpression'
@@ -76,6 +78,14 @@ export class BooleanLiteral extends Expression {
 
 export class NullLiteral extends Expression {
   type: NodeType = 'NullLiteral';
+  
+  constructor() {
+    super();
+  }
+}
+
+export class UndefinedLiteral extends Expression {
+  type: NodeType = 'UndefinedLiteral';
   
   constructor() {
     super();
@@ -176,6 +186,17 @@ export class ObjectLiteral extends Expression {
 
 export class PropertyAccess extends Expression {
   type: NodeType = 'PropertyAccess';
+  
+  constructor(
+    public object: Expression,
+    public property: string
+  ) {
+    super();
+  }
+}
+
+export class OptionalChainAccess extends Expression {
+  type: NodeType = 'OptionalChainAccess';
   
   constructor(
     public object: Expression,

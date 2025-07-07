@@ -2,6 +2,49 @@
 
 All notable changes to prism-uncertainty will be documented in this file.
 
+## [1.0.13] - 2024-06-27
+
+### Added
+- **Optional chaining operator (`?.`)** - Safe property access that returns null instead of throwing errors
+- **Undefined support** - `undefined` is now a proper value type, distinct from `null`
+- Undefined works with all operators including optional chaining
+- Both null and undefined are falsy but remain distinct values
+- Optional chaining works with arrays, objects, and nested properties
+
+### Example
+```prism
+// Optional chaining - safe navigation
+user = { profile: null }
+name = user?.profile?.name  // Returns null instead of throwing
+
+// Undefined support
+value = undefined
+isEmpty = value == null      // false (undefined != null)
+isUndefined = value == undefined  // true
+
+// Optional chaining with undefined
+data = { info: undefined }
+result = data?.info?.details  // Returns null
+
+// Distinction between null and undefined
+missing = undefined          // Never assigned
+empty = null                // Explicitly empty
+
+// Both are falsy
+if (!missing && !empty) {
+  // This executes because both are falsy
+}
+
+// Safe navigation in complex structures
+config = {
+  server: {
+    host: "localhost",
+    port: undefined
+  }
+}
+port = config?.server?.port ?? 3000  // Uses default 3000
+```
+
 ## [1.0.12] - 2024-06-27
 
 ### Added

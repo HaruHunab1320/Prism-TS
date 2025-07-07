@@ -2,7 +2,7 @@
 
 The official npm package for Prism - the language where AI meets certainty.
 
-**Latest: v1.0.12** - Compound assignment operators for cleaner, more expressive code
+**Latest: v1.0.13** - Optional chaining and undefined support for safer null handling
 
 ## Installation
 
@@ -84,6 +84,8 @@ Convenience function for one-off execution.
 - 🚀 Lambda expressions with arrow syntax
 - 🎯 Closures and functional programming
 - ⬜ Null support for representing absence of values
+- ⚡ Undefined support - distinct from null
+- 🔍 Optional chaining operator (?.) for safe navigation
 - ➕ Compound assignment operators (+=, -=, *=, /=, %=)
 
 ## Example: AI Model Ensemble
@@ -110,6 +112,11 @@ console.log(result); // "auto_approve" or "manual_review"
 ```
 
 ## What's New
+
+### v1.0.13 - Optional Chaining & Undefined
+- **Optional chaining**: `user?.profile?.name` - safe property access
+- **Undefined support**: Distinct from null for better JavaScript interop
+- **Safe navigation**: No more "Cannot read property of null" errors
 
 ### v1.0.12 - Compound Assignment Operators
 - **Compound assignments**: `+=`, `-=`, `*=`, `/=`, `%=`
@@ -199,27 +206,35 @@ avg = reduce(user.scores, (a, b) => a + b, 0) / 3
 status = user.active ? "Active" : "Inactive"
 ```
 
-### Null Handling
+### Null & Undefined Handling
 
 ```prism
-// Null represents absence of value
+// Null vs Undefined distinction
 profile = {
   username: "alice",
-  email: null,
-  phone: null
+  email: null,        // Explicitly no email
+  phone: undefined    // Not yet provided
 }
 
-// Check for null values
-hasEmail = profile.email != null
-displayEmail = profile.email != null ? profile.email : "No email provided"
+// Optional chaining for safe access
+safeEmail = profile?.email ?? "No email"
+safePhone = profile?.phone ?? "No phone"
 
-// Filter out nulls from arrays
-data = [1, null, 3, null, 5]
-validData = filter(data, x => x != null)  // [1, 3, 5]
+// Deep optional chaining
+user = { settings: { theme: { color: "blue" } } }
+color = user?.settings?.theme?.color  // "blue"
 
-// Null with confidence
-maybeValue = null ~> 0.3
-fallback = maybeValue ~?? "default"  // Uses "default" due to low confidence
+// Handles null/undefined gracefully
+empty = { settings: null }
+missing = { settings: undefined }
+emptyColor = empty?.settings?.theme?.color    // null (no error!)
+missingColor = missing?.settings?.theme?.color // null (no error!)
+
+// Filter nulls vs undefined
+data = [1, null, 3, undefined, 5]
+noNulls = filter(data, x => x != null)       // [1, 3, undefined, 5]
+noUndefined = filter(data, x => x != undefined) // [1, null, 3, 5]
+validData = filter(data, x => x != null && x != undefined) // [1, 3, 5]
 ```
 
 ### Compound Assignments

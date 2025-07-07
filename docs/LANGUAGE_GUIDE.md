@@ -156,7 +156,7 @@ computed = 5 > 3  // true
 ### Null
 
 ```prism
-// Null represents the absence of a value
+// Null represents the explicit absence of a value
 empty = null
 
 // Null is falsy in conditionals
@@ -170,6 +170,29 @@ if (null) {
 value = null
 isNull = value == null  // true
 notNull = value != null // false
+```
+
+### Undefined
+
+```prism
+// Undefined represents a value that hasn't been assigned
+unassigned = undefined
+
+// Undefined is also falsy
+if (undefined) {
+  // This won't execute
+} else {
+  // This will execute
+}
+
+// Undefined is distinct from null
+isNull = undefined == null      // false
+isUndefined = undefined == undefined  // true
+
+// Both are falsy but different
+nullValue = null
+undefinedValue = undefined
+areSame = nullValue == undefinedValue  // false
 ```
 
 ### Arrays
@@ -197,6 +220,14 @@ person = {
 // Object property access
 person_name = person.name  // "Alice"
 person_age = person["age"]  // 30
+
+// Optional chaining - safe property access
+user = { profile: null }
+safeName = user?.profile?.name  // Returns null instead of throwing
+
+// Works with undefined too
+data = { value: undefined }
+result = data?.value?.nested  // Returns null
 
 // Nested objects
 company = {
@@ -452,6 +483,32 @@ is_valid = measurement ~>= minimum_required ~&& measurement ~<= maximum_allowed
 ```
 
 ### Navigation Operators
+
+#### Optional Chaining (`?.`)
+
+Safe property access that returns null instead of throwing errors:
+
+```prism
+// Basic optional chaining
+user = null
+name = user?.name  // Returns null (no error)
+
+// Chained optional access
+profile = { settings: null }
+theme = profile?.settings?.theme  // Returns null
+
+// Works with arrays
+arr = null
+length = arr?.length  // Returns null
+
+// Mix with regular access
+data = { user: { name: "Alice" } }
+result = data.user?.name  // "Alice"
+
+// Handles undefined too
+obj = { value: undefined }
+nested = obj?.value?.property  // Returns null
+```
 
 #### Confident Property Access (`~.`)
 
