@@ -2,6 +2,35 @@
 
 All notable changes to prism-uncertainty will be documented in this file.
 
+## [1.0.12] - 2024-06-27
+
+### Added
+- **Compound assignment operators** - `+=`, `-=`, `*=`, `/=`, `%=`
+- Compound assignments work with numbers, strings, and confidence values
+- String concatenation with `+=` operator
+- All compound operators properly propagate confidence values
+
+### Example
+```prism
+// Numeric operations
+score = 100
+score += 25   // score = 125
+score -= 10   // score = 115
+score *= 2    // score = 230
+score /= 5    // score = 46
+score %= 10   // score = 6
+
+// String concatenation
+greeting = "Hello"
+greeting += ", "
+greeting += "World!"  // "Hello, World!"
+
+// With confidence values
+measurement = 50 ~> 0.9
+adjustment = 10 ~> 0.7
+measurement += adjustment  // 60 with 0.7 confidence (minimum)
+```
+
 ## [1.0.11] - 2024-06-27
 
 ### Added
@@ -10,9 +39,6 @@ All notable changes to prism-uncertainty will be documented in this file.
 - Null works with all operators including ternary and logical operators
 - Null integrates with confidence system
 - Array methods handle null values properly
-- **Compound assignment operators** - `+=`, `-=`, `*=`, `/=`, `%=`
-- Compound assignments work with numbers, strings, and confidence values
-- String concatenation with `+=` operator
 
 ### Example
 ```prism
@@ -31,12 +57,6 @@ mapped = map(data, x => x != null ? x * 2 : 0)  // [2, 0, 6, 0, 10]
 // Null with confidence
 uncertain = null ~> 0.5
 fallback = uncertain ~?? "default"  // Uses fallback due to low confidence
-
-// Compound assignments
-score = 100
-score += 50  // 150
-message = "Hello"
-message += " World"  // "Hello World"
 ```
 
 ## [1.0.9] - 2024-06-26

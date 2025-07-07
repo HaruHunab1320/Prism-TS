@@ -2,7 +2,7 @@
 
 The official npm package for Prism - the language where AI meets certainty.
 
-**Latest: v1.0.9** - Lambda expressions, array methods, and powerful functional programming features
+**Latest: v1.0.12** - Compound assignment operators for cleaner, more expressive code
 
 ## Installation
 
@@ -110,6 +110,17 @@ console.log(result); // "auto_approve" or "manual_review"
 ```
 
 ## What's New
+
+### v1.0.12 - Compound Assignment Operators
+- **Compound assignments**: `+=`, `-=`, `*=`, `/=`, `%=`
+- **String concatenation**: Use `+=` with strings
+- **Confidence propagation**: All operators maintain confidence values
+
+### v1.0.11 - Null Support
+- **Null literal**: `null` as a proper value type
+- **Null in data structures**: Arrays and objects can contain null
+- **Null comparisons**: `==` and `!=` work with null
+- **Confidence with null**: Null values can have confidence
 
 ### v1.0.9 - Lambda Expressions & Functional Programming
 - **Lambda expressions**: `x => x * 2`, `(a, b) => a + b`
