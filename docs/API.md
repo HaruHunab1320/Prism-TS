@@ -18,12 +18,37 @@ This document provides detailed API reference for Prism-TS language constructs a
 "hello"           // Double quotes
 "multi\nline"     // Escape sequences
 "embedded " + var // String concatenation
+"Hello ${name}!"  // String interpolation
+```
+Multiline string
+```  // Triple backticks for multiline
 ```
 
 #### Boolean Literals
 ```prism
 true
 false
+```
+
+#### Null and Undefined
+```prism
+null       // Explicit absence of value
+undefined  // Unassigned value
+```
+
+#### Array Literals
+```prism
+[1, 2, 3]              // Array of numbers
+["a", "b", "c"]        // Array of strings
+[1, "mixed", true]     // Mixed types
+[...arr1, ...arr2]     // Array spread
+```
+
+#### Object Literals  
+```prism
+{name: "Alice", age: 30}           // Basic object
+{...defaults, ...overrides}        // Object spread
+{key: value, "string key": value}  // Property syntax
 ```
 
 ### Confidence Expressions
@@ -53,6 +78,16 @@ sensor_avg = (sensor1 + sensor2) / 2 ~> 0.75
 - `-` - Subtraction
 - `*` - Multiplication  
 - `/` - Division
+- `%` - Modulo (remainder)
+- `**` - Exponentiation (right-associative)
+
+#### Assignment Operators
+- `=` - Assignment
+- `+=` - Addition assignment
+- `-=` - Subtraction assignment
+- `*=` - Multiplication assignment
+- `/=` - Division assignment
+- `%=` - Modulo assignment
 
 #### Comparison
 - `>` - Greater than
@@ -65,12 +100,41 @@ sensor_avg = (sensor1 + sensor2) / 2 ~> 0.75
 #### Logical
 - `&&` - Logical AND
 - `||` - Logical OR
+- `??` - Nullish coalescing (null/undefined only)
+
+#### Special Operators
+- `?.` - Optional chaining
+- `...` - Spread operator
+- `=>` - Lambda/arrow function
 
 ### Unary Operators
 
 - `-` - Numeric negation
 - `!` - Logical NOT
 - `~` - Confidence accessor
+- `<~` - Confidence extraction
+
+### Confidence Operators
+
+#### Binary Confidence Operators
+- `~>` - Confidence assignment
+- `~~` - Confidence chaining
+- `~??` - Confidence coalesce
+- `~&&` - Confident AND
+- `~||` - Confident OR
+- `~+` - Confident addition
+- `~-` - Confident subtraction
+- `~*` - Confident multiplication
+- `~/` - Confident division
+- `~==` - Confident equality
+- `~!=` - Confident inequality
+- `~>` - Confident greater
+- `~>=` - Confident greater equal
+- `~<` - Confident less
+- `~<=` - Confident less equal
+- `~.` - Confident property access
+- `~||>` - Parallel confidence
+- `~@>` - Threshold gate
 
 ### Control Flow
 
@@ -97,6 +161,54 @@ uncertain if (confident_expression ~> threshold) {
   }
 }
 ```
+
+#### For Loops
+```prism
+// C-style for loop
+for init; condition; update {
+  // loop body
+}
+
+// Examples
+for i = 0; i < 10; i = i + 1 {
+  // Standard loop
+}
+
+for ; i < 10; i++ {  // No init
+for i = 0; ; i++ {   // No condition (use break)
+for i = 0; i < 10; { // No update
+```
+
+#### For-In Loops
+```prism
+// Iterate over array elements
+for item in array {
+  // process item
+}
+
+// With index
+for item, index in array {
+  // process item and index
+}
+```
+
+#### While Loops
+```prism
+while condition {
+  // loop body
+}
+```
+
+#### Do-While Loops
+```prism
+do {
+  // loop body (executes at least once)
+} while condition
+```
+
+#### Loop Control
+- `break` - Exit the current loop
+- `continue` - Skip to next iteration
 
 ### Context Management
 
@@ -126,13 +238,61 @@ response = llm("Your prompt here")
 #### Variable Prompts
 ```prism
 topic = "machine learning"
-explanation = llm("Explain " + topic)
+explanation = llm("Explain ${topic}")  // String interpolation
 ```
 
 #### Chained Calls
 ```prism
 overview = llm("Overview of quantum computing")
-details = llm("Based on: " + overview + " - explain challenges")
+details = llm("Based on: ${overview} - explain challenges")
+```
+
+### Lambda Expressions
+
+```prism
+// Single parameter (no parentheses)
+square = x => x * x
+
+// Multiple parameters
+add = (a, b) => a + b
+
+// No parameters
+getRandom = () => Math.random()
+
+// Using lambdas
+result = square(5)  // 25
+sum = add(3, 7)     // 10
+```
+
+### Array Methods
+
+#### As Properties (v1.0.16+)
+```prism
+arr = [1, 2, 3, 4, 5]
+
+// Map - transform elements
+squares = arr.map(x => x * x)           // [1, 4, 9, 16, 25]
+
+// Filter - select elements
+evens = arr.filter(x => x % 2 == 0)     // [2, 4]
+
+// Reduce - aggregate values
+sum = arr.reduce((a, b) => a + b)        // 15
+product = arr.reduce((a, b) => a * b, 1) // 120
+
+// ForEach - iterate (returns undefined)
+arr.forEach(x => println(x))
+
+// Push - add elements (immutable)
+newArr = arr.push(6, 7)                 // [1, 2, 3, 4, 5, 6, 7]
+```
+
+#### As Functions (legacy)
+```prism
+// Still supported for compatibility
+doubled = map(arr, x => x * 2)
+filtered = filter(arr, x => x > 3)
+sum = reduce(arr, (a, b) => a + b, 0)
 ```
 
 ## Runtime API
@@ -168,6 +328,62 @@ class BooleanValue extends Value {
   value: boolean
   equals(other: Value): boolean
   isTruthy(): boolean
+  toString(): string
+}
+```
+
+#### NullValue
+```typescript
+class NullValue extends Value {
+  constructor()
+  value: null
+  equals(other: Value): boolean
+  isTruthy(): boolean  // returns false
+  toString(): string   // returns "null"
+}
+```
+
+#### UndefinedValue
+```typescript
+class UndefinedValue extends Value {
+  constructor()
+  value: undefined
+  equals(other: Value): boolean
+  isTruthy(): boolean  // returns false
+  toString(): string   // returns "undefined"
+}
+```
+
+#### ArrayValue
+```typescript
+class ArrayValue extends Value {
+  constructor(value: Value[])
+  value: Value[]
+  equals(other: Value): boolean
+  isTruthy(): boolean  // returns true if non-empty
+  toString(): string
+}
+```
+
+#### ObjectValue
+```typescript
+class ObjectValue extends Value {
+  constructor(value: Map<string, Value>)
+  value: Map<string, Value>
+  equals(other: Value): boolean
+  isTruthy(): boolean  // returns true
+  toString(): string
+}
+```
+
+#### FunctionValue
+```typescript
+class FunctionValue extends Value {
+  constructor(name: string, fn: Function, arity?: number)
+  name: string
+  arity: number  // parameter count
+  equals(other: Value): boolean
+  isTruthy(): boolean  // returns true
   toString(): string
 }
 ```
@@ -363,6 +579,96 @@ class LexError extends Error {
   
   readonly name: string = "LexError"
   readonly position: number
+}
+```
+
+## AST Nodes
+
+### Expression Nodes
+
+#### LambdaExpression
+```typescript
+class LambdaExpression extends Expression {
+  constructor(parameters: string[], body: Expression)
+  parameters: string[]
+  body: Expression
+}
+```
+
+#### SpreadElement
+```typescript
+class SpreadElement extends Expression {
+  constructor(argument: Expression)
+  argument: Expression
+}
+```
+
+#### AssignmentExpression
+```typescript
+class AssignmentExpression extends Expression {
+  constructor(identifier: string, value: Expression)
+  identifier: string
+  value: Expression
+}
+```
+
+### Statement Nodes
+
+#### ForLoop
+```typescript
+class ForLoop extends Statement {
+  constructor(
+    init: Statement | null,
+    condition: Expression | null,
+    update: Expression | null,
+    body: Statement
+  )
+}
+```
+
+#### ForInLoop
+```typescript
+class ForInLoop extends Statement {
+  constructor(
+    variable: string,
+    index: string | null,  // Optional index variable
+    iterable: Expression,
+    body: Statement
+  )
+}
+```
+
+#### WhileLoop
+```typescript
+class WhileLoop extends Statement {
+  constructor(
+    condition: Expression,
+    body: Statement
+  )
+}
+```
+
+#### DoWhileLoop
+```typescript
+class DoWhileLoop extends Statement {
+  constructor(
+    body: Statement,
+    condition: Expression
+  )
+}
+```
+
+#### BreakStatement
+```typescript
+class BreakStatement extends Statement {
+  constructor()
+}
+```
+
+#### ContinueStatement
+```typescript
+class ContinueStatement extends Statement {
+  constructor()
 }
 ```
 

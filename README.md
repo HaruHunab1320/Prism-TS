@@ -121,6 +121,48 @@ result = age >= 18 ? "Adult" : "Minor"
 data = { name: "Alice", scores: [95, 87, 92] }
 avg = reduce(data.scores, (a, b) => a + b, 0) / data.scores.length
 
+// Array methods as properties (v1.0.16)
+numbers = [1, 2, 3, 4, 5]
+squares = numbers.map(x => x ** 2)         // [1, 4, 9, 16, 25]
+evens = numbers.filter(x => x % 2 == 0)    // [2, 4]
+sum = numbers.reduce((a, b) => a + b)       // 15
+expanded = numbers.push(6, 7)               // [1, 2, 3, 4, 5, 6, 7]
+
+// Spread operator (v1.0.15)
+arr1 = [1, 2, 3]
+arr2 = [4, 5, 6]
+combined = [...arr1, ...arr2]              // [1, 2, 3, 4, 5, 6]
+
+defaults = {theme: "dark", lang: "en"}
+userPrefs = {lang: "es", debug: true}
+settings = {...defaults, ...userPrefs}      // {theme: "dark", lang: "es", debug: true}
+
+// Loops (v1.0.17)
+// C-style for loop
+sum = 0
+for i = 0; i < 5; i = i + 1 {
+  sum = sum + i
+}
+
+// For-in with index
+fruits = ["apple", "banana", "orange"]
+for fruit, idx in fruits {
+  println("${idx}: ${fruit}")
+}
+
+// While loop
+count = 0
+while count < 3 {
+  count = count + 1
+}
+
+// Loop control
+for i = 0; i < 10; i = i + 1 {
+  if (i == 5) break      // Exit loop
+  if (i % 2 == 0) continue  // Skip evens
+  // Process odd numbers
+}
+
 // Null and undefined support
 user = { name: "Bob", email: null, phone: undefined }
 safeEmail = user?.email ?? "no-email@example.com"
@@ -134,6 +176,11 @@ port = config?.server?.port ?? 3000  // No error, uses default
 score = 100
 score += 50  // 150
 score *= 2   // 300
+
+// Exponentiation
+base = 2
+power = base ** 3  // 8
+chained = 2 ** 3 ** 2  // 512 (right-associative)
 ```
 
 ## 📦 Installation Options
@@ -268,6 +315,7 @@ npm run typecheck
 
 ## 🎯 Complete Operator Reference
 
+### Confidence-Aware Operators
 | Operator | Name | Example |
 |----------|------|---------|
 | `~>` | Confidence Assignment | `temp ~> 0.9` |
@@ -289,6 +337,21 @@ npm run typecheck
 | `~.` | Confident Property Access | `obj ~. prop` |
 | `~\|\|>` | Parallel Confidence | `a ~\|\|> b ~\|\|> c` |
 | `~@>` | Threshold Gate | `check ~@> action` |
+
+### Standard Operators
+| Operator | Name | Example |
+|----------|------|---------|
+| `**` | Exponentiation | `2 ** 3` → `8` |
+| `??` | Nullish Coalescing | `null ?? "default"` |
+| `?.` | Optional Chaining | `obj?.prop?.method` |
+| `...` | Spread Operator | `[...arr1, ...arr2]` |
+| `+=` | Addition Assignment | `x += 5` |
+| `-=` | Subtraction Assignment | `x -= 3` |
+| `*=` | Multiplication Assignment | `x *= 2` |
+| `/=` | Division Assignment | `x /= 4` |
+| `%=` | Modulo Assignment | `x %= 3` |
+| `=>` | Lambda/Arrow Function | `x => x * 2` |
+| `%` | Modulo | `10 % 3` → `1` |
 
 ## 🤝 Contributing
 

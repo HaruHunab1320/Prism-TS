@@ -99,6 +99,15 @@ above_three = numbers.filter(x => x > 3)  // [4, 5]
 sum = numbers.reduce((acc, x) => acc + x, 0)  // 15
 product = numbers.reduce((acc, x) => acc * x, 1)  // 120
 
+// Push - add elements (returns new array, immutable)
+original = [1, 2, 3]
+expanded = original.push(4, 5)  // [1, 2, 3, 4, 5]
+// original is still [1, 2, 3]
+
+// ForEach - iterate over elements (returns undefined)
+numbers.forEach(x => println(x))  // Prints each number
+result = numbers.forEach(x => x * 2)  // result is undefined
+
 // Chaining array methods
 result = numbers
   .filter(x => x % 2 == 0)  // Get evens: [2, 4]
@@ -248,6 +257,61 @@ company = {
   employees: [person],
   website: null  // Can use null for missing values
 }
+```
+
+### Spread Operator
+
+The spread operator (`...`) allows you to expand arrays and objects:
+
+```prism
+// Array spreading
+arr1 = [1, 2, 3]
+arr2 = [4, 5, 6]
+
+// Combine arrays
+combined = [...arr1, ...arr2]  // [1, 2, 3, 4, 5, 6]
+
+// Add elements
+withExtra = [0, ...arr1, 4]    // [0, 1, 2, 3, 4]
+
+// Clone arrays
+clone = [...arr1]              // [1, 2, 3]
+
+// Object spreading
+defaults = {
+  theme: "dark",
+  fontSize: 14,
+  autoSave: true
+}
+
+userPrefs = {
+  theme: "light",
+  fontSize: 16
+}
+
+// Merge objects - later properties override earlier ones
+settings = {...defaults, ...userPrefs}
+// Result: {theme: "light", fontSize: 16, autoSave: true}
+
+// Add or override properties
+updated = {...settings, autoSave: false, newProp: "value"}
+
+// Clone objects
+clonedObj = {...settings}
+
+// Multiple spreads
+obj1 = {a: 1, b: 2}
+obj2 = {b: 3, c: 4}
+obj3 = {c: 5, d: 6}
+merged = {...obj1, ...obj2, ...obj3}
+// Result: {a: 1, b: 3, c: 5, d: 6}
+
+// Works with confidence values
+confidentArr = [1, 2, 3] ~> 0.8
+extended = [...confidentArr, 4, 5]  // Spreads the array values
+
+confidentObj = {x: 10, y: 20} ~> 0.9
+expanded = {...confidentObj, z: 30}  // Spreads the object properties
 ```
 
 ### Confident Values
@@ -709,6 +773,153 @@ uncertain if (primary_diagnosis ~> 0.8) {
   }
   low {
     confidence_level = "very_low"
+  }
+}
+```
+
+### Loops
+
+Prism supports standard JavaScript-style loops with seamless confidence propagation:
+
+#### C-style For Loops
+
+```prism
+// Basic for loop
+sum = 0
+for i = 0; i < 5; i = i + 1 {
+  sum = sum + i
+}
+// sum = 10 (0 + 1 + 2 + 3 + 4)
+
+// Loop with array access
+arr = [10, 20, 30, 40, 50]
+total = 0
+for i = 0; i < arr.length; i = i + 1 {
+  total = total + arr[i]
+}
+
+// Optional parts - all are optional
+for ; i < 10; i = i + 1 {  // No init
+  // ...
+}
+
+for i = 0; ; i = i + 1 {    // No condition (use break)
+  if (i >= 5) break
+  // ...
+}
+
+for i = 0; i < 10; {        // No update
+  // ...
+  i = i + 2  // Manual update
+}
+```
+
+#### For-In Loops
+
+Iterate over arrays with optional index:
+
+```prism
+// Basic for-in
+fruits = ["apple", "banana", "orange"]
+for fruit in fruits {
+  println("I like ${fruit}")
+}
+
+// With index
+for fruit, idx in fruits {
+  println("${idx}: ${fruit}")
+}
+
+// With confident arrays
+data = [10, 20, 30] ~> 0.8
+sum = 0
+for value in data {
+  sum = sum + value  // Confidence propagates
+}
+```
+
+#### While Loops
+
+```prism
+// Basic while
+count = 0
+while count < 5 {
+  count = count + 1
+}
+
+// With break
+i = 0
+while true {
+  if (i >= 10) break
+  i = i + 1
+}
+
+// Processing until condition met
+response = ""
+while response != "success" {
+  response = llm("Try to complete task")
+  if (response == "error") break
+}
+```
+
+#### Do-While Loops
+
+Execute at least once:
+
+```prism
+// Basic do-while
+attempts = 0
+do {
+  attempts = attempts + 1
+  result = attemptOperation()
+} while result == "retry" && attempts < 3
+
+// Always executes once
+do {
+  userInput = llm("Get user confirmation")
+} while userInput != "yes" && userInput != "no"
+```
+
+#### Break and Continue
+
+```prism
+// Break - exit the loop
+for i = 0; i < 100; i = i + 1 {
+  if (i == 50) break  // Exit at 50
+  // ...
+}
+
+// Continue - skip to next iteration
+for i = 0; i < 10; i = i + 1 {
+  if (i % 2 == 0) continue  // Skip even numbers
+  println("Odd: ${i}")
+}
+
+// In nested loops
+for i = 0; i < 5; i = i + 1 {
+  for j = 0; j < 5; j = j + 1 {
+    if (j == 2) break     // Only breaks inner loop
+    if (i == 3) continue  // Only affects inner loop
+  }
+}
+```
+
+#### Loops with Confidence
+
+```prism
+// Confidence propagates through loop operations
+confidentData = [1, 2, 3] ~> 0.9
+sum = 0
+for item in confidentData {
+  sum = sum + item  // sum inherits confidence
+}
+
+// Complex confidence handling
+for i = 0; i < 10; i = i + 1 {
+  reading = getSensorReading() ~> 0.7
+  if (<~ reading > 0.8) {
+    // High confidence readings only
+    processReading(reading)
   }
 }
 ```
