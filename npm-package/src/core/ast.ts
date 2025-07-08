@@ -19,13 +19,20 @@ export type NodeType =
   | 'TernaryExpression'
   | 'LambdaExpression'
   | 'SpreadElement'
+  | 'AssignmentExpression'
   | 'BlockStatement'
   | 'IfStatement'
   | 'UncertainIfStatement'
   | 'ContextStatement'
   | 'AgentDeclaration'
   | 'AssignmentStatement'
-  | 'ExpressionStatement';
+  | 'ExpressionStatement'
+  | 'ForLoop'
+  | 'ForInLoop'
+  | 'WhileLoop'
+  | 'DoWhileLoop'
+  | 'BreakStatement'
+  | 'ContinueStatement';
 
 export abstract class ASTNode {
   abstract type: NodeType;
@@ -193,6 +200,17 @@ export class SpreadElement extends Expression {
   }
 }
 
+export class AssignmentExpression extends Expression {
+  type: NodeType = 'AssignmentExpression';
+  
+  constructor(
+    public identifier: string,
+    public value: Expression
+  ) {
+    super();
+  }
+}
+
 export class PropertyAccess extends Expression {
   type: NodeType = 'PropertyAccess';
   
@@ -308,6 +326,70 @@ export class ExpressionStatement extends Statement {
   type: NodeType = 'ExpressionStatement';
   
   constructor(public expression: Expression) {
+    super();
+  }
+}
+
+export class ForLoop extends Statement {
+  type: NodeType = 'ForLoop';
+  
+  constructor(
+    public init: Statement | null,
+    public condition: Expression | null,
+    public update: Expression | null,
+    public body: Statement
+  ) {
+    super();
+  }
+}
+
+export class ForInLoop extends Statement {
+  type: NodeType = 'ForInLoop';
+  
+  constructor(
+    public variable: string,
+    public index: string | null,  // Optional index variable
+    public iterable: Expression,
+    public body: Statement
+  ) {
+    super();
+  }
+}
+
+export class WhileLoop extends Statement {
+  type: NodeType = 'WhileLoop';
+  
+  constructor(
+    public condition: Expression,
+    public body: Statement
+  ) {
+    super();
+  }
+}
+
+export class DoWhileLoop extends Statement {
+  type: NodeType = 'DoWhileLoop';
+  
+  constructor(
+    public body: Statement,
+    public condition: Expression
+  ) {
+    super();
+  }
+}
+
+export class BreakStatement extends Statement {
+  type: NodeType = 'BreakStatement';
+  
+  constructor() {
+    super();
+  }
+}
+
+export class ContinueStatement extends Statement {
+  type: NodeType = 'ContinueStatement';
+  
+  constructor() {
     super();
   }
 }

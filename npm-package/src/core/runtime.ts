@@ -19,6 +19,7 @@ import {
   IndexAccess,
   ConfidenceExpression,
   AssignmentStatement,
+  AssignmentExpression,
   IfStatement,
   UncertainIfStatement,
   ContextStatement,
@@ -28,6 +29,12 @@ import {
   BinaryOperator,
   LambdaExpression,
   SpreadElement,
+  ForLoop,
+  ForInLoop,
+  WhileLoop,
+  DoWhileLoop,
+  BreakStatement as _BreakStatement,
+  ContinueStatement as _ContinueStatement,
 } from './ast';
 import { ConfidenceValue as ConfidenceLib, ConfidenceLevel } from '../confidence';
 import { Context, ContextManager } from '../context';
@@ -37,6 +44,13 @@ export class RuntimeError extends Error {
   constructor(message: string, public node?: ASTNode) {
     super(message);
     this.name = 'RuntimeError';
+  }
+}
+
+export class LoopControlError extends Error {
+  constructor(public type: 'break' | 'continue') {
+    super(type);
+    this.name = 'LoopControlError';
   }
 }
 
@@ -534,6 +548,8 @@ export class Interpreter {
         return this.interpretConfidenceExpression(node as ConfidenceExpression);
       case 'AssignmentStatement':
         return this.interpretAssignmentStatement(node as AssignmentStatement);
+      case 'AssignmentExpression':
+        return this.interpretAssignmentExpression(node as AssignmentExpression);
       case 'IfStatement':
         return this.interpretIfStatement(node as IfStatement);
       case 'UncertainIfStatement':
@@ -546,6 +562,18 @@ export class Interpreter {
         return this.interpretBlockStatement(node as BlockStatement);
       case 'ExpressionStatement':
         return this.interpretExpressionStatement(node as ExpressionStatement);
+      case 'ForLoop':
+        return this.interpretForLoop(node as ForLoop);
+      case 'ForInLoop':
+        return this.interpretForInLoop(node as ForInLoop);
+      case 'WhileLoop':
+        return this.interpretWhileLoop(node as WhileLoop);
+      case 'DoWhileLoop':
+        return this.interpretDoWhileLoop(node as DoWhileLoop);
+      case 'BreakStatement':
+        throw new LoopControlError('break');
+      case 'ContinueStatement':
+        throw new LoopControlError('continue');
       default:
         throw new RuntimeError(`Unknown node type: ${(node as any).type}`, node);
     }
@@ -1602,6 +1630,12 @@ export class Interpreter {
     return value;
   }
 
+  private async interpretAssignmentExpression(node: AssignmentExpression): Promise<Value> {
+    const value = await this.interpret(node.value);
+    this.environment.set(node.identifier, value);
+    return value;
+  }
+
   private async interpretIfStatement(node: IfStatement): Promise<Value> {
     const condition = await this.interpret(node.condition);
 
@@ -1699,6 +1733,174 @@ export class Interpreter {
 
   private async interpretExpressionStatement(node: ExpressionStatement): Promise<Value> {
     return await this.interpret(node.expression);
+  }
+
+  private async interpretForLoop(node: ForLoop): Promise<Value> {
+    // Create new scope for loop
+    const loopEnv = new Environment(this.environment);
+    const previousEnv = this.environment;
+    this.environment = loopEnv;
+
+    try {
+      // Execute init
+      if (node.init) {
+        await this.interpret(node.init);
+      }
+
+      let result: Value = new UndefinedValue();
+
+      // Loop while condition is true
+      while (true) {
+        // Check condition
+        if (node.condition) {
+          const conditionValue = await this.interpret(node.condition);
+          if (!conditionValue.isTruthy()) {
+            break;
+          }
+        }
+
+        // Execute body
+        try {
+          result = await this.interpret(node.body);
+        } catch (error) {
+          if (error instanceof LoopControlError) {
+            if (error.type === 'break') {
+              break;
+            } else if (error.type === 'continue') {
+              // Continue to update expression
+            } else {
+              throw error;
+            }
+          } else {
+            throw error;
+          }
+        }
+
+        // Execute update
+        if (node.update) {
+          await this.interpret(node.update);
+        }
+      }
+
+      return result;
+    } finally {
+      this.environment = previousEnv;
+    }
+  }
+
+  private async interpretForInLoop(node: ForInLoop): Promise<Value> {
+    // Evaluate iterable
+    let iterableValue = await this.interpret(node.iterable);
+    
+    // Unwrap confidence if needed
+    if (iterableValue instanceof ConfidenceValue) {
+      iterableValue = iterableValue.value;
+    }
+    
+    if (!(iterableValue instanceof ArrayValue)) {
+      throw new RuntimeError('for...in loop requires an array', node);
+    }
+
+    // Create new scope for loop
+    const loopEnv = new Environment(this.environment);
+    const previousEnv = this.environment;
+    this.environment = loopEnv;
+
+    try {
+      let result: Value = new UndefinedValue();
+
+      // Iterate over array elements
+      for (let i = 0; i < iterableValue.elements.length; i++) {
+        // Set loop variables
+        loopEnv.define(node.variable, iterableValue.elements[i]);
+        
+        if (node.index) {
+          loopEnv.define(node.index, new NumberValue(i));
+        }
+
+        // Execute body
+        try {
+          result = await this.interpret(node.body);
+        } catch (error) {
+          if (error instanceof LoopControlError) {
+            if (error.type === 'break') {
+              break;
+            } else if (error.type === 'continue') {
+              continue;
+            }
+          } else {
+            throw error;
+          }
+        }
+      }
+
+      return result;
+    } finally {
+      this.environment = previousEnv;
+    }
+  }
+
+  private async interpretWhileLoop(node: WhileLoop): Promise<Value> {
+    let result: Value = new UndefinedValue();
+
+    while (true) {
+      // Check condition
+      const conditionValue = await this.interpret(node.condition);
+      if (!conditionValue.isTruthy()) {
+        break;
+      }
+
+      // Execute body
+      try {
+        result = await this.interpret(node.body);
+      } catch (error) {
+        if (error instanceof LoopControlError) {
+          if (error.type === 'break') {
+            break;
+          } else if (error.type === 'continue') {
+            continue;
+          }
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    return result;
+  }
+
+  private async interpretDoWhileLoop(node: DoWhileLoop): Promise<Value> {
+    let result: Value = new UndefinedValue();
+
+    do {
+      // Execute body
+      try {
+        result = await this.interpret(node.body);
+      } catch (error) {
+        if (error instanceof LoopControlError) {
+          if (error.type === 'break') {
+            break;
+          } else if (error.type === 'continue') {
+            // Check condition before continuing
+            const conditionValue = await this.interpret(node.condition);
+            if (!conditionValue.isTruthy()) {
+              break;
+            }
+            continue;
+          }
+        } else {
+          throw error;
+        }
+      }
+
+      // Check condition
+      const conditionValue = await this.interpret(node.condition);
+      if (!conditionValue.isTruthy()) {
+        break;
+      }
+    } while (true);
+
+    return result;
   }
 }
 

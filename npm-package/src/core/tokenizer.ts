@@ -27,6 +27,11 @@ export enum TokenType {
   FALSE = 'FALSE',
   NULL = 'NULL',
   UNDEFINED = 'UNDEFINED',
+  FOR = 'FOR',
+  WHILE = 'WHILE',
+  DO = 'DO',
+  BREAK = 'BREAK',
+  CONTINUE = 'CONTINUE',
 
   // Operators
   PLUS = 'PLUS',
@@ -121,6 +126,11 @@ const keywords: { [key: string]: TokenType } = {
   'false': TokenType.FALSE,
   'null': TokenType.NULL,
   'undefined': TokenType.UNDEFINED,
+  'for': TokenType.FOR,
+  'while': TokenType.WHILE,
+  'do': TokenType.DO,
+  'break': TokenType.BREAK,
+  'continue': TokenType.CONTINUE,
 };
 
 export class Tokenizer {

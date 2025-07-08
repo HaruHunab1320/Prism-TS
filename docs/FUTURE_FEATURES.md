@@ -34,21 +34,83 @@ doubled = map(arr, x => x * 2)       // Function syntax
 ### 2. For Loops
 **Priority:** CRITICAL  
 **Complexity:** High  
-**Status:** Not implemented
+**Status:** In Development
+
+#### Phase 1: Standard Loops (Critical)
 
 ```prism
-// Need basic iteration:
-for i in range(0, 10) {
-  total = total + arr[i]
+// C-style for loop
+for i = 0; i < 10; i++ {
+  sum = sum + arr[i]
 }
 
-// Or C-style:
-for i = 0; i < arr.length; i++ {
-  // process arr[i]
+// For...in loop for arrays
+for item in array {
+  process(item)
 }
 
-// Current workaround: massive code duplication or using reduce/map
+// For...in with index
+for item, index in array {
+  result[index] = transform(item)
+}
+
+// While loops
+while condition {
+  // iterate while true
+}
+
+// Do-while loops
+do {
+  // execute at least once
+} while condition
 ```
+
+#### Phase 2: Uncertainty-Aware Loops (Enhancement)
+
+```prism
+// Uncertain for - branches based on confidence
+uncertain for analysis in predictions ~> 0.8 {
+  high { 
+    accept(analysis)
+  }
+  medium { 
+    review(analysis)
+  }
+  low { 
+    skip  // or break
+  }
+}
+
+// Confidence-filtered iteration
+for result in results ~@> 0.7 {
+  // Only processes items with confidence > 0.7
+  deploy(result)
+}
+
+// Confidence accumulation
+confident_sum = 0 ~> 1.0
+for value in measurements {
+  confident_sum = confident_sum ~+ value
+}
+// Result has accumulated confidence
+
+// Early exit on low confidence
+for prediction in model_outputs {
+  if <~ prediction < 0.5 {
+    break  // Exit if confidence drops too low
+  }
+  process(prediction)
+}
+```
+
+#### Implementation Plan:
+1. Add loop tokens to tokenizer (FOR, IN, WHILE, DO, BREAK, CONTINUE)
+2. Add loop AST nodes (ForLoop, ForInLoop, WhileLoop, etc.)
+3. Implement loop parsing in parser
+4. Add loop interpretation in runtime
+5. Handle break/continue statements
+6. Add scope management for loop variables
+7. Implement uncertainty variants after standard loops work
 
 ### 3. Logical NOT Operator Fix
 **Priority:** CRITICAL  

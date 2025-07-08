@@ -21,6 +21,7 @@ import {
   IndexAccess,
   ConfidenceExpression,
   AssignmentStatement,
+  AssignmentExpression,
   IfStatement,
   UncertainIfStatement,
   ContextStatement,
@@ -33,6 +34,12 @@ import {
   UnaryOperator,
   LambdaExpression,
   SpreadElement,
+  ForLoop,
+  ForInLoop,
+  WhileLoop,
+  DoWhileLoop,
+  BreakStatement,
+  ContinueStatement,
 } from './ast';
 
 export class ParseError extends Error {
@@ -100,6 +107,26 @@ export class Parser {
       
       if (this.match(TokenType.IF)) {
         return this.ifStatement();
+      }
+      
+      if (this.match(TokenType.FOR)) {
+        return this.forStatement();
+      }
+      
+      if (this.match(TokenType.WHILE)) {
+        return this.whileStatement();
+      }
+      
+      if (this.match(TokenType.DO)) {
+        return this.doWhileStatement();
+      }
+      
+      if (this.match(TokenType.BREAK)) {
+        return this.breakStatement();
+      }
+      
+      if (this.match(TokenType.CONTINUE)) {
+        return this.continueStatement();
       }
       
       if (this.match(TokenType.IN)) {
@@ -303,6 +330,192 @@ export class Parser {
     
     // Wrap expression in an ExpressionStatement
     return new ExpressionStatement(expr!);
+  }
+
+  private forStatement(): Statement {
+    // for statement can be either:
+    // 1. C-style: for i = 0; i < 10; i++ { ... }
+    // 2. For-in: for item in array { ... }
+    // 3. For-in with index: for item, index in array { ... }
+    
+    // Check if this is a for-in loop by looking ahead
+    const checkPoint = this.current;
+    
+    // Try to parse as for-in first
+    if (this.check(TokenType.IDENTIFIER)) {
+      this.advance();
+      
+      if (this.check(TokenType.COMMA)) {
+        // for item, index in array
+        this.advance(); // consume comma
+        if (this.check(TokenType.IDENTIFIER)) {
+          this.advance();
+          if (this.check(TokenType.IN)) {
+            // Reset and parse as for-in with index
+            this.current = checkPoint;
+            return this.forInStatement();
+          }
+        }
+      } else if (this.check(TokenType.IN)) {
+        // for item in array
+        this.current = checkPoint;
+        return this.forInStatement();
+      }
+    }
+    
+    // Reset position and parse as C-style for loop
+    this.current = checkPoint;
+    
+    // C-style for loop: for init; condition; update { body }
+    let init: Statement | null = null;
+    let condition: Expression | null = null;
+    let update: Expression | null = null;
+    
+    // Parse init
+    if (!this.check(TokenType.SEMICOLON)) {
+      if (this.check(TokenType.IDENTIFIER) && this.peekNext().type === TokenType.EQUAL) {
+        // Variable assignment
+        const identifier = this.advance().value;
+        this.consume(TokenType.EQUAL, "Expected '=' in assignment");
+        const value = this.expression();
+        if (!value) {
+          throw new ParseError("Expected expression after '='", this.previous(), this.sourceCode);
+        }
+        init = new AssignmentStatement(identifier, value);
+      } else {
+        // Expression
+        const expr = this.expression();
+        if (expr) {
+          init = new ExpressionStatement(expr);
+        }
+      }
+    }
+    
+    if (!this.match(TokenType.SEMICOLON)) {
+      throw new ParseError("Expected ';' after for loop initializer", this.peek(), this.sourceCode);
+    }
+    
+    // Parse condition
+    if (!this.check(TokenType.SEMICOLON)) {
+      condition = this.expression();
+    }
+    
+    if (!this.match(TokenType.SEMICOLON)) {
+      throw new ParseError("Expected ';' after for loop condition", this.peek(), this.sourceCode);
+    }
+    
+    // Parse update
+    if (!this.check(TokenType.LEFT_BRACE)) {
+      // Check if this is an assignment
+      if (this.check(TokenType.IDENTIFIER)) {
+        const checkPoint = this.current;
+        const identifier = this.advance();
+        
+        if (this.match(TokenType.EQUAL)) {
+          // It's an assignment expression
+          const value = this.expression();
+          if (!value) {
+            throw new ParseError("Expected expression after '='", this.previous(), this.sourceCode);
+          }
+          update = new AssignmentExpression(identifier.value, value);
+        } else {
+          // Not an assignment, reset and parse as regular expression
+          this.current = checkPoint;
+          update = this.expression();
+        }
+      } else {
+        update = this.expression();
+      }
+    }
+    
+    // Parse body
+    const body = this.statement();
+    if (!body) {
+      throw new ParseError("Expected body for for loop", this.peek(), this.sourceCode);
+    }
+    
+    return new ForLoop(init, condition, update, body);
+  }
+  
+  private forInStatement(): Statement {
+    // Parse variable name
+    if (!this.check(TokenType.IDENTIFIER)) {
+      throw new ParseError("Expected identifier in for-in loop", this.peek(), this.sourceCode);
+    }
+    const variable = this.advance().value;
+    
+    // Check for optional index variable
+    let index: string | null = null;
+    if (this.match(TokenType.COMMA)) {
+      if (!this.check(TokenType.IDENTIFIER)) {
+        throw new ParseError("Expected identifier after comma in for-in loop", this.peek(), this.sourceCode);
+      }
+      index = this.advance().value;
+    }
+    
+    // Expect 'in'
+    if (!this.match(TokenType.IN)) {
+      throw new ParseError("Expected 'in' in for-in loop", this.peek(), this.sourceCode);
+    }
+    
+    // Parse iterable expression
+    const iterable = this.expression();
+    if (!iterable) {
+      throw new ParseError("Expected expression after 'in'", this.peek(), this.sourceCode);
+    }
+    
+    // Parse body
+    const body = this.statement();
+    if (!body) {
+      throw new ParseError("Expected body for for-in loop", this.peek(), this.sourceCode);
+    }
+    
+    return new ForInLoop(variable, index, iterable, body);
+  }
+  
+  private whileStatement(): Statement {
+    // Parse condition
+    const condition = this.expression();
+    if (!condition) {
+      throw new ParseError("Expected condition in while loop", this.peek(), this.sourceCode);
+    }
+    
+    // Parse body
+    const body = this.statement();
+    if (!body) {
+      throw new ParseError("Expected body for while loop", this.peek(), this.sourceCode);
+    }
+    
+    return new WhileLoop(condition, body);
+  }
+  
+  private doWhileStatement(): Statement {
+    // Parse body
+    const body = this.statement();
+    if (!body) {
+      throw new ParseError("Expected body for do-while loop", this.peek(), this.sourceCode);
+    }
+    
+    // Expect 'while'
+    if (!this.match(TokenType.WHILE)) {
+      throw new ParseError("Expected 'while' after do-while body", this.peek(), this.sourceCode);
+    }
+    
+    // Parse condition
+    const condition = this.expression();
+    if (!condition) {
+      throw new ParseError("Expected condition in do-while loop", this.peek(), this.sourceCode);
+    }
+    
+    return new DoWhileLoop(body, condition);
+  }
+  
+  private breakStatement(): Statement {
+    return new BreakStatement();
+  }
+  
+  private continueStatement(): Statement {
+    return new ContinueStatement();
   }
 
   private expression(): Expression | null {
@@ -740,6 +953,13 @@ export class Parser {
 
   private peek(): Token {
     return this.tokens[this.current];
+  }
+
+  private peekNext(): Token {
+    if (this.current + 1 >= this.tokens.length) {
+      return this.tokens[this.tokens.length - 1]; // Return EOF token
+    }
+    return this.tokens[this.current + 1];
   }
 
   private previous(): Token {
