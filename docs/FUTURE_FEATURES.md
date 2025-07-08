@@ -2,6 +2,104 @@
 
 This document outlines potential improvements and new operators that could be added to the Prism language. Features are organized by priority and implementation complexity.
 
+## Critical Missing Features (Team Feedback - 2025-07-08)
+
+These features were identified as critical blockers by the testing team:
+
+### 1. Array Property Access
+**Priority:** CRITICAL  
+**Complexity:** Low-Medium  
+**Status:** COMPLETED ✅ (array.length and all methods implemented!)
+
+```prism
+// All Working:
+arr.length              // ✅ Get array length
+arr.map(fn)             // ✅ Transform elements
+arr.filter(fn)          // ✅ Filter elements
+arr.reduce(fn, init?)   // ✅ Reduce to single value
+arr.forEach(fn)         // ✅ Iterate over elements
+arr.push(...items)      // ✅ Add to array (returns new array)
+
+// Both syntaxes work:
+doubled = arr.map(x => x * 2)        // Method syntax
+doubled = map(arr, x => x * 2)       // Function syntax
+
+// Notes:
+// - push() returns a new array (immutable)
+// - forEach() returns undefined
+// - All methods preserve confidence values
+// - Methods accept lambdas with appropriate arity
+```
+
+### 2. For Loops
+**Priority:** CRITICAL  
+**Complexity:** High  
+**Status:** Not implemented
+
+```prism
+// Need basic iteration:
+for i in range(0, 10) {
+  total = total + arr[i]
+}
+
+// Or C-style:
+for i = 0; i < arr.length; i++ {
+  // process arr[i]
+}
+
+// Current workaround: massive code duplication or using reduce/map
+```
+
+### 3. Logical NOT Operator Fix
+**Priority:** CRITICAL  
+**Complexity:** Low  
+**Status:** COMPLETED ✅ (tests confirm it's working correctly)
+
+```prism
+// All of these work correctly:
+if (!someValue) { }
+if (!(a && b)) { }
+!true == false
+!false == true
+!0 == true
+!"" == true
+!null == true
+!undefined == true
+```
+
+### 4. Better Error Messages
+**Priority:** HIGH  
+**Complexity:** Low  
+**Status:** Partially implemented
+
+```prism
+// Current: "Cannot compare boolean and number"
+// Better:  "Cannot compare boolean (maxTier) and number (1) at line 25"
+```
+
+### 5. Type Coercion for Common Patterns
+**Priority:** MEDIUM  
+**Complexity:** Medium  
+**Status:** Currently strict typing causes issues
+
+```prism
+// Common JS pattern that fails:
+maxTier = input.maxTier || 3  // Error: || requires boolean operands
+
+// Must use:
+maxTier = input.maxTier != null ? input.maxTier : 3
+// Or:
+maxTier = input.maxTier ?? 3
+```
+
+## Implementation Priority Order
+
+1. ✅ **Array .length property** - COMPLETED
+2. ✅ **Fix ! operator** - COMPLETED (was already working)
+3. ✅ **Array methods as properties** - COMPLETED
+4. **For loops** - Major feature but eliminates code duplication
+5. **Better error messages** - Improves developer experience
+
 ## High Priority Features
 
 ### 1. Optional Chaining Operator (`?.`)

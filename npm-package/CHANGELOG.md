@@ -2,6 +2,66 @@
 
 All notable changes to prism-uncertainty will be documented in this file.
 
+## [1.0.16] - 2025-07-08
+
+### Added
+- **Array methods as properties** - All array methods now available as properties for better ergonomics
+- `array.map(fn)` - Transform array elements with a function
+- `array.filter(fn)` - Filter elements based on a predicate
+- `array.reduce(fn, init?)` - Reduce array to a single value with optional initial value
+- `array.forEach(fn)` - Iterate over elements (returns undefined)
+- `array.push(...items)` - Add elements to array (returns new array, immutable)
+- All methods preserve confidence values when used on confident arrays
+- Methods intelligently handle optional parameters (e.g., index in reduce)
+- Both method syntax (`arr.map(fn)`) and function syntax (`map(arr, fn)`) are supported
+
+### Fixed
+- Lambda functions now properly track their arity for correct parameter handling
+- Array method callbacks receive the correct number of arguments based on their parameter count
+
+### Example
+```prism
+// Array methods as properties
+numbers = [1, 2, 3, 4, 5]
+
+// Map - transform elements
+doubled = numbers.map(x => x * 2)         // [2, 4, 6, 8, 10]
+squares = numbers.map(x => x ** 2)        // [1, 4, 9, 16, 25]
+
+// Filter - select elements
+evens = numbers.filter(x => x % 2 == 0)   // [2, 4]
+large = numbers.filter(x => x > 3)        // [4, 5]
+
+// Reduce - aggregate values
+sum = numbers.reduce((a, b) => a + b)     // 15
+product = numbers.reduce((a, b) => a * b, 1) // 120
+
+// With index parameter
+indexed = numbers.reduce((acc, val, idx) => acc + val * idx, 0) // 40
+
+// ForEach - side effects (returns undefined)
+result = numbers.forEach(x => x * 2)      // undefined
+
+// Push - add elements (immutable)
+original = [1, 2, 3]
+expanded = original.push(4, 5)            // [1, 2, 3, 4, 5]
+// original is still [1, 2, 3]
+
+// Method chaining
+result = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  .filter(x => x % 2 == 0)               // [2, 4, 6, 8, 10]
+  .map(x => x ** 2)                       // [4, 16, 36, 64, 100]
+  .reduce((a, b) => a + b)                // 220
+
+// Works with confident arrays
+confident = [1, 2, 3] ~> 0.8
+doubled = confident.map(x => x * 2)       // [2, 4, 6] ~> 0.8
+
+// Both syntaxes work
+methodResult = arr.map(x => x * 2)
+functionResult = map(arr, x => x * 2)     // Same result
+```
+
 ## [1.0.15] - 2025-07-08
 
 ### Added

@@ -2,7 +2,7 @@
 
 The official npm package for Prism - the language where AI meets certainty.
 
-**Latest: v1.0.15** - Spread operator for immutable array and object operations
+**Latest: v1.0.16** - Array methods as properties (.map, .filter, .reduce, .forEach, .push)
 
 ## Installation
 
@@ -80,7 +80,7 @@ Convenience function for one-off execution.
 - 🔧 Ternary operators for concise conditionals
 - 📦 Arrays and objects with full manipulation
 - 💬 String interpolation with `${}`
-- 🔄 Built-in array methods (map, filter, reduce)
+- 🔄 Array methods as properties (.map, .filter, .reduce, .forEach, .push)
 - 🚀 Lambda expressions with arrow syntax
 - 🎯 Closures and functional programming
 - ⬜ Null support for representing absence of values
@@ -115,6 +115,13 @@ console.log(result); // "auto_approve" or "manual_review"
 ```
 
 ## What's New
+
+### v1.0.16 - Array Methods as Properties
+- **Method syntax**: `arr.map(fn)`, `arr.filter(fn)`, `arr.reduce(fn)`, `arr.forEach(fn)`, `arr.push(...items)`
+- **Immutable push**: Returns a new array instead of mutating
+- **Smart parameters**: Methods pass the right number of arguments based on function arity
+- **Confidence preservation**: All methods maintain confidence through operations
+- **Dual syntax**: Both `arr.map(fn)` and `map(arr, fn)` work
 
 ### v1.0.15 - Spread Operator
 - **Array spreading**: `[...arr1, ...arr2]` - combine arrays immutably

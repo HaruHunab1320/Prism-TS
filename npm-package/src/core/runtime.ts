@@ -236,7 +236,8 @@ export class FunctionValue extends Value {
 
   constructor(
     public name: string,
-    public value: (args: Value[]) => Promise<Value>
+    public value: (args: Value[]) => Promise<Value>,
+    public arity?: number
   ) {
     super();
   }
@@ -454,7 +455,12 @@ export class Interpreter {
       }
 
       for (let i = startIndex; i < array.elements.length; i++) {
-        accumulator = await reducerArg.value([accumulator, array.elements[i], new NumberValue(i)]);
+        // Only pass index if the reducer expects 3 arguments
+        const args = [accumulator, array.elements[i]];
+        if (reducerArg.arity === 3) {
+          args.push(new NumberValue(i));
+        }
+        accumulator = await reducerArg.value(args);
       }
 
       // Preserve confidence if the original array was confident
@@ -1190,8 +1196,120 @@ export class Interpreter {
       if (node.property === 'length') {
         return new NumberValue(object.elements.length);
       }
-      // Array methods are handled as built-in functions, not properties
-      // They would be called with syntax like: map(array, fn)
+      
+      // Array methods as properties
+      if (node.property === 'map') {
+        return new FunctionValue('map', async (args: Value[]) => {
+          if (args.length !== 1) {
+            throw new RuntimeError('Array.map() requires exactly 1 argument: function');
+          }
+          const fn = args[0];
+          if (!(fn instanceof FunctionValue)) {
+            throw new RuntimeError('Argument to map() must be a function');
+          }
+          
+          const results: Value[] = [];
+          for (const element of object.elements) {
+            const result = await fn.value([element]);
+            results.push(result);
+          }
+          return new ArrayValue(results);
+        });
+      }
+      
+      if (node.property === 'filter') {
+        return new FunctionValue('filter', async (args: Value[]) => {
+          if (args.length !== 1) {
+            throw new RuntimeError('Array.filter() requires exactly 1 argument: predicate');
+          }
+          const predicate = args[0];
+          if (!(predicate instanceof FunctionValue)) {
+            throw new RuntimeError('Argument to filter() must be a function');
+          }
+          
+          const results: Value[] = [];
+          for (const element of object.elements) {
+            const predicateResult = await predicate.value([element]);
+            if (predicateResult.isTruthy()) {
+              results.push(element);
+            }
+          }
+          return new ArrayValue(results);
+        });
+      }
+      
+      if (node.property === 'reduce') {
+        return new FunctionValue('reduce', async (args: Value[]) => {
+          if (args.length < 1 || args.length > 2) {
+            throw new RuntimeError('Array.reduce() requires 1 or 2 arguments: reducer and optional initial value');
+          }
+          const reducer = args[0];
+          const initialValue = args.length === 2 ? args[1] : undefined;
+          
+          if (!(reducer instanceof FunctionValue)) {
+            throw new RuntimeError('First argument to reduce() must be a function');
+          }
+          
+          if (object.elements.length === 0 && initialValue === undefined) {
+            throw new RuntimeError('reduce() of empty array with no initial value');
+          }
+          
+          let accumulator: Value;
+          let startIndex: number;
+          
+          if (initialValue !== undefined) {
+            accumulator = initialValue;
+            startIndex = 0;
+          } else {
+            accumulator = object.elements[0];
+            startIndex = 1;
+          }
+          
+          for (let i = startIndex; i < object.elements.length; i++) {
+            // Only pass index if the reducer expects 3 arguments
+            const args = [accumulator, object.elements[i]];
+            if (reducer.arity === 3) {
+              args.push(new NumberValue(i));
+            }
+            accumulator = await reducer.value(args);
+          }
+          
+          return accumulator;
+        });
+      }
+      
+      if (node.property === 'push') {
+        return new FunctionValue('push', async (args: Value[]) => {
+          if (args.length === 0) {
+            throw new RuntimeError('Array.push() requires at least 1 argument');
+          }
+          // Since arrays are immutable in Prism, return a new array
+          const newElements = [...object.elements, ...args];
+          return new ArrayValue(newElements);
+        });
+      }
+      
+      if (node.property === 'forEach') {
+        return new FunctionValue('forEach', async (args: Value[]) => {
+          if (args.length !== 1) {
+            throw new RuntimeError('Array.forEach() requires exactly 1 argument: function');
+          }
+          const fn = args[0];
+          if (!(fn instanceof FunctionValue)) {
+            throw new RuntimeError('Argument to forEach() must be a function');
+          }
+          
+          for (let i = 0; i < object.elements.length; i++) {
+            // Only pass index if the function expects 2 arguments
+            const args = [object.elements[i]];
+            if (fn.arity === 2) {
+              args.push(new NumberValue(i));
+            }
+            await fn.value(args);
+          }
+          return new UndefinedValue();
+        });
+      }
     }
     
     // Handle object property access
@@ -1206,9 +1324,127 @@ export class Interpreter {
     // Handle confidence values by accessing property on underlying value
     if (object instanceof ConfidenceValue) {
       const innerValue = object.value;
+      const confidence = object.confidence;
       
-      if (innerValue instanceof ArrayValue && node.property === 'length') {
-        return new NumberValue(innerValue.elements.length);
+      if (innerValue instanceof ArrayValue) {
+        if (node.property === 'length') {
+          return new NumberValue(innerValue.elements.length);
+        }
+        
+        // Array methods on confident arrays
+        if (node.property === 'map') {
+          return new FunctionValue('map', async (args: Value[]) => {
+            if (args.length !== 1) {
+              throw new RuntimeError('Array.map() requires exactly 1 argument: function');
+            }
+            const fn = args[0];
+            if (!(fn instanceof FunctionValue)) {
+              throw new RuntimeError('Argument to map() must be a function');
+            }
+            
+            const results: Value[] = [];
+            for (const element of innerValue.elements) {
+              const result = await fn.value([element]);
+              results.push(result);
+            }
+            return new ConfidenceValue(new ArrayValue(results), confidence);
+          });
+        }
+        
+        if (node.property === 'filter') {
+          return new FunctionValue('filter', async (args: Value[]) => {
+            if (args.length !== 1) {
+              throw new RuntimeError('Array.filter() requires exactly 1 argument: predicate');
+            }
+            const predicate = args[0];
+            if (!(predicate instanceof FunctionValue)) {
+              throw new RuntimeError('Argument to filter() must be a function');
+            }
+            
+            const results: Value[] = [];
+            for (const element of innerValue.elements) {
+              const predicateResult = await predicate.value([element]);
+              if (predicateResult.isTruthy()) {
+                results.push(element);
+              }
+            }
+            return new ConfidenceValue(new ArrayValue(results), confidence);
+          });
+        }
+        
+        if (node.property === 'reduce') {
+          return new FunctionValue('reduce', async (args: Value[]) => {
+            if (args.length < 1 || args.length > 2) {
+              throw new RuntimeError('Array.reduce() requires 1 or 2 arguments: reducer and optional initial value');
+            }
+            const reducer = args[0];
+            const initialValue = args.length === 2 ? args[1] : undefined;
+            
+            if (!(reducer instanceof FunctionValue)) {
+              throw new RuntimeError('First argument to reduce() must be a function');
+            }
+            
+            if (innerValue.elements.length === 0 && initialValue === undefined) {
+              throw new RuntimeError('reduce() of empty array with no initial value');
+            }
+            
+            let accumulator: Value;
+            let startIndex: number;
+            
+            if (initialValue !== undefined) {
+              accumulator = initialValue;
+              startIndex = 0;
+            } else {
+              accumulator = innerValue.elements[0];
+              startIndex = 1;
+            }
+            
+            for (let i = startIndex; i < innerValue.elements.length; i++) {
+              // Only pass index if the reducer expects 3 arguments
+              const args = [accumulator, innerValue.elements[i]];
+              if (reducer.arity === 3) {
+                args.push(new NumberValue(i));
+              }
+              accumulator = await reducer.value(args);
+            }
+            
+            // Preserve confidence if result isn't already confident
+            return accumulator instanceof ConfidenceValue ? accumulator : new ConfidenceValue(accumulator, confidence);
+          });
+        }
+        
+        if (node.property === 'push') {
+          return new FunctionValue('push', async (args: Value[]) => {
+            if (args.length === 0) {
+              throw new RuntimeError('Array.push() requires at least 1 argument');
+            }
+            // Since arrays are immutable in Prism, return a new array
+            const newElements = [...innerValue.elements, ...args];
+            return new ConfidenceValue(new ArrayValue(newElements), confidence);
+          });
+        }
+        
+        if (node.property === 'forEach') {
+          return new FunctionValue('forEach', async (args: Value[]) => {
+            if (args.length !== 1) {
+              throw new RuntimeError('Array.forEach() requires exactly 1 argument: function');
+            }
+            const fn = args[0];
+            if (!(fn instanceof FunctionValue)) {
+              throw new RuntimeError('Argument to forEach() must be a function');
+            }
+            
+            for (let i = 0; i < innerValue.elements.length; i++) {
+              // Only pass index if the function expects 2 arguments
+              const args = [innerValue.elements[i]];
+              if (fn.arity === 2) {
+                args.push(new NumberValue(i));
+              }
+              await fn.value(args);
+            }
+            return new UndefinedValue();
+          });
+        }
       }
       
       if (innerValue instanceof ObjectValue) {
@@ -1314,7 +1550,7 @@ export class Interpreter {
     // Create a closure that captures the current environment
     const closureEnv = this.environment;
     
-    return new FunctionValue(`lambda`, async (args: Value[]) => {
+    const fn = new FunctionValue(`lambda`, async (args: Value[]) => {
       if (args.length !== node.parameters.length) {
         throw new RuntimeError(`Lambda expects ${node.parameters.length} arguments, got ${args.length}`);
       }
@@ -1337,7 +1573,9 @@ export class Interpreter {
       } finally {
         this.environment = previousEnv;
       }
-    });
+    }, node.parameters.length);
+    
+    return fn;
   }
 
   private async interpretConfidenceExpression(node: ConfidenceExpression): Promise<Value> {

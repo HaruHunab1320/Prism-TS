@@ -119,7 +119,7 @@ result = age >= 18 ? "Adult" : "Minor"
 
 // Arrays and objects
 data = { name: "Alice", scores: [95, 87, 92] }
-avg = reduce(data.scores, (a, b) => a + b, 0) / 3
+avg = reduce(data.scores, (a, b) => a + b, 0) / data.scores.length
 
 // Null and undefined support
 user = { name: "Bob", email: null, phone: undefined }

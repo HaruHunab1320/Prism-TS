@@ -264,7 +264,8 @@ Features synced:
    - exponentiation.test.ts
    - nullish-coalescing.test.ts
    - spread.test.ts
-3. **Total tests in core**: 459 tests (all passing)
+   - array-methods-properties.test.ts
+3. **Total tests in core**: 488 tests (all passing)
 
 ### Features now available in both npm-package and core:
 - Multiline strings with ```
@@ -285,6 +286,7 @@ Features synced:
 - Exponentiation operator (**) with right associativity
 - Nullish coalescing operator (??)
 - Spread operator (...) for arrays and objects
+- Array methods as properties (.map, .filter, .reduce, .forEach, .push)
 
 ## Next Features (v1.1.0)
 
