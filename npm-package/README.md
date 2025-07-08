@@ -120,6 +120,20 @@ console.log(result); // "auto_approve" or "manual_review"
 
 ## What's New
 
+### v1.0.20 - Spread Operator & Rest Parameters
+- **Function argument spread**: `max(...numbers)` - expand arrays as arguments
+- **Rest parameters**: `(...args) => args.length` - collect arguments as array
+- **Mix regular and rest**: `(first, ...rest) => first + rest.join(",")`
+- **Array.join() method**: Convert arrays to strings with custom separator
+- **Confidence preservation**: Rest parameters maintain confidence values
+
+### v1.0.19 - JavaScript-Style Logical Operators
+- **Type coercion**: `||` and `&&` now return values, not booleans
+- **Common patterns**: `name = userInput || "default"` now works!
+- **Short-circuit evaluation**: Better performance
+- **Enhanced error messages**: Runtime errors show line and column numbers
+- **Better debugging**: `Error at line 5, column 23: message`
+
 ### v1.0.18 - Uncertainty-Aware Loops
 - **Uncertain for loops**: `uncertain for` with confidence-based branching
 - **Uncertain while loops**: `uncertain while` adapts behavior to confidence levels
