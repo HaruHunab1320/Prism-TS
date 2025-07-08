@@ -80,6 +80,18 @@ This document tracks features implemented in the npm-package that need to be syn
 
 | Feature | NPM Package | Core Language | Files to Sync |
 |---------|-------------|---------------|---------------|
+| Null literal `null` | ✅ | ✅ | tokenizer.ts, ast.ts, parser.ts, runtime.ts |
+| NULL token type | ✅ | ✅ | tokenizer.ts |
+| NullLiteral AST node | ✅ | ✅ | ast.ts |
+| NullValue runtime class | ✅ | ✅ | runtime.ts |
+| Null in arrays/objects | ✅ | ✅ | runtime.ts |
+| Null comparisons | ✅ | ✅ | runtime.ts |
+| Null with confidence | ✅ | ✅ | runtime.ts |
+
+### v1.0.12 Features (Synced ✅)
+
+| Feature | NPM Package | Core Language | Files to Sync |
+|---------|-------------|---------------|---------------|
 | Compound assignment operators | ✅ | ✅ | tokenizer.ts, parser.ts |
 | += operator | ✅ | ✅ | tokenizer.ts, parser.ts |
 | -= operator | ✅ | ✅ | tokenizer.ts, parser.ts |
@@ -213,30 +225,48 @@ This document tracks features implemented in the npm-package that need to be syn
 3. Update any import paths if needed
 4. Add new tests to core test suite
 
-## Sync Completion Summary (2025-06-27)
+## Sync Completion Summary
 
-✅ **All features successfully synced from npm-package to core!**
+### 2025-06-27
+✅ **Successfully synced features v1.0.1 through v1.0.11**
 
-### What was synced:
-1. **Core files**: tokenizer.ts, parser.ts, ast.ts, runtime.ts, index.ts
-2. **Test files**: 9 new test files added
-   - tokenizer.multiline.test.ts
-   - parser.errors.test.ts
-   - ternary.test.ts
-   - arrays.test.ts
-   - string-interpolation.test.ts
-   - confidence-manipulation.test.ts
-   - array-methods.test.ts
-   - lambda.test.ts
-   - null.test.ts
-3. **Example files**: 5 new examples added
-   - arrays-and-objects.prism
-   - string-interpolation.prism
-   - new-features-demo.prism
-   - lambda-demo.prism
-   - null-demo.prism
+Features synced:
+- Multiline strings with ```
+- String escape sequences
+- Enhanced error messages with context
+- Ternary operators (? :)
+- Arrays and lists
+- Objects/dictionaries
+- String interpolation
+- Built-in array methods (map, filter, reduce)
+- Lambda expressions with arrow syntax
+- Closures and scope capture
+- Modulo operator (%)
+- Null literal support
 
-### Features now available in core:
+### 2025-07-08
+✅ **Successfully synced features v1.0.12 through v1.0.15**
+
+Features synced:
+- Compound assignment operators (+=, -=, *=, /=, %=)
+- Optional chaining operator (?.)
+- Undefined support (distinct from null)
+- Exponentiation operator (**) with right associativity
+- Nullish coalescing operator (??)
+- Spread operator (...) for arrays and objects
+
+### Current Status:
+1. **Core files synced**: tokenizer.ts, parser.ts, ast.ts, runtime.ts
+2. **Test files added**: 
+   - compound-assignment.test.ts
+   - optional-chaining.test.ts
+   - undefined.test.ts
+   - exponentiation.test.ts
+   - nullish-coalescing.test.ts
+   - spread.test.ts
+3. **Total tests in core**: 459 tests (all passing)
+
+### Features now available in both npm-package and core:
 - Multiline strings with ```
 - String escape sequences
 - Enhanced error messages with context
@@ -254,14 +284,7 @@ This document tracks features implemented in the npm-package that need to be syn
 - Undefined support (distinct from null)
 - Exponentiation operator (**) with right associativity
 - Nullish coalescing operator (??)
-
-### Test Results:
-- Arrays test: ✅ 29/29 passing
-- String interpolation test: ✅ 15/15 passing
-- Array methods test: ✅ 10/10 passing
-- Lambda test: ✅ 12/12 passing
-- Null test: ✅ 17/17 passing
-- Total new tests added: 83 tests
+- Spread operator (...) for arrays and objects
 
 ## Next Features (v1.1.0)
 

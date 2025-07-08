@@ -32,6 +32,7 @@ import {
   BinaryOperator,
   UnaryOperator,
   LambdaExpression,
+  SpreadElement,
 } from './ast';
 
 export class ParseError extends Error {
@@ -623,6 +624,9 @@ export class Parser {
       if (this.check(TokenType.RIGHT_BRACE)) {
         // Empty braces - could be either, treat as object
         isObject = true;
+      } else if (this.check(TokenType.SPREAD)) {
+        // Spread syntax indicates object literal
+        isObject = true;
       } else if (this.check(TokenType.IDENTIFIER) || this.check(TokenType.STRING)) {
         // Save position and check for colon after identifier/string
         const checkPos = this.current;
@@ -646,13 +650,22 @@ export class Parser {
   }
   
   private arrayLiteral(): ArrayLiteral {
-    const elements: Expression[] = [];
+    const elements: (Expression | SpreadElement)[] = [];
     
     if (!this.check(TokenType.RIGHT_BRACKET)) {
       do {
-        const elem = this.expression();
-        if (elem) {
-          elements.push(elem);
+        // Check for spread syntax
+        if (this.match(TokenType.SPREAD)) {
+          const argument = this.expression();
+          if (!argument) {
+            throw new ParseError("Expected expression after '...'", this.previous(), this.sourceCode);
+          }
+          elements.push(new SpreadElement(argument));
+        } else {
+          const elem = this.expression();
+          if (elem) {
+            elements.push(elem);
+          }
         }
       } while (this.match(TokenType.COMMA));
     }
@@ -662,28 +675,38 @@ export class Parser {
   }
   
   private objectLiteral(): ObjectLiteral {
-    const properties: Array<{ key: string; value: Expression }> = [];
+    const properties: Array<{ key?: string; value: Expression | SpreadElement }> = [];
     
     if (!this.check(TokenType.RIGHT_BRACE)) {
       do {
-        let key: string;
-        
-        if (this.match(TokenType.IDENTIFIER)) {
-          key = this.previous().value;
-        } else if (this.match(TokenType.STRING)) {
-          key = this.previous().value;
+        // Check for spread syntax
+        if (this.match(TokenType.SPREAD)) {
+          const argument = this.expression();
+          if (!argument) {
+            throw new ParseError("Expected expression after '...'", this.previous(), this.sourceCode);
+          }
+          properties.push({ value: new SpreadElement(argument) });
         } else {
-          throw new ParseError("Expected property name", this.peek(), this.sourceCode);
+          // Regular property
+          let key: string;
+          
+          if (this.match(TokenType.IDENTIFIER)) {
+            key = this.previous().value;
+          } else if (this.match(TokenType.STRING)) {
+            key = this.previous().value;
+          } else {
+            throw new ParseError("Expected property name", this.peek(), this.sourceCode);
+          }
+          
+          this.consume(TokenType.COLON, "Expected ':' after property name");
+          
+          const value = this.expression();
+          if (!value) {
+            throw new ParseError("Expected expression after ':'", this.previous(), this.sourceCode);
+          }
+          
+          properties.push({ key, value });
         }
-        
-        this.consume(TokenType.COLON, "Expected ':' after property name");
-        
-        const value = this.expression();
-        if (!value) {
-          throw new ParseError("Expected expression after ':'", this.previous(), this.sourceCode);
-        }
-        
-        properties.push({ key, value });
       } while (this.match(TokenType.COMMA));
     }
     

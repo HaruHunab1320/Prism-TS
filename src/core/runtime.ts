@@ -27,6 +27,7 @@ import {
   ExpressionStatement,
   BinaryOperator,
   LambdaExpression,
+  SpreadElement,
 } from './ast';
 import { ConfidenceValue as ConfidenceLib, ConfidenceLevel } from '../confidence';
 import { Context, ContextManager } from '../context';
@@ -1131,15 +1132,52 @@ export class Interpreter {
   private async interpretArrayLiteral(node: ArrayLiteral): Promise<Value> {
     const elements: Value[] = [];
     for (const elem of node.elements) {
-      elements.push(await this.interpret(elem));
+      if (elem instanceof SpreadElement) {
+        // Handle spread element
+        let spreadValue = await this.interpret(elem.argument);
+        
+        // Unwrap confidence if needed
+        if (spreadValue instanceof ConfidenceValue) {
+          spreadValue = spreadValue.value;
+        }
+        
+        if (spreadValue instanceof ArrayValue) {
+          // Spread array elements
+          elements.push(...spreadValue.value);
+        } else {
+          throw new RuntimeError(`Cannot spread non-array value`, elem);
+        }
+      } else {
+        elements.push(await this.interpret(elem));
+      }
     }
     return new ArrayValue(elements);
   }
   
   private async interpretObjectLiteral(node: ObjectLiteral): Promise<Value> {
     const properties = new Map<string, Value>();
-    for (const { key, value } of node.properties) {
-      properties.set(key, await this.interpret(value));
+    for (const prop of node.properties) {
+      if (prop.value instanceof SpreadElement) {
+        // Handle spread element
+        let spreadValue = await this.interpret(prop.value.argument);
+        
+        // Unwrap confidence if needed
+        if (spreadValue instanceof ConfidenceValue) {
+          spreadValue = spreadValue.value;
+        }
+        
+        if (spreadValue instanceof ObjectValue) {
+          // Spread object properties
+          for (const [k, v] of spreadValue.value.entries()) {
+            properties.set(k, v);
+          }
+        } else {
+          throw new RuntimeError(`Cannot spread non-object value`, prop.value);
+        }
+      } else {
+        // Regular property
+        properties.set(prop.key!, await this.interpret(prop.value));
+      }
     }
     return new ObjectValue(properties);
   }

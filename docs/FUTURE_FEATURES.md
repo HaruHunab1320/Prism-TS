@@ -26,7 +26,7 @@ firstItem = items?.[0]
 - Makes code more readable
 - Common pattern in modern languages
 
-### 2. Spread Operator (`...`)
+### 2. Spread Operator (`...`) ✅ COMPLETED
 **Priority:** HIGH  
 **Complexity:** Medium-High  
 **Value:** Essential for modern data manipulation
@@ -40,7 +40,7 @@ newArray = [1, ...oldArray, 5]
 merged = {...defaults, ...userConfig}
 updated = {...user, age: 31}
 
-// Function arguments
+// Function arguments (not yet implemented)
 maxValue = max(...numbers)
 ```
 
@@ -48,6 +48,8 @@ maxValue = max(...numbers)
 - Immutable data operations
 - Clean array/object composition
 - Useful for functional programming patterns
+
+**Note:** Array and object spread are now implemented. Function argument spread is not yet supported.
 
 ### 3. Compound Assignment Operators
 **Priority:** HIGH  

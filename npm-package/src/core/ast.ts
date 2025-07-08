@@ -18,6 +18,7 @@ export type NodeType =
   | 'CallExpression'
   | 'TernaryExpression'
   | 'LambdaExpression'
+  | 'SpreadElement'
   | 'BlockStatement'
   | 'IfStatement'
   | 'UncertainIfStatement'
@@ -171,7 +172,7 @@ export class LambdaExpression extends Expression {
 export class ArrayLiteral extends Expression {
   type: NodeType = 'ArrayLiteral';
   
-  constructor(public elements: Expression[]) {
+  constructor(public elements: (Expression | SpreadElement)[]) {
     super();
   }
 }
@@ -179,7 +180,15 @@ export class ArrayLiteral extends Expression {
 export class ObjectLiteral extends Expression {
   type: NodeType = 'ObjectLiteral';
   
-  constructor(public properties: Array<{ key: string; value: Expression }>) {
+  constructor(public properties: Array<{ key?: string; value: Expression | SpreadElement }>) {
+    super();
+  }
+}
+
+export class SpreadElement extends Expression {
+  type: NodeType = 'SpreadElement';
+  
+  constructor(public argument: Expression) {
     super();
   }
 }

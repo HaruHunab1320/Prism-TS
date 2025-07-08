@@ -2,6 +2,50 @@
 
 All notable changes to prism-uncertainty will be documented in this file.
 
+## [1.0.15] - 2025-07-08
+
+### Added
+- **Spread operator (`...`)** - Essential for modern data manipulation
+- Array spreading: `[...arr1, ...arr2]` combines arrays immutably
+- Object spreading: `{...obj1, ...obj2}` merges objects with property overriding
+- Works seamlessly with confidence values by unwrapping before spreading
+- Enables clean, functional programming patterns
+
+### Example
+```prism
+// Array spreading
+arr1 = [1, 2, 3]
+arr2 = [4, 5, 6]
+combined = [...arr1, ...arr2]  // [1, 2, 3, 4, 5, 6]
+newArray = [0, ...arr1, 4]     // [0, 1, 2, 3, 4]
+
+// Object spreading
+defaults = {theme: "dark", lang: "en"}
+userPrefs = {lang: "es", debug: true}
+settings = {...defaults, ...userPrefs}  // {theme: "dark", lang: "es", debug: true}
+
+// Override properties
+user = {name: "Alice", age: 30}
+updated = {...user, age: 31}  // {name: "Alice", age: 31}
+
+// Multiple spreads
+a = [1, 2]
+b = [3, 4]
+c = [5, 6]
+all = [...a, ...b, ...c]  // [1, 2, 3, 4, 5, 6]
+
+// Works with confidence
+data = [1, 2, 3] ~> 0.8
+extended = [...data, 4, 5]  // Spreads the array values
+
+// Nested structures
+config = {
+  server: {host: "localhost", port: 3000},
+  debug: true
+}
+production = {...config, debug: false}  // Overrides debug while keeping server
+```
+
 ## [1.0.14] - 2024-06-27
 
 ### Added

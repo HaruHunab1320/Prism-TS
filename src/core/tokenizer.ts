@@ -88,6 +88,7 @@ export enum TokenType {
 
   // Special
   ARROW = 'ARROW',
+  SPREAD = 'SPREAD',
   EOF = 'EOF',
 }
 
@@ -201,7 +202,14 @@ export class Tokenizer {
       case '[': return this.makeToken(TokenType.LEFT_BRACKET, '[', startColumn);
       case ']': return this.makeToken(TokenType.RIGHT_BRACKET, ']', startColumn);
       case ',': return this.makeToken(TokenType.COMMA, ',', startColumn);
-      case '.': return this.makeToken(TokenType.DOT, '.', startColumn);
+      case '.': 
+        // Check for spread operator ...
+        if (this.peek() === '.' && this.peekNext() === '.') {
+          this.advance(); // consume second dot
+          this.advance(); // consume third dot
+          return this.makeToken(TokenType.SPREAD, '...', startColumn);
+        }
+        return this.makeToken(TokenType.DOT, '.', startColumn);
       case ':': return this.makeToken(TokenType.COLON, ':', startColumn);
       case ';': return this.makeToken(TokenType.SEMICOLON, ';', startColumn);
       case '?': 

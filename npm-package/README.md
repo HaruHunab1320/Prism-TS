@@ -2,7 +2,7 @@
 
 The official npm package for Prism - the language where AI meets certainty.
 
-**Latest: v1.0.14** - Exponentiation operator and nullish coalescing for modern JavaScript patterns
+**Latest: v1.0.15** - Spread operator for immutable array and object operations
 
 ## Installation
 
@@ -89,6 +89,7 @@ Convenience function for one-off execution.
 - ➕ Compound assignment operators (+=, -=, *=, /=, %=)
 - ⚡ Exponentiation operator (**) for power operations
 - 🔀 Nullish coalescing operator (??) for precise null/undefined handling
+- ... Spread operator for arrays and objects
 
 ## Example: AI Model Ensemble
 
@@ -114,6 +115,12 @@ console.log(result); // "auto_approve" or "manual_review"
 ```
 
 ## What's New
+
+### v1.0.15 - Spread Operator
+- **Array spreading**: `[...arr1, ...arr2]` - combine arrays immutably
+- **Object spreading**: `{...obj1, ...obj2}` - merge objects with overriding
+- Works with confidence values by unwrapping before spreading
+- Enables functional programming patterns
 
 ### v1.0.14 - Exponentiation & Nullish Coalescing
 - **Exponentiation operator**: `2 ** 3` = 8, with right associativity
@@ -291,6 +298,29 @@ greeting += "World!"  // "Hello, World!"
 measurement = 50 ~> 0.9
 adjustment = 10 ~> 0.7
 measurement += adjustment  // 60 with 0.7 confidence (minimum)
+```
+
+### Spread Operator
+
+```prism
+// Array spreading
+arr1 = [1, 2, 3]
+arr2 = [4, 5, 6]
+combined = [...arr1, ...arr2]  // [1, 2, 3, 4, 5, 6]
+newArray = [0, ...arr1, 4]     // [0, 1, 2, 3, 4]
+
+// Object spreading
+defaults = {theme: "dark", lang: "en"}
+userPrefs = {lang: "es", debug: true}
+settings = {...defaults, ...userPrefs}  // {theme: "dark", lang: "es", debug: true}
+
+// Override properties
+user = {name: "Alice", age: 30}
+updated = {...user, age: 31}  // {name: "Alice", age: 31}
+
+// Works with confidence
+data = [1, 2, 3] ~> 0.8
+extended = [...data, 4, 5]  // Spreads the array values
 ```
 
 ## Documentation
