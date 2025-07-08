@@ -733,9 +733,10 @@ export class Parser {
     let expr = this.equality();
     
     while (this.match(TokenType.AND, TokenType.CONFIDENCE_AND)) {
-      const operator = this.previous().value as BinaryOperator;
+      const operatorToken = this.previous();
+      const operator = operatorToken.value as BinaryOperator;
       const right = this.equality();
-      expr = new BinaryExpression(operator, expr!, right!);
+      expr = new BinaryExpression(operator, expr!, right!).setLocation(operatorToken.line, operatorToken.column);
     }
     
     return expr;
@@ -888,7 +889,8 @@ export class Parser {
     }
     
     if (this.match(TokenType.IDENTIFIER)) {
-      const identifier = this.previous().value;
+      const identToken = this.previous();
+      const identifier = identToken.value;
       
       // Check for single-parameter lambda without parentheses
       if (this.check(TokenType.ARROW)) {
@@ -900,7 +902,7 @@ export class Parser {
         return new LambdaExpression([identifier], body);
       }
       
-      return new IdentifierExpression(identifier);
+      return new IdentifierExpression(identifier).setLocation(identToken.line, identToken.column);
     }
     
     if (this.match(TokenType.LEFT_PAREN)) {

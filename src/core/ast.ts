@@ -38,6 +38,12 @@ export type NodeType =
 
 export abstract class ASTNode {
   abstract type: NodeType;
+  location?: { line: number; column: number };
+  
+  setLocation(line: number, column: number): this {
+    this.location = { line, column };
+    return this;
+  }
 }
 
 export abstract class Expression extends ASTNode {}

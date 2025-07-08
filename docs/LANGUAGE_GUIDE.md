@@ -485,6 +485,34 @@ safe_result = ai_response ~?? fallback
 
 ### Logical Operators
 
+#### Standard Logical Operators (`&&`, `||`)
+
+As of v1.0.19, Prism's logical operators work like JavaScript, returning actual values rather than just booleans:
+
+```prism
+// || returns first truthy value or last value
+name = userInput || "Anonymous"  // Common default pattern
+result = 0 || false || "found"   // "found"
+value = null || undefined || 0   // 0 (last value)
+
+// && returns first falsy value or last value  
+result = true && "value"          // "value"
+check = 0 && "never reached"      // 0
+chain = 1 && 2 && 3              // 3
+
+// Short-circuit evaluation
+callCount = 0
+increment = () => callCount + 1
+result = "truthy" || increment()  // increment() never called
+result = false && increment()     // increment() never called
+
+// Works in conditions
+role = userRole || "guest"
+if (role == "guest") {
+  // Handle guest user
+}
+```
+
 #### Confident AND (`~&&`)
 
 Logical AND with confidence propagation (minimum confidence):

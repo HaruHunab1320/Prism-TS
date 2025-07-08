@@ -343,459 +343,6 @@ export class Parser {
     return new ExpressionStatement(expr!);
   }
 
-  private expression(): Expression | null {
-    return this.ternary();
-  }
-
-  private ternary(): Expression | null {
-    let expr = this.confidenceExpression();
-    
-    if (this.match(TokenType.QUESTION)) {
-      const trueBranch = this.expression();
-      if (!trueBranch) {
-        throw new ParseError("Expected expression after '?'", this.previous(), this.sourceCode);
-      }
-      
-      if (!this.match(TokenType.COLON)) {
-        throw new ParseError("Expected ':' after true branch of ternary operator", this.peek(), this.sourceCode);
-      }
-      
-      const falseBranch = this.expression();
-      if (!falseBranch) {
-        throw new ParseError("Expected expression after ':'", this.previous(), this.sourceCode);
-      }
-      
-      return new TernaryExpression(expr!, trueBranch, falseBranch);
-    }
-    
-    return expr;
-  }
-
-  private confidenceExpression(): Expression | null {
-    let expr = this.logicalOr();
-    
-    if (this.match(TokenType.CONFIDENCE_ARROW)) {
-      const confidence = this.primary();
-      if (confidence) {
-        return new ConfidenceExpression(expr!, confidence);
-      }
-      throw new ParseError("Expected expression after '~>'", this.previous(), this.sourceCode);
-    }
-    
-    // Handle confidence chaining operator (~~)
-    while (this.match(TokenType.CONFIDENCE_CHAIN)) {
-      const operator = this.previous().value as BinaryOperator;
-      const right = this.logicalOr();
-      expr = new BinaryExpression(operator, expr!, right!);
-    }
-    
-    return expr;
-  }
-
-  private logicalOr(): Expression | null {
-    let expr = this.nullishCoalesce();
-    
-    while (this.match(TokenType.OR, TokenType.CONFIDENCE_OR, TokenType.PARALLEL_CONFIDENCE, TokenType.THRESHOLD_GATE)) {
-      const operator = this.previous().value as BinaryOperator;
-      const right = this.nullishCoalesce();
-      expr = new BinaryExpression(operator, expr!, right!);
-    }
-    
-    return expr;
-  }
-
-  private nullishCoalesce(): Expression | null {
-    let expr = this.confidenceCoalesce();
-    
-    while (this.match(TokenType.QUESTION_QUESTION)) {
-      const operator = this.previous().value as BinaryOperator;
-      const right = this.confidenceCoalesce();
-      expr = new BinaryExpression(operator, expr!, right!);
-    }
-    
-    return expr;
-  }
-
-  private confidenceCoalesce(): Expression | null {
-    let expr = this.logicalAnd();
-    
-    while (this.match(TokenType.CONFIDENCE_COALESCE)) {
-      const operator = this.previous().value as BinaryOperator;
-      const right = this.logicalAnd();
-      expr = new BinaryExpression(operator, expr!, right!);
-    }
-    
-    return expr;
-  }
-
-  private logicalAnd(): Expression | null {
-    let expr = this.equality();
-    
-    while (this.match(TokenType.AND, TokenType.CONFIDENCE_AND)) {
-      const operator = this.previous().value as BinaryOperator;
-      const right = this.equality();
-      expr = new BinaryExpression(operator, expr!, right!);
-    }
-    
-    return expr;
-  }
-
-  private equality(): Expression | null {
-    let expr = this.comparison();
-    
-    while (this.match(TokenType.NOT_EQUAL, TokenType.EQUAL_EQUAL, TokenType.CONFIDENCE_EQUAL, TokenType.CONFIDENCE_NOT_EQUAL)) {
-      const operator = this.previous().value as BinaryOperator;
-      const right = this.comparison();
-      expr = new BinaryExpression(operator, expr!, right!);
-    }
-    
-    return expr;
-  }
-
-  private comparison(): Expression | null {
-    let expr = this.term();
-    
-    while (this.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL, 
-                      TokenType.CONFIDENCE_GREATER_EQUAL, TokenType.CONFIDENCE_LESS, TokenType.CONFIDENCE_LESS_EQUAL)) {
-      const operator = this.previous().value as BinaryOperator;
-      const right = this.term();
-      expr = new BinaryExpression(operator, expr!, right!);
-    }
-    
-    return expr;
-  }
-
-  private term(): Expression | null {
-    let expr = this.factor();
-    
-    while (this.match(TokenType.MINUS, TokenType.PLUS, TokenType.CONFIDENCE_MINUS, TokenType.CONFIDENCE_PLUS)) {
-      const operator = this.previous().value as BinaryOperator;
-      const right = this.factor();
-      expr = new BinaryExpression(operator, expr!, right!);
-    }
-    
-    return expr;
-  }
-
-  private factor(): Expression | null {
-    let expr = this.exponent();
-    
-    while (this.match(TokenType.SLASH, TokenType.STAR, TokenType.PERCENT, TokenType.CONFIDENCE_SLASH, TokenType.CONFIDENCE_STAR)) {
-      const operator = this.previous().value as BinaryOperator;
-      const right = this.exponent();
-      expr = new BinaryExpression(operator, expr!, right!);
-    }
-    
-    return expr;
-  }
-
-  private exponent(): Expression | null {
-    let expr = this.unary();
-    
-    // Right-associative: parse from right to left
-    if (this.match(TokenType.STAR_STAR)) {
-      const operator = this.previous().value as BinaryOperator;
-      const right = this.exponent(); // Recursive for right-associativity
-      expr = new BinaryExpression(operator, expr!, right!);
-    }
-    
-    return expr;
-  }
-
-  private unary(): Expression | null {
-    if (this.match(TokenType.NOT, TokenType.MINUS, TokenType.TILDE, TokenType.CONFIDENCE_EXTRACT)) {
-      const operator = this.previous().value as UnaryOperator;
-      const right = this.unary();
-      return new UnaryExpression(operator, right!);
-    }
-    
-    return this.call();
-  }
-
-  private call(): Expression | null {
-    const expr = this.primary();
-    
-    let current = expr;
-    while (current) {
-      if (this.match(TokenType.LEFT_PAREN)) {
-        current = this.finishCall(current);
-      } else if (this.match(TokenType.DOT)) {
-        const name = this.consume(TokenType.IDENTIFIER, "Expected property name after '.'").value;
-        current = new PropertyAccess(current, name);
-      } else if (this.match(TokenType.OPTIONAL_CHAIN)) {
-        const name = this.consume(TokenType.IDENTIFIER, "Expected property name after '?.'").value;
-        current = new OptionalChainAccess(current, name);
-      } else if (this.match(TokenType.CONFIDENCE_DOT)) {
-        const name = this.consume(TokenType.IDENTIFIER, "Expected property name after '~.'").value;
-        current = new BinaryExpression('~.', current, new IdentifierExpression(name));
-      } else if (this.match(TokenType.LEFT_BRACKET)) {
-        const index = this.expression();
-        if (!index) {
-          throw new ParseError("Expected expression in brackets", this.peek(), this.sourceCode);
-        }
-        this.consume(TokenType.RIGHT_BRACKET, "Expected ']' after index");
-        current = new IndexAccess(current, index);
-      } else {
-        break;
-      }
-    }
-    
-    return current;
-  }
-
-  private finishCall(callee: Expression): Expression {
-    const args: Expression[] = [];
-    
-    if (!this.check(TokenType.RIGHT_PAREN)) {
-      do {
-        const arg = this.expression();
-        if (arg) args.push(arg);
-      } while (this.match(TokenType.COMMA));
-    }
-    
-    this.consume(TokenType.RIGHT_PAREN, "Expected ')' after arguments");
-    return new CallExpression(callee, args);
-  }
-
-  private primary(): Expression | null {
-    if (this.match(TokenType.NUMBER)) {
-      return new NumberLiteral(parseFloat(this.previous().value));
-    }
-    
-    if (this.match(TokenType.STRING)) {
-      return new StringLiteral(this.previous().value);
-    }
-    
-    if (this.match(TokenType.INTERPOLATED_STRING)) {
-      return this.parseInterpolatedString(this.previous());
-    }
-    
-    if (this.match(TokenType.TRUE)) {
-      return new BooleanLiteral(true);
-    }
-    
-    if (this.match(TokenType.FALSE)) {
-      return new BooleanLiteral(false);
-    }
-    
-    if (this.match(TokenType.NULL)) {
-      return new NullLiteral();
-    }
-    
-    if (this.match(TokenType.UNDEFINED)) {
-      return new UndefinedLiteral();
-    }
-    
-    if (this.match(TokenType.IDENTIFIER)) {
-      const identifier = this.previous().value;
-      
-      // Check for single-parameter lambda without parentheses
-      if (this.check(TokenType.ARROW)) {
-        this.advance(); // consume =>
-        const body = this.ternary();
-        if (!body) {
-          throw new ParseError("Expected expression after '=>'", this.previous(), this.sourceCode);
-        }
-        return new LambdaExpression([identifier], body);
-      }
-      
-      return new IdentifierExpression(identifier);
-    }
-    
-    if (this.match(TokenType.LEFT_PAREN)) {
-      // Check if this could be a lambda expression
-      const savedPosition = this.current;
-      
-      // Try to parse as lambda parameters
-      const params: string[] = [];
-      let isLambda = false;
-      
-      // Empty params () =>
-      if (this.check(TokenType.RIGHT_PAREN)) {
-        this.advance();
-        if (this.check(TokenType.ARROW)) {
-          isLambda = true;
-        }
-      } else if (this.check(TokenType.IDENTIFIER)) {
-        // Single param (x) => or multiple (x, y) =>
-        do {
-          if (this.match(TokenType.IDENTIFIER)) {
-            params.push(this.previous().value);
-          } else {
-            break;
-          }
-        } while (this.match(TokenType.COMMA));
-        
-        if (this.match(TokenType.RIGHT_PAREN) && this.check(TokenType.ARROW)) {
-          isLambda = true;
-        }
-      }
-      
-      if (isLambda) {
-        this.consume(TokenType.ARROW, "Expected '=>' after lambda parameters");
-        const body = this.ternary(); // Parse lambda body
-        if (!body) {
-          throw new ParseError("Expected expression after '=>'", this.previous(), this.sourceCode);
-        }
-        return new LambdaExpression(params, body);
-      }
-      
-      // Not a lambda, restore position and parse as grouped expression
-      this.current = savedPosition;
-      const expr = this.expression();
-      this.consume(TokenType.RIGHT_PAREN, "Expected ')' after expression");
-      return expr;
-    }
-    
-    if (this.match(TokenType.LEFT_BRACKET)) {
-      return this.arrayLiteral();
-    }
-    
-    // Check for object literal by looking ahead for object-like pattern
-    if (this.check(TokenType.LEFT_BRACE)) {
-      // Save current position
-      const savedPosition = this.current;
-      this.advance(); // consume {
-      
-      // Check if it's an object literal or block statement
-      let isObject = false;
-      if (this.check(TokenType.RIGHT_BRACE)) {
-        // Empty braces - could be either, treat as object
-        isObject = true;
-      } else if (this.check(TokenType.SPREAD)) {
-        // Spread syntax indicates object literal
-        isObject = true;
-      } else if (this.check(TokenType.IDENTIFIER) || this.check(TokenType.STRING)) {
-        // Save position and check for colon after identifier/string
-        const checkPos = this.current;
-        this.advance();
-        if (this.check(TokenType.COLON)) {
-          isObject = true;
-        }
-        this.current = checkPos;
-      }
-      
-      // Restore position
-      this.current = savedPosition;
-      
-      if (isObject) {
-        this.advance(); // consume {
-        return this.objectLiteral();
-      }
-    }
-    
-    throw new ParseError("Expected expression", this.peek(), this.sourceCode);
-  }
-  
-  private arrayLiteral(): ArrayLiteral {
-    const elements: (Expression | SpreadElement)[] = [];
-    
-    if (!this.check(TokenType.RIGHT_BRACKET)) {
-      do {
-        // Check for spread syntax
-        if (this.match(TokenType.SPREAD)) {
-          const argument = this.expression();
-          if (!argument) {
-            throw new ParseError("Expected expression after '...'", this.previous(), this.sourceCode);
-          }
-          elements.push(new SpreadElement(argument));
-        } else {
-          const elem = this.expression();
-          if (elem) {
-            elements.push(elem);
-          }
-        }
-      } while (this.match(TokenType.COMMA));
-    }
-    
-    this.consume(TokenType.RIGHT_BRACKET, "Expected ']' after array elements");
-    return new ArrayLiteral(elements);
-  }
-  
-  private objectLiteral(): ObjectLiteral {
-    const properties: Array<{ key?: string; value: Expression | SpreadElement }> = [];
-    
-    if (!this.check(TokenType.RIGHT_BRACE)) {
-      do {
-        // Check for spread syntax
-        if (this.match(TokenType.SPREAD)) {
-          const argument = this.expression();
-          if (!argument) {
-            throw new ParseError("Expected expression after '...'", this.previous(), this.sourceCode);
-          }
-          properties.push({ value: new SpreadElement(argument) });
-        } else {
-          // Regular property
-          let key: string;
-          
-          if (this.match(TokenType.IDENTIFIER)) {
-            key = this.previous().value;
-          } else if (this.match(TokenType.STRING)) {
-            key = this.previous().value;
-          } else {
-            throw new ParseError("Expected property name", this.peek(), this.sourceCode);
-          }
-          
-          this.consume(TokenType.COLON, "Expected ':' after property name");
-          
-          const value = this.expression();
-          if (!value) {
-            throw new ParseError("Expected expression after ':'", this.previous(), this.sourceCode);
-          }
-          
-          properties.push({ key, value });
-        }
-      } while (this.match(TokenType.COMMA));
-    }
-    
-    this.consume(TokenType.RIGHT_BRACE, "Expected '}' after object properties");
-    return new ObjectLiteral(properties);
-  }
-
-  private match(...types: TokenType[]): boolean {
-    for (const type of types) {
-      if (this.check(type)) {
-        this.advance();
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private check(type: TokenType): boolean {
-    if (this.isAtEnd()) return false;
-    return this.peek().type === type;
-  }
-
-  private advance(): Token {
-    if (!this.isAtEnd()) this.current++;
-    return this.previous();
-  }
-
-  private isAtEnd(): boolean {
-    return this.peek().type === TokenType.EOF;
-  }
-
-  private peek(): Token {
-    return this.tokens[this.current];
-  }
-
-  private previous(): Token {
-    return this.tokens[this.current - 1];
-  }
-
-  private peekNext(): Token {
-    if (this.current + 1 >= this.tokens.length) {
-      return this.tokens[this.tokens.length - 1]; // Return EOF token
-    }
-    return this.tokens[this.current + 1];
-  }
-
-  private consume(type: TokenType, message: string): Token {
-    if (this.check(type)) return this.advance();
-    throw new ParseError(message, this.peek(), this.sourceCode);
-  }
-
   private forStatement(): Statement {
     // for statement can be either:
     // 1. C-style: for i = 0; i < 10; i++ { ... }
@@ -1095,6 +642,461 @@ export class Parser {
     }
     
     return branches;
+  }
+
+  private expression(): Expression | null {
+    return this.ternary();
+  }
+
+  private ternary(): Expression | null {
+    let expr = this.confidenceExpression();
+    
+    if (this.match(TokenType.QUESTION)) {
+      const trueBranch = this.expression();
+      if (!trueBranch) {
+        throw new ParseError("Expected expression after '?'", this.previous(), this.sourceCode);
+      }
+      
+      if (!this.match(TokenType.COLON)) {
+        throw new ParseError("Expected ':' after true branch of ternary operator", this.peek(), this.sourceCode);
+      }
+      
+      const falseBranch = this.expression();
+      if (!falseBranch) {
+        throw new ParseError("Expected expression after ':'", this.previous(), this.sourceCode);
+      }
+      
+      return new TernaryExpression(expr!, trueBranch, falseBranch);
+    }
+    
+    return expr;
+  }
+
+  private confidenceExpression(): Expression | null {
+    let expr = this.logicalOr();
+    
+    if (this.match(TokenType.CONFIDENCE_ARROW)) {
+      const confidence = this.primary();
+      if (confidence) {
+        return new ConfidenceExpression(expr!, confidence);
+      }
+      throw new ParseError("Expected expression after '~>'", this.previous(), this.sourceCode);
+    }
+    
+    // Handle confidence chaining operator (~~)
+    while (this.match(TokenType.CONFIDENCE_CHAIN)) {
+      const operator = this.previous().value as BinaryOperator;
+      const right = this.logicalOr();
+      expr = new BinaryExpression(operator, expr!, right!);
+    }
+    
+    return expr;
+  }
+
+  private logicalOr(): Expression | null {
+    let expr = this.nullishCoalesce();
+    
+    while (this.match(TokenType.OR, TokenType.CONFIDENCE_OR, TokenType.PARALLEL_CONFIDENCE, TokenType.THRESHOLD_GATE)) {
+      const operator = this.previous().value as BinaryOperator;
+      const right = this.nullishCoalesce();
+      expr = new BinaryExpression(operator, expr!, right!);
+    }
+    
+    return expr;
+  }
+
+  private nullishCoalesce(): Expression | null {
+    let expr = this.confidenceCoalesce();
+    
+    while (this.match(TokenType.QUESTION_QUESTION)) {
+      const operator = this.previous().value as BinaryOperator;
+      const right = this.confidenceCoalesce();
+      expr = new BinaryExpression(operator, expr!, right!);
+    }
+    
+    return expr;
+  }
+
+  private confidenceCoalesce(): Expression | null {
+    let expr = this.logicalAnd();
+    
+    while (this.match(TokenType.CONFIDENCE_COALESCE)) {
+      const operator = this.previous().value as BinaryOperator;
+      const right = this.logicalAnd();
+      expr = new BinaryExpression(operator, expr!, right!);
+    }
+    
+    return expr;
+  }
+
+  private logicalAnd(): Expression | null {
+    let expr = this.equality();
+    
+    while (this.match(TokenType.AND, TokenType.CONFIDENCE_AND)) {
+      const operatorToken = this.previous();
+      const operator = operatorToken.value as BinaryOperator;
+      const right = this.equality();
+      expr = new BinaryExpression(operator, expr!, right!).setLocation(operatorToken.line, operatorToken.column);
+    }
+    
+    return expr;
+  }
+
+  private equality(): Expression | null {
+    let expr = this.comparison();
+    
+    while (this.match(TokenType.NOT_EQUAL, TokenType.EQUAL_EQUAL, TokenType.CONFIDENCE_EQUAL, TokenType.CONFIDENCE_NOT_EQUAL)) {
+      const operator = this.previous().value as BinaryOperator;
+      const right = this.comparison();
+      expr = new BinaryExpression(operator, expr!, right!);
+    }
+    
+    return expr;
+  }
+
+  private comparison(): Expression | null {
+    let expr = this.term();
+    
+    while (this.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL, 
+                      TokenType.CONFIDENCE_GREATER_EQUAL, TokenType.CONFIDENCE_LESS, TokenType.CONFIDENCE_LESS_EQUAL)) {
+      const operator = this.previous().value as BinaryOperator;
+      const right = this.term();
+      expr = new BinaryExpression(operator, expr!, right!);
+    }
+    
+    return expr;
+  }
+
+  private term(): Expression | null {
+    let expr = this.factor();
+    
+    while (this.match(TokenType.MINUS, TokenType.PLUS, TokenType.CONFIDENCE_MINUS, TokenType.CONFIDENCE_PLUS)) {
+      const operator = this.previous().value as BinaryOperator;
+      const right = this.factor();
+      expr = new BinaryExpression(operator, expr!, right!);
+    }
+    
+    return expr;
+  }
+
+  private factor(): Expression | null {
+    let expr = this.exponent();
+    
+    while (this.match(TokenType.SLASH, TokenType.STAR, TokenType.PERCENT, TokenType.CONFIDENCE_SLASH, TokenType.CONFIDENCE_STAR)) {
+      const operator = this.previous().value as BinaryOperator;
+      const right = this.exponent();
+      expr = new BinaryExpression(operator, expr!, right!);
+    }
+    
+    return expr;
+  }
+
+  private exponent(): Expression | null {
+    let expr = this.unary();
+    
+    // Right-associative: parse from right to left
+    if (this.match(TokenType.STAR_STAR)) {
+      const operator = this.previous().value as BinaryOperator;
+      const right = this.exponent(); // Recursive for right-associativity
+      expr = new BinaryExpression(operator, expr!, right!);
+    }
+    
+    return expr;
+  }
+
+  private unary(): Expression | null {
+    if (this.match(TokenType.NOT, TokenType.MINUS, TokenType.TILDE, TokenType.CONFIDENCE_EXTRACT)) {
+      const operator = this.previous().value as UnaryOperator;
+      const right = this.unary();
+      return new UnaryExpression(operator, right!);
+    }
+    
+    return this.call();
+  }
+
+  private call(): Expression | null {
+    const expr = this.primary();
+    
+    let current = expr;
+    while (current) {
+      if (this.match(TokenType.LEFT_PAREN)) {
+        current = this.finishCall(current);
+      } else if (this.match(TokenType.DOT)) {
+        const name = this.consume(TokenType.IDENTIFIER, "Expected property name after '.'").value;
+        current = new PropertyAccess(current, name);
+      } else if (this.match(TokenType.OPTIONAL_CHAIN)) {
+        const name = this.consume(TokenType.IDENTIFIER, "Expected property name after '?.'").value;
+        current = new OptionalChainAccess(current, name);
+      } else if (this.match(TokenType.CONFIDENCE_DOT)) {
+        const name = this.consume(TokenType.IDENTIFIER, "Expected property name after '~.'").value;
+        current = new BinaryExpression('~.', current, new IdentifierExpression(name));
+      } else if (this.match(TokenType.LEFT_BRACKET)) {
+        const index = this.expression();
+        if (!index) {
+          throw new ParseError("Expected expression in brackets", this.peek(), this.sourceCode);
+        }
+        this.consume(TokenType.RIGHT_BRACKET, "Expected ']' after index");
+        current = new IndexAccess(current, index);
+      } else {
+        break;
+      }
+    }
+    
+    return current;
+  }
+
+  private finishCall(callee: Expression): Expression {
+    const args: Expression[] = [];
+    
+    if (!this.check(TokenType.RIGHT_PAREN)) {
+      do {
+        const arg = this.expression();
+        if (arg) args.push(arg);
+      } while (this.match(TokenType.COMMA));
+    }
+    
+    this.consume(TokenType.RIGHT_PAREN, "Expected ')' after arguments");
+    return new CallExpression(callee, args);
+  }
+
+  private primary(): Expression | null {
+    if (this.match(TokenType.NUMBER)) {
+      return new NumberLiteral(parseFloat(this.previous().value));
+    }
+    
+    if (this.match(TokenType.STRING)) {
+      return new StringLiteral(this.previous().value);
+    }
+    
+    if (this.match(TokenType.INTERPOLATED_STRING)) {
+      return this.parseInterpolatedString(this.previous());
+    }
+    
+    if (this.match(TokenType.TRUE)) {
+      return new BooleanLiteral(true);
+    }
+    
+    if (this.match(TokenType.FALSE)) {
+      return new BooleanLiteral(false);
+    }
+    
+    if (this.match(TokenType.NULL)) {
+      return new NullLiteral();
+    }
+    
+    if (this.match(TokenType.UNDEFINED)) {
+      return new UndefinedLiteral();
+    }
+    
+    if (this.match(TokenType.IDENTIFIER)) {
+      const identToken = this.previous();
+      const identifier = identToken.value;
+      
+      // Check for single-parameter lambda without parentheses
+      if (this.check(TokenType.ARROW)) {
+        this.advance(); // consume =>
+        const body = this.ternary();
+        if (!body) {
+          throw new ParseError("Expected expression after '=>'", this.previous(), this.sourceCode);
+        }
+        return new LambdaExpression([identifier], body);
+      }
+      
+      return new IdentifierExpression(identifier).setLocation(identToken.line, identToken.column);
+    }
+    
+    if (this.match(TokenType.LEFT_PAREN)) {
+      // Check if this could be a lambda expression
+      const savedPosition = this.current;
+      
+      // Try to parse as lambda parameters
+      const params: string[] = [];
+      let isLambda = false;
+      
+      // Empty params () =>
+      if (this.check(TokenType.RIGHT_PAREN)) {
+        this.advance();
+        if (this.check(TokenType.ARROW)) {
+          isLambda = true;
+        }
+      } else if (this.check(TokenType.IDENTIFIER)) {
+        // Single param (x) => or multiple (x, y) =>
+        do {
+          if (this.match(TokenType.IDENTIFIER)) {
+            params.push(this.previous().value);
+          } else {
+            break;
+          }
+        } while (this.match(TokenType.COMMA));
+        
+        if (this.match(TokenType.RIGHT_PAREN) && this.check(TokenType.ARROW)) {
+          isLambda = true;
+        }
+      }
+      
+      if (isLambda) {
+        this.consume(TokenType.ARROW, "Expected '=>' after lambda parameters");
+        const body = this.ternary(); // Parse lambda body
+        if (!body) {
+          throw new ParseError("Expected expression after '=>'", this.previous(), this.sourceCode);
+        }
+        return new LambdaExpression(params, body);
+      }
+      
+      // Not a lambda, restore position and parse as grouped expression
+      this.current = savedPosition;
+      const expr = this.expression();
+      this.consume(TokenType.RIGHT_PAREN, "Expected ')' after expression");
+      return expr;
+    }
+    
+    if (this.match(TokenType.LEFT_BRACKET)) {
+      return this.arrayLiteral();
+    }
+    
+    // Check for object literal by looking ahead for object-like pattern
+    if (this.check(TokenType.LEFT_BRACE)) {
+      // Save current position
+      const savedPosition = this.current;
+      this.advance(); // consume {
+      
+      // Check if it's an object literal or block statement
+      let isObject = false;
+      if (this.check(TokenType.RIGHT_BRACE)) {
+        // Empty braces - could be either, treat as object
+        isObject = true;
+      } else if (this.check(TokenType.SPREAD)) {
+        // Spread syntax indicates object literal
+        isObject = true;
+      } else if (this.check(TokenType.IDENTIFIER) || this.check(TokenType.STRING)) {
+        // Save position and check for colon after identifier/string
+        const checkPos = this.current;
+        this.advance();
+        if (this.check(TokenType.COLON)) {
+          isObject = true;
+        }
+        this.current = checkPos;
+      }
+      
+      // Restore position
+      this.current = savedPosition;
+      
+      if (isObject) {
+        this.advance(); // consume {
+        return this.objectLiteral();
+      }
+    }
+    
+    throw new ParseError("Expected expression", this.peek(), this.sourceCode);
+  }
+  
+  private arrayLiteral(): ArrayLiteral {
+    const elements: (Expression | SpreadElement)[] = [];
+    
+    if (!this.check(TokenType.RIGHT_BRACKET)) {
+      do {
+        // Check for spread syntax
+        if (this.match(TokenType.SPREAD)) {
+          const argument = this.expression();
+          if (!argument) {
+            throw new ParseError("Expected expression after '...'", this.previous(), this.sourceCode);
+          }
+          elements.push(new SpreadElement(argument));
+        } else {
+          const elem = this.expression();
+          if (elem) {
+            elements.push(elem);
+          }
+        }
+      } while (this.match(TokenType.COMMA));
+    }
+    
+    this.consume(TokenType.RIGHT_BRACKET, "Expected ']' after array elements");
+    return new ArrayLiteral(elements);
+  }
+  
+  private objectLiteral(): ObjectLiteral {
+    const properties: Array<{ key?: string; value: Expression | SpreadElement }> = [];
+    
+    if (!this.check(TokenType.RIGHT_BRACE)) {
+      do {
+        // Check for spread syntax
+        if (this.match(TokenType.SPREAD)) {
+          const argument = this.expression();
+          if (!argument) {
+            throw new ParseError("Expected expression after '...'", this.previous(), this.sourceCode);
+          }
+          properties.push({ value: new SpreadElement(argument) });
+        } else {
+          // Regular property
+          let key: string;
+          
+          if (this.match(TokenType.IDENTIFIER)) {
+            key = this.previous().value;
+          } else if (this.match(TokenType.STRING)) {
+            key = this.previous().value;
+          } else {
+            throw new ParseError("Expected property name", this.peek(), this.sourceCode);
+          }
+          
+          this.consume(TokenType.COLON, "Expected ':' after property name");
+          
+          const value = this.expression();
+          if (!value) {
+            throw new ParseError("Expected expression after ':'", this.previous(), this.sourceCode);
+          }
+          
+          properties.push({ key, value });
+        }
+      } while (this.match(TokenType.COMMA));
+    }
+    
+    this.consume(TokenType.RIGHT_BRACE, "Expected '}' after object properties");
+    return new ObjectLiteral(properties);
+  }
+
+  private match(...types: TokenType[]): boolean {
+    for (const type of types) {
+      if (this.check(type)) {
+        this.advance();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private check(type: TokenType): boolean {
+    if (this.isAtEnd()) return false;
+    return this.peek().type === type;
+  }
+
+  private advance(): Token {
+    if (!this.isAtEnd()) this.current++;
+    return this.previous();
+  }
+
+  private isAtEnd(): boolean {
+    return this.peek().type === TokenType.EOF;
+  }
+
+  private peek(): Token {
+    return this.tokens[this.current];
+  }
+
+  private peekNext(): Token {
+    if (this.current + 1 >= this.tokens.length) {
+      return this.tokens[this.tokens.length - 1]; // Return EOF token
+    }
+    return this.tokens[this.current + 1];
+  }
+
+  private previous(): Token {
+    return this.tokens[this.current - 1];
+  }
+
+  private consume(type: TokenType, message: string): Token {
+    if (this.check(type)) return this.advance();
+    throw new ParseError(message, this.peek(), this.sourceCode);
   }
 
   private synchronize(): void {

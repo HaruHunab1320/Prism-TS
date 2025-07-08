@@ -44,9 +44,22 @@ import { Context, ContextManager } from '../context';
 import { LLMProvider, LLMRequest, MockLLMProvider } from '../llm';
 
 export class RuntimeError extends Error {
-  constructor(message: string, public node?: ASTNode) {
-    super(message);
+  public line?: number;
+  public column?: number;
+  
+  constructor(message: string, public node?: ASTNode, location?: { line: number; column: number }) {
+    // If location is provided, enhance the error message
+    const enhancedMessage = location 
+      ? `Error at line ${location.line}, column ${location.column}: ${message}`
+      : message;
+    
+    super(enhancedMessage);
     this.name = 'RuntimeError';
+    
+    if (location) {
+      this.line = location.line;
+      this.column = location.column;
+    }
   }
 }
 
@@ -290,7 +303,7 @@ export class Environment {
       return this.parent.get(name);
     }
 
-    throw new RuntimeError(`Undefined variable: ${name}`);
+    throw new RuntimeError(`Undefined variable: ${name}`, undefined, undefined);
   }
 
   set(name: string, value: Value): void {
@@ -641,7 +654,7 @@ export class Interpreter {
     try {
       return this.environment.get(node.name);
     } catch (error) {
-      throw new RuntimeError(`Undefined variable: ${node.name}`, node);
+      throw new RuntimeError(`Undefined variable: ${node.name}`, node, node.location);
     }
   }
 
@@ -651,6 +664,25 @@ export class Interpreter {
       const left = await this.interpret(node.left);
       // Don't evaluate right side - it's a property name, not an expression
       return this.applyBinaryOperator(node.operator, left, node.right as IdentifierExpression, node);
+    }
+
+    // Special handling for short-circuit operators
+    if (node.operator === '||' || node.operator === '&&') {
+      const left = await this.interpret(node.left);
+      
+      // Short-circuit evaluation for ||
+      if (node.operator === '||' && left.isTruthy()) {
+        return left;
+      }
+      
+      // Short-circuit evaluation for &&
+      if (node.operator === '&&' && !left.isTruthy()) {
+        return left;
+      }
+      
+      // Only evaluate right side if we didn't short-circuit
+      const right = await this.interpret(node.right);
+      return right;
     }
 
     const left = await this.interpret(node.left);
@@ -694,7 +726,7 @@ export class Interpreter {
         if (left instanceof StringValue || right instanceof StringValue) {
           return new StringValue(left.toString() + right.toString());
         }
-        throw new RuntimeError(`Cannot apply + to ${left.type} and ${right.type}`, node);
+        throw new RuntimeError(`Cannot apply + to ${left.type} and ${right.type}`, node, node.location);
 
       case '-':
         if (left instanceof NumberValue && right instanceof NumberValue) {
@@ -763,10 +795,9 @@ export class Interpreter {
         return new BooleanValue(!left.equals(right));
 
       case '&&':
-        return new BooleanValue(left.isTruthy() && right.isTruthy());
-
       case '||':
-        return new BooleanValue(left.isTruthy() || right.isTruthy());
+        // These are handled in interpretBinaryExpression for short-circuit evaluation
+        throw new RuntimeError('Logical operators should be handled in interpretBinaryExpression', node);
 
       case '??':
         // Nullish coalescing - return right if left is null or undefined
@@ -1637,6 +1668,12 @@ export class Interpreter {
     return value;
   }
 
+  private async interpretAssignmentExpression(node: AssignmentExpression): Promise<Value> {
+    const value = await this.interpret(node.value);
+    this.environment.set(node.identifier, value);
+    return value;
+  }
+
   private async interpretIfStatement(node: IfStatement): Promise<Value> {
     const condition = await this.interpret(node.condition);
 
@@ -1734,12 +1771,6 @@ export class Interpreter {
 
   private async interpretExpressionStatement(node: ExpressionStatement): Promise<Value> {
     return await this.interpret(node.expression);
-  }
-
-  private async interpretAssignmentExpression(node: AssignmentExpression): Promise<Value> {
-    const value = await this.interpret(node.value);
-    this.environment.set(node.identifier, value);
-    return value;
   }
 
   private async interpretForLoop(node: ForLoop): Promise<Value> {
