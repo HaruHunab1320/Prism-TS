@@ -354,18 +354,30 @@ export class Parser {
   }
 
   private logicalOr(): Expression | null {
-    let expr = this.coalesce();
+    let expr = this.nullishCoalesce();
     
     while (this.match(TokenType.OR, TokenType.CONFIDENCE_OR, TokenType.PARALLEL_CONFIDENCE, TokenType.THRESHOLD_GATE)) {
       const operator = this.previous().value as BinaryOperator;
-      const right = this.coalesce();
+      const right = this.nullishCoalesce();
       expr = new BinaryExpression(operator, expr!, right!);
     }
     
     return expr;
   }
 
-  private coalesce(): Expression | null {
+  private nullishCoalesce(): Expression | null {
+    let expr = this.confidenceCoalesce();
+    
+    while (this.match(TokenType.QUESTION_QUESTION)) {
+      const operator = this.previous().value as BinaryOperator;
+      const right = this.confidenceCoalesce();
+      expr = new BinaryExpression(operator, expr!, right!);
+    }
+    
+    return expr;
+  }
+
+  private confidenceCoalesce(): Expression | null {
     let expr = this.logicalAnd();
     
     while (this.match(TokenType.CONFIDENCE_COALESCE)) {
@@ -427,11 +439,24 @@ export class Parser {
   }
 
   private factor(): Expression | null {
-    let expr = this.unary();
+    let expr = this.exponent();
     
     while (this.match(TokenType.SLASH, TokenType.STAR, TokenType.PERCENT, TokenType.CONFIDENCE_SLASH, TokenType.CONFIDENCE_STAR)) {
       const operator = this.previous().value as BinaryOperator;
-      const right = this.unary();
+      const right = this.exponent();
+      expr = new BinaryExpression(operator, expr!, right!);
+    }
+    
+    return expr;
+  }
+
+  private exponent(): Expression | null {
+    let expr = this.unary();
+    
+    // Right-associative: parse from right to left
+    if (this.match(TokenType.STAR_STAR)) {
+      const operator = this.previous().value as BinaryOperator;
+      const right = this.exponent(); // Recursive for right-associativity
       expr = new BinaryExpression(operator, expr!, right!);
     }
     

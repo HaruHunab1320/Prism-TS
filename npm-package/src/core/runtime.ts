@@ -675,6 +675,12 @@ export class Interpreter {
         }
         throw new RuntimeError(`Cannot apply / to ${left.type} and ${right.type}`, node);
 
+      case '**':
+        if (left instanceof NumberValue && right instanceof NumberValue) {
+          return new NumberValue(Math.pow(left.value, right.value));
+        }
+        throw new RuntimeError(`Cannot apply ** to ${left.type} and ${right.type}`, node);
+
       case '%':
         if (left instanceof NumberValue && right instanceof NumberValue) {
           if (right.value === 0) {
@@ -719,6 +725,13 @@ export class Interpreter {
 
       case '||':
         return new BooleanValue(left.isTruthy() || right.isTruthy());
+
+      case '??':
+        // Nullish coalescing - return right if left is null or undefined
+        if (left instanceof NullValue || left instanceof UndefinedValue) {
+          return right;
+        }
+        return left;
 
       case '~~':
         // Confidence chaining - should not reach here as it's handled with confidence

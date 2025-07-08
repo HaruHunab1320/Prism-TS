@@ -59,6 +59,9 @@ message += " World"  // message = "Hello World"
 // Arithmetic
 result = (10 + 5) * 2
 remainder = 17 % 5  // Modulo operator: 2
+exponentiation = 2 ** 3  // Exponentiation operator: 8
+power = base ** exponent  // Works with variables
+right_assoc = 2 ** 3 ** 2  // Right associative: 2 ** 9 = 512
 
 // String concatenation and interpolation
 greeting = "Hello, " + name  // Traditional concatenation
@@ -170,6 +173,11 @@ if (null) {
 value = null
 isNull = value == null  // true
 notNull = value != null // false
+
+// Nullish coalescing - only replaces null/undefined
+port = process.env.PORT ?? 3000  // Uses 3000 only if PORT is null/undefined
+enabled = config.enabled ?? true  // Keeps false if explicitly set
+retries = options.retries ?? 0    // Keeps 0 if specified
 ```
 
 ### Undefined
@@ -310,6 +318,32 @@ result = processed_data ~> reliability
 Prism provides a comprehensive set of operators designed specifically for uncertainty-aware programming. These operators allow you to manipulate, combine, and control the flow of confident values in sophisticated ways.
 
 ### Core Operators
+
+#### Nullish Coalescing Operator (`??`)
+
+Returns the right operand only when the left is null or undefined (unlike `||` which replaces all falsy values):
+
+```prism
+// Basic nullish coalescing
+value = null ?? "default"  // "default"
+result = undefined ?? "fallback"  // "fallback"
+
+// Preserves falsy values
+zero = 0 ?? 10  // 0 (not 10!)
+emptyStr = "" ?? "default"  // "" (not "default"!)
+falseBool = false ?? true  // false (not true!)
+
+// Chaining
+result = value1 ?? value2 ?? value3 ?? "final default"
+
+// With optional chaining
+user = { profile: null }
+name = user?.profile?.name ?? "Anonymous"
+
+// Works with confidence values
+uncertain = null ~> 0.8
+result = uncertain ?? "fallback"  // "fallback" with 0.8 confidence
+```
 
 #### Confidence Assignment (`~>`)
 
@@ -578,18 +612,21 @@ safe_result = low_confidence_input ~@> risky_operation  // Returns input with re
 
 Prism operators follow this precedence order (highest to lowest):
 
-1. **Property Access**: `.`, `~.`
+1. **Property Access**: `.`, `~.`, `?.`
 2. **Unary**: `!`, `-`, `~`, `<~`
-3. **Multiplicative**: `*`, `/`, `~*`, `~/`
-4. **Additive**: `+`, `-`, `~+`, `~-`
-5. **Comparison**: `<`, `<=`, `>`, `>=`, `~<`, `~<=`, `~>=`
-6. **Equality**: `==`, `!=`, `~==`, `~!=`
-7. **Logical AND**: `&&`, `~&&`
-8. **Confidence Coalesce**: `~??`
-9. **Logical OR**: `||`, `~||`, `~||>`
-10. **Threshold Gate**: `~@>`
-11. **Confidence Chaining**: `~~`
-12. **Confidence Assignment**: `~>`
+3. **Exponentiation**: `**` (right-associative)
+4. **Multiplicative**: `*`, `/`, `%`, `~*`, `~/`
+5. **Additive**: `+`, `-`, `~+`, `~-`
+6. **Comparison**: `<`, `<=`, `>`, `>=`, `~<`, `~<=`, `~>=`
+7. **Equality**: `==`, `!=`, `~==`, `~!=`
+8. **Logical AND**: `&&`, `~&&`
+9. **Nullish Coalescing**: `??`
+10. **Confidence Coalesce**: `~??`
+11. **Logical OR**: `||`, `~||`, `~||>`
+12. **Threshold Gate**: `~@>`
+13. **Confidence Chaining**: `~~`
+14. **Ternary**: `? :`
+15. **Confidence Assignment**: `~>`
 
 ```prism
 // Precedence example

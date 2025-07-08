@@ -32,6 +32,7 @@ export enum TokenType {
   PLUS = 'PLUS',
   MINUS = 'MINUS',
   STAR = 'STAR',
+  STAR_STAR = 'STAR_STAR',
   SLASH = 'SLASH',
   PERCENT = 'PERCENT',
   EQUAL = 'EQUAL',
@@ -83,6 +84,7 @@ export enum TokenType {
   COLON = 'COLON',
   SEMICOLON = 'SEMICOLON',
   QUESTION = 'QUESTION',
+  QUESTION_QUESTION = 'QUESTION_QUESTION',
 
   // Special
   ARROW = 'ARROW',
@@ -175,6 +177,10 @@ export class Tokenizer {
           this.advance();
           return this.makeToken(TokenType.STAR_EQUAL, '*=', startColumn);
         }
+        if (this.peek() === '*') {
+          this.advance();
+          return this.makeToken(TokenType.STAR_STAR, '**', startColumn);
+        }
         return this.makeToken(TokenType.STAR, '*', startColumn);
       case '/': 
         if (this.peek() === '=') {
@@ -202,6 +208,10 @@ export class Tokenizer {
         if (this.peek() === '.') {
           this.advance();
           return this.makeToken(TokenType.OPTIONAL_CHAIN, '?.', startColumn);
+        }
+        if (this.peek() === '?') {
+          this.advance();
+          return this.makeToken(TokenType.QUESTION_QUESTION, '??', startColumn);
         }
         return this.makeToken(TokenType.QUESTION, '?', startColumn);
     }

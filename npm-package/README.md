@@ -2,7 +2,7 @@
 
 The official npm package for Prism - the language where AI meets certainty.
 
-**Latest: v1.0.13** - Optional chaining and undefined support for safer null handling
+**Latest: v1.0.14** - Exponentiation operator and nullish coalescing for modern JavaScript patterns
 
 ## Installation
 
@@ -87,6 +87,8 @@ Convenience function for one-off execution.
 - ⚡ Undefined support - distinct from null
 - 🔍 Optional chaining operator (?.) for safe navigation
 - ➕ Compound assignment operators (+=, -=, *=, /=, %=)
+- ⚡ Exponentiation operator (**) for power operations
+- 🔀 Nullish coalescing operator (??) for precise null/undefined handling
 
 ## Example: AI Model Ensemble
 
@@ -112,6 +114,11 @@ console.log(result); // "auto_approve" or "manual_review"
 ```
 
 ## What's New
+
+### v1.0.14 - Exponentiation & Nullish Coalescing
+- **Exponentiation operator**: `2 ** 3` = 8, with right associativity
+- **Nullish coalescing**: `value ?? default` - only replaces null/undefined
+- Both operators integrate seamlessly with confidence values
 
 ### v1.0.13 - Optional Chaining & Undefined
 - **Optional chaining**: `user?.profile?.name` - safe property access
@@ -204,6 +211,33 @@ user = {
 // Access nested properties
 avg = reduce(user.scores, (a, b) => a + b, 0) / 3
 status = user.active ? "Active" : "Inactive"
+```
+
+### Exponentiation & Nullish Coalescing
+
+```prism
+// Exponentiation - power operations
+squared = 3 ** 2              // 9
+cubed = 2 ** 3                // 8
+rightAssoc = 2 ** 3 ** 2      // 2 ** 9 = 512 (right associative)
+
+// With variables and expressions
+base = 4
+result = base ** 0.5          // 2 (square root)
+complex = (base + 1) ** 2     // 25
+
+// Nullish coalescing - precise null/undefined handling
+// Different from || - preserves falsy values
+port = process.env.PORT ?? 3000       // Uses 3000 only if PORT is null/undefined
+enabled = config.enabled ?? true      // Keeps false if explicitly set
+retries = options.retries ?? 0        // Keeps 0 if specified
+
+// Chaining nullish coalescing
+value = cache ?? database ?? defaultValue
+
+// With confidence values
+uncertain = getData() ~> 0.7
+result = (uncertain ?? fallback) ** 2
 ```
 
 ### Null & Undefined Handling

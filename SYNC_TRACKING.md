@@ -104,6 +104,21 @@ This document tracks features implemented in the npm-package that need to be syn
 | Undefined vs null distinction | ✅ | ✅ | runtime.ts |
 | Optional chain with undefined | ✅ | ✅ | runtime.ts |
 
+### v1.0.14 Features (Synced ✅)
+
+| Feature | NPM Package | Core Language | Files to Sync |
+|---------|-------------|---------------|---------------|
+| Exponentiation operator (**) | ✅ | ✅ | tokenizer.ts, ast.ts, parser.ts, runtime.ts |
+| STAR_STAR token type | ✅ | ✅ | tokenizer.ts |
+| Right-associative parsing | ✅ | ✅ | parser.ts |
+| Math.pow implementation | ✅ | ✅ | runtime.ts |
+| Nullish coalescing operator (??) | ✅ | ✅ | tokenizer.ts, ast.ts, parser.ts, runtime.ts |
+| QUESTION_QUESTION token type | ✅ | ✅ | tokenizer.ts |
+| Nullish coalescing parsing | ✅ | ✅ | parser.ts |
+| Null/undefined-only fallback | ✅ | ✅ | runtime.ts |
+| Preserves falsy values (0, false, "") | ✅ | ✅ | runtime.ts |
+| Works with confidence values | ✅ | ✅ | runtime.ts |
+
 ### Files Modified in NPM Package
 
 1. **src/core/tokenizer.ts**
@@ -116,6 +131,11 @@ This document tracks features implemented in the npm-package that need to be syn
    - Enhanced string parsing with brace depth tracking
    - Added ARROW token type for lambda expressions
    - Added PERCENT token type for modulo operator
+   - Added PLUS_EQUAL, MINUS_EQUAL, STAR_EQUAL, SLASH_EQUAL, PERCENT_EQUAL tokens
+   - Added OPTIONAL_CHAIN token type for ?.
+   - Added NULL and UNDEFINED token types
+   - Added STAR_STAR token type for **
+   - Added QUESTION_QUESTION token type for ??
 
 2. **src/core/parser.ts**
    - Enhanced `ParseError` class with context formatting
@@ -130,6 +150,12 @@ This document tracks features implemented in the npm-package that need to be syn
    - Updated `primary()` to detect single param lambdas
    - Updated parenthesized expressions to detect multi-param lambdas
    - Added PERCENT to `factor()` method for modulo
+   - Added compound assignment parsing in `expressionStatement()`
+   - Added OptionalChainAccess parsing in `call()`
+   - Added null and undefined literal parsing
+   - Added `exponent()` method for right-associative ** operator
+   - Added `nullishCoalesce()` method for ?? operator
+   - Renamed `coalesce()` to `confidenceCoalesce()`
 
 3. **src/core/ast.ts**
    - Added TernaryExpression node
@@ -139,6 +165,9 @@ This document tracks features implemented in the npm-package that need to be syn
    - Added LambdaExpression node type
    - Added LambdaExpression class with parameters and body
    - Added '%' to BinaryOperator type
+   - Added NullLiteral and UndefinedLiteral nodes
+   - Added OptionalChainAccess node
+   - Added '**' and '??' to BinaryOperator type
 
 4. **src/core/runtime.ts**
    - Added ArrayValue and ObjectValue classes
@@ -150,6 +179,11 @@ This document tracks features implemented in the npm-package that need to be syn
    - Added `interpretLambdaExpression()` method with closure support
    - Updated array methods to work with lambda functions
    - Added modulo operator implementation
+   - Added NullValue and UndefinedValue classes
+   - Added compound assignment operations
+   - Added `interpretOptionalChainAccess()` method
+   - Added '**' case using Math.pow
+   - Added '??' case for nullish coalescing
 
 5. **src/index.ts**
    - Added `initializeLLMProviders()` method
@@ -166,6 +200,11 @@ This document tracks features implemented in the npm-package that need to be syn
 - `src/core/array-methods.test.ts` - Array methods tests
 - `src/core/lambda.test.ts` - Lambda expression tests
 - `src/core/null.test.ts` - Null support tests
+- `src/core/compound-assignment.test.ts` - Compound assignment tests
+- `src/core/optional-chaining.test.ts` - Optional chaining tests
+- `src/core/undefined.test.ts` - Undefined support tests
+- `src/core/exponentiation.test.ts` - Exponentiation operator tests
+- `src/core/nullish-coalescing.test.ts` - Nullish coalescing tests
 
 ## Sync Strategy
 
@@ -210,6 +249,11 @@ This document tracks features implemented in the npm-package that need to be syn
 - Closures and scope capture
 - Modulo operator (%)
 - Null literal support
+- Compound assignment operators (+=, -=, *=, /=, %=)
+- Optional chaining operator (?.)
+- Undefined support (distinct from null)
+- Exponentiation operator (**) with right associativity
+- Nullish coalescing operator (??)
 
 ### Test Results:
 - Arrays test: ✅ 29/29 passing

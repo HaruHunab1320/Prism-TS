@@ -2,6 +2,45 @@
 
 All notable changes to prism-uncertainty will be documented in this file.
 
+## [1.0.14] - 2024-06-27
+
+### Added
+- **Exponentiation operator (`**`)** - Mathematical power operations with right associativity
+- **Nullish coalescing operator (`??`)** - Returns right operand only for null/undefined values
+- Exponentiation has higher precedence than multiplication/division
+- Nullish coalescing differs from `||` by preserving falsy values like `0`, `false`, and `""`
+- Both operators work seamlessly with confidence values
+
+### Example
+```prism
+// Exponentiation - power operations
+squared = 3 ** 2              // 9
+cubed = 2 ** 3                // 8
+rightAssoc = 2 ** 3 ** 2      // 2 ** 9 = 512
+
+// With variables and expressions
+base = 4
+result = base ** 0.5          // 2 (square root)
+complex = (base + 1) ** 2     // 25
+
+// Nullish coalescing - precise null/undefined handling
+// Different from || - preserves falsy values
+port = process.env.PORT ?? 3000       // Uses 3000 only if PORT is null/undefined
+enabled = config.enabled ?? true      // Keeps false if explicitly set
+retries = options.retries ?? 0        // Keeps 0 if specified
+
+// Chaining nullish coalescing
+value = cache ?? database ?? defaultValue
+
+// With optional chaining
+user = { profile: null }
+name = user?.profile?.name ?? "Anonymous"
+
+// With confidence values
+uncertain = getData() ~> 0.7
+result = (uncertain ?? fallback) ** 2
+```
+
 ## [1.0.13] - 2024-06-27
 
 ### Added
