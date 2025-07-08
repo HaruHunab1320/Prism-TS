@@ -1,322 +1,159 @@
 # Future Features for Prism
 
-This document outlines potential improvements and new operators that could be added to the Prism language. Features are organized by priority and implementation complexity.
+This document outlines potential improvements and new operators that could be added to the Prism language. Features are organized by priority and implementation status.
 
-## Critical Missing Features (Team Feedback - 2025-07-08)
+## Completed Features ✅
 
-These features were identified as critical blockers by the testing team:
+These features were previously planned and are now implemented:
 
 ### 1. Array Property Access
-**Priority:** CRITICAL  
-**Complexity:** Low-Medium  
-**Status:** COMPLETED ✅ (array.length and all methods implemented!)
+**Status:** COMPLETED ✅  
+**Implemented:** v1.0.14
+- `array.length` property
+- All array methods: `map()`, `filter()`, `reduce()`, `forEach()`, `push()`
+- Both method and function syntax supported
+
+### 2. Logical NOT Operator (`!`)
+**Status:** COMPLETED ✅  
+**Note:** Was already working, tests confirm functionality
+
+### 3. Optional Chaining (`?.`)
+**Status:** COMPLETED ✅  
+**Implemented:** v1.0.11
+- Safe property access: `user?.profile?.name`
+- Works with arrays and confidence values
+- Returns undefined when encountering null/undefined
+
+### 4. Spread Operator (`...`)
+**Status:** COMPLETED ✅  
+**Implemented:** v1.0.10
+- Array spread: `[...arr1, ...arr2]`
+- Object spread: `{...base, z: 3}`
+- Note: Function argument spread not yet implemented
+
+### 5. Compound Assignment Operators
+**Status:** COMPLETED ✅  
+**Implemented:** v1.0.9
+- All operators: `+=`, `-=`, `*=`, `/=`, `%=`
+- Works with numbers, strings, and confidence values
+
+### 6. Undefined Support
+**Status:** COMPLETED ✅  
+**Implemented:** v1.0.12
+- `undefined` keyword
+- Distinct from `null`
+- Works with all operators
+
+### 7. Nullish Coalescing (`??`)
+**Status:** COMPLETED ✅  
+**Implemented:** v1.0.8
+- Returns right operand when left is null/undefined
+- Different from `||` which checks truthiness
+
+### 8. Exponentiation Operator (`**`)
+**Status:** COMPLETED ✅  
+**Implemented:** v1.0.13
+- Power operator with right-associativity
+- Works with confidence values
+
+### 9. Standard Loops
+**Status:** COMPLETED ✅  
+**Implemented:** v1.0.17
+- C-style for loops: `for (i = 0; i < 10; i++)`
+- For-in loops: `for item in array` and `for item, index in array`
+- While loops: `while (condition) { }`
+- Do-while loops: `do { } while (condition)`
+- Break and continue statements
+- Full nested loop support
+
+### 10. Uncertainty-Aware Loops
+**Status:** COMPLETED ✅  
+**Implemented:** v1.0.18
+- `uncertain for` and `uncertain while` loops
+- Confidence-based branching (high/medium/low)
+- Thresholds: HIGH >= 0.7, MEDIUM >= 0.5, LOW < 0.5
+
+## Critical Missing Features
+
+### 1. Type Coercion for || Operator
+**Priority:** HIGH  
+**Complexity:** Medium  
+**Status:** Not implemented
 
 ```prism
-// All Working:
-arr.length              // ✅ Get array length
-arr.map(fn)             // ✅ Transform elements
-arr.filter(fn)          // ✅ Filter elements
-arr.reduce(fn, init?)   // ✅ Reduce to single value
-arr.forEach(fn)         // ✅ Iterate over elements
-arr.push(...items)      // ✅ Add to array (returns new array)
+// Common JS pattern that currently fails:
+name = userInput || "default"  // Error: || requires boolean operands
 
-// Both syntaxes work:
-doubled = arr.map(x => x * 2)        // Method syntax
-doubled = map(arr, x => x * 2)       // Function syntax
-
-// Notes:
-// - push() returns a new array (immutable)
-// - forEach() returns undefined
-// - All methods preserve confidence values
-// - Methods accept lambdas with appropriate arity
+// Current workarounds:
+name = userInput ? userInput : "default"
+name = userInput ?? "default"  // only for null/undefined
 ```
 
-### 2. For Loops
-**Priority:** CRITICAL  
-**Complexity:** High  
-**Status:** In Development
+**Benefits:**
+- Matches JavaScript behavior
+- Eliminates common errors
+- More intuitive for developers
 
-#### Phase 1: Standard Loops (Critical)
-
-```prism
-// C-style for loop
-for i = 0; i < 10; i++ {
-  sum = sum + arr[i]
-}
-
-// For...in loop for arrays
-for item in array {
-  process(item)
-}
-
-// For...in with index
-for item, index in array {
-  result[index] = transform(item)
-}
-
-// While loops
-while condition {
-  // iterate while true
-}
-
-// Do-while loops
-do {
-  // execute at least once
-} while condition
-```
-
-#### Phase 2: Uncertainty-Aware Loops (Enhancement)
-
-```prism
-// Uncertain for - branches based on confidence
-uncertain for analysis in predictions ~> 0.8 {
-  high { 
-    accept(analysis)
-  }
-  medium { 
-    review(analysis)
-  }
-  low { 
-    skip  // or break
-  }
-}
-
-// Confidence-filtered iteration
-for result in results ~@> 0.7 {
-  // Only processes items with confidence > 0.7
-  deploy(result)
-}
-
-// Confidence accumulation
-confident_sum = 0 ~> 1.0
-for value in measurements {
-  confident_sum = confident_sum ~+ value
-}
-// Result has accumulated confidence
-
-// Early exit on low confidence
-for prediction in model_outputs {
-  if <~ prediction < 0.5 {
-    break  // Exit if confidence drops too low
-  }
-  process(prediction)
-}
-```
-
-#### Implementation Plan:
-1. Add loop tokens to tokenizer (FOR, IN, WHILE, DO, BREAK, CONTINUE)
-2. Add loop AST nodes (ForLoop, ForInLoop, WhileLoop, etc.)
-3. Implement loop parsing in parser
-4. Add loop interpretation in runtime
-5. Handle break/continue statements
-6. Add scope management for loop variables
-7. Implement uncertainty variants after standard loops work
-
-### 3. Logical NOT Operator Fix
-**Priority:** CRITICAL  
-**Complexity:** Low  
-**Status:** COMPLETED ✅ (tests confirm it's working correctly)
-
-```prism
-// All of these work correctly:
-if (!someValue) { }
-if (!(a && b)) { }
-!true == false
-!false == true
-!0 == true
-!"" == true
-!null == true
-!undefined == true
-```
-
-### 4. Better Error Messages
+### 2. Better Error Messages
 **Priority:** HIGH  
 **Complexity:** Low  
 **Status:** Partially implemented
 
 ```prism
-// Current: "Cannot compare boolean and number"
-// Better:  "Cannot compare boolean (maxTier) and number (1) at line 25"
+// Current: "Cannot apply + to string and number"
+// Better:  "Error on line 5: Cannot apply + to string 'hello' and number 42"
 ```
 
-### 5. Type Coercion for Common Patterns
-**Priority:** MEDIUM  
-**Complexity:** Medium  
-**Status:** Currently strict typing causes issues
-
-```prism
-// Common JS pattern that fails:
-maxTier = input.maxTier || 3  // Error: || requires boolean operands
-
-// Must use:
-maxTier = input.maxTier != null ? input.maxTier : 3
-// Or:
-maxTier = input.maxTier ?? 3
-```
-
-## Implementation Priority Order
-
-1. ✅ **Array .length property** - COMPLETED
-2. ✅ **Fix ! operator** - COMPLETED (was already working)
-3. ✅ **Array methods as properties** - COMPLETED
-4. **For loops** - Major feature but eliminates code duplication
-5. **Better error messages** - Improves developer experience
+**Improvements needed:**
+- Include line numbers in runtime errors
+- Show actual values that caused errors
+- Include variable names when available
 
 ## High Priority Features
 
-### 1. Optional Chaining Operator (`?.`)
+### 1. Function Argument Spread
 **Priority:** HIGH  
 **Complexity:** Medium  
-**Value:** Prevents errors when accessing properties on null/undefined values
+**Value:** Completes spread operator implementation
 
 ```prism
-// Safe property access
-address = user?.profile?.address?.street
-
-// Safe method calls
-result = api?.getData?.()
-
-// Safe array access
-firstItem = items?.[0]
-```
-
-**Benefits:**
-- Eliminates verbose null checking
-- Prevents runtime errors
-- Makes code more readable
-- Common pattern in modern languages
-
-### 2. Spread Operator (`...`) ✅ COMPLETED
-**Priority:** HIGH  
-**Complexity:** Medium-High  
-**Value:** Essential for modern data manipulation
-
-```prism
-// Array spread
-combined = [...array1, ...array2]
-newArray = [1, ...oldArray, 5]
-
-// Object spread
-merged = {...defaults, ...userConfig}
-updated = {...user, age: 31}
-
-// Function arguments (not yet implemented)
+// Spread in function calls
 maxValue = max(...numbers)
+combined = concat(...arrays)
+
+// Rest parameters
+sum = (...nums) => reduce(nums, (a, b) => a + b, 0)
 ```
 
-**Benefits:**
-- Immutable data operations
-- Clean array/object composition
-- Useful for functional programming patterns
-
-**Note:** Array and object spread are now implemented. Function argument spread is not yet supported.
-
-### 3. Compound Assignment Operators
-**Priority:** HIGH  
-**Complexity:** Low  
-**Value:** Basic convenience operators found in most languages
-
-```prism
-x += 5    // x = x + 5
-x -= 3    // x = x - 3
-x *= 2    // x = x * 2
-x /= 4    // x = x / 4
-x %= 3    // x = x % 3
-
-// Could also support confidence versions
-x ~+= 5   // x = x ~+ 5
-```
-
-**Benefits:**
-- More concise code
-- Expected by developers
-- Easy to implement
-
-### 4. Undefined Support
-**Priority:** HIGH  
-**Complexity:** Low-Medium  
-**Value:** Complements null support for complete absence handling
-
-```prism
-// Undefined as a value
-value = undefined
-
-// Distinguish between null and undefined
-if (value == undefined) {
-  // Never assigned
-} else if (value == null) {
-  // Explicitly set to null
-}
-```
-
-**Benefits:**
-- Complete absence value support
-- Better JavaScript/TypeScript interop
-- Clearer intent in code
-
-## Medium Priority Features
-
-### 5. Nullish Coalescing (`??`)
+### 2. Pipeline Operator (`|>`)
 **Priority:** MEDIUM  
-**Complexity:** Low  
-**Value:** Different from confidence coalesce, works with null/undefined
+**Complexity:** Medium  
+**Value:** Functional composition
 
 ```prism
-// Use right side only if left is null/undefined
-displayName = user.nickname ?? user.name ?? "Anonymous"
-
-// Different from || which checks truthiness
-count = userCount ?? 0  // 0 is kept if userCount is 0
+result = data
+  |> filter(_, x => x > 0)
+  |> map(_, x => x * 2)
+  |> reduce(_, (a, b) => a + b, 0)
 ```
 
-**Benefits:**
-- Precise null/undefined handling
-- Avoids falsy value confusion
-- Pairs well with optional chaining
-
-### 6. Exponentiation Operator (`**`)
-**Priority:** MEDIUM  
-**Complexity:** Low  
-**Value:** Mathematical completeness
-
-```prism
-squared = x ** 2
-cubed = x ** 3
-power = base ** exponent
-
-// With confidence
-result = (value ~> 0.9) ** 2
-```
-
-**Benefits:**
-- More readable than function calls
-- Standard in modern languages
-- Useful for scientific computing
-
-### 7. Destructuring Assignment
+### 3. Destructuring Assignment
 **Priority:** MEDIUM  
 **Complexity:** High  
-**Value:** Clean extraction of values from structures
+**Value:** Clean value extraction
 
 ```prism
 // Array destructuring
 [first, second, ...rest] = numbers
-[x, y] = coordinates
 
 // Object destructuring
 {name, age, email = "none"} = user
-{data: {value}} = response  // Nested
 
-// In function parameters
+// In parameters
 process = ({name, age}) => "${name} is ${age}"
 ```
 
-**Benefits:**
-- Cleaner variable assignment
-- Reduces repetitive code
-- Modern pattern matching
-
-### 8. Type Checking Operators
+### 4. Type Checking Operators
 **Priority:** MEDIUM  
 **Complexity:** Medium  
 **Value:** Runtime type safety
@@ -331,214 +168,110 @@ if (typeof value == "number") {
 if (value instanceof Array) {
   filtered = filter(value, x => x > 0)
 }
-
-// Type guard functions
-isString = x => typeof x == "string"
 ```
-
-**Benefits:**
-- Safer runtime operations
-- Better error handling
-- Useful for dynamic data
 
 ## Lower Priority Features
 
-### 9. Pipeline Operator (`|>`)
-**Priority:** LOW  
-**Complexity:** Medium  
-**Value:** Functional composition syntax
-
-```prism
-// Linear data transformation
-result = data
-  |> filter(_, x => x > 0)
-  |> map(_, x => x * 2)
-  |> reduce(_, (a, b) => a + b, 0)
-
-// With confidence
-processed = rawData ~> 0.8
-  |> validate(_)
-  |> transform(_)
-```
-
-**Benefits:**
-- Readable data pipelines
-- Functional programming style
-- Reduces nesting
-
-### 10. Pattern Matching
+### 5. Pattern Matching
 **Priority:** LOW  
 **Complexity:** Very High  
 **Value:** Advanced control flow
 
 ```prism
-// Pattern matching expression
 result = match value {
   null => "no value",
   0 => "zero",
   n if n > 0 => "positive: ${n}",
   {type: "error", message} => "Error: ${message}",
-  [first, ...rest] => "Array starting with ${first}",
   _ => "other"
-}
-
-// With confidence patterns
-action = match (analysis ~> 0.8) {
-  {confidence: c} if c >= 0.9 => "auto-approve",
-  {confidence: c} if c >= 0.7 => "review",
-  _ => "reject"
 }
 ```
 
-**Benefits:**
-- Powerful conditional logic
-- Exhaustive checking
-- Elegant error handling
-
-### 11. Range Operator
+### 6. Range Operator
 **Priority:** LOW  
 **Complexity:** Medium  
-**Value:** Convenient sequence generation
+**Value:** Sequence generation
 
 ```prism
-// Inclusive ranges
 numbers = 1..10        // [1, 2, 3, ..., 10]
-letters = 'a'..'z'     // ['a', 'b', ..., 'z']
-
-// With step
 evens = 0..20 step 2   // [0, 2, 4, ..., 20]
-countdown = 10..1 step -1
 
-// In loops (if we add loops)
 for i in 1..100 {
   print(i)
 }
 ```
 
-**Benefits:**
-- Concise sequence creation
-- Useful for iterations
-- Mathematical clarity
-
-### 12. Custom Confidence Thresholds
+### 7. Custom Confidence Thresholds
 **Priority:** LOW  
 **Complexity:** Low  
-**Value:** Fine-grained confidence control
+**Value:** Fine-grained control
 
 ```prism
-// Current ~@> uses 70% threshold
 // Custom threshold syntax
 result = value ~@[0.9]> action   // 90% threshold
 safe = data ~@[0.95]> process    // 95% threshold
-
-// Variable thresholds
-threshold = 0.85
-decision = analysis ~@[threshold]> approve
 ```
 
-**Benefits:**
-- Flexible confidence handling
-- Domain-specific thresholds
-- Better control
-
-### 13. Async/Await Support
+### 8. Async/Await Support
 **Priority:** LOW  
 **Complexity:** Very High  
 **Value:** Modern async handling
 
 ```prism
-// Async function definition
 async function analyzeData(data) {
   result = await llm("Analyze: ${data}")
-  processed = await transform(result)
-  return processed
-}
-
-// Async with confidence
-async function processWithConfidence() {
-  analysis = await llm("Complex analysis") ~> 0.8
-  if (analysis ~@> "proceed") {
-    return await executeAction()
-  }
+  return await transform(result)
 }
 ```
 
-**Benefits:**
-- Clean async code
-- Better error handling
-- Modern programming model
-
-### 14. Set Operations
+### 9. Set Operations
 **Priority:** LOW  
 **Complexity:** Medium  
-**Value:** Mathematical set operations
+**Value:** Mathematical operations
 
 ```prism
-// Set literals
+// Set literals and operations
 uniqueNumbers = {1, 2, 3, 3, 4}  // {1, 2, 3, 4}
-
-// Set operations
 union = set1 | set2
 intersection = set1 & set2
-difference = set1 - set2
-symmetric = set1 ^ set2
-
-// Set methods
-has3 = uniqueNumbers.has(3)
-size = uniqueNumbers.size
 ```
 
-**Benefits:**
-- Unique value collections
-- Mathematical operations
-- Data deduplication
-
-### 15. Tagged Template Literals
+### 10. Tagged Template Literals
 **Priority:** LOW  
 **Complexity:** High  
-**Value:** Domain-specific string processing
+**Value:** Domain-specific processing
 
 ```prism
-// SQL template tag
 query = sql`
   SELECT * FROM users 
-  WHERE age > ${minAge} 
-  AND city = ${city}
+  WHERE age > ${minAge}
 `
-
-// HTML template tag
-element = html`
-  <div class="${className}">
-    ${content}
-  </div>
-`
-
-// Custom tags
-formatted = fmt`Price: ${price:,.2f}`
 ```
 
-**Benefits:**
-- Safe string interpolation
-- Domain-specific processing
-- Prevention of injection attacks
+## Implementation Priority Summary
 
-## Implementation Priority
+### Immediate (Critical Blockers):
+1. **Type Coercion for ||** - Common pattern support
+2. **Better Error Messages** - Developer experience
 
-Based on value, complexity, and user benefit, recommended implementation order:
+### Near Term (High Value):
+4. **Function Argument Spread** - Complete spread implementation
+5. **Pipeline Operator** - Functional programming
+6. **Destructuring** - Modern syntax
+7. **Type Checking** - Runtime safety
 
-1. **Compound Assignment Operators** - Easy win, expected feature
-2. **Optional Chaining (`?.`)** - High value for null safety
-3. **Undefined Support** - Completes null handling
-4. **Exponentiation (`**`)** - Simple math operator
-5. **Spread Operator (`...`)** - Essential but complex
-6. **Nullish Coalescing (`??`)** - Pairs with optional chaining
-7. **Type Checking** - Improves runtime safety
-8. **Destructuring** - Modern but complex
+### Long Term (Nice to Have):
+8. Pattern Matching
+9. Range Operators
+10. Custom Confidence Thresholds
+11. Async/Await
+12. Set Operations
+13. Tagged Templates
 
 ## Notes
 
-- Features should maintain Prism's focus on uncertainty and confidence
-- New operators should integrate with existing confidence operators where sensible
-- Syntax choices should be familiar to JavaScript/TypeScript developers
+- All new features should integrate with the confidence system where appropriate
+- Maintain backwards compatibility
 - Each feature needs comprehensive tests and documentation
-- Consider how features interact with the confidence system
+- Prioritize features that unblock common use cases
+- Consider developer experience and error messages
