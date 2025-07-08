@@ -2,6 +2,74 @@
 
 All notable changes to prism-uncertainty will be documented in this file.
 
+## [1.0.18] - 2025-07-08
+
+### Added
+- **Uncertainty-aware loops** - Revolutionary loop constructs that adapt behavior based on confidence levels
+- **Uncertain for loops** - Execute different branches based on loop confidence
+  - `uncertain for i = 0; condition ~> confidence; i++`
+  - High, medium, and low confidence branches
+  - Dynamic confidence evaluation at each iteration
+- **Uncertain while loops** - Conditional execution with confidence-based branching
+  - `uncertain while condition ~> confidence`
+  - Automatic branch selection based on confidence thresholds
+  - Perfect for sensor monitoring and AI model inference
+- **Confidence thresholds**:
+  - HIGH: confidence >= 0.7
+  - MEDIUM: 0.5 <= confidence < 0.7
+  - LOW: confidence < 0.5
+- Full support for break and continue within uncertainty branches
+- Seamless integration with existing confidence system
+
+### Example
+```prism
+// Uncertain for loop - adapt to confidence levels
+uncertain for i = 0; (i < readings.length) ~> confidence; i++ {
+  high {
+    // Confidence >= 0.7 - fully automated
+    processAutomatically(readings[i])
+  }
+  medium {
+    // 0.5 <= confidence < 0.7 - human review
+    flagForReview(readings[i])
+  }
+  low {
+    // Confidence < 0.5 - alert and skip
+    sendAlert(readings[i])
+    break
+  }
+}
+
+// Uncertain while - monitor with degradation handling
+uncertain while (systemActive() ~> getSystemHealth()) {
+  high {
+    runNormalOperations()
+  }
+  medium {
+    runDegradedMode()
+  }
+  low {
+    enterSafeMode()
+    break
+  }
+}
+
+// AI inference with confidence-based retries
+uncertain for attempt = 0; attempt < 3; attempt++ {
+  high {
+    return model.predict(input)
+  }
+  medium {
+    // Use ensemble for medium confidence
+    return ensemblePredict(input)
+  }
+  low {
+    // Request human labeling
+    return requestHumanInput(input)
+  }
+}
+```
+
 ## [1.0.17] - 2025-07-08
 
 ### Added

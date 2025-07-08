@@ -210,6 +210,52 @@ do {
 - `break` - Exit the current loop
 - `continue` - Skip to next iteration
 
+#### Uncertain For Loops
+```prism
+// Syntax
+uncertain for init; condition; update {
+  high {
+    // Execute when confidence >= 0.7
+  }
+  medium {
+    // Execute when 0.5 <= confidence < 0.7
+  }
+  low {
+    // Execute when confidence < 0.5
+  }
+}
+
+// With confident condition
+uncertain for i = 0; (i < n) ~> confidence; i++ {
+  high { /* ... */ }
+  medium { /* ... */ }
+  low { /* ... */ }
+}
+```
+
+#### Uncertain While Loops
+```prism
+// Syntax
+uncertain while condition ~> confidence {
+  high {
+    // Execute when confidence >= 0.7
+  }
+  medium {
+    // Execute when 0.5 <= confidence < 0.7
+  }
+  low {
+    // Execute when confidence < 0.5
+  }
+}
+
+// Example
+uncertain while (isActive() ~> getConfidence()) {
+  high { processNormally() }
+  medium { processWithCaution() }
+  low { handleLowConfidence() }
+}
+```
+
 ### Context Management
 
 #### Context Declaration
@@ -669,6 +715,37 @@ class BreakStatement extends Statement {
 ```typescript
 class ContinueStatement extends Statement {
   constructor()
+}
+```
+
+#### UncertainForLoop
+```typescript
+class UncertainForLoop extends Statement {
+  constructor(
+    init: Statement | null,
+    condition: Expression | null,
+    update: Expression | null,
+    branches: UncertainBranches
+  )
+}
+```
+
+#### UncertainWhileLoop
+```typescript
+class UncertainWhileLoop extends Statement {
+  constructor(
+    condition: Expression,
+    branches: UncertainBranches
+  )
+}
+```
+
+#### UncertainBranches
+```typescript
+interface UncertainBranches {
+  high: Statement;
+  medium?: Statement;
+  low: Statement;
 }
 ```
 

@@ -2,7 +2,7 @@
 
 The official npm package for Prism - the language where AI meets certainty.
 
-**Latest: v1.0.17** - Complete loop support (for, for-in, while, do-while, break/continue)
+**Latest: v1.0.18** - Uncertainty-aware loops (uncertain for/while with confidence-based branching)
 
 ## Installation
 
@@ -115,6 +115,14 @@ console.log(result); // "auto_approve" or "manual_review"
 ```
 
 ## What's New
+
+### v1.0.18 - Uncertainty-Aware Loops
+- **Uncertain for loops**: `uncertain for` with confidence-based branching
+- **Uncertain while loops**: `uncertain while` adapts behavior to confidence levels
+- **Confidence branches**: `high`, `medium`, and `low` execution paths
+- **Dynamic evaluation**: Confidence checked at each iteration
+- **Perfect for AI/ML**: Adapt behavior based on model confidence
+- **Sensor monitoring**: Degrade gracefully with confidence levels
 
 ### v1.0.17 - Complete Loop Support
 - **C-style for loops**: `for i = 0; i < 5; i++` with optional parts

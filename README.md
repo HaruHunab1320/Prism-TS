@@ -163,6 +163,34 @@ for i = 0; i < 10; i = i + 1 {
   // Process odd numbers
 }
 
+// Uncertainty-aware loops (v1.0.18)
+// Execute different code based on confidence levels
+uncertain for i = 0; (i < readings.length) ~> 0.8; i = i + 1 {
+  high {
+    // Confidence >= 0.7 - automate
+    processAutomatically(readings[i])
+  }
+  medium {
+    // 0.5 <= confidence < 0.7 - review
+    flagForReview(readings[i])
+  }
+  low {
+    // Confidence < 0.5 - alert
+    sendAlert(readings[i])
+  }
+}
+
+// Uncertain while with dynamic confidence
+uncertain while (sensorActive() ~> getSensorConfidence()) {
+  high {
+    takeMeasurement()
+  }
+  low {
+    recalibrateSensor()
+    break
+  }
+}
+
 // Null and undefined support
 user = { name: "Bob", email: null, phone: undefined }
 safeEmail = user?.email ?? "no-email@example.com"

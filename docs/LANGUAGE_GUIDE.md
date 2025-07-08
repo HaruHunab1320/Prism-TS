@@ -924,6 +924,164 @@ for i = 0; i < 10; i = i + 1 {
 }
 ```
 
+### Uncertainty-Aware Loops
+
+Prism provides special loop constructs that adapt behavior based on confidence levels:
+
+#### Uncertain For Loops
+
+```prism
+// Basic uncertain for loop
+uncertain for i = 0; i < dataPoints.length; i = i + 1 {
+  high {
+    // Execute when confidence >= 0.7
+    processWithAutomation(dataPoints[i])
+  }
+  medium {
+    // Execute when 0.5 <= confidence < 0.7
+    processWithHumanReview(dataPoints[i])
+  }
+  low {
+    // Execute when confidence < 0.5
+    skipOrLogError(dataPoints[i])
+  }
+}
+
+// With confident conditions
+sensorReadings = [0.95, 0.8, 0.6, 0.3, 0.1]
+uncertain for i = 0; (i < 5) ~> sensorReadings[i]; i = i + 1 {
+  high {
+    // High confidence reading
+    recordMeasurement(i)
+  }
+  medium {
+    // Medium confidence
+    flagForCalibration(i)
+  }
+  low {
+    // Low confidence
+    alertMaintenance(i)
+    break  // Stop processing on low confidence
+  }
+}
+```
+
+#### Uncertain While Loops
+
+```prism
+// Confidence-based while loop
+confidence = 0.9
+attempts = 0
+uncertain while (attempts < maxAttempts) ~> confidence {
+  high {
+    // High confidence path
+    result = performOperation()
+    if (result.success) break
+    attempts = attempts + 1
+  }
+  medium {
+    // Medium confidence - add verification
+    result = performOperationWithVerification()
+    attempts = attempts + 1
+    confidence = confidence * 0.9  // Decay confidence
+  }
+  low {
+    // Low confidence - manual intervention
+    requestManualIntervention()
+    break
+  }
+}
+
+// Dynamic confidence from sensor
+uncertain while (systemRunning() ~> getSystemConfidence()) {
+  high {
+    // Normal operation
+    processNextBatch()
+  }
+  medium {
+    // Degraded operation
+    processWithExtraChecks()
+  }
+  low {
+    // System unreliable
+    enterSafeMode()
+    break
+  }
+}
+```
+
+#### Key Features
+
+1. **Confidence Thresholds**: 
+   - HIGH: confidence >= 0.7
+   - MEDIUM: 0.5 <= confidence < 0.7
+   - LOW: confidence < 0.5
+
+2. **Dynamic Evaluation**: Confidence is evaluated at each iteration
+
+3. **Branch Selection**: Only the matching confidence branch executes
+
+4. **Control Flow**: Standard `break` and `continue` work within branches
+
+5. **Confidence Sources**:
+   - Explicit values: `~> 0.8`
+   - Variables: `~> confidenceVar`
+   - Expressions: `~> calculateConfidence()`
+   - Confident values: `(condition) ~> confidence`
+
+#### Practical Examples
+
+```prism
+// AI model inference with confidence-based retries
+modelResults = []
+uncertain for i = 0; i < inputs.length; i = i + 1 {
+  high {
+    // High confidence - use result directly
+    prediction = model.predict(inputs[i])
+    modelResults = [...modelResults, prediction]
+  }
+  medium {
+    // Medium confidence - ensemble approach
+    predictions = [
+      model1.predict(inputs[i]),
+      model2.predict(inputs[i]),
+      model3.predict(inputs[i])
+    ]
+    consensus = votingEnsemble(predictions)
+    modelResults = [...modelResults, consensus]
+  }
+  low {
+    // Low confidence - human in the loop
+    humanLabel = requestHumanLabeling(inputs[i])
+    modelResults = [...modelResults, humanLabel]
+  }
+}
+
+// Sensor fusion with degradation handling
+sensorNetwork = initializeSensors()
+uncertain while (monitoringActive) ~> sensorNetwork.getHealthScore() {
+  high {
+    // All sensors working well
+    data = sensorNetwork.getAllReadings()
+    fusedResult = advancedFusion(data)
+    publish(fusedResult)
+  }
+  medium {
+    // Some sensors degraded
+    workingSensors = sensorNetwork.getWorkingSensors()
+    data = workingSensors.getReadings()
+    fusedResult = robustFusion(data)  // More conservative algorithm
+    publish(fusedResult)
+  }
+  low {
+    // Critical sensor failure
+    logError("Sensor network critically degraded")
+    switchToBackupSystem()
+    break
+  }
+}
+```
+
 ## LLM Integration
 
 ### Basic LLM Calls
