@@ -32,7 +32,9 @@ export type NodeType =
   | 'WhileLoop'
   | 'DoWhileLoop'
   | 'BreakStatement'
-  | 'ContinueStatement';
+  | 'ContinueStatement'
+  | 'UncertainForLoop'
+  | 'UncertainWhileLoop';
 
 export abstract class ASTNode {
   abstract type: NodeType;
@@ -390,6 +392,30 @@ export class ContinueStatement extends Statement {
   type: NodeType = 'ContinueStatement';
   
   constructor() {
+    super();
+  }
+}
+
+export class UncertainForLoop extends Statement {
+  type: NodeType = 'UncertainForLoop';
+  
+  constructor(
+    public init: Statement | null,
+    public condition: Expression | null,
+    public update: Expression | null,
+    public branches: UncertainBranches
+  ) {
+    super();
+  }
+}
+
+export class UncertainWhileLoop extends Statement {
+  type: NodeType = 'UncertainWhileLoop';
+  
+  constructor(
+    public condition: Expression,
+    public branches: UncertainBranches
+  ) {
     super();
   }
 }

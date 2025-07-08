@@ -1,6 +1,7 @@
 import {
   ASTNode,
   Program,
+  Statement,
   IdentifierExpression,
   NumberLiteral,
   StringLiteral,
@@ -35,6 +36,8 @@ import {
   DoWhileLoop,
   BreakStatement as _BreakStatement,
   ContinueStatement as _ContinueStatement,
+  UncertainForLoop,
+  UncertainWhileLoop,
 } from './ast';
 import { ConfidenceValue as ConfidenceLib, ConfidenceLevel } from '../confidence';
 import { Context, ContextManager } from '../context';
@@ -570,6 +573,10 @@ export class Interpreter {
         return this.interpretWhileLoop(node as WhileLoop);
       case 'DoWhileLoop':
         return this.interpretDoWhileLoop(node as DoWhileLoop);
+      case 'UncertainForLoop':
+        return this.interpretUncertainForLoop(node as UncertainForLoop);
+      case 'UncertainWhileLoop':
+        return this.interpretUncertainWhileLoop(node as UncertainWhileLoop);
       case 'BreakStatement':
         throw new LoopControlError('break');
       case 'ContinueStatement':
@@ -1899,6 +1906,140 @@ export class Interpreter {
         break;
       }
     } while (true);
+
+    return result;
+  }
+  
+  private async interpretUncertainForLoop(node: UncertainForLoop): Promise<Value> {
+    // Create scope for loop variable if needed
+    const loopEnv = new Environment(this.environment);
+    const previousEnv = this.environment;
+    this.environment = loopEnv;
+
+    try {
+      // Execute init
+      if (node.init) {
+        await this.interpret(node.init);
+      }
+
+      let result: Value = new UndefinedValue();
+      
+      // Track overall loop confidence
+      let loopConfidence = new ConfidenceLib(1.0);
+
+      // Loop while condition is true
+      while (true) {
+        // Check condition and extract confidence
+        if (node.condition) {
+          const conditionValue = await this.interpret(node.condition);
+          
+          // Extract confidence from condition
+          if (conditionValue instanceof ConfidenceValue) {
+            loopConfidence = conditionValue.confidence;
+            if (!conditionValue.value.isTruthy()) {
+              break;
+            }
+          } else {
+            // Non-confident condition defaults to high confidence
+            if (!conditionValue.isTruthy()) {
+              break;
+            }
+          }
+        }
+
+        // Execute branch based on confidence level
+        const level = loopConfidence.level;
+        let branchToExecute: Statement | undefined;
+        
+        if (level === ConfidenceLevel.HIGH && node.branches.high) {
+          branchToExecute = node.branches.high;
+        } else if (level === ConfidenceLevel.MEDIUM && node.branches.medium) {
+          branchToExecute = node.branches.medium;
+        } else if (node.branches.low) {
+          branchToExecute = node.branches.low;
+        }
+
+        if (branchToExecute) {
+          try {
+            result = await this.interpret(branchToExecute);
+          } catch (error) {
+            if (error instanceof LoopControlError) {
+              if (error.type === 'break') {
+                break;
+              } else if (error.type === 'continue') {
+                // Continue to update expression
+              } else {
+                throw error;
+              }
+            } else {
+              throw error;
+            }
+          }
+        }
+
+        // Execute update
+        if (node.update) {
+          await this.interpret(node.update);
+        }
+      }
+
+      return result;
+    } finally {
+      this.environment = previousEnv;
+    }
+  }
+  
+  private async interpretUncertainWhileLoop(node: UncertainWhileLoop): Promise<Value> {
+    let result: Value = new UndefinedValue();
+
+    while (true) {
+      // Check condition and extract confidence
+      const conditionValue = await this.interpret(node.condition);
+      
+      let loopConfidence: ConfidenceLib;
+      let shouldContinue: boolean;
+      
+      if (conditionValue instanceof ConfidenceValue) {
+        loopConfidence = conditionValue.confidence;
+        shouldContinue = conditionValue.value.isTruthy();
+      } else {
+        // Non-confident condition defaults to high confidence
+        loopConfidence = new ConfidenceLib(1.0);
+        shouldContinue = conditionValue.isTruthy();
+      }
+      
+      if (!shouldContinue) {
+        break;
+      }
+
+      // Execute branch based on confidence level
+      const level = loopConfidence.level;
+      let branchToExecute: Statement | undefined;
+      
+      if (level === ConfidenceLevel.HIGH && node.branches.high) {
+        branchToExecute = node.branches.high;
+      } else if (level === ConfidenceLevel.MEDIUM && node.branches.medium) {
+        branchToExecute = node.branches.medium;
+      } else if (node.branches.low) {
+        branchToExecute = node.branches.low;
+      }
+
+      if (branchToExecute) {
+        try {
+          result = await this.interpret(branchToExecute);
+        } catch (error) {
+          if (error instanceof LoopControlError) {
+            if (error.type === 'break') {
+              break;
+            } else if (error.type === 'continue') {
+              continue;
+            }
+          } else {
+            throw error;
+          }
+        }
+      }
+    }
 
     return result;
   }

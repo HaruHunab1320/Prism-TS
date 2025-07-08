@@ -40,6 +40,8 @@ import {
   DoWhileLoop,
   BreakStatement,
   ContinueStatement,
+  UncertainForLoop,
+  UncertainWhileLoop,
 } from './ast';
 
 export class ParseError extends Error {
@@ -102,7 +104,16 @@ export class Parser {
       }
       
       if (this.match(TokenType.UNCERTAIN)) {
-        return this.uncertainIfStatement();
+        // Check what follows 'uncertain'
+        if (this.check(TokenType.IF)) {
+          return this.uncertainIfStatement();
+        } else if (this.check(TokenType.FOR)) {
+          return this.uncertainForStatement();
+        } else if (this.check(TokenType.WHILE)) {
+          return this.uncertainWhileStatement();
+        } else {
+          throw new ParseError("Expected 'if', 'for', or 'while' after 'uncertain'", this.peek(), this.sourceCode);
+        }
       }
       
       if (this.match(TokenType.IF)) {
@@ -516,6 +527,121 @@ export class Parser {
   
   private continueStatement(): Statement {
     return new ContinueStatement();
+  }
+  
+  private uncertainForStatement(): Statement {
+    this.consume(TokenType.FOR, "Expected 'for' after 'uncertain'");
+    
+    // Parse init, condition, update like regular for loop
+    let init: Statement | null = null;
+    let condition: Expression | null = null;
+    let update: Expression | null = null;
+    
+    // Parse init
+    if (!this.check(TokenType.SEMICOLON)) {
+      if (this.check(TokenType.IDENTIFIER) && this.peekNext().type === TokenType.EQUAL) {
+        const identifier = this.advance().value;
+        this.consume(TokenType.EQUAL, "Expected '=' in assignment");
+        const value = this.expression();
+        if (!value) {
+          throw new ParseError("Expected expression after '='", this.previous(), this.sourceCode);
+        }
+        init = new AssignmentStatement(identifier, value);
+      } else {
+        const expr = this.expression();
+        if (expr) {
+          init = new ExpressionStatement(expr);
+        }
+      }
+    }
+    
+    if (!this.match(TokenType.SEMICOLON)) {
+      throw new ParseError("Expected ';' after for loop initializer", this.peek(), this.sourceCode);
+    }
+    
+    // Parse condition
+    if (!this.check(TokenType.SEMICOLON)) {
+      condition = this.expression();
+    }
+    
+    if (!this.match(TokenType.SEMICOLON)) {
+      throw new ParseError("Expected ';' after for loop condition", this.peek(), this.sourceCode);
+    }
+    
+    // Parse update
+    if (!this.check(TokenType.LEFT_BRACE)) {
+      if (this.check(TokenType.IDENTIFIER)) {
+        const checkPoint = this.current;
+        const identifier = this.advance();
+        
+        if (this.match(TokenType.EQUAL)) {
+          const value = this.expression();
+          if (!value) {
+            throw new ParseError("Expected expression after '='", this.previous(), this.sourceCode);
+          }
+          update = new AssignmentExpression(identifier.value, value);
+        } else {
+          this.current = checkPoint;
+          update = this.expression();
+        }
+      } else {
+        update = this.expression();
+      }
+    }
+    
+    // Parse uncertain branches
+    this.consume(TokenType.LEFT_BRACE, "Expected '{' after uncertain for loop header");
+    const branches = this.parseUncertainBranches();
+    this.consume(TokenType.RIGHT_BRACE, "Expected '}' after uncertain for branches");
+    
+    return new UncertainForLoop(init, condition, update, branches);
+  }
+  
+  private uncertainWhileStatement(): Statement {
+    this.consume(TokenType.WHILE, "Expected 'while' after 'uncertain'");
+    
+    // Parse condition - must be a confident expression
+    const condition = this.expression();
+    if (!condition) {
+      throw new ParseError("Expected condition in uncertain while loop", this.peek(), this.sourceCode);
+    }
+    
+    // Parse uncertain branches
+    this.consume(TokenType.LEFT_BRACE, "Expected '{' after uncertain while condition");
+    const branches = this.parseUncertainBranches();
+    this.consume(TokenType.RIGHT_BRACE, "Expected '}' after uncertain while branches");
+    
+    return new UncertainWhileLoop(condition, branches);
+  }
+  
+  private parseUncertainBranches(): UncertainBranches {
+    const branches: UncertainBranches = {
+      high: new BlockStatement([]),
+      low: new BlockStatement([]),
+    };
+    
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      if (this.match(TokenType.HIGH)) {
+        this.consume(TokenType.LEFT_BRACE, "Expected '{' after 'high'");
+        const statements = this.blockContents();
+        branches.high = new BlockStatement(statements);
+        this.consume(TokenType.RIGHT_BRACE, "Expected '}' after high branch");
+      } else if (this.match(TokenType.MEDIUM)) {
+        this.consume(TokenType.LEFT_BRACE, "Expected '{' after 'medium'");
+        const statements = this.blockContents();
+        branches.medium = new BlockStatement(statements);
+        this.consume(TokenType.RIGHT_BRACE, "Expected '}' after medium branch");
+      } else if (this.match(TokenType.LOW)) {
+        this.consume(TokenType.LEFT_BRACE, "Expected '{' after 'low'");
+        const statements = this.blockContents();
+        branches.low = new BlockStatement(statements);
+        this.consume(TokenType.RIGHT_BRACE, "Expected '}' after low branch");
+      } else {
+        throw new ParseError("Expected 'high', 'medium', or 'low' branch in uncertain loop", this.peek(), this.sourceCode);
+      }
+    }
+    
+    return branches;
   }
 
   private expression(): Expression | null {
