@@ -2,7 +2,7 @@
 
 The official npm package for Prism - the language where AI meets certainty.
 
-**Latest: v1.0.16** - Array methods as properties (.map, .filter, .reduce, .forEach, .push)
+**Latest: v1.0.17** - Complete loop support (for, for-in, while, do-while, break/continue)
 
 ## Installation
 
@@ -115,6 +115,15 @@ console.log(result); // "auto_approve" or "manual_review"
 ```
 
 ## What's New
+
+### v1.0.17 - Complete Loop Support
+- **C-style for loops**: `for i = 0; i < 5; i++` with optional parts
+- **For-in loops**: `for item in array` or `for item, index in array`
+- **While loops**: `while condition { ... }`
+- **Do-while loops**: `do { ... } while condition`
+- **Loop control**: `break` and `continue` statements
+- **Nested loops**: Full support for loops within loops
+- **Confidence preservation**: Loops work seamlessly with confident values
 
 ### v1.0.16 - Array Methods as Properties
 - **Method syntax**: `arr.map(fn)`, `arr.filter(fn)`, `arr.reduce(fn)`, `arr.forEach(fn)`, `arr.push(...items)`

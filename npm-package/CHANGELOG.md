@@ -2,6 +2,79 @@
 
 All notable changes to prism-uncertainty will be documented in this file.
 
+## [1.0.17] - 2025-07-08
+
+### Added
+- **Complete loop support** - Standard JavaScript-style loops with Prism's unique features
+- **C-style for loops** - Traditional loops with init, condition, and update expressions
+  - Optional parts: `for ; i < 10; i++` or `for i = 0; ; i++`
+  - Variables use outer scope (not block-scoped)
+- **For-in loops** - Iterate over array elements with optional index
+  - `for item in array { ... }`
+  - `for item, index in array { ... }`
+  - Creates new scope for loop variables
+- **While loops** - Execute while condition is true
+- **Do-while loops** - Execute at least once, then check condition
+- **Break and continue** - Control flow within loops
+  - Break exits the current loop
+  - Continue skips to next iteration
+- **Nested loops** - Full support for loops within loops
+- **Confidence preservation** - Loops work seamlessly with confident values
+- Comprehensive test suite with 31 loop tests
+
+### Example
+```prism
+// C-style for loop
+sum = 0
+for i = 0; i < 5; i = i + 1 {
+  sum = sum + i
+}
+// sum = 10 (0 + 1 + 2 + 3 + 4)
+
+// For-in loop with array
+arr = ["a", "b", "c"]
+result = ""
+for item, idx in arr {
+  result = result + item + idx
+}
+// result = "a0b1c2"
+
+// While loop
+i = 0
+while i < 3 {
+  i = i + 1
+}
+
+// Do-while - executes at least once
+count = 0
+do {
+  count = count + 1
+} while false
+// count = 1
+
+// Break and continue
+for i = 0; i < 10; i = i + 1 {
+  if (i == 5) break      // Exit loop at 5
+  if (i % 2 == 0) continue  // Skip even numbers
+  // Process odd numbers only
+}
+
+// Works with confident values
+data = [1, 2, 3] ~> 0.8
+sum = 0
+for item in data {
+  sum = sum + item
+}
+// sum gets confidence from operations
+
+// Nested loops
+for i = 0; i < 3; i = i + 1 {
+  for j = 0; j < 2; j = j + 1 {
+    // Inner loop runs 6 times total
+  }
+}
+```
+
 ## [1.0.16] - 2025-07-08
 
 ### Added
