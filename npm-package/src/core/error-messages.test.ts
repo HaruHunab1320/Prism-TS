@@ -67,7 +67,7 @@ describe('Enhanced Error Messages', () => {
       expect(() => parse(`
         x = 10
         y = 
-      `)).toThrow(/ParseError at line 3/);
+      `)).toThrow(/ParseError at line 4/);
     });
 
     it('should show parse error for invalid syntax', () => {

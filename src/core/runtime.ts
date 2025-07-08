@@ -498,6 +498,80 @@ export class Interpreter {
         ? new ConfidenceValue(accumulator, confidence)
         : accumulator;
     }));
+
+    // Built-in max function
+    this.environment.define('max', new FunctionValue('max', async (args) => {
+      if (args.length === 0) {
+        throw new RuntimeError('max() requires at least one argument');
+      }
+
+      let maxVal: Value | null = null;
+      let maxNum: number = -Infinity;
+      let maxConfidence: ConfidenceLib | null = null;
+
+      for (const arg of args) {
+        let value = arg;
+        let confidence: ConfidenceLib | null = null;
+
+        if (arg instanceof ConfidenceValue) {
+          value = arg.value;
+          confidence = arg.confidence;
+        }
+
+        if (!(value instanceof NumberValue)) {
+          throw new RuntimeError(`max() requires numeric arguments, got ${value.type}`);
+        }
+
+        if (value.value > maxNum) {
+          maxNum = value.value;
+          maxVal = value;
+          maxConfidence = confidence;
+        }
+      }
+
+      // Return with confidence if any input had confidence
+      if (maxConfidence && maxVal) {
+        return new ConfidenceValue(maxVal, maxConfidence);
+      }
+      return maxVal!;
+    }));
+
+    // Built-in min function
+    this.environment.define('min', new FunctionValue('min', async (args) => {
+      if (args.length === 0) {
+        throw new RuntimeError('min() requires at least one argument');
+      }
+
+      let minVal: Value | null = null;
+      let minNum: number = Infinity;
+      let minConfidence: ConfidenceLib | null = null;
+
+      for (const arg of args) {
+        let value = arg;
+        let confidence: ConfidenceLib | null = null;
+
+        if (arg instanceof ConfidenceValue) {
+          value = arg.value;
+          confidence = arg.confidence;
+        }
+
+        if (!(value instanceof NumberValue)) {
+          throw new RuntimeError(`min() requires numeric arguments, got ${value.type}`);
+        }
+
+        if (value.value < minNum) {
+          minNum = value.value;
+          minVal = value;
+          minConfidence = confidence;
+        }
+      }
+
+      // Return with confidence if any input had confidence
+      if (minConfidence && minVal) {
+        return new ConfidenceValue(minVal, minConfidence);
+      }
+      return minVal!;
+    }));
   }
 
   registerLLMProvider(name: string, provider: LLMProvider): void {
@@ -1179,12 +1253,22 @@ export class Interpreter {
     const callee = await this.interpret(node.callee);
 
     if (!(callee instanceof FunctionValue)) {
-      throw new RuntimeError(`Cannot call non-function value: ${callee.type}`, node);
+      throw new RuntimeError(`Cannot call non-function value: ${callee.type}`, node, node.location);
     }
 
     const args: Value[] = [];
     for (const arg of node.args) {
-      args.push(await this.interpret(arg));
+      if (arg instanceof SpreadElement) {
+        // Handle spread element
+        const spreadValue = await this.interpret(arg.argument);
+        if (!(spreadValue instanceof ArrayValue)) {
+          throw new RuntimeError(`Cannot spread non-array value: ${spreadValue.type}`, node, node.location);
+        }
+        // Add all elements from the array
+        args.push(...spreadValue.elements);
+      } else {
+        args.push(await this.interpret(arg));
+      }
     }
 
     return await callee.value(args);

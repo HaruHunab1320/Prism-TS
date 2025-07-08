@@ -128,10 +128,17 @@ evens = numbers.filter(x => x % 2 == 0)    // [2, 4]
 sum = numbers.reduce((a, b) => a + b)       // 15
 expanded = numbers.push(6, 7)               // [1, 2, 3, 4, 5, 6, 7]
 
-// Spread operator (v1.0.15)
+// Spread operator & Rest parameters (v1.0.20)
 arr1 = [1, 2, 3]
 arr2 = [4, 5, 6]
 combined = [...arr1, ...arr2]              // [1, 2, 3, 4, 5, 6]
+max_value = max(...combined)                // 6 - spread in function calls
+
+// Rest parameters in lambdas
+sum_all = (...nums) => nums.reduce((a, b) => a + b, 0)
+total = sum_all(1, 2, 3, 4, 5)             // 15
+greet = (greeting, ...names) => greeting + " " + names.join(" and ")
+message = greet("Hello", "Alice", "Bob")    // "Hello Alice and Bob"
 
 defaults = {theme: "dark", lang: "en"}
 userPrefs = {lang: "es", debug: true}

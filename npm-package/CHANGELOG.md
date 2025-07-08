@@ -2,6 +2,38 @@
 
 All notable changes to prism-uncertainty will be documented in this file.
 
+## [1.0.20] - 2025-07-08
+
+### Added
+- **Function argument spread operator** - Expand arrays as individual arguments in function calls
+  - Use `...array` syntax to spread array elements: `max(...[1, 2, 3])`
+  - Combine multiple arrays: `concat(...arr1, ...arr2)`
+  - Mix regular and spread arguments: `fn(a, ...rest, b)`
+- **Rest parameters in function definitions** - Collect variable arguments as an array
+  - Use `...name` in lambda parameters: `(...args) => args.length`
+  - Regular params with rest: `(first, ...rest) => first + rest.join(",")`
+  - Rest parameters preserve confidence values
+  - Works seamlessly with array methods
+- **Array.join() method** - Convert array elements to string
+  - Default separator is comma: `[1, 2, 3].join()` // "1,2,3"
+  - Custom separator: `["a", "b", "c"].join(" ")` // "a b c"
+  - Handles null/undefined as empty strings
+
+### Example
+```prism
+// Spread operator in function calls
+numbers = [1, 2, 3, 4, 5]
+maxValue = max(...numbers)  // 5
+
+// Rest parameters in lambdas
+sum = (...nums) => nums.reduce((a, b) => a + b, 0)
+total = sum(1, 2, 3, 4, 5)  // 15
+
+// Combining features
+greet = (greeting, ...names) => greeting + " " + names.join(" and ")
+message = greet("Hello", "Alice", "Bob")  // "Hello Alice and Bob"
+```
+
 ## [1.0.19] - 2025-07-08
 
 ### Added

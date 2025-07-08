@@ -498,6 +498,80 @@ export class Interpreter {
         ? new ConfidenceValue(accumulator, confidence)
         : accumulator;
     }));
+
+    // Built-in max function
+    this.environment.define('max', new FunctionValue('max', async (args) => {
+      if (args.length === 0) {
+        throw new RuntimeError('max() requires at least one argument');
+      }
+
+      let maxVal: Value | null = null;
+      let maxNum: number = -Infinity;
+      let maxConfidence: ConfidenceLib | null = null;
+
+      for (const arg of args) {
+        let value = arg;
+        let confidence: ConfidenceLib | null = null;
+
+        if (arg instanceof ConfidenceValue) {
+          value = arg.value;
+          confidence = arg.confidence;
+        }
+
+        if (!(value instanceof NumberValue)) {
+          throw new RuntimeError(`max() requires numeric arguments, got ${value.type}`);
+        }
+
+        if (value.value > maxNum) {
+          maxNum = value.value;
+          maxVal = value;
+          maxConfidence = confidence;
+        }
+      }
+
+      // Return with confidence if any input had confidence
+      if (maxConfidence && maxVal) {
+        return new ConfidenceValue(maxVal, maxConfidence);
+      }
+      return maxVal!;
+    }));
+
+    // Built-in min function
+    this.environment.define('min', new FunctionValue('min', async (args) => {
+      if (args.length === 0) {
+        throw new RuntimeError('min() requires at least one argument');
+      }
+
+      let minVal: Value | null = null;
+      let minNum: number = Infinity;
+      let minConfidence: ConfidenceLib | null = null;
+
+      for (const arg of args) {
+        let value = arg;
+        let confidence: ConfidenceLib | null = null;
+
+        if (arg instanceof ConfidenceValue) {
+          value = arg.value;
+          confidence = arg.confidence;
+        }
+
+        if (!(value instanceof NumberValue)) {
+          throw new RuntimeError(`min() requires numeric arguments, got ${value.type}`);
+        }
+
+        if (value.value < minNum) {
+          minNum = value.value;
+          minVal = value;
+          minConfidence = confidence;
+        }
+      }
+
+      // Return with confidence if any input had confidence
+      if (minConfidence && minVal) {
+        return new ConfidenceValue(minVal, minConfidence);
+      }
+      return minVal!;
+    }));
   }
 
   registerLLMProvider(name: string, provider: LLMProvider): void {
@@ -1179,12 +1253,22 @@ export class Interpreter {
     const callee = await this.interpret(node.callee);
 
     if (!(callee instanceof FunctionValue)) {
-      throw new RuntimeError(`Cannot call non-function value: ${callee.type}`, node);
+      throw new RuntimeError(`Cannot call non-function value: ${callee.type}`, node, node.location);
     }
 
     const args: Value[] = [];
     for (const arg of node.args) {
-      args.push(await this.interpret(arg));
+      if (arg instanceof SpreadElement) {
+        // Handle spread element
+        const spreadValue = await this.interpret(arg.argument);
+        if (!(spreadValue instanceof ArrayValue)) {
+          throw new RuntimeError(`Cannot spread non-array value: ${spreadValue.type}`, node, node.location);
+        }
+        // Add all elements from the array
+        args.push(...spreadValue.elements);
+      } else {
+        args.push(await this.interpret(arg));
+      }
     }
 
     return await callee.value(args);
@@ -1376,6 +1460,40 @@ export class Interpreter {
           return new UndefinedValue();
         });
       }
+      
+      if (node.property === 'join') {
+        return new FunctionValue('join', async (args: Value[]) => {
+          if (args.length > 1) {
+            throw new RuntimeError('Array.join() requires 0 or 1 argument');
+          }
+          
+          let separator = ',';
+          if (args.length === 1) {
+            if (!(args[0] instanceof StringValue)) {
+              throw new RuntimeError('Array.join() separator must be a string');
+            }
+            separator = args[0].value;
+          }
+          
+          const strings = object.elements.map(el => {
+            if (el instanceof StringValue) {
+              return el.value;
+            } else if (el instanceof NumberValue) {
+              return el.value.toString();
+            } else if (el instanceof BooleanValue) {
+              return el.value.toString();
+            } else if (el instanceof NullValue) {
+              return '';
+            } else if (el instanceof UndefinedValue) {
+              return '';
+            } else {
+              return el.toString();
+            }
+          });
+          
+          return new StringValue(strings.join(separator));
+        });
+      }
     }
     
     // Handle object property access
@@ -1511,6 +1629,40 @@ export class Interpreter {
             return new UndefinedValue();
           });
         }
+        
+        if (node.property === 'join') {
+          return new FunctionValue('join', async (args: Value[]) => {
+            if (args.length > 1) {
+              throw new RuntimeError('Array.join() requires 0 or 1 argument');
+            }
+            
+            let separator = ',';
+            if (args.length === 1) {
+              if (!(args[0] instanceof StringValue)) {
+                throw new RuntimeError('Array.join() separator must be a string');
+              }
+              separator = args[0].value;
+            }
+            
+            const strings = innerValue.elements.map(el => {
+              if (el instanceof StringValue) {
+                return el.value;
+              } else if (el instanceof NumberValue) {
+                return el.value.toString();
+              } else if (el instanceof BooleanValue) {
+                return el.value.toString();
+              } else if (el instanceof NullValue) {
+                return '';
+              } else if (el instanceof UndefinedValue) {
+                return '';
+              } else {
+                return el.toString();
+              }
+            });
+            
+            return new ConfidenceValue(new StringValue(strings.join(separator)), confidence);
+          });
+        }
       }
       
       if (innerValue instanceof ObjectValue) {
@@ -1617,16 +1769,31 @@ export class Interpreter {
     const closureEnv = this.environment;
     
     const fn = new FunctionValue(`lambda`, async (args: Value[]) => {
-      if (args.length !== node.parameters.length) {
-        throw new RuntimeError(`Lambda expects ${node.parameters.length} arguments, got ${args.length}`);
+      // Handle rest parameters
+      if (node.restParameter) {
+        // With rest parameter, we need at least as many args as regular params
+        if (args.length < node.parameters.length) {
+          throw new RuntimeError(`Lambda expects at least ${node.parameters.length} arguments, got ${args.length}`);
+        }
+      } else {
+        // Without rest parameter, exact match required
+        if (args.length !== node.parameters.length) {
+          throw new RuntimeError(`Lambda expects ${node.parameters.length} arguments, got ${args.length}`);
+        }
       }
       
       // Create new environment for lambda execution
       const lambdaEnv = new Environment(closureEnv);
       
-      // Bind parameters to arguments
+      // Bind regular parameters to arguments
       for (let i = 0; i < node.parameters.length; i++) {
         lambdaEnv.define(node.parameters[i], args[i]);
+      }
+      
+      // Bind rest parameter if present
+      if (node.restParameter) {
+        const restArgs = args.slice(node.parameters.length);
+        lambdaEnv.define(node.restParameter, new ArrayValue(restArgs));
       }
       
       // Execute lambda body in the new environment
@@ -1639,7 +1806,7 @@ export class Interpreter {
       } finally {
         this.environment = previousEnv;
       }
-    }, node.parameters.length);
+    }, node.restParameter ? -1 : node.parameters.length); // -1 indicates variadic
     
     return fn;
   }

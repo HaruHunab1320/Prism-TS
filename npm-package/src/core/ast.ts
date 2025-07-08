@@ -151,12 +151,12 @@ export class CallExpression extends Expression {
   
   constructor(
     public callee: Expression,
-    public args: Expression[]
+    public args: (Expression | SpreadElement)[]
   ) {
     super();
   }
   
-  get arguments(): Expression[] {
+  get arguments(): (Expression | SpreadElement)[] {
     return this.args;
   }
 }
@@ -178,7 +178,8 @@ export class LambdaExpression extends Expression {
   
   constructor(
     public parameters: string[],
-    public body: Expression
+    public body: Expression,
+    public restParameter?: string
   ) {
     super();
   }

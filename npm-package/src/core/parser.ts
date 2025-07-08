@@ -846,12 +846,21 @@ export class Parser {
   }
 
   private finishCall(callee: Expression): Expression {
-    const args: Expression[] = [];
+    const args: (Expression | SpreadElement)[] = [];
     
     if (!this.check(TokenType.RIGHT_PAREN)) {
       do {
-        const arg = this.expression();
-        if (arg) args.push(arg);
+        // Check for spread syntax
+        if (this.match(TokenType.SPREAD)) {
+          const argument = this.expression();
+          if (!argument) {
+            throw new ParseError("Expected expression after '...'", this.previous(), this.sourceCode);
+          }
+          args.push(new SpreadElement(argument));
+        } else {
+          const arg = this.expression();
+          if (arg) args.push(arg);
+        }
       } while (this.match(TokenType.COMMA));
     }
     
@@ -911,6 +920,7 @@ export class Parser {
       
       // Try to parse as lambda parameters
       const params: string[] = [];
+      let restParam: string | undefined = undefined;
       let isLambda = false;
       
       // Empty params () =>
@@ -919,10 +929,24 @@ export class Parser {
         if (this.check(TokenType.ARROW)) {
           isLambda = true;
         }
-      } else if (this.check(TokenType.IDENTIFIER)) {
-        // Single param (x) => or multiple (x, y) =>
+      } else if (this.check(TokenType.IDENTIFIER) || this.check(TokenType.SPREAD)) {
+        // Parse parameters, including potential rest parameter
         do {
-          if (this.match(TokenType.IDENTIFIER)) {
+          if (this.match(TokenType.SPREAD)) {
+            // Rest parameter
+            if (!this.check(TokenType.IDENTIFIER)) {
+              throw new ParseError("Expected parameter name after '...'", this.peek(), this.sourceCode);
+            }
+            restParam = this.advance().value;
+            
+            // Rest parameter must be last
+            if (this.match(TokenType.COMMA)) {
+              throw new ParseError("Rest parameter must be last formal parameter", this.previous(), this.sourceCode);
+            }
+          } else if (this.match(TokenType.IDENTIFIER)) {
+            if (restParam) {
+              throw new ParseError("Rest parameter must be last formal parameter", this.previous(), this.sourceCode);
+            }
             params.push(this.previous().value);
           } else {
             break;
@@ -940,7 +964,7 @@ export class Parser {
         if (!body) {
           throw new ParseError("Expected expression after '=>'", this.previous(), this.sourceCode);
         }
-        return new LambdaExpression(params, body);
+        return new LambdaExpression(params, body, restParam);
       }
       
       // Not a lambda, restore position and parse as grouped expression

@@ -2,7 +2,7 @@
 
 The official npm package for Prism - the language where AI meets certainty.
 
-**Latest: v1.0.19** - JavaScript-style logical operators (|| and &&) with type coercion and enhanced error messages
+**Latest: v1.0.20** - Function argument spread (...args) and rest parameters in lambdas
 
 ## Installation
 

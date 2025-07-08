@@ -26,10 +26,11 @@ These features were previously planned and are now implemented:
 
 ### 4. Spread Operator (`...`)
 **Status:** COMPLETED ✅  
-**Implemented:** v1.0.10
+**Implemented:** v1.0.10 (arrays/objects), v1.0.20 (functions)
 - Array spread: `[...arr1, ...arr2]`
 - Object spread: `{...base, z: 3}`
-- Note: Function argument spread not yet implemented
+- Function argument spread: `max(...numbers)`
+- Rest parameters: `(...args) => args.length`
 
 ### 5. Compound Assignment Operators
 **Status:** COMPLETED ✅  
@@ -73,41 +74,23 @@ These features were previously planned and are now implemented:
 - Confidence-based branching (high/medium/low)
 - Thresholds: HIGH >= 0.7, MEDIUM >= 0.5, LOW < 0.5
 
+### 11. Type Coercion for || and && Operators
+**Status:** COMPLETED ✅  
+**Implemented:** v1.0.19
+- JavaScript-style logical operators
+- `||` returns first truthy value or last value
+- `&&` returns first falsy value or last value
+- Short-circuit evaluation
+
+### 12. Better Error Messages
+**Status:** COMPLETED ✅  
+**Implemented:** v1.0.19
+- Runtime errors now show line and column numbers
+
 ## Critical Missing Features
-
-### 1. Type Coercion for || Operator
-**Priority:** HIGH  
-**Complexity:** Medium  
-**Status:** Not implemented
-
-```prism
-// Common JS pattern that currently fails:
-name = userInput || "default"  // Error: || requires boolean operands
-
-// Current workarounds:
-name = userInput ? userInput : "default"
-name = userInput ?? "default"  // only for null/undefined
-```
-
-**Benefits:**
-- Matches JavaScript behavior
-- Eliminates common errors
-- More intuitive for developers
-
-### 2. Better Error Messages
-**Priority:** HIGH  
-**Complexity:** Low  
-**Status:** Partially implemented
-
-```prism
-// Current: "Cannot apply + to string and number"
-// Better:  "Error on line 5: Cannot apply + to string 'hello' and number 42"
-```
-
-**Improvements needed:**
-- Include line numbers in runtime errors
-- Show actual values that caused errors
-- Include variable names when available
+- Format: `Error at line X, column Y: message`
+- AST nodes carry optional location information
+- Future improvement: Show actual variable values in error messages
 
 ## High Priority Features
 
@@ -250,15 +233,12 @@ query = sql`
 
 ## Implementation Priority Summary
 
-### Immediate (Critical Blockers):
-1. **Type Coercion for ||** - Common pattern support
-2. **Better Error Messages** - Developer experience
+### Immediate (Next to Implement):
+1. **Pipeline Operator** - Functional programming style for chaining operations
 
 ### Near Term (High Value):
-4. **Function Argument Spread** - Complete spread implementation
-5. **Pipeline Operator** - Functional programming
-6. **Destructuring** - Modern syntax
-7. **Type Checking** - Runtime safety
+2. **Destructuring** - Modern syntax
+3. **Type Checking** - Runtime safety
 
 ### Long Term (Nice to Have):
 8. Pattern Matching

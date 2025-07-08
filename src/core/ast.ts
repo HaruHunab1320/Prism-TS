@@ -151,12 +151,12 @@ export class CallExpression extends Expression {
   
   constructor(
     public callee: Expression,
-    public args: Expression[]
+    public args: (Expression | SpreadElement)[]
   ) {
     super();
   }
   
-  get arguments(): Expression[] {
+  get arguments(): (Expression | SpreadElement)[] {
     return this.args;
   }
 }

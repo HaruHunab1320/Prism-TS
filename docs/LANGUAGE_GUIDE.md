@@ -120,6 +120,39 @@ clean_data = data.filter(x => x != null)  // [1, 3, 5]
 safe_doubles = data.map(x => x != null ? x * 2 : 0)  // [2, 0, 6, 0, 10]
 ```
 
+### Spread Operator and Rest Parameters
+
+```prism
+// Spread operator in function calls - expand arrays as arguments
+numbers = [1, 2, 3, 4, 5]
+max_value = max(...numbers)  // 5
+
+// Combining multiple arrays as arguments
+arr1 = [10, 20]
+arr2 = [30, 40]
+result = max(...arr1, ...arr2, 50)  // 50
+
+// Rest parameters in function definitions - collect arguments as array
+sum = (...nums) => nums.reduce((a, b) => a + b, 0)
+total = sum(1, 2, 3, 4, 5)  // 15
+
+// Regular parameters with rest
+greet = (greeting, ...names) => greeting + " " + names.join(" and ")
+message = greet("Hello", "Alice", "Bob", "Charlie")  // "Hello Alice and Bob and Charlie"
+
+// Rest parameters work with confidence values
+average = (...values) => values.reduce((a, b) => a + b, 0) / values.length
+confident_avg = average(10 ~> 0.9, 20 ~> 0.8, 30 ~> 0.7)  // preserves confidence
+
+// Spread with array methods
+process = (...items) => items.map(x => x * 2)
+doubled = process(1, 2, 3)  // [2, 4, 6]
+
+// Spread works with any array-like value
+filtered = [1, 2, 3, 4, 5].filter(x => x > 2)  // [3, 4, 5]
+max_filtered = max(...filtered)  // 5
+```
+
 ### Comments
 
 ```prism

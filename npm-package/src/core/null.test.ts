@@ -164,8 +164,7 @@ describe('Null Support', () => {
       const ast = parser.parse();
       const result = await runtime.execute(ast);
       
-      expect(result).toBeInstanceOf(BooleanValue);
-      expect((result as BooleanValue).value).toBe(false);
+      expect(result).toBeInstanceOf(NullValue);
     });
   });
 

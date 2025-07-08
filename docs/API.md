@@ -308,6 +308,21 @@ getRandom = () => Math.random()
 // Using lambdas
 result = square(5)  // 25
 sum = add(3, 7)     // 10
+
+// Rest parameters - collect arguments as array
+sumAll = (...nums) => nums.reduce((a, b) => a + b, 0)
+total = sumAll(1, 2, 3, 4, 5)  // 15
+
+// Regular and rest parameters
+greet = (greeting, ...names) => greeting + " " + names.join(" and ")
+message = greet("Hello", "Alice", "Bob")  // "Hello Alice and Bob"
+
+// Spread operator in function calls
+numbers = [1, 2, 3, 4, 5]
+maxValue = max(...numbers)  // 5
+
+// Combining spread and regular arguments
+result = sumAll(1, ...[2, 3, 4], 5)  // 15
 ```
 
 ### Array Methods
@@ -635,9 +650,10 @@ class LexError extends Error {
 #### LambdaExpression
 ```typescript
 class LambdaExpression extends Expression {
-  constructor(parameters: string[], body: Expression)
+  constructor(parameters: string[], body: Expression, restParameter?: string)
   parameters: string[]
   body: Expression
+  restParameter?: string
 }
 ```
 

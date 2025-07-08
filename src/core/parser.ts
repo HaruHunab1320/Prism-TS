@@ -846,12 +846,21 @@ export class Parser {
   }
 
   private finishCall(callee: Expression): Expression {
-    const args: Expression[] = [];
+    const args: (Expression | SpreadElement)[] = [];
     
     if (!this.check(TokenType.RIGHT_PAREN)) {
       do {
-        const arg = this.expression();
-        if (arg) args.push(arg);
+        // Check for spread syntax
+        if (this.match(TokenType.SPREAD)) {
+          const argument = this.expression();
+          if (!argument) {
+            throw new ParseError("Expected expression after '...'", this.previous(), this.sourceCode);
+          }
+          args.push(new SpreadElement(argument));
+        } else {
+          const arg = this.expression();
+          if (arg) args.push(arg);
+        }
       } while (this.match(TokenType.COMMA));
     }
     

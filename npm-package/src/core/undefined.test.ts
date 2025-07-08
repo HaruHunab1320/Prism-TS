@@ -152,8 +152,8 @@ describe('Undefined Support', () => {
         result
       `;
       const result = await execute(code);
-      // In our language, || returns boolean, not the value
-      expect((result as BooleanValue).value).toBe(true);
+      // JavaScript-style || returns the first truthy value or last value
+      expect((result as NumberValue).value).toBe(42);
     });
   });
 
