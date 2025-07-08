@@ -83,8 +83,8 @@ decision = best_model ~@> "auto_approve" ~?? "manual_review"
 
 ## ✨ Key Features
 
-### 🎯 18 Uncertainty-Aware Operators
-From confidence assignment (`~>`) to parallel ensemble (`~||>`), Prism has an operator for every uncertainty pattern.
+### 🎯 22 Uncertainty-Aware Operators & Constructs
+From confidence assignment (`~>`) to parallel ensemble (`~||>`), plus uncertainty-aware control flow (`uncertain if/for/while`), Prism has a construct for every uncertainty pattern.
 
 ### 🧠 Native LLM Integration
 ```prism
