@@ -2,7 +2,7 @@
 
 The official npm package for Prism - the language where AI meets certainty.
 
-**Latest: v1.0.18** - Uncertainty-aware loops (uncertain for/while with confidence-based branching)
+**Latest: v1.0.19** - JavaScript-style logical operators (|| and &&) with type coercion and enhanced error messages
 
 ## Installation
 
@@ -72,7 +72,7 @@ Convenience function for one-off execution.
 
 ## Features
 
-- 🎯 18 uncertainty-aware operators
+- 🎯 22 uncertainty-aware operators and constructs
 - 🧠 Native LLM integration
 - 🌊 Uncertainty-aware control flow
 - 🔗 Automatic confidence propagation
@@ -90,6 +90,10 @@ Convenience function for one-off execution.
 - ⚡ Exponentiation operator (**) for power operations
 - 🔀 Nullish coalescing operator (??) for precise null/undefined handling
 - ... Spread operator for arrays and objects
+- 🔄 Standard loops (for, for-in, while, do-while) with break/continue
+- 🌊 Uncertainty-aware loops (uncertain for/while) with confidence-based branching
+- 🔀 JavaScript-style || and && operators with type coercion
+- 📍 Enhanced error messages with line and column numbers
 
 ## Example: AI Model Ensemble
 
