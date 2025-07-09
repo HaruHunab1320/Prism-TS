@@ -94,6 +94,9 @@ Convenience function for one-off execution.
 - 🌊 Uncertainty-aware loops (uncertain for/while) with confidence-based branching
 - 🔀 JavaScript-style || and && operators with type coercion
 - 📍 Enhanced error messages with line and column numbers
+- ➡️ Pipeline operators (|> and ~|>) for functional composition
+- 🎯 Placeholder syntax (_) for pipeline expressions
+- 🚦 Confidence threshold gates (~?>) for quality control
 
 ## Example: AI Model Ensemble
 
@@ -119,6 +122,15 @@ console.log(result); // "auto_approve" or "manual_review"
 ```
 
 ## What's New
+
+### v1.0.21 - Pipeline Operators & Threshold Gates
+- **Pipeline operator |>**: Chain operations left-to-right with `_` placeholder
+- **Confidence pipeline ~|>**: Preserve confidence through transformations
+- **Threshold gate ~?>**: Conditional pipeline continuation based on confidence
+- **Clean syntax**: `nums |> filter(_, x => x > 2) |> map(_, x => x * 2)`
+- **Quality gates**: `data ~?> 0.8 ~|> process(_)` - only process if confident
+- **Default fallbacks**: `result ~?> [0.9, "low_confidence"]` - fallback values
+- **Parse-time optimization**: Placeholders replaced during parsing for performance
 
 ### v1.0.20 - Spread Operator & Rest Parameters
 - **Function argument spread**: `max(...numbers)` - expand arrays as arguments

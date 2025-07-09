@@ -19,6 +19,7 @@ export type NodeType =
   | 'TernaryExpression'
   | 'LambdaExpression'
   | 'SpreadElement'
+  | 'PlaceholderExpression'
   | 'AssignmentExpression'
   | 'BlockStatement'
   | 'IfStatement'
@@ -119,7 +120,7 @@ export class ConfidenceExpression extends Expression {
   }
 }
 
-export type BinaryOperator = '+' | '-' | '*' | '/' | '%' | '**' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '&&' | '||' | '??' | '~>' | '~~' | '~??' | '~&&' | '~||' | '~||>' | '~@>' | '~+' | '~-' | '~*' | '~/' | '~==' | '~!=' | '~<' | '~>=' | '~<=' | '~.' | '.';
+export type BinaryOperator = '+' | '-' | '*' | '/' | '%' | '**' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '&&' | '||' | '??' | '|>' | '~>' | '~~' | '~??' | '~&&' | '~||' | '~||>' | '~@>' | '~|>' | '~?>' | '~+' | '~-' | '~*' | '~/' | '~==' | '~!=' | '~<' | '~>=' | '~<=' | '~.' | '.';
 
 export class BinaryExpression extends Expression {
   type: NodeType = 'BinaryExpression';
@@ -205,6 +206,14 @@ export class SpreadElement extends Expression {
   type: NodeType = 'SpreadElement';
   
   constructor(public argument: Expression) {
+    super();
+  }
+}
+
+export class PlaceholderExpression extends Expression {
+  type: NodeType = 'PlaceholderExpression';
+  
+  constructor() {
     super();
   }
 }

@@ -144,6 +144,32 @@ defaults = {theme: "dark", lang: "en"}
 userPrefs = {lang: "es", debug: true}
 settings = {...defaults, ...userPrefs}      // {theme: "dark", lang: "es", debug: true}
 
+// Pipeline operators (v1.0.21)
+// Chain operations left-to-right with |>
+result = 5 
+  |> double(_)      // 10
+  |> addOne(_)      // 11
+  |> toString(_)    // "11"
+
+// Confidence pipeline with ~|>
+data = 10 ~> 0.9
+processed = data
+  ~|> transform(_)  // Preserves 90% confidence
+  ~|> validate(_)   // Still 90% confidence
+
+// Confidence threshold gate with ~?>
+analysis = measurement ~> 0.85
+  ~?> 0.9                    // Gate: only continue if >= 90%
+  ~|> advancedAnalysis(_)    // This only runs if confidence is high
+  ~?> [0.95, basicResult]    // Another gate with default fallback
+
+// Array processing pipelines
+nums = [1, 2, 3, 4, 5]
+result = nums
+  |> filter(_, x => x > 2)         // [3, 4, 5]
+  |> map(_, x => x * 2)            // [6, 8, 10]
+  |> reduce(_, (a, b) => a + b, 0) // 24
+
 // Loops (v1.0.17)
 // C-style for loop
 sum = 0
@@ -372,6 +398,8 @@ npm run typecheck
 | `~.` | Confident Property Access | `obj ~. prop` |
 | `~\|\|>` | Parallel Confidence | `a ~\|\|> b ~\|\|> c` |
 | `~@>` | Threshold Gate | `check ~@> action` |
+| `~\|>` | Confidence Pipeline | `data ~\|> process(_)` |
+| `~?>` | Confidence Threshold Gate | `value ~?> 0.8` |
 
 ### Standard Operators
 | Operator | Name | Example |
@@ -380,6 +408,7 @@ npm run typecheck
 | `??` | Nullish Coalescing | `null ?? "default"` |
 | `?.` | Optional Chaining | `obj?.prop?.method` |
 | `...` | Spread Operator | `[...arr1, ...arr2]` |
+| `\|>` | Pipeline | `value \|> process(_)` |
 | `+=` | Addition Assignment | `x += 5` |
 | `-=` | Subtraction Assignment | `x -= 3` |
 | `*=` | Multiplication Assignment | `x *= 2` |

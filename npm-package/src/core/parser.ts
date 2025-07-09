@@ -34,6 +34,7 @@ import {
   UnaryOperator,
   LambdaExpression,
   SpreadElement,
+  PlaceholderExpression,
   ForLoop,
   ForInLoop,
   WhileLoop,
@@ -645,7 +646,46 @@ export class Parser {
   }
 
   private expression(): Expression | null {
-    return this.ternary();
+    return this.pipeline();
+  }
+  
+  private pipeline(): Expression | null {
+    let expr = this.ternary();
+    
+    while (this.match(TokenType.PIPELINE, TokenType.CONFIDENCE_PIPELINE, TokenType.CONFIDENCE_THRESHOLD_GATE)) {
+      const operator = this.previous();
+      
+      if (operator.type === TokenType.CONFIDENCE_THRESHOLD_GATE) {
+        // Handle threshold gate operator ~?>
+        const threshold = this.ternary();
+        if (!threshold) {
+          throw new ParseError("Expected threshold expression after '~?>'", this.previous(), this.sourceCode);
+        }
+        
+        // Create threshold gate expression
+        expr = new BinaryExpression('~?>' as BinaryOperator, expr!, threshold);
+      } else {
+        // Handle regular and confidence pipeline operators
+        const isConfidencePipeline = operator.type === TokenType.CONFIDENCE_PIPELINE;
+        const right = this.ternary();
+        
+        if (!right) {
+          throw new ParseError("Expected expression after pipeline operator", this.previous(), this.sourceCode);
+        }
+        
+        // Replace placeholders in the right expression with the left expression
+        const pipelineExpr = this.replacePlaceholders(right, expr!);
+        
+        // For confidence pipeline, wrap in a binary expression to preserve confidence
+        if (isConfidencePipeline) {
+          expr = new BinaryExpression('~|>' as BinaryOperator, expr!, pipelineExpr);
+        } else {
+          expr = pipelineExpr;
+        }
+      }
+    }
+    
+    return expr;
   }
 
   private ternary(): Expression | null {
@@ -895,6 +935,10 @@ export class Parser {
     
     if (this.match(TokenType.UNDEFINED)) {
       return new UndefinedLiteral();
+    }
+    
+    if (this.match(TokenType.PLACEHOLDER)) {
+      return new PlaceholderExpression();
     }
     
     if (this.match(TokenType.IDENTIFIER)) {
@@ -1217,6 +1261,99 @@ export class Parser {
     parts.push(value.substring(partStart));
     
     return new InterpolatedString(parts, expressions);
+  }
+  
+  private replacePlaceholders(expr: Expression, replacement: Expression): Expression {
+    // Base case: if this is a placeholder, replace it
+    if (expr instanceof PlaceholderExpression) {
+      return replacement;
+    }
+    
+    // Recursive cases: traverse the AST and replace placeholders
+    if (expr instanceof BinaryExpression) {
+      return new BinaryExpression(
+        expr.operator,
+        this.replacePlaceholders(expr.left, replacement),
+        this.replacePlaceholders(expr.right, replacement)
+      );
+    }
+    
+    if (expr instanceof UnaryExpression) {
+      return new UnaryExpression(
+        expr.operator,
+        this.replacePlaceholders(expr.operand, replacement)
+      );
+    }
+    
+    if (expr instanceof CallExpression) {
+      const newArgs = expr.args.map(arg => {
+        if (arg instanceof SpreadElement) {
+          return new SpreadElement(this.replacePlaceholders(arg.argument, replacement));
+        }
+        return this.replacePlaceholders(arg, replacement);
+      });
+      return new CallExpression(
+        this.replacePlaceholders(expr.callee, replacement),
+        newArgs
+      );
+    }
+    
+    if (expr instanceof TernaryExpression) {
+      return new TernaryExpression(
+        this.replacePlaceholders(expr.condition, replacement),
+        this.replacePlaceholders(expr.trueBranch, replacement),
+        this.replacePlaceholders(expr.falseBranch, replacement)
+      );
+    }
+    
+    if (expr instanceof ArrayLiteral) {
+      const newElements = expr.elements.map(el => {
+        if (el instanceof SpreadElement) {
+          return new SpreadElement(this.replacePlaceholders(el.argument, replacement));
+        }
+        return this.replacePlaceholders(el, replacement);
+      });
+      return new ArrayLiteral(newElements);
+    }
+    
+    if (expr instanceof ObjectLiteral) {
+      const newProps = expr.properties.map(prop => ({
+        key: prop.key,
+        value: prop.value instanceof SpreadElement 
+          ? new SpreadElement(this.replacePlaceholders(prop.value.argument, replacement))
+          : this.replacePlaceholders(prop.value, replacement)
+      }));
+      return new ObjectLiteral(newProps);
+    }
+    
+    if (expr instanceof PropertyAccess) {
+      return new PropertyAccess(
+        this.replacePlaceholders(expr.object, replacement),
+        expr.property
+      );
+    }
+    
+    if (expr instanceof IndexAccess) {
+      return new IndexAccess(
+        this.replacePlaceholders(expr.object, replacement),
+        this.replacePlaceholders(expr.index, replacement)
+      );
+    }
+    
+    if (expr instanceof ConfidenceExpression) {
+      return new ConfidenceExpression(
+        this.replacePlaceholders(expr.expression, replacement),
+        this.replacePlaceholders(expr.confidence, replacement)
+      );
+    }
+    
+    if (expr instanceof LambdaExpression) {
+      // Don't replace placeholders in lambda body - they have their own scope
+      return expr;
+    }
+    
+    // For literals and identifiers, return as-is
+    return expr;
   }
 }
 

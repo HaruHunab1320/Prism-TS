@@ -153,6 +153,77 @@ filtered = [1, 2, 3, 4, 5].filter(x => x > 2)  // [3, 4, 5]
 max_filtered = max(...filtered)  // 5
 ```
 
+### Pipeline Operators
+
+```prism
+// Basic pipeline operator |> - functional composition
+result = data
+  |> filter(_, x => x > 0)
+  |> map(_, x => x * 2)
+  |> reduce(_, (a, b) => a + b, 0)
+
+// The _ placeholder represents the piped value
+value = 5
+  |> double(_)      // double(5) = 10
+  |> addOne(_)      // addOne(10) = 11
+  |> toString(_)    // toString(11) = "11"
+
+// Confidence pipeline operator ~|> - preserves confidence
+confident_data = data ~> 0.8
+result = confident_data
+  ~|> process(_)      // Result has 0.8 confidence
+  ~|> validate(_)     // Still 0.8 confidence
+  ~|> finalize(_)     // Maintains confidence throughout
+
+// Modify confidence mid-pipeline
+analysis = raw_data ~> 0.9
+  ~|> clean(_)
+  ~|> validate(_) ~> 0.7    // Update confidence
+  ~|> transform(_)          // Now has 0.7 confidence
+
+// Works with all expressions
+nums = [1, 2, 3, 4, 5]
+sum = nums
+  |> filter(_, x => x % 2 == 0)   // [2, 4]
+  |> map(_, x => x * x)            // [4, 16]
+  |> reduce(_, (a, b) => a + b, 0) // 20
+
+// Multiple placeholders in one call
+result = 10 |> add(_, 5)     // add(10, 5) = 15
+result = 10 |> add(5, _)     // add(5, 10) = 15
+```
+
+#### Confidence Threshold Gate (~?>)
+
+The threshold gate operator provides conditional pipeline continuation based on confidence levels:
+
+```prism
+// Basic threshold gate
+value = prediction ~> 0.75
+result = value ~?> 0.8  // Returns undefined if confidence < 80%
+
+// Threshold with default value
+value = analysis ~> 0.4
+result = value ~?> [0.7, "needs_review"]  // Returns default if below threshold
+
+// Quality gates in AI pipelines
+response = llm("Generate summary") ~> 0.85
+finalResponse = response
+  ~?> [0.9, "Low confidence - please refine request"]
+  
+// Progressive enhancement
+data = measurement ~> 0.95
+analysis = data
+  ~|> basicAnalysis(_)     // Always runs
+  ~?> 0.7                  // Gate: continue if >= 70%
+  ~|> advancedAnalysis(_)  // Only if confident
+  ~?> 0.9                  // Gate: continue if >= 90%
+  ~|> expertAnalysis(_)    // Only if very confident
+
+// Combine with nullish coalescing for fallbacks
+result = (complexCalc() ~?> 0.8) ?? simpleCalc()
+```
+
 ### Comments
 
 ```prism
@@ -752,6 +823,7 @@ Prism operators follow this precedence order (highest to lowest):
 13. **Confidence Chaining**: `~~`
 14. **Ternary**: `? :`
 15. **Confidence Assignment**: `~>`
+16. **Pipeline**: `|>`, `~|>`, `~?>`
 
 ```prism
 // Precedence example

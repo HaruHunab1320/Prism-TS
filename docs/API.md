@@ -356,6 +356,107 @@ filtered = filter(arr, x => x > 3)
 sum = reduce(arr, (a, b) => a + b, 0)
 ```
 
+### Pipeline Operators
+
+#### Basic Pipeline Operator |>
+The pipeline operator allows you to chain operations in a more readable left-to-right manner.
+
+```prism
+// Basic usage with placeholder _
+result = 5 |> double(_)  // equivalent to: double(5)
+
+// Chaining multiple operations
+result = 5 
+  |> double(_)      // 10
+  |> addOne(_)      // 11
+  |> toString(_)    // "11"
+
+// With array methods
+nums = [1, 2, 3, 4, 5]
+result = nums
+  |> filter(_, x => x > 2)         // [3, 4, 5]
+  |> map(_, x => x * 2)            // [6, 8, 10]
+  |> reduce(_, (a, b) => a + b, 0) // 24
+
+// Multiple placeholders in one call
+add = (a, b) => a + b
+result = 10 |> add(_, 5)  // 15
+
+// Nested operations
+result = 5 |> add(double(_), 3)  // double(5) + 3 = 13
+```
+
+#### Confidence Pipeline Operator ~|>
+The confidence pipeline operator preserves confidence values through the pipeline chain.
+
+```prism
+// Preserves confidence through transformations
+confident_value = 5 ~> 0.8
+result = confident_value
+  ~|> double(_)     // 10 with 80% confidence
+  ~|> addOne(_)     // 11 with 80% confidence
+
+// Can override confidence mid-pipeline
+data = 10 ~> 0.9
+result = data
+  ~|> process1(_)
+  ~|> process2(_) ~> 0.7  // Changes confidence to 70%
+
+// Works with confidence-aware operations
+nums = [1 ~> 0.9, 2 ~> 0.8, 3 ~> 0.7]
+filtered = nums ~|> filter(_, x => (<~ x) > 0.75)
+// Result preserves confidence through the operation
+```
+
+#### Placeholder Behavior
+- The `_` placeholder represents the piped value
+- Can only be used within pipeline expressions
+- Multiple placeholders can be used in the same function call
+- Placeholders are replaced at parse time, not runtime
+
+```prism
+// Error: placeholder outside pipeline
+result = _  // Error!
+
+// Valid: placeholder in pipeline
+result = 5 |> process(_)  // OK
+
+// Valid: multiple placeholders
+result = 10 |> between(5, _, 15)  // between(5, 10, 15)
+```
+
+#### Confidence Threshold Gate ~?>
+The threshold gate operator allows conditional pipeline continuation based on confidence levels.
+
+```prism
+// Basic threshold - returns undefined if below threshold
+value = data ~> 0.6
+result = value ~?> 0.8  // Only continues if confidence >= 0.8
+
+// Threshold with default value
+value = data ~> 0.4
+result = value ~?> [0.7, "low_confidence"]  // Returns default if below 0.7
+
+// Chaining with pipelines
+result = aiResponse ~> 0.85
+  ~?> 0.9                     // Quality gate at 90%
+  ~|> enhance(_)              // Only runs if gate passes
+  ~|> format(_)
+
+// Progressive enhancement based on confidence
+analysis = measurement ~> 0.95
+  ~|> basicAnalysis(_)        // Always runs
+  ~?> 0.7                     // Continue if >= 70%
+  ~|> advancedAnalysis(_)     // Enhanced analysis
+  ~?> 0.9                     // Continue if >= 90%
+  ~|> expertAnalysis(_)       // Expert-level analysis
+
+// Adaptive processing
+result = sensorData ~> confidence
+  ~?> [0.8, sensorData]       // Use original if < 80%
+  ~|> complexProcess(_)       // Only for high confidence
+```
+
 ## Runtime API
 
 ### Value Types

@@ -2,6 +2,51 @@
 
 All notable changes to prism-uncertainty will be documented in this file.
 
+## [1.0.21] - 2025-07-09
+
+### Added
+- **Pipeline operators** - Functional composition with confidence preservation
+  - `|>` - Basic pipeline operator for left-to-right function composition
+  - `~|>` - Confidence pipeline operator that preserves uncertainty through transformations
+  - `~?>` - Confidence threshold gate for conditional pipeline continuation
+  - `_` - Placeholder syntax for representing the piped value
+  - Parse-time placeholder replacement for optimal performance
+  - Seamless integration with array methods and lambda expressions
+- **Threshold gates** - Quality control for confidence-based workflows
+  - Basic threshold: `value ~?> 0.8` returns undefined if below threshold
+  - Threshold with default: `value ~?> [0.8, "fallback"]` provides fallback value
+  - Progressive enhancement: Chain multiple gates for graduated processing
+  - Perfect for AI quality gates and adaptive processing
+
+### Example
+```prism
+// Basic pipeline - clean, readable transformations
+result = 5 
+  |> double(_)      // 10
+  |> addOne(_)      // 11
+  |> toString(_)    // "11"
+
+// Confidence pipeline - preserves uncertainty
+data = 10 ~> 0.9
+result = data
+  ~|> process1(_)   // Preserves 90% confidence
+  ~|> process2(_)   // Still 90% confidence
+
+// Array method chaining
+nums = [1, 2, 3, 4, 5]
+result = nums
+  |> filter(_, x => x > 2)         // [3, 4, 5]
+  |> map(_, x => x * 2)            // [6, 8, 10]
+  |> reduce(_, (a, b) => a + b, 0) // 24
+
+// Confidence threshold gates
+aiResponse = llm("Analyze data") ~> 0.85
+finalResult = aiResponse
+  ~?> 0.9                          // Quality gate at 90%
+  ~|> enhance(_)                   // Only runs if confident
+  ~?> [0.95, "needs_review"]      // Another gate with fallback
+```
+
 ## [1.0.19] - 2025-07-08
 
 ### Added

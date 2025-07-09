@@ -634,6 +634,8 @@ export class Interpreter {
         return this.interpretIndexAccess(node as IndexAccess);
       case 'LambdaExpression':
         return this.interpretLambdaExpression(node as LambdaExpression);
+      case 'PlaceholderExpression':
+        throw new RuntimeError('Placeholder (_) can only be used within pipeline expressions', node);
       case 'ConfidenceExpression':
         return this.interpretConfidenceExpression(node as ConfidenceExpression);
       case 'AssignmentStatement':
@@ -939,6 +941,14 @@ export class Interpreter {
       case '~@>':
         // Threshold gate - should not reach here as it's handled with confidence
         throw new RuntimeError('Threshold gate requires confident values', node);
+        
+      case '~|>':
+        // Confidence pipeline - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confidence pipeline requires confident values', node);
+        
+      case '~?>':
+        // Confidence threshold gate - handle non-confident values
+        return this.applyConfidenceThresholdGate(left, right, node);
 
       default:
         throw new RuntimeError(`Unknown binary operator: ${operator}`, node);
@@ -984,6 +994,23 @@ export class Interpreter {
     // Special handling for threshold gate operator (~@>)
     if (operator === '~@>') {
       return this.applyThresholdGate(left, right, node);
+    }
+    
+    // Special handling for confidence pipeline operator (~|>)
+    if (operator === '~|>') {
+      // For confidence pipeline, if right has confidence, use its confidence
+      // Otherwise preserve left's confidence
+      if (right instanceof ConfidenceValue) {
+        return right; // Right value already has confidence
+      }
+      const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
+      return new ConfidenceValue(right, leftConf);
+    }
+    
+    // Special handling for confidence threshold gate operator (~?>)
+    if (operator === '~?>') {
+      // This operator works with both confident and non-confident values
+      return this.applyConfidenceThresholdGate(left, right, node);
     }
 
     // Extract values and confidences
@@ -1215,6 +1242,50 @@ export class Interpreter {
       // If threshold not met, return the left value with reduced confidence
       const reducedConfidence = new ConfidenceLib(leftConf.value * 0.5);
       return new ConfidenceValue(left instanceof ConfidenceValue ? left.value : left, reducedConfidence);
+    }
+  }
+  
+  private applyConfidenceThresholdGate(left: Value, right: Value, node: BinaryExpression): Value {
+    // For confidence threshold gate (~?>), continue the pipeline only if confidence meets threshold
+    // Right operand should be either:
+    // 1. A number (threshold value between 0 and 1)
+    // 2. An array [threshold, defaultValue] for threshold with default
+    
+    const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
+    const leftValue = left instanceof ConfidenceValue ? left.value : left;
+    
+    // Handle threshold specification
+    let threshold: number;
+    let defaultValue: Value | undefined;
+    
+    if (right instanceof ArrayValue && right.value.length === 2) {
+      // Format: ~?> [threshold, default]
+      const thresholdVal = right.value[0];
+      if (!(thresholdVal instanceof NumberValue)) {
+        throw new RuntimeError('Threshold gate array first element must be a number', node);
+      }
+      threshold = thresholdVal.value;
+      defaultValue = right.value[1];
+    } else if (right instanceof NumberValue) {
+      // Format: ~?> threshold
+      threshold = right.value;
+      defaultValue = new UndefinedValue();
+    } else {
+      throw new RuntimeError('Threshold gate expects a number or [threshold, default] array', node);
+    }
+    
+    // Validate threshold is between 0 and 1
+    if (threshold < 0 || threshold > 1) {
+      throw new RuntimeError('Confidence threshold must be between 0 and 1', node);
+    }
+    
+    // Check if confidence meets threshold
+    if (leftConf.value >= threshold) {
+      // Confidence meets threshold, continue with the value
+      return new ConfidenceValue(leftValue, leftConf);
+    } else {
+      // Confidence below threshold, return default value
+      return defaultValue;
     }
   }
 
