@@ -109,49 +109,28 @@ sum = (...nums) => reduce(nums, (a, b) => a + b, 0)
 ```
 
 ### 2. Pipeline Operator (`|>`)
-**Priority:** MEDIUM  
-**Complexity:** Medium  
-**Value:** Functional composition
-
-```prism
-result = data
-  |> filter(_, x => x > 0)
-  |> map(_, x => x * 2)
-  |> reduce(_, (a, b) => a + b, 0)
-```
+**Status:** COMPLETED ✅  
+**Implemented:** v1.0.20
+- Function composition with `|>` operator
+- Placeholder `_` for piped values
+- Works with all functions and methods
 
 ### 3. Destructuring Assignment
-**Priority:** MEDIUM  
-**Complexity:** High  
-**Value:** Clean value extraction
-
-```prism
-// Array destructuring
-[first, second, ...rest] = numbers
-
-// Object destructuring
-{name, age, email = "none"} = user
-
-// In parameters
-process = ({name, age}) => "${name} is ${age}"
-```
+**Status:** COMPLETED ✅  
+**Implemented:** v1.0.21
+- Array destructuring with rest elements
+- Object destructuring with default values
+- Destructuring in function parameters
+- **NEW**: Confidence-based destructuring with thresholds
+  - Global thresholds: `[a, b] ~> 0.8 = array`
+  - Per-element thresholds: `[a ~> 0.9, b ~> 0.5] = array`
 
 ### 4. Type Checking Operators
-**Priority:** MEDIUM  
-**Complexity:** Medium  
-**Value:** Runtime type safety
-
-```prism
-// typeof operator
-if (typeof value == "number") {
-  result = value * 2
-}
-
-// instanceof operator
-if (value instanceof Array) {
-  filtered = filter(value, x => x > 0)
-}
-```
+**Status:** COMPLETED ✅  
+**Implemented:** v1.0.21
+- `typeof` operator returns type as string
+- `instanceof` operator for type checking
+- Works with all Prism types including confidence values
 
 ## Lower Priority Features
 

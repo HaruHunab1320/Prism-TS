@@ -35,7 +35,11 @@ export type NodeType =
   | 'BreakStatement'
   | 'ContinueStatement'
   | 'UncertainForLoop'
-  | 'UncertainWhileLoop';
+  | 'UncertainWhileLoop'
+  | 'ArrayPattern'
+  | 'ObjectPattern'
+  | 'RestElement'
+  | 'DestructuringAssignment';
 
 export abstract class ASTNode {
   abstract type: NodeType;
@@ -120,7 +124,7 @@ export class ConfidenceExpression extends Expression {
   }
 }
 
-export type BinaryOperator = '+' | '-' | '*' | '/' | '%' | '**' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '&&' | '||' | '??' | '|>' | '~>' | '~~' | '~??' | '~&&' | '~||' | '~||>' | '~@>' | '~|>' | '~?>' | '~+' | '~-' | '~*' | '~/' | '~==' | '~!=' | '~<' | '~>=' | '~<=' | '~.' | '.';
+export type BinaryOperator = '+' | '-' | '*' | '/' | '%' | '**' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '&&' | '||' | '??' | '|>' | '~>' | '~~' | '~??' | '~&&' | '~||' | '~||>' | '~@>' | '~|>' | '~?>' | '~+' | '~-' | '~*' | '~/' | '~==' | '~!=' | '~<' | '~>=' | '~<=' | '~.' | '.' | 'instanceof';
 
 export class BinaryExpression extends Expression {
   type: NodeType = 'BinaryExpression';
@@ -134,7 +138,7 @@ export class BinaryExpression extends Expression {
   }
 }
 
-export type UnaryOperator = '-' | '!' | '~' | '<~';
+export type UnaryOperator = '-' | '!' | '~' | '<~' | 'typeof';
 
 export class UnaryExpression extends Expression {
   type: NodeType = 'UnaryExpression';
@@ -174,13 +178,15 @@ export class TernaryExpression extends Expression {
   }
 }
 
+export type LambdaParameter = string | ArrayPattern | ObjectPattern;
+
 export class LambdaExpression extends Expression {
   type: NodeType = 'LambdaExpression';
   
   constructor(
-    public parameters: string[],
+    public parameters: LambdaParameter[],
     public body: Expression,
-    public restParameter?: string
+    public restParameter?: string | ArrayPattern | ObjectPattern
   ) {
     super();
   }
@@ -189,7 +195,7 @@ export class LambdaExpression extends Expression {
 export class ArrayLiteral extends Expression {
   type: NodeType = 'ArrayLiteral';
   
-  constructor(public elements: (Expression | SpreadElement)[]) {
+  constructor(public elements: (Expression | SpreadElement | null)[]) {
     super();
   }
 }
@@ -440,6 +446,56 @@ export class Program extends ASTNode {
   type: NodeType = 'Program';
   
   constructor(public statements: Statement[]) {
+    super();
+  }
+}
+
+// Pattern nodes for destructuring
+export class ArrayPattern extends Expression {
+  type: NodeType = 'ArrayPattern';
+  
+  constructor(
+    public elements: (IdentifierExpression | ArrayPattern | ObjectPattern | RestElement | null)[],
+    public elementThresholds?: (Expression | null)[]  // Per-element thresholds (Option 3)
+  ) {
+    super();
+  }
+}
+
+export class ObjectPattern extends Expression {
+  type: NodeType = 'ObjectPattern';
+  
+  constructor(
+    public properties: Array<{
+      key: string;
+      value: IdentifierExpression | ArrayPattern | ObjectPattern;
+      defaultValue?: Expression;
+      confidenceThreshold?: Expression;  // Per-property threshold (Option 3)
+    }>,
+    public rest?: RestElement
+  ) {
+    super();
+  }
+}
+
+export class RestElement extends Expression {
+  type: NodeType = 'RestElement';
+  
+  constructor(
+    public argument: IdentifierExpression
+  ) {
+    super();
+  }
+}
+
+export class DestructuringAssignment extends Statement {
+  type: NodeType = 'DestructuringAssignment';
+  
+  constructor(
+    public pattern: ArrayPattern | ObjectPattern,
+    public value: Expression,
+    public confidenceThreshold?: Expression  // For global threshold (Option 1)
+  ) {
     super();
   }
 }

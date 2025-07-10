@@ -32,6 +32,8 @@ export enum TokenType {
   DO = 'DO',
   BREAK = 'BREAK',
   CONTINUE = 'CONTINUE',
+  TYPEOF = 'TYPEOF',
+  INSTANCEOF = 'INSTANCEOF',
 
   // Operators
   PLUS = 'PLUS',
@@ -135,6 +137,8 @@ const keywords: { [key: string]: TokenType } = {
   'do': TokenType.DO,
   'break': TokenType.BREAK,
   'continue': TokenType.CONTINUE,
+  'typeof': TokenType.TYPEOF,
+  'instanceof': TokenType.INSTANCEOF,
 };
 
 export class Tokenizer {

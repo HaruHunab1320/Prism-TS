@@ -38,6 +38,10 @@ import {
   ContinueStatement as _ContinueStatement,
   UncertainForLoop,
   UncertainWhileLoop,
+  ArrayPattern,
+  ObjectPattern,
+  RestElement,
+  DestructuringAssignment,
 } from './ast';
 import { ConfidenceValue as ConfidenceLib, ConfidenceLevel } from '../confidence';
 import { Context, ContextManager } from '../context';
@@ -255,9 +259,10 @@ export class ObjectValue extends Value {
 
   toString(): string {
     const props = Array.from(this.properties.entries())
+      .filter(([_, v]) => !(v instanceof UndefinedValue))
       .map(([k, v]) => `${k}: ${v.toString()}`)
       .join(', ');
-    return `{ ${props} }`;
+    return props.length > 0 ? `{ ${props} }` : '{}';
   }
 }
 
@@ -634,10 +639,14 @@ export class Interpreter {
         return this.interpretIndexAccess(node as IndexAccess);
       case 'LambdaExpression':
         return this.interpretLambdaExpression(node as LambdaExpression);
+      case 'PlaceholderExpression':
+        throw new RuntimeError('Placeholder (_) can only be used within pipeline expressions', node);
       case 'ConfidenceExpression':
         return this.interpretConfidenceExpression(node as ConfidenceExpression);
       case 'AssignmentStatement':
         return this.interpretAssignmentStatement(node as AssignmentStatement);
+      case 'DestructuringAssignment':
+        return this.interpretDestructuringAssignment(node as DestructuringAssignment);
       case 'AssignmentExpression':
         return this.interpretAssignmentExpression(node as AssignmentExpression);
       case 'IfStatement':
@@ -787,8 +796,8 @@ export class Interpreter {
       throw new RuntimeError(`Invalid right operand for operator ${operator}`, node);
     }
 
-    // Handle confidence propagation
-    if (left instanceof ConfidenceValue || right instanceof ConfidenceValue) {
+    // Handle confidence propagation (except for instanceof which doesn't propagate confidence)
+    if ((left instanceof ConfidenceValue || right instanceof ConfidenceValue) && operator !== 'instanceof') {
       return this.applyBinaryOperatorWithConfidence(operator, left, right as Value, node);
     }
 
@@ -939,6 +948,51 @@ export class Interpreter {
       case '~@>':
         // Threshold gate - should not reach here as it's handled with confidence
         throw new RuntimeError('Threshold gate requires confident values', node);
+        
+      case '~|>':
+        // Confidence pipeline - should not reach here as it's handled with confidence
+        throw new RuntimeError('Confidence pipeline requires confident values', node);
+        
+      case '~?>':
+        // Confidence threshold gate - handle non-confident values
+        return this.applyConfidenceThresholdGate(left, right, node);
+
+      case 'instanceof':
+        // Check if left is an instance of the constructor/type specified by right
+        // For now, we'll check against built-in types
+        if (right instanceof StringValue) {
+          const typeName = right.value.toLowerCase();
+          
+          // Handle confidence values by checking the wrapped value
+          const valueToCheck = left instanceof ConfidenceValue ? left.value : left;
+          
+          switch (typeName) {
+            case 'number':
+              return new BooleanValue(valueToCheck instanceof NumberValue);
+            case 'string':
+              return new BooleanValue(valueToCheck instanceof StringValue);
+            case 'boolean':
+              return new BooleanValue(valueToCheck instanceof BooleanValue);
+            case 'array':
+              return new BooleanValue(valueToCheck instanceof ArrayValue);
+            case 'object':
+              return new BooleanValue(valueToCheck instanceof ObjectValue);
+            case 'function':
+              return new BooleanValue(valueToCheck instanceof FunctionValue);
+            case 'null':
+              return new BooleanValue(valueToCheck instanceof NullValue);
+            case 'undefined':
+              return new BooleanValue(valueToCheck instanceof UndefinedValue);
+            default:
+              throw new RuntimeError(`Unknown type name: ${typeName}`, node);
+          }
+        } else if (right instanceof FunctionValue) {
+          // For constructor functions, we would need to track prototype chain
+          // For now, we'll just support built-in types
+          throw new RuntimeError('instanceof with constructor functions not yet supported', node);
+        } else {
+          throw new RuntimeError('Right-hand side of instanceof must be a type name or constructor', node);
+        }
 
       default:
         throw new RuntimeError(`Unknown binary operator: ${operator}`, node);
@@ -984,6 +1038,23 @@ export class Interpreter {
     // Special handling for threshold gate operator (~@>)
     if (operator === '~@>') {
       return this.applyThresholdGate(left, right, node);
+    }
+    
+    // Special handling for confidence pipeline operator (~|>)
+    if (operator === '~|>') {
+      // For confidence pipeline, if right has confidence, use its confidence
+      // Otherwise preserve left's confidence
+      if (right instanceof ConfidenceValue) {
+        return right; // Right value already has confidence
+      }
+      const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
+      return new ConfidenceValue(right, leftConf);
+    }
+    
+    // Special handling for confidence threshold gate operator (~?>)
+    if (operator === '~?>') {
+      // This operator works with both confident and non-confident values
+      return this.applyConfidenceThresholdGate(left, right, node);
     }
 
     // Extract values and confidences
@@ -1217,6 +1288,50 @@ export class Interpreter {
       return new ConfidenceValue(left instanceof ConfidenceValue ? left.value : left, reducedConfidence);
     }
   }
+  
+  private applyConfidenceThresholdGate(left: Value, right: Value, node: BinaryExpression): Value {
+    // For confidence threshold gate (~?>), continue the pipeline only if confidence meets threshold
+    // Right operand should be either:
+    // 1. A number (threshold value between 0 and 1)
+    // 2. An array [threshold, defaultValue] for threshold with default
+    
+    const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
+    const leftValue = left instanceof ConfidenceValue ? left.value : left;
+    
+    // Handle threshold specification
+    let threshold: number;
+    let defaultValue: Value | undefined;
+    
+    if (right instanceof ArrayValue && right.value.length === 2) {
+      // Format: ~?> [threshold, default]
+      const thresholdVal = right.value[0];
+      if (!(thresholdVal instanceof NumberValue)) {
+        throw new RuntimeError('Threshold gate array first element must be a number', node);
+      }
+      threshold = thresholdVal.value;
+      defaultValue = right.value[1];
+    } else if (right instanceof NumberValue) {
+      // Format: ~?> threshold
+      threshold = right.value;
+      defaultValue = new UndefinedValue();
+    } else {
+      throw new RuntimeError('Threshold gate expects a number or [threshold, default] array', node);
+    }
+    
+    // Validate threshold is between 0 and 1
+    if (threshold < 0 || threshold > 1) {
+      throw new RuntimeError('Confidence threshold must be between 0 and 1', node);
+    }
+    
+    // Check if confidence meets threshold
+    if (leftConf.value >= threshold) {
+      // Confidence meets threshold, continue with the value
+      return new ConfidenceValue(leftValue, leftConf);
+    } else {
+      // Confidence below threshold, return default value
+      return defaultValue;
+    }
+  }
 
   private async interpretUnaryExpression(node: UnaryExpression): Promise<Value> {
     const operand = await this.interpret(node.operand);
@@ -1243,6 +1358,39 @@ export class Interpreter {
         }
         // For non-confident values, return default confidence (1.0)
         return new NumberValue(1.0);
+
+      case 'typeof':
+        // Return the type of the operand as a string
+        if (operand instanceof NumberValue) {
+          return new StringValue('number');
+        } else if (operand instanceof StringValue) {
+          return new StringValue('string');
+        } else if (operand instanceof BooleanValue) {
+          return new StringValue('boolean');
+        } else if (operand instanceof FunctionValue) {
+          return new StringValue('function');
+        } else if (operand instanceof ArrayValue) {
+          return new StringValue('array');
+        } else if (operand instanceof ObjectValue) {
+          return new StringValue('object');
+        } else if (operand instanceof NullValue) {
+          return new StringValue('null');
+        } else if (operand instanceof UndefinedValue) {
+          return new StringValue('undefined');
+        } else if (operand instanceof ConfidenceValue) {
+          // For confidence values, return the type of the wrapped value
+          const inner = operand.value;
+          if (inner instanceof NumberValue) return new StringValue('number');
+          if (inner instanceof StringValue) return new StringValue('string');
+          if (inner instanceof BooleanValue) return new StringValue('boolean');
+          if (inner instanceof FunctionValue) return new StringValue('function');
+          if (inner instanceof ArrayValue) return new StringValue('array');
+          if (inner instanceof ObjectValue) return new StringValue('object');
+          if (inner instanceof NullValue) return new StringValue('null');
+          if (inner instanceof UndefinedValue) return new StringValue('undefined');
+          return new StringValue('unknown');
+        }
+        return new StringValue('unknown');
 
       default:
         throw new RuntimeError(`Unknown unary operator: ${node.operator}`, node);
@@ -1288,7 +1436,10 @@ export class Interpreter {
   private async interpretArrayLiteral(node: ArrayLiteral): Promise<Value> {
     const elements: Value[] = [];
     for (const elem of node.elements) {
-      if (elem instanceof SpreadElement) {
+      if (elem === null) {
+        // Hole in array - this is handled during destructuring
+        elements.push(new UndefinedValue());
+      } else if (elem instanceof SpreadElement) {
         // Handle spread element
         let spreadValue = await this.interpret(elem.argument);
         
@@ -1460,6 +1611,40 @@ export class Interpreter {
           return new UndefinedValue();
         });
       }
+      
+      if (node.property === 'join') {
+        return new FunctionValue('join', async (args: Value[]) => {
+          if (args.length > 1) {
+            throw new RuntimeError('Array.join() requires 0 or 1 argument');
+          }
+          
+          let separator = ',';
+          if (args.length === 1) {
+            if (!(args[0] instanceof StringValue)) {
+              throw new RuntimeError('Array.join() separator must be a string');
+            }
+            separator = args[0].value;
+          }
+          
+          const strings = object.elements.map(el => {
+            if (el instanceof StringValue) {
+              return el.value;
+            } else if (el instanceof NumberValue) {
+              return el.value.toString();
+            } else if (el instanceof BooleanValue) {
+              return el.value.toString();
+            } else if (el instanceof NullValue) {
+              return '';
+            } else if (el instanceof UndefinedValue) {
+              return '';
+            } else {
+              return el.toString();
+            }
+          });
+          
+          return new StringValue(strings.join(separator));
+        });
+      }
     }
     
     // Handle object property access
@@ -1595,6 +1780,40 @@ export class Interpreter {
             return new UndefinedValue();
           });
         }
+        
+        if (node.property === 'join') {
+          return new FunctionValue('join', async (args: Value[]) => {
+            if (args.length > 1) {
+              throw new RuntimeError('Array.join() requires 0 or 1 argument');
+            }
+            
+            let separator = ',';
+            if (args.length === 1) {
+              if (!(args[0] instanceof StringValue)) {
+                throw new RuntimeError('Array.join() separator must be a string');
+              }
+              separator = args[0].value;
+            }
+            
+            const strings = innerValue.elements.map(el => {
+              if (el instanceof StringValue) {
+                return el.value;
+              } else if (el instanceof NumberValue) {
+                return el.value.toString();
+              } else if (el instanceof BooleanValue) {
+                return el.value.toString();
+              } else if (el instanceof NullValue) {
+                return '';
+              } else if (el instanceof UndefinedValue) {
+                return '';
+              } else {
+                return el.toString();
+              }
+            });
+            
+            return new ConfidenceValue(new StringValue(strings.join(separator)), confidence);
+          });
+        }
       }
       
       if (innerValue instanceof ObjectValue) {
@@ -1701,16 +1920,66 @@ export class Interpreter {
     const closureEnv = this.environment;
     
     const fn = new FunctionValue(`lambda`, async (args: Value[]) => {
-      if (args.length !== node.parameters.length) {
-        throw new RuntimeError(`Lambda expects ${node.parameters.length} arguments, got ${args.length}`);
+      // Handle rest parameters
+      if (node.restParameter) {
+        // With rest parameter, we need at least as many args as regular params
+        if (args.length < node.parameters.length) {
+          throw new RuntimeError(`Lambda expects at least ${node.parameters.length} arguments, got ${args.length}`);
+        }
+      } else {
+        // Without rest parameter, exact match required
+        if (args.length !== node.parameters.length) {
+          throw new RuntimeError(`Lambda expects ${node.parameters.length} arguments, got ${args.length}`);
+        }
       }
       
       // Create new environment for lambda execution
       const lambdaEnv = new Environment(closureEnv);
       
-      // Bind parameters to arguments
+      // Bind regular parameters to arguments
       for (let i = 0; i < node.parameters.length; i++) {
-        lambdaEnv.define(node.parameters[i], args[i]);
+        const param = node.parameters[i];
+        const arg = args[i];
+        
+        if (typeof param === 'string') {
+          // Simple parameter
+          lambdaEnv.define(param, arg);
+        } else if (param instanceof ArrayPattern || param instanceof ObjectPattern) {
+          // Destructuring parameter - use lambda environment for bindings
+          const previousEnv = this.environment;
+          this.environment = lambdaEnv;
+          try {
+            if (param instanceof ArrayPattern) {
+              await this.destructureArray(param, arg);
+            } else {
+              await this.destructureObject(param, arg);
+            }
+          } finally {
+            this.environment = previousEnv;
+          }
+        }
+      }
+      
+      // Bind rest parameter if present
+      if (node.restParameter) {
+        const restArgs = args.slice(node.parameters.length);
+        if (typeof node.restParameter === 'string') {
+          lambdaEnv.define(node.restParameter, new ArrayValue(restArgs));
+        } else {
+          // Rest parameter with destructuring pattern
+          const previousEnv = this.environment;
+          this.environment = lambdaEnv;
+          try {
+            const restArray = new ArrayValue(restArgs);
+            if (node.restParameter instanceof ArrayPattern) {
+              await this.destructureArray(node.restParameter, restArray);
+            } else if (node.restParameter instanceof ObjectPattern) {
+              await this.destructureObject(node.restParameter, restArray);
+            }
+          } finally {
+            this.environment = previousEnv;
+          }
+        }
       }
       
       // Execute lambda body in the new environment
@@ -1723,7 +1992,7 @@ export class Interpreter {
       } finally {
         this.environment = previousEnv;
       }
-    }, node.parameters.length);
+    }, node.restParameter ? -1 : node.parameters.length); // -1 indicates variadic
     
     return fn;
   }
@@ -1756,6 +2025,207 @@ export class Interpreter {
     const value = await this.interpret(node.value);
     this.environment.set(node.identifier, value);
     return value;
+  }
+  
+  private async interpretDestructuringAssignment(node: DestructuringAssignment): Promise<Value> {
+    const value = await this.interpret(node.value);
+    
+    // Handle global confidence threshold (Option 1)
+    let globalThreshold: number | undefined;
+    if (node.confidenceThreshold) {
+      const thresholdValue = await this.interpret(node.confidenceThreshold);
+      if (!(thresholdValue instanceof NumberValue)) {
+        throw new RuntimeError('Confidence threshold must be a number', node);
+      }
+      globalThreshold = thresholdValue.value;
+    }
+    
+    if (node.pattern instanceof ArrayPattern) {
+      await this.destructureArray(node.pattern, value, globalThreshold);
+    } else if (node.pattern instanceof ObjectPattern) {
+      await this.destructureObject(node.pattern, value, globalThreshold);
+    }
+    
+    return value;
+  }
+  
+  private async destructureArray(pattern: ArrayPattern, value: Value, globalThreshold?: number): Promise<void> {
+    if (!(value instanceof ArrayValue)) {
+      throw new RuntimeError('Cannot destructure non-array value', pattern);
+    }
+    
+    const array = value.value;
+    let restStartIndex = pattern.elements.length;
+    
+    // Find if there's a rest element
+    for (let i = 0; i < pattern.elements.length; i++) {
+      if (pattern.elements[i] instanceof RestElement) {
+        restStartIndex = i;
+        break;
+      }
+    }
+    
+    // Process regular elements
+    for (let i = 0; i < restStartIndex; i++) {
+      const element = pattern.elements[i];
+      const arrayValue = i < array.length ? array[i] : new UndefinedValue();
+      
+      if (element === null) {
+        // Skip hole
+        continue;
+      }
+      
+      // Check confidence threshold
+      let shouldAssign = true;
+      
+      // Option 3: Per-element threshold
+      if (pattern.elementThresholds && pattern.elementThresholds[i]) {
+        const thresholdExpr = pattern.elementThresholds[i]!;
+        const thresholdValue = await this.interpret(thresholdExpr);
+        if (!(thresholdValue instanceof NumberValue)) {
+          throw new RuntimeError('Element confidence threshold must be a number', pattern);
+        }
+        const threshold = thresholdValue.value;
+        shouldAssign = this.meetsConfidenceThreshold(arrayValue, threshold);
+      }
+      // Option 1: Global threshold
+      else if (globalThreshold !== undefined) {
+        shouldAssign = this.meetsConfidenceThreshold(arrayValue, globalThreshold);
+      }
+      
+      if (!shouldAssign) {
+        // Assign undefined if confidence is too low
+        if (element instanceof IdentifierExpression) {
+          this.environment.set(element.name, new UndefinedValue());
+        } else if (element instanceof ArrayPattern) {
+          await this.destructureArray(element, new ArrayValue([]), globalThreshold);
+        } else if (element instanceof ObjectPattern) {
+          await this.destructureObject(element, new ObjectValue(new Map()), globalThreshold);
+        }
+      } else {
+        if (element instanceof IdentifierExpression) {
+          this.environment.set(element.name, arrayValue);
+        } else if (element instanceof ArrayPattern) {
+          await this.destructureArray(element, arrayValue, globalThreshold);
+        } else if (element instanceof ObjectPattern) {
+          await this.destructureObject(element, arrayValue, globalThreshold);
+        }
+      }
+    }
+    
+    // Process rest element if present
+    if (restStartIndex < pattern.elements.length) {
+      const restElement = pattern.elements[restStartIndex] as RestElement;
+      const restArray: Value[] = [];
+      
+      // Filter rest elements by confidence threshold
+      for (let i = restStartIndex; i < array.length; i++) {
+        const val = array[i];
+        if (globalThreshold !== undefined) {
+          if (this.meetsConfidenceThreshold(val, globalThreshold)) {
+            restArray.push(val);
+          }
+        } else {
+          restArray.push(val);
+        }
+      }
+      
+      this.environment.set(restElement.argument.name, new ArrayValue(restArray));
+    }
+  }
+  
+  private meetsConfidenceThreshold(value: Value, threshold: number): boolean {
+    if (value instanceof ConfidenceValue) {
+      return value.confidence.value >= threshold;
+    }
+    // Non-confident values are treated as having confidence 1.0
+    return 1.0 >= threshold;
+  }
+  
+  private async destructureObject(pattern: ObjectPattern, value: Value, globalThreshold?: number): Promise<void> {
+    if (!(value instanceof ObjectValue)) {
+      throw new RuntimeError('Cannot destructure non-object value', pattern);
+    }
+    
+    const obj = value.value;
+    const extractedKeys = new Set<string>();
+    
+    // Process properties
+    for (const prop of pattern.properties) {
+      const objValue = obj.get(prop.key);
+      let assignValue: Value;
+      
+      if (objValue !== undefined) {
+        assignValue = objValue;
+        extractedKeys.add(prop.key);
+      } else if (prop.defaultValue) {
+        assignValue = await this.interpret(prop.defaultValue);
+      } else {
+        assignValue = new UndefinedValue();
+      }
+      
+      // Check confidence threshold
+      let shouldAssign = true;
+      
+      // Option 3: Per-property threshold
+      if (prop.confidenceThreshold) {
+        const thresholdValue = await this.interpret(prop.confidenceThreshold);
+        if (!(thresholdValue instanceof NumberValue)) {
+          throw new RuntimeError('Property confidence threshold must be a number', pattern);
+        }
+        const threshold = thresholdValue.value;
+        shouldAssign = this.meetsConfidenceThreshold(assignValue, threshold);
+      }
+      // Option 1: Global threshold
+      else if (globalThreshold !== undefined) {
+        shouldAssign = this.meetsConfidenceThreshold(assignValue, globalThreshold);
+      }
+      
+      if (!shouldAssign) {
+        // Assign undefined if confidence is too low
+        if (prop.value instanceof IdentifierExpression) {
+          this.environment.set(prop.value.name, new UndefinedValue());
+        } else if (prop.value instanceof ArrayPattern) {
+          await this.destructureArray(prop.value, new ArrayValue([]), globalThreshold);
+        } else if (prop.value instanceof ObjectPattern) {
+          await this.destructureObject(prop.value, new ObjectValue(new Map()), globalThreshold);
+        }
+      } else {
+        if (prop.value instanceof IdentifierExpression) {
+          this.environment.set(prop.value.name, assignValue);
+        } else if (prop.value instanceof ArrayPattern) {
+          // If this property has a confidence threshold, use it as the global threshold for the nested pattern
+          const nestedThreshold = prop.confidenceThreshold ? 
+            (await this.interpret(prop.confidenceThreshold) as NumberValue).value : 
+            globalThreshold;
+          await this.destructureArray(prop.value, assignValue, nestedThreshold);
+        } else if (prop.value instanceof ObjectPattern) {
+          // If this property has a confidence threshold, use it as the global threshold for the nested pattern
+          const nestedThreshold = prop.confidenceThreshold ? 
+            (await this.interpret(prop.confidenceThreshold) as NumberValue).value : 
+            globalThreshold;
+          await this.destructureObject(prop.value, assignValue, nestedThreshold);
+        }
+      }
+    }
+    
+    // Process rest element if present
+    if (pattern.rest) {
+      const restObj = new Map<string, Value>();
+      for (const [key, val] of obj.entries()) {
+        if (!extractedKeys.has(key)) {
+          // Filter by global threshold if specified
+          if (globalThreshold !== undefined) {
+            if (this.meetsConfidenceThreshold(val, globalThreshold)) {
+              restObj.set(key, val);
+            }
+          } else {
+            restObj.set(key, val);
+          }
+        }
+      }
+      this.environment.set(pattern.rest.argument.name, new ObjectValue(restObj));
+    }
   }
 
   private async interpretIfStatement(node: IfStatement): Promise<Value> {

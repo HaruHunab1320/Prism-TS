@@ -32,6 +32,8 @@ export enum TokenType {
   DO = 'DO',
   BREAK = 'BREAK',
   CONTINUE = 'CONTINUE',
+  TYPEOF = 'TYPEOF',
+  INSTANCEOF = 'INSTANCEOF',
 
   // Operators
   PLUS = 'PLUS',
@@ -94,6 +96,10 @@ export enum TokenType {
   // Special
   ARROW = 'ARROW',
   SPREAD = 'SPREAD',
+  PIPELINE = 'PIPELINE',
+  CONFIDENCE_PIPELINE = 'CONFIDENCE_PIPELINE',
+  CONFIDENCE_THRESHOLD_GATE = 'CONFIDENCE_THRESHOLD_GATE',
+  PLACEHOLDER = 'PLACEHOLDER',
   EOF = 'EOF',
 }
 
@@ -131,6 +137,8 @@ const keywords: { [key: string]: TokenType } = {
   'do': TokenType.DO,
   'break': TokenType.BREAK,
   'continue': TokenType.CONTINUE,
+  'typeof': TokenType.TYPEOF,
+  'instanceof': TokenType.INSTANCEOF,
 };
 
 export class Tokenizer {
@@ -290,6 +298,11 @@ export class Tokenizer {
         this.advance(); // consume second ?
         return this.makeToken(TokenType.CONFIDENCE_COALESCE, '~??', startColumn);
       }
+      if (this.peek() === '?' && this.peekNext() === '>') {
+        this.advance(); // consume ?
+        this.advance(); // consume >
+        return this.makeToken(TokenType.CONFIDENCE_THRESHOLD_GATE, '~?>', startColumn);
+      }
       if (this.peek() === '&' && this.peekNext() === '&') {
         this.advance(); // consume first &
         this.advance(); // consume second &
@@ -299,6 +312,11 @@ export class Tokenizer {
         this.advance(); // consume @
         this.advance(); // consume >
         return this.makeToken(TokenType.THRESHOLD_GATE, '~@>', startColumn);
+      }
+      if (this.peek() === '|' && this.peekNext() === '>') {
+        this.advance(); // consume |
+        this.advance(); // consume >
+        return this.makeToken(TokenType.CONFIDENCE_PIPELINE, '~|>', startColumn);
       }
       if (this.peek() === '|' && this.peekNext() === '|' && this.peekThird() === '>') {
         this.advance(); // consume first |
@@ -362,9 +380,15 @@ export class Tokenizer {
       return this.makeToken(TokenType.AND, '&&', startColumn);
     }
 
-    if (char === '|' && this.peek() === '|') {
-      this.advance();
-      return this.makeToken(TokenType.OR, '||', startColumn);
+    if (char === '|') {
+      if (this.peek() === '>') {
+        this.advance(); // consume >
+        return this.makeToken(TokenType.PIPELINE, '|>', startColumn);
+      }
+      if (this.peek() === '|') {
+        this.advance(); // consume second |
+        return this.makeToken(TokenType.OR, '||', startColumn);
+      }
     }
 
     // String literals
@@ -533,6 +557,12 @@ export class Tokenizer {
     }
 
     const value = this.input.substring(start, this.position);
+    
+    // Special case: standalone underscore is a placeholder
+    if (value === '_') {
+      return this.makeToken(TokenType.PLACEHOLDER, value, startColumn);
+    }
+    
     const type = keywords[value] || TokenType.IDENTIFIER;
 
     return this.makeToken(type, value, startColumn);

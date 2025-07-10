@@ -33,6 +33,7 @@ import {
   BinaryOperator,
   UnaryOperator,
   LambdaExpression,
+  LambdaParameter,
   SpreadElement,
   PlaceholderExpression,
   ForLoop,
@@ -43,6 +44,10 @@ import {
   ContinueStatement,
   UncertainForLoop,
   UncertainWhileLoop,
+  ArrayPattern,
+  ObjectPattern,
+  RestElement,
+  DestructuringAssignment,
 } from './ast';
 
 export class ParseError extends Error {
@@ -145,8 +150,85 @@ export class Parser {
         return this.contextStatement();
       }
       
-      if (this.match(TokenType.LEFT_BRACE)) {
-        return this.blockStatement();
+      // Check for potential destructuring patterns
+      if (this.check(TokenType.LEFT_BRACKET)) {
+        // Array destructuring pattern - parse as expression statement
+        return this.expressionStatement();
+      }
+      
+      if (this.check(TokenType.LEFT_BRACE)) {
+        // Look ahead to determine if this is a block or object literal
+        const checkpoint = this.current;
+        this.advance(); // consume {
+        
+        let isObjectOrDestructuring = false;
+        
+        // Check various patterns that indicate object literal or destructuring
+        if (this.check(TokenType.RIGHT_BRACE)) {
+          // Empty object {}
+          isObjectOrDestructuring = true;
+        } else if (this.check(TokenType.SPREAD)) {
+          // Spread in object {...x}
+          isObjectOrDestructuring = true;
+        } else if (this.check(TokenType.IDENTIFIER)) {
+          // Look ahead one more token after identifier
+          this.advance();
+          if (this.check(TokenType.COMMA) || this.check(TokenType.COLON) || 
+              this.check(TokenType.RIGHT_BRACE)) {
+            // Object property syntax
+            isObjectOrDestructuring = true;
+          } else if (this.check(TokenType.CONFIDENCE_ARROW)) {
+            // Confidence arrow after identifier in {} context
+            // This is likely a destructuring pattern
+            isObjectOrDestructuring = true;
+          } else if (this.check(TokenType.EQUAL)) {
+            // Could be destructuring with default value {x = default} or assignment {x = y}
+            // Look further ahead to distinguish
+            const checkPoint2 = this.current;
+            this.advance(); // skip =
+            // Skip the default value expression
+            let depth = 0;
+            while (!this.isAtEnd() && (depth > 0 || (!this.check(TokenType.COMMA) && 
+                   !this.check(TokenType.RIGHT_BRACE)))) {
+              if (this.check(TokenType.LEFT_PAREN) || this.check(TokenType.LEFT_BRACKET) || 
+                  this.check(TokenType.LEFT_BRACE)) {
+                depth++;
+              } else if (this.check(TokenType.RIGHT_PAREN) || this.check(TokenType.RIGHT_BRACKET) || 
+                         this.check(TokenType.RIGHT_BRACE)) {
+                depth--;
+              }
+              this.advance();
+            }
+            // If followed by comma or }, it's likely object destructuring with default
+            if (this.check(TokenType.COMMA) || this.check(TokenType.RIGHT_BRACE)) {
+              // Check if the closing } is followed by =
+              if (this.check(TokenType.RIGHT_BRACE)) {
+                const checkPoint3 = this.current;
+                this.advance(); // skip }
+                if (this.check(TokenType.EQUAL)) {
+                  isObjectOrDestructuring = true;
+                }
+                this.current = checkPoint3;
+              } else {
+                // Has comma, likely part of destructuring pattern
+                isObjectOrDestructuring = true;
+              }
+            }
+            this.current = checkPoint2;
+          }
+        }
+        
+        // Restore position
+        this.current = checkpoint;
+        
+        if (isObjectOrDestructuring) {
+          // Parse as expression statement (which will handle both object literals and destructuring)
+          return this.expressionStatement();
+        } else {
+          // Parse as block statement
+          this.advance(); // consume {
+          return this.blockStatement();
+        }
       }
       
       return this.expressionStatement();
@@ -248,11 +330,26 @@ export class Parser {
     const condition = this.expression();
     this.consume(TokenType.RIGHT_PAREN, "Expected ')' after if condition");
     
-    const thenStatement = this.statement();
-    let elseStatement: Statement | undefined = undefined;
+    // For if statements, always treat { as a block statement
+    let thenStatement: Statement;
+    if (this.check(TokenType.LEFT_BRACE)) {
+      this.advance(); // consume {
+      thenStatement = this.blockStatement();
+    } else {
+      const stmt = this.statement();
+      if (!stmt) throw new ParseError("Expected statement", this.peek(), this.sourceCode);
+      thenStatement = stmt;
+    }
     
+    let elseStatement: Statement | undefined = undefined;
     if (this.match(TokenType.ELSE)) {
-      elseStatement = this.statement() || undefined;
+      // For else, also handle blocks directly
+      if (this.check(TokenType.LEFT_BRACE)) {
+        this.advance(); // consume {
+        elseStatement = this.blockStatement();
+      } else {
+        elseStatement = this.statement() || undefined;
+      }
     }
     
     return new IfStatement(condition!, thenStatement!, elseStatement);
@@ -262,14 +359,29 @@ export class Parser {
     this.consume(TokenType.CONTEXT, "Expected 'context' after 'in'");
     const contextName = this.consume(TokenType.IDENTIFIER, "Expected context name").value;
     
-    const body = this.statement();
+    // For context statements, handle blocks directly
+    let body: Statement;
+    if (this.check(TokenType.LEFT_BRACE)) {
+      this.advance(); // consume {
+      body = this.blockStatement();
+    } else {
+      const stmt = this.statement();
+      if (!stmt) throw new ParseError("Expected statement", this.peek(), this.sourceCode);
+      body = stmt;
+    }
+    
     let shiftTo: string | undefined = undefined;
     
     if (this.match(TokenType.SHIFTING)) {
       this.consume(TokenType.TO, "Expected 'to' after 'shifting'");
       shiftTo = this.consume(TokenType.IDENTIFIER, "Expected context name after 'to'").value;
       // Parse the shifting target block
-      this.statement(); // consume the shifting target block
+      if (this.check(TokenType.LEFT_BRACE)) {
+        this.advance(); // consume {
+        this.blockStatement(); // consume the shifting target block
+      } else {
+        this.statement(); // consume the shifting target statement
+      }
     }
     
     return new ContextStatement(contextName, body!, shiftTo);
@@ -295,6 +407,36 @@ export class Parser {
   }
 
   private expressionStatement(): Statement {
+    // Look for destructuring pattern at the start
+    if (this.check(TokenType.LEFT_BRACKET) || this.check(TokenType.LEFT_BRACE)) {
+      // Use lookahead to check if this is likely a destructuring assignment
+      const isLikelyDestructuring = this.isLikelyDestructuringPattern();
+      // console.log('At start of expressionStatement, token:', this.peek(), 'isLikelyDestructuring:', isLikelyDestructuring);
+      
+      if (isLikelyDestructuring) {
+        const pattern = this.tryParseDestructuringPattern();
+        // console.log('Parsed pattern:', pattern);
+        if (pattern) {
+          // Check for confidence threshold (Option 1: [a, b] ~> 0.8 = array)
+          let confidenceThreshold: Expression | undefined;
+          if (this.match(TokenType.CONFIDENCE_ARROW)) {
+            const threshold = this.expression();
+            if (threshold) {
+              confidenceThreshold = threshold;
+            }
+          }
+          
+          if (this.match(TokenType.EQUAL)) {
+            const value = this.expression();
+            this.match(TokenType.SEMICOLON);
+            return new DestructuringAssignment(pattern, value!, confidenceThreshold);
+          } else {
+            throw new ParseError("Expected '=' after destructuring pattern", this.peek(), this.sourceCode);
+          }
+        }
+      }
+    }
+    
     const expr = this.expression();
     
     // Check if this is an assignment or compound assignment
@@ -798,7 +940,8 @@ export class Parser {
     let expr = this.term();
     
     while (this.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL, 
-                      TokenType.CONFIDENCE_GREATER_EQUAL, TokenType.CONFIDENCE_LESS, TokenType.CONFIDENCE_LESS_EQUAL)) {
+                      TokenType.CONFIDENCE_GREATER_EQUAL, TokenType.CONFIDENCE_LESS, TokenType.CONFIDENCE_LESS_EQUAL,
+                      TokenType.INSTANCEOF)) {
       const operator = this.previous().value as BinaryOperator;
       const right = this.term();
       expr = new BinaryExpression(operator, expr!, right!);
@@ -845,7 +988,7 @@ export class Parser {
   }
 
   private unary(): Expression | null {
-    if (this.match(TokenType.NOT, TokenType.MINUS, TokenType.TILDE, TokenType.CONFIDENCE_EXTRACT)) {
+    if (this.match(TokenType.NOT, TokenType.MINUS, TokenType.TILDE, TokenType.CONFIDENCE_EXTRACT, TokenType.TYPEOF)) {
       const operator = this.previous().value as UnaryOperator;
       const right = this.unary();
       return new UnaryExpression(operator, right!);
@@ -963,8 +1106,8 @@ export class Parser {
       const savedPosition = this.current;
       
       // Try to parse as lambda parameters
-      const params: string[] = [];
-      let restParam: string | undefined = undefined;
+      const params: LambdaParameter[] = [];
+      let restParam: string | ArrayPattern | ObjectPattern | undefined = undefined;
       let isLambda = false;
       
       // Empty params () =>
@@ -973,15 +1116,24 @@ export class Parser {
         if (this.check(TokenType.ARROW)) {
           isLambda = true;
         }
-      } else if (this.check(TokenType.IDENTIFIER) || this.check(TokenType.SPREAD)) {
-        // Parse parameters, including potential rest parameter
+      } else if (this.check(TokenType.IDENTIFIER) || this.check(TokenType.SPREAD) || 
+                 this.check(TokenType.LEFT_BRACKET) || this.check(TokenType.LEFT_BRACE)) {
+        // Parse parameters, including potential rest parameter and destructuring patterns
         do {
           if (this.match(TokenType.SPREAD)) {
             // Rest parameter
-            if (!this.check(TokenType.IDENTIFIER)) {
-              throw new ParseError("Expected parameter name after '...'", this.peek(), this.sourceCode);
+            if (this.check(TokenType.IDENTIFIER)) {
+              restParam = this.advance().value;
+            } else if (this.check(TokenType.LEFT_BRACKET) || this.check(TokenType.LEFT_BRACE)) {
+              // Rest with destructuring pattern
+              const pattern = this.tryParseDestructuringPattern();
+              if (!pattern) {
+                throw new ParseError("Expected parameter pattern after '...'", this.peek(), this.sourceCode);
+              }
+              restParam = pattern;
+            } else {
+              throw new ParseError("Expected parameter name or pattern after '...'", this.peek(), this.sourceCode);
             }
-            restParam = this.advance().value;
             
             // Rest parameter must be last
             if (this.match(TokenType.COMMA)) {
@@ -992,6 +1144,16 @@ export class Parser {
               throw new ParseError("Rest parameter must be last formal parameter", this.previous(), this.sourceCode);
             }
             params.push(this.previous().value);
+          } else if (this.check(TokenType.LEFT_BRACKET) || this.check(TokenType.LEFT_BRACE)) {
+            // Destructuring pattern parameter
+            if (restParam) {
+              throw new ParseError("Rest parameter must be last formal parameter", this.previous(), this.sourceCode);
+            }
+            const pattern = this.tryParseDestructuringPattern();
+            if (!pattern) {
+              break; // Not a valid pattern, stop parsing params
+            }
+            params.push(pattern);
           } else {
             break;
           }
@@ -1037,10 +1199,19 @@ export class Parser {
         // Spread syntax indicates object literal
         isObject = true;
       } else if (this.check(TokenType.IDENTIFIER) || this.check(TokenType.STRING)) {
-        // Save position and check for colon after identifier/string
+        // Save position and check for colon or confidence arrow after identifier/string
         const checkPos = this.current;
         this.advance();
         if (this.check(TokenType.COLON)) {
+          isObject = true;
+        } else if (this.check(TokenType.CONFIDENCE_ARROW)) {
+          // This might be a destructuring pattern with confidence threshold
+          isObject = false;
+        } else if (!this.check(TokenType.COMMA) && !this.check(TokenType.RIGHT_BRACE)) {
+          // If it's not followed by comma or closing brace, it's not a valid object
+          isObject = false;
+        } else {
+          // Shorthand property
           isObject = true;
         }
         this.current = checkPos;
@@ -1059,12 +1230,15 @@ export class Parser {
   }
   
   private arrayLiteral(): ArrayLiteral {
-    const elements: (Expression | SpreadElement)[] = [];
+    const elements: (Expression | SpreadElement | null)[] = [];
     
     if (!this.check(TokenType.RIGHT_BRACKET)) {
       do {
-        // Check for spread syntax
-        if (this.match(TokenType.SPREAD)) {
+        // Check for hole (consecutive comma)
+        if (this.check(TokenType.COMMA) || this.check(TokenType.RIGHT_BRACKET)) {
+          elements.push(null); // Hole in array
+        } else if (this.match(TokenType.SPREAD)) {
+          // Check for spread syntax
           const argument = this.expression();
           if (!argument) {
             throw new ParseError("Expected expression after '...'", this.previous(), this.sourceCode);
@@ -1107,14 +1281,22 @@ export class Parser {
             throw new ParseError("Expected property name", this.peek(), this.sourceCode);
           }
           
-          this.consume(TokenType.COLON, "Expected ':' after property name");
-          
-          const value = this.expression();
-          if (!value) {
-            throw new ParseError("Expected expression after ':'", this.previous(), this.sourceCode);
+          // Check for equals sign (indicates destructuring pattern with default, not object literal)
+          if (this.check(TokenType.EQUAL)) {
+            throw new ParseError("Unexpected '=' in object literal. Did you mean to use destructuring assignment?", this.peek(), this.sourceCode);
           }
           
-          properties.push({ key, value });
+          // Check for shorthand syntax or full syntax
+          if (this.match(TokenType.COLON)) {
+            const value = this.expression();
+            if (!value) {
+              throw new ParseError("Expected expression after ':'", this.previous(), this.sourceCode);
+            }
+            properties.push({ key, value });
+          } else {
+            // Shorthand: {name} is equivalent to {name: name}
+            properties.push({ key, value: new IdentifierExpression(key) });
+          }
         }
       } while (this.match(TokenType.COMMA));
     }
@@ -1308,6 +1490,9 @@ export class Parser {
     
     if (expr instanceof ArrayLiteral) {
       const newElements = expr.elements.map(el => {
+        if (el === null) {
+          return null;
+        }
         if (el instanceof SpreadElement) {
           return new SpreadElement(this.replacePlaceholders(el.argument, replacement));
         }
@@ -1354,6 +1539,395 @@ export class Parser {
     
     // For literals and identifiers, return as-is
     return expr;
+  }
+  
+  private parsePattern(): ArrayPattern | ObjectPattern | null {
+    if (this.check(TokenType.LEFT_BRACKET)) {
+      return this.parseArrayPattern();
+    } else if (this.check(TokenType.LEFT_BRACE)) {
+      return this.parseObjectPattern();
+    }
+    return null;
+  }
+  
+  private tryParseDestructuringPattern(): ArrayPattern | ObjectPattern | null {
+    // This is similar to parsePattern but used specifically for destructuring
+    // It's more lenient about what can appear in patterns
+    const checkpoint = this.current;
+    
+    try {
+      if (this.check(TokenType.LEFT_BRACKET)) {
+        return this.parseDestructuringArrayPattern();
+      } else if (this.check(TokenType.LEFT_BRACE)) {
+        return this.parseDestructuringObjectPattern();
+      }
+    } catch (e) {
+      // If parsing fails, restore position and return null
+      this.current = checkpoint;
+      return null;
+    }
+    
+    return null;
+  }
+  
+  private isLikelyDestructuringPattern(): boolean {
+    // Use lookahead to determine if this looks like a destructuring pattern
+    const savedCurrent = this.current;
+    
+    try {
+      if (this.check(TokenType.LEFT_BRACKET)) {
+        // Skip array pattern
+        this.advance(); // [
+        let depth = 1;
+        while (depth > 0 && !this.isAtEnd()) {
+          if (this.check(TokenType.LEFT_BRACKET)) depth++;
+          else if (this.check(TokenType.RIGHT_BRACKET)) depth--;
+          this.advance();
+        }
+      } else if (this.check(TokenType.LEFT_BRACE)) {
+        // Skip object pattern
+        this.advance(); // {
+        let depth = 1;
+        while (depth > 0 && !this.isAtEnd()) {
+          if (this.check(TokenType.LEFT_BRACE)) depth++;
+          else if (this.check(TokenType.RIGHT_BRACE)) depth--;
+          this.advance();
+        }
+      }
+      
+      // Check if followed by confidence arrow and/or equals
+      if (this.check(TokenType.CONFIDENCE_ARROW)) {
+        // Skip confidence expression
+        this.advance(); // ~>
+        // Skip the threshold value
+        while (!this.isAtEnd() && !this.check(TokenType.EQUAL)) {
+          this.advance();
+        }
+      }
+      
+      // Check if followed by equals sign
+      const result = this.check(TokenType.EQUAL);
+      
+      // Restore position
+      this.current = savedCurrent;
+      return result;
+    } catch {
+      // If anything fails during lookahead, assume it's not a pattern
+      this.current = savedCurrent;
+      return false;
+    }
+  }
+  
+  private parseArrayPattern(): ArrayPattern {
+    this.consume(TokenType.LEFT_BRACKET, "Expected '['");
+    const elements: (IdentifierExpression | ArrayPattern | ObjectPattern | RestElement | null)[] = [];
+    
+    while (!this.check(TokenType.RIGHT_BRACKET) && !this.isAtEnd()) {
+      // Check for consecutive commas (hole)
+      if (this.check(TokenType.COMMA)) {
+        elements.push(null);
+        this.advance(); // consume comma
+        continue;
+      }
+      
+      if (this.match(TokenType.SPREAD)) {
+        // Rest element
+        const identifier = this.consume(TokenType.IDENTIFIER, "Expected identifier after '...'");
+        elements.push(new RestElement(new IdentifierExpression(identifier.value)));
+        // Rest element must be last
+        if (!this.check(TokenType.RIGHT_BRACKET)) {
+          this.consume(TokenType.COMMA, "Rest element must be last element");
+        }
+      } else if (this.check(TokenType.LEFT_BRACKET) || this.check(TokenType.LEFT_BRACE)) {
+        // Nested pattern
+        const nested = this.parsePattern();
+        if (nested) {
+          elements.push(nested);
+        }
+      } else {
+        // Regular identifier
+        const identifier = this.consume(TokenType.IDENTIFIER, "Expected identifier in array pattern");
+        elements.push(new IdentifierExpression(identifier.value));
+      }
+      
+      if (!this.check(TokenType.RIGHT_BRACKET)) {
+        this.consume(TokenType.COMMA, "Expected ',' or ']'");
+      }
+    }
+    
+    this.consume(TokenType.RIGHT_BRACKET, "Expected ']'");
+    return new ArrayPattern(elements);
+  }
+  
+  private parseObjectPattern(): ObjectPattern {
+    this.consume(TokenType.LEFT_BRACE, "Expected '{'");
+    const properties: Array<{
+      key: string;
+      value: IdentifierExpression | ArrayPattern | ObjectPattern;
+      defaultValue?: Expression;
+    }> = [];
+    let rest: RestElement | undefined;
+    
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      if (this.match(TokenType.SPREAD)) {
+        // Rest properties
+        const identifier = this.consume(TokenType.IDENTIFIER, "Expected identifier after '...'");
+        rest = new RestElement(new IdentifierExpression(identifier.value));
+        // Rest must be last
+        break;
+      }
+      
+      const key = this.consume(TokenType.IDENTIFIER, "Expected property name").value;
+      let value: IdentifierExpression | ArrayPattern | ObjectPattern;
+      let defaultValue: Expression | undefined;
+      
+      if (this.match(TokenType.COLON)) {
+        // Renamed binding: {name: userName}
+        if (this.check(TokenType.LEFT_BRACKET) || this.check(TokenType.LEFT_BRACE)) {
+          // Nested pattern
+          const nested = this.parsePattern();
+          if (!nested) {
+            throw new ParseError("Expected pattern after ':'", this.peek(), this.sourceCode);
+          }
+          value = nested;
+        } else {
+          const identifier = this.consume(TokenType.IDENTIFIER, "Expected identifier after ':'");
+          value = new IdentifierExpression(identifier.value);
+        }
+      } else {
+        // Shorthand: {name} is same as {name: name}
+        value = new IdentifierExpression(key);
+      }
+      
+      // Default value
+      if (this.match(TokenType.EQUAL)) {
+        const defaultExpr = this.ternary();
+        if (defaultExpr) {
+          defaultValue = defaultExpr;
+        }
+      }
+      
+      properties.push({ key, value, defaultValue });
+      
+      if (!this.check(TokenType.RIGHT_BRACE)) {
+        this.consume(TokenType.COMMA, "Expected ',' or '}'");
+      }
+    }
+    
+    this.consume(TokenType.RIGHT_BRACE, "Expected '}'");
+    return new ObjectPattern(properties, rest);
+  }
+  
+  private convertToPattern(expr: Expression): ArrayPattern | ObjectPattern | null {
+    if (expr instanceof ArrayLiteral) {
+      return this.convertArrayToPattern(expr);
+    } else if (expr instanceof ObjectLiteral) {
+      return this.convertObjectToPattern(expr);
+    }
+    return null;
+  }
+  
+  private convertArrayToPattern(array: ArrayLiteral): ArrayPattern | null {
+    const elements: (IdentifierExpression | ArrayPattern | ObjectPattern | RestElement | null)[] = [];
+    
+    for (const element of array.elements) {
+      if (element === null) {
+        // Hole in array
+        elements.push(null);
+      } else if (element instanceof IdentifierExpression) {
+        elements.push(element);
+      } else if (element instanceof SpreadElement) {
+        if (element.argument instanceof IdentifierExpression) {
+          elements.push(new RestElement(element.argument));
+        } else {
+          return null; // Invalid pattern
+        }
+      } else if (element instanceof ArrayLiteral || element instanceof ObjectLiteral) {
+        const nested = this.convertToPattern(element);
+        if (nested) {
+          elements.push(nested);
+        } else {
+          return null; // Invalid pattern
+        }
+      } else {
+        return null; // Invalid pattern element
+      }
+    }
+    
+    return new ArrayPattern(elements);
+  }
+  
+  private convertObjectToPattern(obj: ObjectLiteral): ObjectPattern | null {
+    const properties: Array<{
+      key: string;
+      value: IdentifierExpression | ArrayPattern | ObjectPattern;
+      defaultValue?: Expression;
+    }> = [];
+    let rest: RestElement | undefined;
+    
+    for (const prop of obj.properties) {
+      if (prop.key === undefined) {
+        // Spread property
+        if (prop.value instanceof SpreadElement && prop.value.argument instanceof IdentifierExpression) {
+          rest = new RestElement(prop.value.argument);
+          continue;
+        } else {
+          return null; // Invalid pattern
+        }
+      }
+      
+      // Handle property
+      let value: IdentifierExpression | ArrayPattern | ObjectPattern;
+      
+      if (prop.value instanceof IdentifierExpression) {
+        value = prop.value;
+      } else if (prop.value instanceof ArrayLiteral || prop.value instanceof ObjectLiteral) {
+        const nested = this.convertToPattern(prop.value);
+        if (nested) {
+          value = nested;
+        } else {
+          return null; // Invalid pattern
+        }
+      } else {
+        return null; // Invalid pattern value
+      }
+      
+      properties.push({ key: prop.key, value });
+    }
+    
+    return new ObjectPattern(properties, rest);
+  }
+  
+  private parseDestructuringArrayPattern(): ArrayPattern {
+    this.consume(TokenType.LEFT_BRACKET, "Expected '['");
+    const elements: (IdentifierExpression | ArrayPattern | ObjectPattern | RestElement | null)[] = [];
+    const elementThresholds: (Expression | null)[] = [];
+    
+    while (!this.check(TokenType.RIGHT_BRACKET) && !this.isAtEnd()) {
+      // Check for consecutive commas (hole)
+      if (this.check(TokenType.COMMA)) {
+        elements.push(null);
+        elementThresholds.push(null);
+        this.advance(); // consume comma
+        continue;
+      }
+      
+      if (this.match(TokenType.SPREAD)) {
+        // Rest element
+        const identifier = this.consume(TokenType.IDENTIFIER, "Expected identifier after '...'");
+        elements.push(new RestElement(new IdentifierExpression(identifier.value)));
+        elementThresholds.push(null); // No threshold for rest elements
+        // Rest element must be last
+        if (!this.check(TokenType.RIGHT_BRACKET)) {
+          this.consume(TokenType.COMMA, "Rest element must be last element");
+        }
+      } else if (this.check(TokenType.LEFT_BRACKET) || this.check(TokenType.LEFT_BRACE)) {
+        // Nested pattern
+        const nested = this.tryParseDestructuringPattern();
+        if (nested) {
+          elements.push(nested);
+          // Check for confidence threshold after nested pattern
+          if (this.match(TokenType.CONFIDENCE_ARROW)) {
+            const threshold = this.expression();
+            elementThresholds.push(threshold);
+          } else {
+            elementThresholds.push(null);
+          }
+        }
+      } else {
+        // Regular identifier
+        const identifier = this.consume(TokenType.IDENTIFIER, "Expected identifier in array pattern");
+        elements.push(new IdentifierExpression(identifier.value));
+        
+        // Check for per-element confidence threshold (Option 3: [a ~> 0.9, b])
+        if (this.match(TokenType.CONFIDENCE_ARROW)) {
+          const threshold = this.expression();
+          elementThresholds.push(threshold);
+        } else {
+          elementThresholds.push(null);
+        }
+      }
+      
+      if (!this.check(TokenType.RIGHT_BRACKET)) {
+        this.consume(TokenType.COMMA, "Expected ',' or ']'");
+      }
+    }
+    
+    this.consume(TokenType.RIGHT_BRACKET, "Expected ']'");
+    
+    // Only include thresholds if at least one was specified
+    const hasThresholds = elementThresholds.some(t => t !== null);
+    return new ArrayPattern(elements, hasThresholds ? elementThresholds : undefined);
+  }
+  
+  private parseDestructuringObjectPattern(): ObjectPattern {
+    this.consume(TokenType.LEFT_BRACE, "Expected '{'");
+    const properties: Array<{
+      key: string;
+      value: IdentifierExpression | ArrayPattern | ObjectPattern;
+      defaultValue?: Expression;
+      confidenceThreshold?: Expression;
+    }> = [];
+    let rest: RestElement | undefined;
+    
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      if (this.match(TokenType.SPREAD)) {
+        // Rest properties
+        const identifier = this.consume(TokenType.IDENTIFIER, "Expected identifier after '...'");
+        rest = new RestElement(new IdentifierExpression(identifier.value));
+        break;
+      }
+      
+      const key = this.consume(TokenType.IDENTIFIER, "Expected property name").value;
+      let value: IdentifierExpression | ArrayPattern | ObjectPattern;
+      let defaultValue: Expression | undefined;
+      let confidenceThreshold: Expression | undefined;
+      
+      // Check for: renamed binding, default value, or shorthand
+      if (this.match(TokenType.COLON)) {
+        // Renamed binding: {name: userName}
+        if (this.check(TokenType.LEFT_BRACKET) || this.check(TokenType.LEFT_BRACE)) {
+          // Nested pattern
+          const nested = this.tryParseDestructuringPattern();
+          if (!nested) {
+            throw new ParseError("Expected pattern after ':'", this.peek(), this.sourceCode);
+          }
+          value = nested;
+        } else {
+          const identifier = this.consume(TokenType.IDENTIFIER, "Expected identifier after ':'");
+          value = new IdentifierExpression(identifier.value);
+        }
+      } else {
+        // Shorthand: {name} is same as {name: name}
+        value = new IdentifierExpression(key);
+      }
+      
+      // Confidence threshold (Option 3: {name ~> 0.9, age})
+      if (this.match(TokenType.CONFIDENCE_ARROW)) {
+        const threshold = this.expression();
+        if (threshold) {
+          confidenceThreshold = threshold;
+        }
+      }
+      
+      // Default value (can appear with or without renaming)
+      if (this.match(TokenType.EQUAL)) {
+        const defaultExpr = this.ternary();
+        if (!defaultExpr) {
+          throw new ParseError("Expected default value after '='", this.peek(), this.sourceCode);
+        }
+        defaultValue = defaultExpr;
+      }
+      
+      properties.push({ key, value, defaultValue, confidenceThreshold });
+      
+      if (!this.check(TokenType.RIGHT_BRACE)) {
+        this.consume(TokenType.COMMA, "Expected ',' or '}'");
+      }
+    }
+    
+    this.consume(TokenType.RIGHT_BRACE, "Expected '}'");
+    return new ObjectPattern(properties, rest);
   }
 }
 
