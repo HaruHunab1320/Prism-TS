@@ -106,6 +106,7 @@ sensor_avg = (sensor1 + sensor2) / 2 ~> 0.75
 - `?.` - Optional chaining
 - `...` - Spread operator
 - `=>` - Lambda/arrow function
+- `instanceof` - Type checking (returns boolean)
 
 ### Unary Operators
 
@@ -113,6 +114,7 @@ sensor_avg = (sensor1 + sensor2) / 2 ~> 0.75
 - `!` - Logical NOT
 - `~` - Confidence accessor
 - `<~` - Confidence extraction
+- `typeof` - Type inspection (returns string)
 
 ### Confidence Operators
 
@@ -455,6 +457,64 @@ analysis = measurement ~> 0.95
 result = sensorData ~> confidence
   ~?> [0.8, sensorData]       // Use original if < 80%
   ~|> complexProcess(_)       // Only for high confidence
+```
+
+### Type Checking Operators
+
+#### typeof Operator
+Returns a string indicating the type of a value.
+
+```prism
+typeof 42              // "number"
+typeof "hello"         // "string"
+typeof true            // "boolean"
+typeof null            // "null"
+typeof undefined       // "undefined"
+typeof [1, 2, 3]       // "array"
+typeof {a: 1}          // "object"
+typeof (x => x + 1)    // "function"
+
+// With confidence values
+typeof (42 ~> 0.8)     // "number" (checks wrapped value)
+```
+
+#### instanceof Operator
+Checks if a value is an instance of a specific type, returning a boolean.
+
+```prism
+42 instanceof "number"           // true
+"hello" instanceof "string"      // true
+[1, 2, 3] instanceof "array"     // true
+{a: 1} instanceof "object"       // true
+
+// Arrays are distinct from objects
+[1, 2, 3] instanceof "object"    // false
+
+// With confidence values
+(42 ~> 0.8) instanceof "number"  // true
+```
+
+Common usage patterns:
+```prism
+// Type guards
+processValue = value => {
+  if (typeof value == "number") {
+    value * 2
+  } else if (typeof value == "string") {
+    value + value
+  } else {
+    "unknown type"
+  }
+}
+
+// Input validation
+safeDivide = (a, b) => {
+  if (a instanceof "number" && b instanceof "number") {
+    b != 0 ? a / b : "Cannot divide by zero"
+  } else {
+    "Both arguments must be numbers"
+  }
+}
 ```
 
 ## Runtime API

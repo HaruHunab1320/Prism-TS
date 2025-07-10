@@ -1,0 +1,63 @@
+# Source files (we publish compiled dist/)
+src/
+*.ts
+!dist/**/*.d.ts
+
+# Config files
+tsconfig.json
+jest.config.js
+.eslintrc.js
+*.test.ts
+*.test.js
+
+# Environment and secrets
+.env
+.env.*
+
+# Dependencies and build artifacts
+node_modules/
+coverage/
+*.log
+*.tgz
+
+# Version control
+.git/
+.github/
+
+# Documentation (except user-facing README)
+docs/
+ARCHITECTURE.md
+DEVELOPMENT.md
+VISION.md
+PATTERNS.md
+SYNC_TRACKING.md
+TEST-INTEGRATION.md
+UNDEFINED_SUPPORT_CHANGES.md
+CHANGELOG.md
+package-main.json
+
+# Examples and tests
+examples/
+tests/
+website/
+benchmarks/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# npm package directory (being removed)
+npm-package/
+
+# Project-specific files
+.claude/
+.cursorrules
+test-*.prism
+test-*.ts
+*.prism

@@ -83,8 +83,8 @@ decision = best_model ~@> "auto_approve" ~?? "manual_review"
 
 ## ✨ Key Features
 
-### 🎯 22 Uncertainty-Aware Operators & Constructs
-From confidence assignment (`~>`) to parallel ensemble (`~||>`), plus uncertainty-aware control flow (`uncertain if/for/while`), Prism has a construct for every uncertainty pattern.
+### 🎯 25+ Uncertainty-Aware Operators & Constructs
+From confidence assignment (`~>`) to parallel ensemble (`~||>`), plus uncertainty-aware control flow (`uncertain if/for/while`), destructuring with confidence thresholds, and type checking operators, Prism has a construct for every uncertainty pattern.
 
 ### 🧠 Native LLM Integration
 ```prism
@@ -128,6 +128,18 @@ evens = numbers.filter(x => x % 2 == 0)    // [2, 4]
 sum = numbers.reduce((a, b) => a + b)       // 15
 expanded = numbers.push(6, 7)               // [1, 2, 3, 4, 5, 6, 7]
 
+// Destructuring assignment
+[a, b, c] = [1, 2, 3]                      // a=1, b=2, c=3
+[first, ...rest] = [1, 2, 3, 4, 5]         // first=1, rest=[2,3,4,5]
+{name, age} = {name: "Alice", age: 30}     // Extract object properties
+{x: newX, y: newY} = {x: 10, y: 20}        // Rename during destructuring
+
+// Type checking operators
+typeof 42                                   // "number"
+typeof [1, 2, 3]                           // "array"
+42 instanceof "number"                      // true
+[1, 2, 3] instanceof "array"               // true
+
 // Spread operator & Rest parameters (v1.0.20)
 arr1 = [1, 2, 3]
 arr2 = [4, 5, 6]
@@ -162,6 +174,15 @@ analysis = measurement ~> 0.85
   ~?> 0.9                    // Gate: only continue if >= 90%
   ~|> advancedAnalysis(_)    // This only runs if confidence is high
   ~?> [0.95, basicResult]    // Another gate with default fallback
+
+// Confidence-based destructuring
+data = [10 ~> 0.9, 20 ~> 0.6, 30 ~> 0.8]
+[a, b, c] ~> 0.7 = data                    // a=10, b=undefined, c=30
+// Only values with confidence >= 0.7 are assigned
+
+// Per-element confidence thresholds
+[critical ~> 0.9, important ~> 0.7, optional ~> 0.5] = sensorData
+// Each element has its own confidence requirement
 
 // Array processing pipelines
 nums = [1, 2, 3, 4, 5]
@@ -317,9 +338,10 @@ prism-ts/
 │   ├── context/         # Context management
 │   ├── llm/            # LLM integrations
 │   └── repl/           # Interactive REPL
-├── npm-package/         # NPM distribution
+├── dist/                # Compiled JavaScript (generated)
 ├── docs/               # Documentation
 ├── examples/           # Example Prism programs
+├── tests/              # Integration tests
 └── website/            # Project website
 ```
 
@@ -416,6 +438,18 @@ npm run typecheck
 | `%=` | Modulo Assignment | `x %= 3` |
 | `=>` | Lambda/Arrow Function | `x => x * 2` |
 | `%` | Modulo | `10 % 3` → `1` |
+| `typeof` | Type Inspection | `typeof 42` → `"number"` |
+| `instanceof` | Type Checking | `42 instanceof "number"` → `true` |
+
+### Language Constructs
+| Construct | Description | Example |
+|-----------|-------------|---------|
+| Array Destructuring | Extract array elements | `[a, b, c] = [1, 2, 3]` |
+| Object Destructuring | Extract object properties | `{name, age} = user` |
+| Rest Elements | Collect remaining values | `[first, ...rest] = array` |
+| Confidence Destructuring | Filter by confidence | `[a, b] ~> 0.8 = data` |
+| Per-Element Thresholds | Individual confidence filters | `[a ~> 0.9, b ~> 0.7] = data` |
+| Destructuring in Parameters | Function parameter patterns | `sum = ([a, b]) => a + b` |
 
 ## 🤝 Contributing
 

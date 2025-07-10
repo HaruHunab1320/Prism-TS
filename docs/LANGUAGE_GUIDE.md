@@ -53,6 +53,75 @@ message = "Hello"
 message += " World"  // message = "Hello World"
 ```
 
+### Destructuring Assignment
+
+Prism supports destructuring assignment for both arrays and objects, making it easy to extract values from complex data structures.
+
+#### Array Destructuring
+
+```prism
+// Basic array destructuring
+[a, b, c] = [1, 2, 3]
+// a = 1, b = 2, c = 3
+
+// Skip elements with holes
+[first, , third] = [10, 20, 30]
+// first = 10, third = 30
+
+// With rest elements
+[head, ...tail] = [1, 2, 3, 4, 5]
+// head = 1, tail = [2, 3, 4, 5]
+
+// Nested arrays
+[a, [b, c]] = [1, [2, 3]]
+// a = 1, b = 2, c = 3
+```
+
+#### Object Destructuring
+
+```prism
+// Basic object destructuring
+{name, age} = {name: "Alice", age: 30}
+// name = "Alice", age = 30
+
+// Rename properties
+{name: userName, age: userAge} = {name: "Bob", age: 25}
+// userName = "Bob", userAge = 25
+
+// Default values
+{name = "Anonymous", role = "user"} = {name: "Charlie"}
+// name = "Charlie", role = "user"
+
+// Rest properties
+{a, b, ...rest} = {a: 1, b: 2, c: 3, d: 4}
+// a = 1, b = 2, rest = {c: 3, d: 4}
+
+// Nested objects
+{user: {name, email}} = {user: {name: "Dave", email: "dave@example.com"}}
+// name = "Dave", email = "dave@example.com"
+```
+
+#### Common Patterns
+
+```prism
+// Variable swapping
+a = 10
+b = 20
+[a, b] = [b, a]
+// Now a = 20, b = 10
+
+// Function return values
+getCoords = () => [100, 200]
+[x, y] = getCoords()
+// x = 100, y = 200
+
+// Array methods
+users = [{name: "Alice"}, {name: "Bob"}, {name: "Charlie"}]
+[firstUser, ...otherUsers] = users
+{name} = firstUser
+// name = "Alice"
+```
+
 ### Expressions
 
 ```prism
@@ -83,6 +152,20 @@ greet = name => "Hello, ${name}!"
 // Using lambdas
 result = square(5)  // 25
 sum = add(3, 7)  // 10
+
+// Destructuring in function parameters
+processPoint = ([x, y]) => x + y
+processPoint([3, 4])  // returns 7
+
+getUserInfo = ({name, age}) => name + " is " + age
+getUserInfo({name: "Alice", age: 30})  // returns "Alice is 30"
+
+// With default values
+createUser = ({name, email, role = "user"}) => {
+  name + " (" + email + ") - " + role
+}
+createUser({name: "Test", email: "test@example.com"})
+// returns "Test (test@example.com) - user"
 
 // Array method examples
 numbers = [1, 2, 3, 4, 5]
@@ -848,6 +931,74 @@ reliable_average = (sensor1 ~+ sensor2 ~+ sensor3) ~/ 3 ~@> control_system
 // Safe navigation with fallbacks
 user_preference = user ~. settings ~. theme ~?? "default" ~@> apply_theme()
 ```
+
+### Confidence-Based Destructuring
+
+Prism allows you to filter values during destructuring based on their confidence levels. Values below the threshold are assigned as `undefined`.
+
+#### Global Threshold
+
+Apply a single confidence threshold to all destructured values:
+
+```prism
+data = [10 ~> 0.9, 20 ~> 0.6, 30 ~> 0.8]
+
+// Only values with confidence >= 0.7 are assigned
+[a, b, c] ~> 0.7 = data
+// a = 10, b = undefined, c = 30
+
+// Object destructuring with threshold
+userData = {
+  name: "Alice" ~> 0.95,
+  email: "alice@example.com" ~> 0.6,
+  age: 30 ~> 0.85
+}
+
+{name, email, age} ~> 0.8 = userData
+// name = "Alice", email = undefined, age = 30
+```
+
+#### Per-Element Threshold
+
+Apply individual thresholds to specific elements:
+
+```prism
+// Array with per-element thresholds
+[critical ~> 0.9, important ~> 0.7, optional ~> 0.5] = sensorData
+
+// Object with per-property thresholds
+{
+  userId: id ~> 0.95,      // Require very high confidence for ID
+  userName: name ~> 0.8,   // High confidence for name
+  userPrefs: prefs ~> 0.5  // Lower threshold for preferences
+} = apiResponse
+
+// Mixed approach
+{name ~> 0.9, age, email ~> 0.8} = userData
+// name requires 90%, email requires 80%, age has no threshold
+```
+
+#### With Rest Elements
+
+Rest elements only collect values that meet the confidence threshold:
+
+```prism
+values = [1 ~> 0.9, 2 ~> 0.5, 3 ~> 0.8, 4 ~> 0.6, 5 ~> 0.95]
+
+// Global threshold affects rest collection
+[first, ...rest] ~> 0.7 = values
+// first = 1, rest = [3, 5] (only values with confidence >= 0.7)
+
+// Object rest with threshold
+{critical ~> 0.9, ...others} ~> 0.7 = measurements
+// critical assigned if >= 0.9, others contains properties >= 0.7
+```
+
+This feature is particularly useful for:
+- Filtering unreliable sensor data
+- Processing API responses with varying confidence
+- Implementing fallback strategies for low-confidence values
+- Building robust data pipelines that handle uncertainty
 
 ## Control Flow
 
