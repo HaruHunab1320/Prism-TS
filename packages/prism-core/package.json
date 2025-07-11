@@ -1,9 +1,22 @@
 {
-  "name": "@prism/core",
+  "name": "prism-uncertainty",
   "version": "1.0.21",
-  "description": "Core Prism language implementation - parser, runtime, and confidence system",
+  "description": "A programming language for uncertainty",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "keywords": [
+    "prism",
+    "uncertainty",
+    "programming-language",
+    "confidence",
+    "llm",
+    "ai"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uncertainty-lang/prism.git",
+    "directory": "packages/prism-core"
+  },
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
     "dev": "tsc -b tsconfig.build.json -w",
@@ -29,7 +42,8 @@
   },
   "files": [
     "dist",
-    "src"
+    "src",
+    "README.md"
   ],
   "publishConfig": {
     "access": "public"

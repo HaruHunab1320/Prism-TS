@@ -1,0 +1,41 @@
+{
+  "name": "@prism/confidence",
+  "version": "0.1.0",
+  "description": "Confidence extraction library for Prism - standardized patterns for extracting confidence values from LLMs and other sources",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "dev": "tsc -w"
+  },
+  "keywords": [
+    "prism",
+    "confidence",
+    "uncertainty",
+    "llm",
+    "ai",
+    "extraction",
+    "calibration"
+  ],
+  "dependencies": {
+    "@prism/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.30",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.4.3"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

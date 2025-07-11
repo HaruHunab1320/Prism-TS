@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "types": ["jest", "node"],
+    "paths": {
+      "@prism/core": ["../prism-core/src"],
+      "@prism/core/*": ["../prism-core/src/*"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "test/**/*"
+  ],
+  "references": [
+    { "path": "../prism-core" }
+  ]
+}
