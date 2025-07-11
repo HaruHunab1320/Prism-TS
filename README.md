@@ -1,476 +1,298 @@
-# 🌟 Prism: The Language Where AI Meets Certainty
+# 🌟 Prism: Programming with Confidence in an Uncertain World
 
 <div align="center">
 
-[![npm version](https://img.shields.io/npm/v/prism-uncertainty.svg?style=for-the-badge)](https://www.npmjs.com/package/prism-uncertainty)
+[![npm version](https://img.shields.io/npm/v/@prism/core.svg?style=for-the-badge)](https://www.npmjs.com/package/@prism/core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-**Write AI code that's 69% shorter. Handle uncertainty natively. Ship with confidence.**
+**A programming language where uncertainty is a first-class citizen.**
 
-[NPM Package](#-npm-package) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Examples](#-examples)
+[Quick Start](#-quick-start) • [Packages](#-packages) • [Documentation](#-documentation) • [Examples](#-examples) • [Contributing](#-contributing)
 
 </div>
 
 ---
 
-## 🚀 NPM Package
+## 📦 Important: Package Migration
 
-Prism is now available as an npm package! Use it in your TypeScript/JavaScript projects:
+> **If you're using `prism-uncertainty`, please migrate to `@prism/core`**
+> 
+> ```bash
+> npm uninstall prism-uncertainty
+> npm install @prism/core
+> ```
+
+## 🚀 Quick Start
+
+Install using your preferred package manager:
 
 ```bash
-npm install prism-uncertainty
+# npm
+npm install @prism/core
+npm install @prism/confidence  # optional
+
+# yarn
+yarn add @prism/core
+yarn add @prism/confidence     # optional
+
+# pnpm
+pnpm add @prism/core
+pnpm add @prism/confidence     # optional
+
+# Install CLI globally
+npm install -g @prism/cli      # or yarn/pnpm
 ```
 
-### TypeScript Integration
+### Your First Prism Program
 
 ```typescript
-import { Prism, runPrism } from 'prism-uncertainty';
+import { parse, createRuntime } from '@prism/core';
 
-// Create a Prism instance
-const prism = new Prism({
-  geminiApiKey: 'your-api-key' // or use GEMINI_API_KEY env var
-});
+const code = `
+  // AI responses with confidence
+  analysis = llm("Is this secure?") ~> 0.85
+  
+  // Confidence-aware decisions
+  uncertain if (analysis) {
+    high { deploy() }
+    medium { review() }
+    low { abort() }
+  }
+`;
 
-// Execute Prism code with modern features
-const result = await prism.execute(`
-  temperature = 22.5 ~> 0.9
-  weather = llm("Is ${temperature}°C good for outdoor activities?")
-  decision = weather ~@> "Go outside!" ~?? "Stay indoors"
-  decision
-`);
-
-console.log(result); // Confident decision with uncertainty tracking
+const ast = parse(code);
+const runtime = createRuntime();
+const result = await runtime.execute(ast);
 ```
 
-### Quick One-Liner
+## 📚 Packages
+
+Prism is organized as a monorepo with focused, modular packages:
+
+| Package | Description | Version |
+|---------|-------------|---------|
+| [`@prism/core`](./packages/prism-core) | Core language implementation (parser, runtime, types) | ![npm](https://img.shields.io/npm/v/@prism/core.svg) |
+| [`@prism/confidence`](./packages/prism-confidence) | Confidence extraction from LLMs and other sources | ![npm](https://img.shields.io/npm/v/@prism/confidence.svg) |
+| [`@prism/llm`](./packages/prism-llm) | LLM provider integrations (Claude, Gemini, OpenAI) | ![npm](https://img.shields.io/npm/v/@prism/llm.svg) |
+| [`@prism/cli`](./apps/cli) | Command-line interface | ![npm](https://img.shields.io/npm/v/@prism/cli.svg) |
+| [`@prism/repl`](./apps/repl) | Interactive REPL | ![npm](https://img.shields.io/npm/v/@prism/repl.svg) |
+
+## ✨ Why Prism?
+
+Every AI application deals with uncertainty, but traditional languages pretend it doesn't exist. Prism makes uncertainty explicit and manageable.
+
+### 🎯 Uncertainty as a First-Class Citizen
+
+```prism
+// Traditional approach: Uncertainty is hidden
+result = llm_call()
+if (result) { /* hope for the best */ }
+
+// Prism: Uncertainty is explicit
+result = llm_call() ~> 0.7
+uncertain if (result) {
+  high { proceed_with_confidence() }
+  medium { add_human_review() }
+  low { need_more_data() }
+}
+```
+
+### 🧠 Built for the AI Era
+
+```prism
+// Ensemble multiple models with confidence
+claude_says = llm("Analyze risk", model: "claude") ~> 0.9
+gpt_says = llm("Analyze risk", model: "gpt4") ~> 0.8
+gemini_says = llm("Analyze risk", model: "gemini") ~> 0.7
+
+// Automatically use highest confidence result
+best_analysis = claude_says ~||> gpt_says ~||> gemini_says
+
+// Confidence-aware null coalescing
+decision = best_analysis ~?? fallback_analysis ~?? "manual_review"
+```
+
+### 📊 Confidence Extraction Made Easy
+
+With `@prism/confidence`:
 
 ```typescript
-import { runPrism } from 'prism-uncertainty';
+import { confidence } from '@prism/confidence';
 
-// Run Prism code directly
-const result = await runPrism('(model1 ~> 0.7) ~||> (model2 ~> 0.9)');
+// Extract confidence from any LLM response
+const response = await llm("Is this safe?");
+const conf = await confidence.extract(response);
+
+// Multiple strategies available
+const ensemble = await confidence.fromConsistency(
+  () => llm("Analyze this"),
+  { samples: 5 }
+);
+
+// Domain-specific calibration
+const calibrated = await confidence.calibrators.security
+  .calibrate(conf, { type: 'sql_injection' });
 ```
 
-### CLI Usage
+## 🔧 Language Features
 
-```bash
-# Install globally
-npm install -g prism-uncertainty
+### Confidence Operators
+- `~>` - Assign confidence
+- `<~` - Extract confidence  
+- `~*`, `~/`, `~+`, `~-` - Confidence-preserving arithmetic
+- `~==`, `~!=`, `~>`, `~<` - Confidence comparisons
+- `~&&`, `~||` - Confidence logical operations
+- `~??` - Confidence null coalescing
+- `~||>` - Parallel confidence (ensemble)
 
-# Run Prism files
-prism run weather-analysis.prism
-
-# Interactive REPL
-prism repl
-
-# Evaluate expressions
-prism eval "42 ~> 0.9"
-```
-
-## 🤔 Why Prism?
-
-Every AI application deals with uncertainty, but traditional languages pretend it doesn't exist. Prism changes that.
-
+### Control Flow
 ```prism
-// Traditional: 250+ lines of manual confidence tracking
-// Prism: Natural uncertainty handling in 77 lines
+// Uncertain conditionals
+uncertain if (measurement) {
+  high { /* >70% confidence */ }
+  medium { /* 30-70% confidence */ }
+  low { /* <30% confidence */ }
+}
 
-best_model = gpt_result ~||> claude_result ~||> gemini_result
-decision = best_model ~@> "auto_approve" ~?? "manual_review"
-```
-
-## ✨ Key Features
-
-### 🎯 25+ Uncertainty-Aware Operators & Constructs
-From confidence assignment (`~>`) to parallel ensemble (`~||>`), plus uncertainty-aware control flow (`uncertain if/for/while`), destructuring with confidence thresholds, and type checking operators, Prism has a construct for every uncertainty pattern.
-
-### 🧠 Native LLM Integration
-```prism
-response = llm("Analyze this data")  // Confidence included automatically
-```
-
-### 🌊 Uncertainty-Aware Control Flow
-```prism
-uncertain if (analysis ~> 0.8) {
-  high { deploy_to_production() }
-  medium { deploy_to_staging() }
-  low { request_human_review() }
+// Uncertain loops
+uncertain while (condition) {
+  confident { /* >70% */ }
+  attempt { /* 30-70% */ }
+  abort { /* <30% */ }
 }
 ```
 
-### 🔗 Automatic Confidence Propagation
-```prism
-// Confidence flows naturally through operations
-result = (sensor1 ~+ sensor2) ~* factor  // Min confidence propagated
-```
-
-### 🆕 Modern Language Features
-```prism
-// Lambda expressions
-doubled = map([1, 2, 3], x => x * 2)
-
-// String interpolation
-message = "Temperature: ${temp}°C, Status: ${status}"
-
-// Ternary operators
-result = age >= 18 ? "Adult" : "Minor"
-
-// Arrays and objects
-data = { name: "Alice", scores: [95, 87, 92] }
-avg = reduce(data.scores, (a, b) => a + b, 0) / data.scores.length
-
-// Array methods as properties (v1.0.16)
-numbers = [1, 2, 3, 4, 5]
-squares = numbers.map(x => x ** 2)         // [1, 4, 9, 16, 25]
-evens = numbers.filter(x => x % 2 == 0)    // [2, 4]
-sum = numbers.reduce((a, b) => a + b)       // 15
-expanded = numbers.push(6, 7)               // [1, 2, 3, 4, 5, 6, 7]
-
-// Destructuring assignment
-[a, b, c] = [1, 2, 3]                      // a=1, b=2, c=3
-[first, ...rest] = [1, 2, 3, 4, 5]         // first=1, rest=[2,3,4,5]
-{name, age} = {name: "Alice", age: 30}     // Extract object properties
-{x: newX, y: newY} = {x: 10, y: 20}        // Rename during destructuring
-
-// Type checking operators
-typeof 42                                   // "number"
-typeof [1, 2, 3]                           // "array"
-42 instanceof "number"                      // true
-[1, 2, 3] instanceof "array"               // true
-
-// Spread operator & Rest parameters (v1.0.20)
-arr1 = [1, 2, 3]
-arr2 = [4, 5, 6]
-combined = [...arr1, ...arr2]              // [1, 2, 3, 4, 5, 6]
-max_value = max(...combined)                // 6 - spread in function calls
-
-// Rest parameters in lambdas
-sum_all = (...nums) => nums.reduce((a, b) => a + b, 0)
-total = sum_all(1, 2, 3, 4, 5)             // 15
-greet = (greeting, ...names) => greeting + " " + names.join(" and ")
-message = greet("Hello", "Alice", "Bob")    // "Hello Alice and Bob"
-
-defaults = {theme: "dark", lang: "en"}
-userPrefs = {lang: "es", debug: true}
-settings = {...defaults, ...userPrefs}      // {theme: "dark", lang: "es", debug: true}
-
-// Pipeline operators (v1.0.21)
-// Chain operations left-to-right with |>
-result = 5 
-  |> double(_)      // 10
-  |> addOne(_)      // 11
-  |> toString(_)    // "11"
-
-// Confidence pipeline with ~|>
-data = 10 ~> 0.9
-processed = data
-  ~|> transform(_)  // Preserves 90% confidence
-  ~|> validate(_)   // Still 90% confidence
-
-// Confidence threshold gate with ~?>
-analysis = measurement ~> 0.85
-  ~?> 0.9                    // Gate: only continue if >= 90%
-  ~|> advancedAnalysis(_)    // This only runs if confidence is high
-  ~?> [0.95, basicResult]    // Another gate with default fallback
-
-// Confidence-based destructuring
-data = [10 ~> 0.9, 20 ~> 0.6, 30 ~> 0.8]
-[a, b, c] ~> 0.7 = data                    // a=10, b=undefined, c=30
-// Only values with confidence >= 0.7 are assigned
-
-// Per-element confidence thresholds
-[critical ~> 0.9, important ~> 0.7, optional ~> 0.5] = sensorData
-// Each element has its own confidence requirement
-
-// Array processing pipelines
-nums = [1, 2, 3, 4, 5]
-result = nums
-  |> filter(_, x => x > 2)         // [3, 4, 5]
-  |> map(_, x => x * 2)            // [6, 8, 10]
-  |> reduce(_, (a, b) => a + b, 0) // 24
-
-// Loops (v1.0.17)
-// C-style for loop
-sum = 0
-for i = 0; i < 5; i = i + 1 {
-  sum = sum + i
-}
-
-// For-in with index
-fruits = ["apple", "banana", "orange"]
-for fruit, idx in fruits {
-  println("${idx}: ${fruit}")
-}
-
-// While loop
-count = 0
-while count < 3 {
-  count = count + 1
-}
-
-// Loop control
-for i = 0; i < 10; i = i + 1 {
-  if (i == 5) break      // Exit loop
-  if (i % 2 == 0) continue  // Skip evens
-  // Process odd numbers
-}
-
-// Uncertainty-aware loops (v1.0.18)
-// Execute different code based on confidence levels
-uncertain for i = 0; (i < readings.length) ~> 0.8; i = i + 1 {
-  high {
-    // Confidence >= 0.7 - automate
-    processAutomatically(readings[i])
-  }
-  medium {
-    // 0.5 <= confidence < 0.7 - review
-    flagForReview(readings[i])
-  }
-  low {
-    // Confidence < 0.5 - alert
-    sendAlert(readings[i])
-  }
-}
-
-// Uncertain while with dynamic confidence
-uncertain while (sensorActive() ~> getSensorConfidence()) {
-  high {
-    takeMeasurement()
-  }
-  low {
-    recalibrateSensor()
-    break
-  }
-}
-
-// Null and undefined support
-user = { name: "Bob", email: null, phone: undefined }
-safeEmail = user?.email ?? "no-email@example.com"
-safePhone = user?.phone ?? "no-phone"
-
-// Optional chaining prevents errors
-config = null
-port = config?.server?.port ?? 3000  // No error, uses default
-
-// Compound assignments
-score = 100
-score += 50  // 150
-score *= 2   // 300
-
-// Exponentiation
-base = 2
-power = base ** 3  // 8
-chained = 2 ** 3 ** 2  // 512 (right-associative)
-```
-
-## 📦 Installation Options
-
-### From NPM (Recommended)
-```bash
-npm install prism-uncertainty
-```
-
-### From Source
-```bash
-git clone https://github.com/your-username/prism-ts.git
-cd prism-ts
-npm install
-npm run build
-```
-
-## 🎮 Quick Examples
-
-### AI Model Ensemble
-```prism
-// Run multiple models and select the most confident result
-gpt = llm("Analyze with GPT") 
-claude = llm("Analyze with Claude")
-gemini = llm("Analyze with Gemini")
-
-best_result = gpt ~||> claude ~||> gemini
-```
-
-### Confidence-Based Decisions
-```prism
-analysis = llm("Is this transaction fraudulent?")
-action = analysis ~@> "block_transaction" ~?? "manual_review"
-
-uncertain if (analysis ~> 0.9) {
-  high { notify_security_team() }
-  medium { flag_for_review() }
-  low { allow_transaction() }
-}
-```
-
-### Data Processing with Lambdas
-```prism
-// Process sensor data with confidence
-sensors = [22.5, 23.1, 22.8] ~> 0.95
-processed = map(sensors, x => x * 1.8 + 32)  // Convert to Fahrenheit
-valid = filter(processed, x => x > 70 && x < 75)
-average = reduce(valid, (sum, val) => sum + val, 0) / valid.length
-```
-
-### Modern String Templates
-```prism
-// Multi-line report generation
-user = { name: "Alice", role: "Admin" }
-report = ```
-Daily Report
-============
-Generated for: ${user.name}
-Role: ${user.role}
-Timestamp: ${llm("current time")}
-
-Status: ${status ~> 0.8 ? "Operational" : "Needs Review"}
-```
-```
-
-## 🏗️ Project Structure
-
-```
-prism-ts/
-├── src/                  # TypeScript source code
-│   ├── core/            # Language core (Parser, Runtime, AST)
-│   ├── confidence/      # Confidence value system
-│   ├── context/         # Context management
-│   ├── llm/            # LLM integrations
-│   └── repl/           # Interactive REPL
-├── dist/                # Compiled JavaScript (generated)
-├── docs/               # Documentation
-├── examples/           # Example Prism programs
-├── tests/              # Integration tests
-└── website/            # Project website
-```
-
-## 📊 Performance
-
-Benchmark results comparing Prism to traditional JavaScript:
-
-| Metric | Prism | Traditional JS | Improvement |
-|--------|-------|----------------|-------------|
-| Lines of Code | 77 | 250 | **69% less** |
-| Confidence Bugs | 0 | ∞ | **Eliminated** |
-| Development Time | Minutes | Hours | **3x faster** |
-| Boilerplate | None | Everywhere | **100% removed** |
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-npm test
-
-# Run specific test suite
-npm test operators.test.ts
-
-# Run with coverage
-npm test -- --coverage
-```
-
-**Current Status**: ✅ 343/343 tests passing
+### Modern Language Features
+- First-class functions and lambdas
+- Pattern matching with uncertainty
+- Async/await with confidence propagation
+- Destructuring with confidence preservation
+- Type checking with `typeof` and `instanceof`
 
 ## 🛠️ Development
 
-### Building
+> **Note**: We use pnpm and Turborepo for development. You'll need pnpm installed to contribute.
+
 ```bash
-npm run build
+# Clone the repository
+git clone https://github.com/cjpais/prism.git
+cd prism
+
+# Install pnpm if you don't have it
+npm install -g pnpm
+
+# Install dependencies
+pnpm install
+
+# Build all packages
+pnpm build
+
+# Run tests
+pnpm test
+
+# Start development mode
+pnpm dev
 ```
 
-### Linting
+### For Users vs Contributors
+
+**Users**: Install our packages with any package manager (npm, yarn, pnpm)
 ```bash
-npm run lint
+npm install @prism/core    # Works with npm, yarn, or pnpm!
 ```
 
-### Type Checking
+**Contributors**: Development requires pnpm for workspace management
 ```bash
-npm run typecheck
+pnpm install              # Must use pnpm for development
 ```
 
-## 📚 Documentation
+### Repository Structure
+```
+prism/
+├── packages/
+│   ├── prism-core/        # Core language implementation
+│   ├── prism-confidence/  # Confidence extraction library
+│   └── prism-llm/         # LLM provider integrations
+├── apps/
+│   ├── cli/               # Command-line interface
+│   └── repl/              # Interactive REPL
+├── examples/              # Example Prism programs
+├── docs/                  # Documentation
+├── pnpm-workspace.yaml    # pnpm workspace configuration
+└── turbo.json            # Turborepo configuration
+```
 
-- [Language Guide](docs/LANGUAGE_GUIDE.md) - Complete language reference
-- [API Documentation](docs/API.md) - TypeScript/JavaScript API
-- [Architecture](ARCHITECTURE.md) - System design
-- [Development](DEVELOPMENT.md) - Development guide
-- [Patterns](PATTERNS.md) - Common patterns and best practices
+## 📖 Documentation
 
-## 🎯 Complete Operator Reference
+- [Language Guide](./docs/LANGUAGE_GUIDE.md) - Complete language reference
+- [API Documentation](./docs/API.md) - All operators and functions
+- [Confidence Extraction](./packages/prism-confidence/README.md) - Using @prism/confidence
+- [Examples](./examples/) - Real-world usage patterns
 
-### Confidence-Aware Operators
-| Operator | Name | Example |
-|----------|------|---------|
-| `~>` | Confidence Assignment | `temp ~> 0.9` |
-| `<~` | Confidence Extraction | `conf = <~ temp` |
-| `~~` | Confidence Chaining | `a ~~ b ~~ c` |
-| `~??` | Confidence Coalesce | `primary ~?? backup` |
-| `~&&` | Confident AND | `a ~&& b` |
-| `~\|\|` | Confident OR | `a ~\|\| b` |
-| `~+` | Confident Addition | `a ~+ b` |
-| `~-` | Confident Subtraction | `a ~- b` |
-| `~*` | Confident Multiplication | `a ~* b` |
-| `~/` | Confident Division | `a ~/ b` |
-| `~==` | Confident Equality | `a ~== b` |
-| `~!=` | Confident Inequality | `a ~!= b` |
-| `~>` | Confident Greater | `a ~> b` |
-| `~>=` | Confident Greater Equal | `a ~>= b` |
-| `~<` | Confident Less | `a ~< b` |
-| `~<=` | Confident Less Equal | `a ~<= b` |
-| `~.` | Confident Property Access | `obj ~. prop` |
-| `~\|\|>` | Parallel Confidence | `a ~\|\|> b ~\|\|> c` |
-| `~@>` | Threshold Gate | `check ~@> action` |
-| `~\|>` | Confidence Pipeline | `data ~\|> process(_)` |
-| `~?>` | Confidence Threshold Gate | `value ~?> 0.8` |
+## 🌟 Examples
 
-### Standard Operators
-| Operator | Name | Example |
-|----------|------|---------|
-| `**` | Exponentiation | `2 ** 3` → `8` |
-| `??` | Nullish Coalescing | `null ?? "default"` |
-| `?.` | Optional Chaining | `obj?.prop?.method` |
-| `...` | Spread Operator | `[...arr1, ...arr2]` |
-| `\|>` | Pipeline | `value \|> process(_)` |
-| `+=` | Addition Assignment | `x += 5` |
-| `-=` | Subtraction Assignment | `x -= 3` |
-| `*=` | Multiplication Assignment | `x *= 2` |
-| `/=` | Division Assignment | `x /= 4` |
-| `%=` | Modulo Assignment | `x %= 3` |
-| `=>` | Lambda/Arrow Function | `x => x * 2` |
-| `%` | Modulo | `10 % 3` → `1` |
-| `typeof` | Type Inspection | `typeof 42` → `"number"` |
-| `instanceof` | Type Checking | `42 instanceof "number"` → `true` |
+### AI Safety Analysis
+```prism
+code = read_file("user_submission.py")
+safety = llm("Analyze for vulnerabilities: " + code)
 
-### Language Constructs
-| Construct | Description | Example |
-|-----------|-------------|---------|
-| Array Destructuring | Extract array elements | `[a, b, c] = [1, 2, 3]` |
-| Object Destructuring | Extract object properties | `{name, age} = user` |
-| Rest Elements | Collect remaining values | `[first, ...rest] = array` |
-| Confidence Destructuring | Filter by confidence | `[a, b] ~> 0.8 = data` |
-| Per-Element Thresholds | Individual confidence filters | `[a ~> 0.9, b ~> 0.7] = data` |
-| Destructuring in Parameters | Function parameter patterns | `sum = ([a, b]) => a + b` |
+uncertain if (safety) {
+  high { 
+    deploy_to_production()
+    log("Deployed with confidence: " + (<~ safety))
+  }
+  medium {
+    results = run_sandboxed_tests(code)
+    if (results.pass) { deploy_to_staging() }
+  }
+  low {
+    send_to_security_team(code, safety)
+  }
+}
+```
+
+### Multi-Model Consensus
+```prism
+question = "Will it rain tomorrow?"
+
+// Get predictions from multiple sources
+weather_api = fetch_weather_api() ~> 0.8
+model1 = llm(question, model: "claude") ~> 0.9  
+model2 = llm(question, model: "gemini") ~> 0.85
+local_sensors = analyze_pressure() ~> 0.7
+
+// Combine predictions with confidence weighting
+consensus = (weather_api ~+ model1 ~+ model2 ~+ local_sensors) ~/ 4
+
+uncertain if (consensus) {
+  high { "Definitely bring an umbrella! ☔" }
+  medium { "Maybe pack a raincoat 🧥" }
+  low { "Enjoy the sunshine! ☀️" }
+}
+```
 
 ## 🤝 Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! See our [Contributing Guide](./CONTRIBUTING.md) for details.
+
+### Key areas for contribution:
+- Language features and operators
+- Confidence extraction strategies
+- LLM provider integrations
+- Documentation and examples
+- Testing and benchmarks
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) for details.
-
-## 🙏 Acknowledgments
-
-Built by developers who believe AI programming should be as natural as the uncertainty it handles.
+MIT - See [LICENSE](./LICENSE) for details.
 
 ---
 
 <div align="center">
 
-**Ready to embrace uncertainty?**
+Built with ❤️ for the uncertain future of programming
 
-[![NPM](https://img.shields.io/badge/npm-prism--uncertainty-red?style=for-the-badge)](https://www.npmjs.com/package/prism-uncertainty)
-[![Docs](https://img.shields.io/badge/Read-Documentation-blue?style=for-the-badge)](docs/LANGUAGE_GUIDE.md)
-[![GitHub](https://img.shields.io/badge/Star-on%20GitHub-yellow?style=for-the-badge)](https://github.com/HaruHunab1320/Prism-TS)
+[Report Bug](https://github.com/cjpais/prism/issues) • [Request Feature](https://github.com/cjpais/prism/issues) • [Join Discussion](https://github.com/cjpais/prism/discussions)
 
 </div>

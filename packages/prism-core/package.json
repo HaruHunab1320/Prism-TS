@@ -1,5 +1,5 @@
 {
-  "name": "prism-uncertainty",
+  "name": "@prism/core",
   "version": "1.0.21",
   "description": "A programming language for uncertainty",
   "main": "dist/index.js",
@@ -14,7 +14,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/uncertainty-lang/prism.git",
+    "url": "https://github.com/cjpais/prism.git",
     "directory": "packages/prism-core"
   },
   "scripts": {
