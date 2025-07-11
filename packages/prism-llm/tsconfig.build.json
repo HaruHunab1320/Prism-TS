@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@prism/core": ["../prism-core/src"],
+      "@prism/core/*": ["../prism-core/src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["**/*.test.ts", "**/*.spec.ts"],
+  "references": []
+}

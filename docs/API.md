@@ -130,7 +130,6 @@ sensor_avg = (sensor1 + sensor2) / 2 ~> 0.75
 - `~/` - Confident division
 - `~==` - Confident equality
 - `~!=` - Confident inequality
-- `~>` - Confident greater
 - `~>=` - Confident greater equal
 - `~<` - Confident less
 - `~<=` - Confident less equal

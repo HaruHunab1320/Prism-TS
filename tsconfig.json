@@ -3,8 +3,6 @@
     "target": "ES2022",
     "module": "commonjs",
     "lib": ["ES2022"],
-    "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -17,8 +15,20 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "composite": true,
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@prism/core": ["./packages/prism-core/src"],
+      "@prism/llm": ["./packages/prism-llm/src"],
+      "@prism/repl": ["./apps/repl/src"]
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "references": [
+    { "path": "./packages/prism-core" },
+    { "path": "./packages/prism-llm" },
+    { "path": "./apps/repl" },
+    { "path": "./apps/cli" }
+  ]
 }

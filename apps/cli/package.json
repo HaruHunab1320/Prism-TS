@@ -1,0 +1,29 @@
+{
+  "name": "@prism/cli",
+  "version": "1.0.21",
+  "description": "Command-line interface for Prism language",
+  "main": "dist/index.js",
+  "bin": {
+    "prism": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node --project tsconfig.dev.json -r tsconfig-paths/register src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@prism/core": "workspace:*",
+    "@prism/llm": "workspace:*",
+    "@prism/repl": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.4.3"
+  },
+  "files": [
+    "dist"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "types": ["jest", "node"],
+    "paths": {
+      "@prism/llm": ["../prism-llm/src"],
+      "@prism/llm/*": ["../prism-llm/src/*"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "test/**/*"
+  ],
+  "references": [
+    { "path": "../prism-llm" }
+  ]
+}

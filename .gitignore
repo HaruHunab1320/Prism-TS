@@ -10,3 +10,8 @@ coverage/
 *.swp
 *.swo
 *~
+.turbo/
+*.tsbuildinfo
+packages/*/dist/
+apps/*/dist/
+pnpm-lock.yaml

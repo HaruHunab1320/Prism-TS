@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@prism/core": ["../../packages/prism-core/src"],
+      "@prism/core/*": ["../../packages/prism-core/src/*"],
+      "@prism/llm": ["../../packages/prism-llm/src"],
+      "@prism/llm/*": ["../../packages/prism-llm/src/*"],
+      "@prism/repl": ["../repl/src"],
+      "@prism/repl/*": ["../repl/src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../../packages/prism-core" },
+    { "path": "../../packages/prism-llm" },
+    { "path": "../repl" }
+  ]
+}
