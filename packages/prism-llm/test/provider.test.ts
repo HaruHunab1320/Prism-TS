@@ -30,7 +30,7 @@ describe('LLM Providers', () => {
     });
 
     it('should allow setting custom mock responses', async () => {
-      provider.setMockResponse('Custom response', 0.9);
+      provider.setMockResponse('Custom response', 0.9, 'High confidence reasoning');
       
       const request = new LLMRequest('Test prompt');
       const response = await provider.complete(request);
@@ -91,9 +91,9 @@ describe('LLM Providers', () => {
       expect(provider.name).toBe('Claude');
     });
 
-    it('should not support embeddings', async () => {
+    it('should not support embeddings', () => {
       const provider = new ClaudeProvider('test-key');
-      await expect(provider.embed('test')).rejects.toThrow('does not provide embedding functionality');
+      expect(provider.embed).toBeUndefined();
     });
   });
 
@@ -253,6 +253,48 @@ describe('LLM Providers', () => {
       expect(error.code).toBe('TEST_CODE');
       expect(error.context).toEqual({ detail: 'value' });
       expect(error.name).toBe('LLMError');
+    });
+  });
+
+  describe('Structured Output', () => {
+    let provider: MockLLMProvider;
+
+    beforeEach(() => {
+      provider = new MockLLMProvider();
+    });
+
+    it('should return confidence with responses by default', async () => {
+      provider.setMockResponse('This is certain information.', 0.95);
+      
+      const request = new LLMRequest('Tell me something');
+      const response = await provider.complete(request);
+      
+      expect(response.content).toBe('This is certain information.');
+      expect(response.confidence).toBe(0.95);
+    });
+
+    it('should include reasoning when requested', async () => {
+      provider.setMockResponse('The answer is 42.', 0.99, 'This is based on mathematical proof.');
+      
+      const request = new LLMRequest('What is the answer?', {
+        includeReasoning: true
+      });
+      
+      const response = await provider.complete(request);
+      
+      expect(response.content).toBe('The answer is 42.');
+      expect(response.confidence).toBe(0.99);
+      expect(response.metadata?.reasoning).toBe('This is based on mathematical proof.');
+    });
+
+    it('should handle low confidence responses', async () => {
+      provider.setMockResponse('I am not sure about this.', 0.3);
+      
+      const request = new LLMRequest('Tell me something uncertain');
+      const response = await provider.complete(request);
+      
+      expect(response.content).toBe('I am not sure about this.');
+      expect(response.confidence).toBe(0.3);
     });
   });
 });

@@ -27,8 +27,14 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
-  "dependencies": {
+  "dependencies": {},
+  "peerDependencies": {
     "@prism/llm": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@prism/llm": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
