@@ -79,8 +79,8 @@ function HomepageFeatures() {
           />
           <Feature
             icon="🤖"
-            title="Native AI Integration"
-            description="Built-in support for LLMs with automatic confidence extraction from Claude, Gemini, and GPT."
+            title="AI-Ready Design"
+            description="Built for the age of AI with explicit confidence tracking and the @prism/confidence library for extraction."
           />
           <Feature
             icon="🌊"
@@ -89,8 +89,8 @@ function HomepageFeatures() {
           />
           <Feature
             icon="📊"
-            title="Advanced Extraction"
-            description="Extract confidence from any source using consistency checks, response analysis, and calibration."
+            title="Confidence Extraction"
+            description="Extract confidence from LLMs and other sources with @prism/confidence - consistency checks, response analysis, and more."
           />
           <Feature
             icon="🔧"
