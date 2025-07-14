@@ -4,6 +4,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
 import React from 'react';
+import BrowserOnly from '@docusaurus/BrowserOnly';
 
 import styles from './index.module.css';
 
@@ -12,6 +13,14 @@ function HomepageHeader() {
 
   return (
     <header className={styles.hero}>
+      <div className={styles.particleContainer}>
+        <BrowserOnly fallback={<div />}>
+          {() => {
+            const ParticleBackground = require('../components/ParticleBackground').default;
+            return <ParticleBackground />;
+          }}
+        </BrowserOnly>
+      </div>
       <div className={styles.heroContent}>
         <img 
           src="/img/prism-logo-v1.png" 
