@@ -5,22 +5,22 @@ title: LLM Integration
 
 # LLM Integration
 
-Prism provides seamless integration with Large Language Models (LLMs) through the `@prism/llm` package. This guide covers everything you need to know about integrating Claude, Gemini, and other LLM providers with your Prism applications.
+Prism provides seamless integration with Large Language Models (LLMs) through the `@prism-lang/llm` package. This guide covers everything you need to know about integrating Claude, Gemini, and other LLM providers with your Prism applications.
 
 ## Installation
 
 ```bash
-npm install @prism/llm
+npm install @prism-lang/llm
 # or
-yarn add @prism/llm
+yarn add @prism-lang/llm
 # or
-pnpm add @prism/llm
+pnpm add @prism-lang/llm
 ```
 
 ## Quick Start
 
 ```typescript
-import { ClaudeProvider, LLMRequest } from '@prism/llm';
+import { ClaudeProvider, LLMRequest } from '@prism-lang/llm';
 
 // Initialize a provider
 const claude = new ClaudeProvider(process.env.CLAUDE_API_KEY);
@@ -40,7 +40,7 @@ console.log(response.confidence); // 0.9
 Claude is Anthropic's state-of-the-art language model. Prism supports all Claude models.
 
 ```typescript
-import { ClaudeProvider } from '@prism/llm';
+import { ClaudeProvider } from '@prism-lang/llm';
 
 const claude = new ClaudeProvider(apiKey, {
   model: 'claude-3-haiku-20240307', // Default model
@@ -61,7 +61,7 @@ const claude = new ClaudeProvider(apiKey, {
 Google's Gemini models offer excellent performance and embedding capabilities.
 
 ```typescript
-import { GeminiProvider } from '@prism/llm';
+import { GeminiProvider } from '@prism-lang/llm';
 
 const gemini = new GeminiProvider(apiKey, {
   model: 'gemini-1.5-flash', // Default model
@@ -81,7 +81,7 @@ const gemini = new GeminiProvider(apiKey, {
 For testing and development, use the mock provider:
 
 ```typescript
-import { MockLLMProvider } from '@prism/llm';
+import { MockLLMProvider } from '@prism-lang/llm';
 
 const mock = new MockLLMProvider();
 mock.setMockResponse('Test response', 0.75);
@@ -110,7 +110,7 @@ GOOGLE_API_KEY=AIza...
 Use the configuration manager for automatic setup:
 
 ```typescript
-import { LLMConfigManager } from '@prism/llm';
+import { LLMConfigManager } from '@prism-lang/llm';
 
 // Create providers from environment
 const providers = LLMConfigManager.createFromEnvironment();
@@ -130,7 +130,7 @@ const status = LLMConfigManager.getConfigStatus();
 For more control, configure providers manually:
 
 ```typescript
-import { ClaudeProvider, LLMProviderConfig } from '@prism/llm';
+import { ClaudeProvider, LLMProviderConfig } from '@prism-lang/llm';
 
 const config: LLMProviderConfig = {
   type: 'claude',
@@ -147,7 +147,7 @@ const provider = LLMConfigManager.createProvider(config);
 ### Basic Completion
 
 ```typescript
-import { LLMRequest, LLMOptions } from '@prism/llm';
+import { LLMRequest, LLMOptions } from '@prism-lang/llm';
 
 const options: LLMOptions = {
   maxTokens: 1000,
@@ -189,7 +189,7 @@ const embeddings = await gemini.embed('Text to embed');
 Use the registry pattern for managing multiple providers:
 
 ```typescript
-import { LLMProviderRegistry } from '@prism/llm';
+import { LLMProviderRegistry } from '@prism-lang/llm';
 
 const registry = new LLMProviderRegistry();
 
@@ -208,7 +208,7 @@ const response2 = await registry.complete(request, 'gemini'); // Uses specific
 All LLM operations can throw `LLMError`:
 
 ```typescript
-import { LLMError } from '@prism/llm';
+import { LLMError } from '@prism-lang/llm';
 
 try {
   const response = await provider.complete(request);
@@ -249,7 +249,7 @@ try {
 Implement rate limiting to avoid API limits:
 
 ```typescript
-import { RateLimiter } from '@prism/llm';
+import { RateLimiter } from '@prism-lang/llm';
 
 const limiter = new RateLimiter(
   10,    // Max requests
@@ -269,7 +269,7 @@ console.log(limiter.remaining()); // 9
 Implement automatic retry with exponential backoff:
 
 ```typescript
-import { withRetry } from '@prism/llm';
+import { withRetry } from '@prism-lang/llm';
 
 const response = await withRetry(
   () => provider.complete(request),
@@ -336,7 +336,7 @@ async function queryLLM(prompt: string): Promise<string> {
 ### 3. Use Type-Safe Configuration
 
 ```typescript
-import { LLMProviderConfig } from '@prism/llm';
+import { LLMProviderConfig } from '@prism-lang/llm';
 
 const config: LLMProviderConfig = {
   type: 'claude',

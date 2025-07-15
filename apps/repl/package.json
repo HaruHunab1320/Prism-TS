@@ -1,5 +1,5 @@
 {
-  "name": "@prism/repl",
+  "name": "@prism-lang/repl",
   "version": "1.0.0",
   "description": "Interactive REPL for Prism language",
   "main": "dist/index.js",
@@ -12,8 +12,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@prism/core": "workspace:*",
-    "@prism/llm": "workspace:*"
+    "@prism-lang/core": "workspace:*",
+    "@prism-lang/llm": "workspace:*"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",

@@ -5,22 +5,22 @@ title: Confidence Extraction
 
 # Confidence Extraction
 
-The `@prism/confidence` package provides comprehensive tools for extracting, calibrating, and managing confidence values from various sources including LLM responses, sensors, and APIs. This guide covers all aspects of confidence extraction in Prism.
+The `@prism-lang/confidence` package provides comprehensive tools for extracting, calibrating, and managing confidence values from various sources including LLM responses, sensors, and APIs. This guide covers all aspects of confidence extraction in Prism.
 
 ## Installation
 
 ```bash
-npm install @prism/confidence
+npm install @prism-lang/confidence
 # or
-yarn add @prism/confidence
+yarn add @prism-lang/confidence
 # or
-pnpm add @prism/confidence
+pnpm add @prism-lang/confidence
 ```
 
 ## Quick Start
 
 ```typescript
-import { confidence, smartExtract } from '@prism/confidence';
+import { confidence, smartExtract } from '@prism-lang/confidence';
 
 // Simple extraction from text
 const result = await confidence.extract("I'm fairly certain Paris is the capital of France.");
@@ -39,7 +39,7 @@ The confidence extraction library provides three levels of API complexity:
 ### Level 1: Dead Simple
 
 ```typescript
-import { ConfidenceExtractor } from '@prism/confidence';
+import { ConfidenceExtractor } from '@prism-lang/confidence';
 
 const extractor = new ConfidenceExtractor();
 const result = await extractor.extract("I think the answer might be 42");
@@ -160,7 +160,7 @@ const result = await extractor.fromStructuredResponse(
 Adjust confidence based on domain expertise:
 
 ```typescript
-import { DomainCalibrator } from '@prism/confidence';
+import { DomainCalibrator } from '@prism-lang/confidence';
 
 const calibrator = new DomainCalibrator({
   domain: 'medical',
@@ -196,7 +196,7 @@ console.log(calibrated.value); // 0.9 (0.75 + 0.15)
 Adjust confidence for security-critical operations:
 
 ```typescript
-import { SecurityCalibrator } from '@prism/confidence';
+import { SecurityCalibrator } from '@prism-lang/confidence';
 
 const secCalibrator = new SecurityCalibrator();
 
@@ -215,7 +215,7 @@ console.log(result.value); // 0.72 (reduced by 20%)
 Learn from user feedback:
 
 ```typescript
-import { InteractiveCalibrator } from '@prism/confidence';
+import { InteractiveCalibrator } from '@prism-lang/confidence';
 
 const interactiveCalibrator = new InteractiveCalibrator();
 
@@ -234,7 +234,7 @@ const calibrated = await interactiveCalibrator.calibrate({ value: 0.8 });
 Combine multiple confidence sources:
 
 ```typescript
-import { ConfidenceEnsemble } from '@prism/confidence';
+import { ConfidenceEnsemble } from '@prism-lang/confidence';
 
 const ensemble = new ConfidenceEnsemble({
   consistency: 0.4,
@@ -258,7 +258,7 @@ console.log(combined.value); // 0.8 (weighted average)
 Ensure minimum confidence across a set of operations:
 
 ```typescript
-import { ConfidenceBudgetManager } from '@prism/confidence';
+import { ConfidenceBudgetManager } from '@prism-lang/confidence';
 
 const budgetManager = new ConfidenceBudgetManager(0.7); // Minimum 70% total
 
@@ -276,7 +276,7 @@ console.log(budgetManager.getWeakestLink()); // { value: 'step2', confidence: 0.
 Define and validate confidence requirements:
 
 ```typescript
-import { ConfidenceContractManager } from '@prism/confidence';
+import { ConfidenceContractManager } from '@prism-lang/confidence';
 
 const contract = new ConfidenceContractManager({
   'data_quality': 0.8,
@@ -299,7 +299,7 @@ console.log(validation.failures); // ['model_accuracy: 0.7 < 0.75']
 Track confidence across multiple aspects:
 
 ```typescript
-import { DifferentialConfidenceManager } from '@prism/confidence';
+import { DifferentialConfidenceManager } from '@prism-lang/confidence';
 
 const diffManager = new DifferentialConfidenceManager();
 
@@ -320,7 +320,7 @@ console.log(result.recommendation); // "Focus on improving completeness (current
 Model confidence decay over time:
 
 ```typescript
-import { TemporalConfidence } from '@prism/confidence';
+import { TemporalConfidence } from '@prism-lang/confidence';
 
 const temporal = new TemporalConfidence(
   24, // 24 hour half-life
@@ -340,7 +340,7 @@ console.log(aged.value); // 0.636 (0.9 * 0.707)
 ### Sensor Confidence
 
 ```typescript
-import { SensorConfidenceExtractor } from '@prism/confidence';
+import { SensorConfidenceExtractor } from '@prism-lang/confidence';
 
 const sensorExtractor = new SensorConfidenceExtractor();
 
@@ -355,7 +355,7 @@ const confidence = await sensorExtractor.extract({
 ### API Confidence
 
 ```typescript
-import { APIConfidenceExtractor } from '@prism/confidence';
+import { APIConfidenceExtractor } from '@prism-lang/confidence';
 
 const apiExtractor = new APIConfidenceExtractor();
 
@@ -372,8 +372,8 @@ const confidence = await apiExtractor.extract({
 ### Example 1: LLM Response with Confidence
 
 ```typescript
-import { ConfidenceExtractor } from '@prism/confidence';
-import { ClaudeProvider, LLMRequest } from '@prism/llm';
+import { ConfidenceExtractor } from '@prism-lang/confidence';
+import { ClaudeProvider, LLMRequest } from '@prism-lang/llm';
 
 const llm = new ClaudeProvider(process.env.CLAUDE_API_KEY);
 const extractor = new ConfidenceExtractor();
@@ -400,7 +400,7 @@ console.log(`Confidence: ${(result.confidence * 100).toFixed(1)}%`);
 ### Example 2: Multi-Source Confidence
 
 ```typescript
-import { ConfidenceEnsemble, ConfidenceExtractor } from '@prism/confidence';
+import { ConfidenceEnsemble, ConfidenceExtractor } from '@prism-lang/confidence';
 
 async function robustQuery(prompt: string) {
   const extractor = new ConfidenceExtractor();
@@ -447,7 +447,7 @@ import {
   DomainCalibrator, 
   ConfidenceBudgetManager,
   SecurityCalibrator 
-} from '@prism/confidence';
+} from '@prism-lang/confidence';
 
 class ProductionPipeline {
   private extractor = new ConfidenceExtractor();

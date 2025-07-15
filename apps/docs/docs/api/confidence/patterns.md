@@ -87,7 +87,7 @@ Get comprehensive budget status.
 ### Example: Medical Diagnosis
 
 ```typescript
-import { ConfidenceBudgetManager } from '@prism/confidence';
+import { ConfidenceBudgetManager } from '@prism-lang/confidence';
 
 // Require 2.5 total confidence for diagnosis
 const diagnosisBudget = new ConfidenceBudgetManager(2.5);
@@ -166,7 +166,7 @@ Get human-readable contract summary.
 ### Example: Security Audit
 
 ```typescript
-import { ConfidenceContractManager } from '@prism/confidence';
+import { ConfidenceContractManager } from '@prism-lang/confidence';
 
 // Define security requirements
 const securityContract = new ConfidenceContractManager({
@@ -264,7 +264,7 @@ Get average confidence across all aspects.
 ### Example: Multi-Model Prediction
 
 ```typescript
-import { DifferentialConfidenceManager } from '@prism/confidence';
+import { DifferentialConfidenceManager } from '@prism-lang/confidence';
 
 const weatherPrediction = new DifferentialConfidenceManager();
 
@@ -349,7 +349,7 @@ Get human-readable decay explanation.
 ### Example: Market Prediction
 
 ```typescript
-import { TemporalConfidence } from '@prism/confidence';
+import { TemporalConfidence } from '@prism-lang/confidence';
 
 // Stock prediction with 7-day half-life
 const prediction = new TemporalConfidence(0.85, {
@@ -474,7 +474,7 @@ import {
   ConfidenceContractManager,
   DifferentialConfidenceManager,
   TemporalConfidence
-} from '@prism/confidence';
+} from '@prism-lang/confidence';
 
 class InvestmentDecisionSystem {
   private budget = new ConfidenceBudgetManager(4.0);

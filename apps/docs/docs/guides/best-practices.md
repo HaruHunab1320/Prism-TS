@@ -43,7 +43,7 @@ Create reusable confidence modules:
 
 ```typescript
 // confidence/extractors/domain-extractor.ts
-import { ConfidenceExtractor } from '@prism/confidence';
+import { ConfidenceExtractor } from '@prism-lang/confidence';
 
 export class DomainSpecificExtractor extends ConfidenceExtractor {
   async extractFromDomainData(data: DomainData): Promise<ConfidenceResult> {
@@ -242,8 +242,8 @@ class LazyConfidenceValue<T> {
 Test with confidence variations:
 
 ```typescript
-import { MockLLMProvider } from '@prism/llm';
-import { ConfidenceExtractor } from '@prism/confidence';
+import { MockLLMProvider } from '@prism-lang/llm';
+import { ConfidenceExtractor } from '@prism-lang/confidence';
 
 describe('ConfidenceAwareService', () => {
   let mockLLM: MockLLMProvider;

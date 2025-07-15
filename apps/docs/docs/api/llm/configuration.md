@@ -41,7 +41,7 @@ Retrieve API key from environment variables.
 
 **Example:**
 ```typescript
-import { LLMConfigManager } from '@prism/llm';
+import { LLMConfigManager } from '@prism-lang/llm';
 
 const claudeKey = LLMConfigManager.getApiKey('claude');
 if (!claudeKey) {
@@ -326,7 +326,7 @@ GEMINI_API_KEY=AIzaSy...
 ### Basic Setup
 
 ```typescript
-import { LLMConfigManager, LLMProviderRegistry } from '@prism/llm';
+import { LLMConfigManager, LLMProviderRegistry } from '@prism-lang/llm';
 
 // Create registry with all available providers
 const registry = new LLMProviderRegistry();

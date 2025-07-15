@@ -34,7 +34,7 @@ prism run hello.prism
 ### Using TypeScript/JavaScript
 
 ```typescript
-import { parse, createRuntime } from 'prism-uncertainty';
+import { parse, createRuntime } from '@prism-lang/core';
 import { readFileSync } from 'fs';
 
 const code = readFileSync('hello.prism', 'utf-8');

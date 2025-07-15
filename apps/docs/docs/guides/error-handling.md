@@ -29,7 +29,7 @@ try {
 When working with LLM providers, handle specific error types:
 
 ```typescript
-import { LLMError } from '@prism/llm';
+import { LLMError } from '@prism-lang/llm';
 
 try {
   const response = await llm.complete(request);
@@ -57,7 +57,7 @@ try {
 Handle uncertainty explicitly in your error handling:
 
 ```typescript
-import { ConfidenceValue } from '@prism/core';
+import { ConfidenceValue } from '@prism-lang/core';
 
 function processResult(result: ConfidenceValue<string>) {
   if (result.confidence < 0.5) {
@@ -79,7 +79,7 @@ function processResult(result: ConfidenceValue<string>) {
 Wrap uncertain operations with confidence-aware error handling:
 
 ```typescript
-import { prism } from '@prism/core';
+import { prism } from '@prism-lang/core';
 
 async function safeEvaluate(expression: string) {
   try {
@@ -634,7 +634,7 @@ const errorChain = new ErrorChain()
 ### 3. Test Error Scenarios
 
 ```typescript
-import { MockLLMProvider } from '@prism/llm';
+import { MockLLMProvider } from '@prism-lang/llm';
 
 describe('Error Handling', () => {
   it('should handle low confidence gracefully', async () => {

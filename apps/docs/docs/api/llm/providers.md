@@ -109,7 +109,7 @@ class MockLLMProvider implements LLMProvider {
 
 **Example:**
 ```typescript
-import { MockLLMProvider } from '@prism/llm';
+import { MockLLMProvider } from '@prism-lang/llm';
 
 const mock = new MockLLMProvider();
 mock.setMockResponse("Test response", 0.9);
@@ -157,7 +157,7 @@ interface ClaudeConfig {
 
 **Example:**
 ```typescript
-import { ClaudeProvider } from '@prism/llm';
+import { ClaudeProvider } from '@prism-lang/llm';
 
 const claude = new ClaudeProvider(
   process.env.CLAUDE_API_KEY!,
@@ -208,7 +208,7 @@ interface GeminiConfig {
 
 **Example:**
 ```typescript
-import { GeminiProvider } from '@prism/llm';
+import { GeminiProvider } from '@prism-lang/llm';
 
 const gemini = new GeminiProvider(
   process.env.GEMINI_API_KEY!,
@@ -247,7 +247,7 @@ class LLMProviderRegistry {
 
 **Example:**
 ```typescript
-import { LLMProviderRegistry, ClaudeProvider, GeminiProvider } from '@prism/llm';
+import { LLMProviderRegistry, ClaudeProvider, GeminiProvider } from '@prism-lang/llm';
 
 const registry = new LLMProviderRegistry();
 
@@ -273,7 +273,7 @@ const geminiResponse = await registry.complete(
 ### Default Registry
 
 ```typescript
-import { defaultLLMRegistry } from '@prism/llm';
+import { defaultLLMRegistry } from '@prism-lang/llm';
 
 // Pre-configured global registry
 defaultLLMRegistry.register('mock', new MockLLMProvider());
@@ -381,7 +381,7 @@ for (const prompt of prompts) {
 ### Example: OpenAI Provider
 
 ```typescript
-import { LLMProvider, LLMRequest, LLMResponse, LLMError } from '@prism/llm';
+import { LLMProvider, LLMRequest, LLMResponse, LLMError } from '@prism-lang/llm';
 
 export class OpenAIProvider implements LLMProvider {
   readonly name = 'OpenAI';

@@ -1,5 +1,5 @@
 {
-  "name": "@prism/cli",
+  "name": "@prism-lang/cli",
   "version": "1.0.21",
   "description": "Command-line interface for Prism language",
   "main": "dist/index.js",
@@ -13,9 +13,9 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@prism/core": "workspace:*",
-    "@prism/llm": "workspace:*",
-    "@prism/repl": "workspace:*"
+    "@prism-lang/core": "workspace:*",
+    "@prism-lang/llm": "workspace:*",
+    "@prism-lang/repl": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.11.30",

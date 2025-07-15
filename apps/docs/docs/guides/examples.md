@@ -26,8 +26,8 @@ combined = weather_prediction ~*> temperature  // "sunny", 72 with confidence 0.
 ### 2. LLM Integration with Confidence
 
 ```typescript
-import { createRuntime, parse } from '@prism/core';
-import { ClaudeProvider } from '@prism/llm';
+import { createRuntime, parse } from '@prism-lang/core';
+import { ClaudeProvider } from '@prism-lang/llm';
 
 // Setup
 const runtime = createRuntime();
@@ -78,8 +78,8 @@ uncertain if (avg_confidence > 0.8) {
 ### 1. Multi-Stage Decision Pipeline
 
 ```typescript
-import { ConfidenceExtractor, DomainCalibrator, ConfidenceBudgetManager } from '@prism/confidence';
-import { ClaudeProvider, GeminiProvider } from '@prism/llm';
+import { ConfidenceExtractor, DomainCalibrator, ConfidenceBudgetManager } from '@prism-lang/confidence';
+import { ClaudeProvider, GeminiProvider } from '@prism-lang/llm';
 
 class DecisionPipeline {
   private extractor = new ConfidenceExtractor();
@@ -163,7 +163,7 @@ const result = await pipeline.analyze('Should we approve this loan application?'
 ### 2. Real-time Confidence Monitoring
 
 ```typescript
-import { TemporalConfidence, ConfidenceVisualizer } from '@prism/confidence';
+import { TemporalConfidence, ConfidenceVisualizer } from '@prism-lang/confidence';
 
 class RealTimeMonitor {
   private temporal = new TemporalConfidence(60, 'exponential'); // 60 min half-life
@@ -336,13 +336,13 @@ const result = await cache.get(
 ### 1. Medical Diagnosis Assistant
 
 ```typescript
-import { createRuntime, parse } from '@prism/core';
+import { createRuntime, parse } from '@prism-lang/core';
 import { 
   ConfidenceExtractor, 
   DomainCalibrator, 
   SecurityCalibrator,
   ConfidenceContractManager 
-} from '@prism/confidence';
+} from '@prism-lang/confidence';
 
 class MedicalDiagnosisAssistant {
   private runtime = createRuntime();
@@ -629,9 +629,9 @@ class ContentModerationSystem {
 
 ```typescript
 import express from 'express';
-import { createRuntime, parse } from '@prism/core';
-import { ConfidenceExtractor } from '@prism/confidence';
-import { ClaudeProvider } from '@prism/llm';
+import { createRuntime, parse } from '@prism-lang/core';
+import { ConfidenceExtractor } from '@prism-lang/confidence';
+import { ClaudeProvider } from '@prism-lang/llm';
 
 const app = express();
 app.use(express.json());
@@ -709,8 +709,8 @@ app.listen(3000);
 
 ```tsx
 import React, { useState, useEffect } from 'react';
-import { createRuntime, parse } from '@prism/core';
-import { ConfidenceVisualizer } from '@prism/confidence';
+import { createRuntime, parse } from '@prism-lang/core';
+import { ConfidenceVisualizer } from '@prism-lang/confidence';
 
 const ConfidenceAnalyzer: React.FC = () => {
   const [input, setInput] = useState('');
@@ -819,14 +819,14 @@ A complete example of a weather prediction service using Prism:
 
 ```typescript
 // src/weather-service.ts
-import { createRuntime, parse } from '@prism/core';
+import { createRuntime, parse } from '@prism-lang/core';
 import { 
   ConfidenceExtractor, 
   TemporalConfidence,
   ConfidenceEnsemble,
   APIConfidenceExtractor 
-} from '@prism/confidence';
-import { ClaudeProvider, GeminiProvider } from '@prism/llm';
+} from '@prism-lang/confidence';
+import { ClaudeProvider, GeminiProvider } from '@prism-lang/llm';
 
 interface WeatherPrediction {
   temperature: number;

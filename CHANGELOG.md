@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to prism-uncertainty will be documented in this file.
+All notable changes to @prism-lang/core will be documented in this file.
 
 ## [1.0.20] - 2025-07-08
 
@@ -627,4 +627,4 @@ query = "SELECT * FROM users WHERE name = \"John\""
 - Full TypeScript implementation
 - Interactive REPL
 - CLI tools (prism run, prism eval, prism repl)
-- npm package: prism-uncertainty
+- npm package: @prism-lang/core

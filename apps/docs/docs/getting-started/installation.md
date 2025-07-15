@@ -19,11 +19,11 @@ Get started with Prism in minutes. Choose your preferred package manager and ins
 The core Prism language implementation:
 
 ```bash
-npm install prism-uncertainty
+npm install @prism-lang/core
 # or
-yarn add prism-uncertainty
+yarn add @prism-lang/core
 # or
-pnpm add prism-uncertainty
+pnpm add @prism-lang/core
 ```
 
 ### Optional Packages
@@ -31,19 +31,19 @@ pnpm add prism-uncertainty
 #### Confidence Extraction
 Advanced confidence extraction and calibration:
 ```bash
-npm install @prism/confidence
+npm install @prism-lang/confidence
 ```
 
 #### LLM Integrations
 Support for Claude, Gemini, and OpenAI:
 ```bash
-npm install @prism/llm
+npm install @prism-lang/llm
 ```
 
 #### CLI Tools
 Command-line interface for running Prism files:
 ```bash
-npm install -g @prism/cli
+npm install -g @prism-lang/cli
 ```
 
 ## Quick Verification
@@ -51,7 +51,7 @@ npm install -g @prism/cli
 Verify your installation:
 
 ```typescript
-import { parse, createRuntime } from 'prism-uncertainty';
+import { parse, createRuntime } from '@prism-lang/core';
 
 const code = `
   greeting = "Hello, uncertain world!"

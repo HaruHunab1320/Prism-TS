@@ -42,13 +42,14 @@ function HomepageHeader() {
         </div>
         <div className={styles.codeExample}>
           <pre>
-            <code>{`// Handle AI responses with confidence
-analysis = llm("Is this secure?") ~> 0.85
+            <code>{`// AI responses with automatic confidence extraction
+security_check = llm("Analyze this code for vulnerabilities")
+// Confidence automatically extracted from LLM response!
 
-uncertain if (analysis) {
-  high { deploy() }
-  medium { review() }
-  low { abort() }
+uncertain if (security_check) {
+  high { deploy_to_production() }    // >0.8 confidence
+  medium { request_human_review() }  // 0.5-0.8
+  low { block_deployment() }         // <0.5
 }`}</code>
           </pre>
         </div>
@@ -80,7 +81,7 @@ function HomepageFeatures() {
           <Feature
             icon="🤖"
             title="AI-Ready Design"
-            description="Built for the age of AI with explicit confidence tracking and the @prism/confidence library for extraction."
+            description="Built for the age of AI with explicit confidence tracking and the @prism-lang/confidence library for extraction."
           />
           <Feature
             icon="🌊"
@@ -90,7 +91,7 @@ function HomepageFeatures() {
           <Feature
             icon="📊"
             title="Confidence Extraction"
-            description="Extract confidence from LLMs and other sources with @prism/confidence - consistency checks, response analysis, and more."
+            description="Extract confidence from LLMs and other sources with @prism-lang/confidence - consistency checks, response analysis, and more."
           />
           <Feature
             icon="🔧"

@@ -120,7 +120,7 @@ const config: Config = {
           items: [
             {
               label: "Stack Overflow",
-              href: "https://stackoverflow.com/questions/tagged/prism-uncertainty",
+              href: "https://stackoverflow.com/questions/tagged/prism-lang",
             },
             {
               label: "Discord",
@@ -128,7 +128,7 @@ const config: Config = {
             },
             {
               label: "npm",
-              href: "https://www.npmjs.com/package/prism-uncertainty",
+              href: "https://www.npmjs.com/package/@prism-lang/core",
             },
           ],
         },

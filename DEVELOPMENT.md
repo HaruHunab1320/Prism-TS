@@ -2,11 +2,11 @@
 
 ## 🚀 Current Status
 
-Prism is a fully functional programming language with comprehensive uncertainty-aware features. The language is stable and actively used through the `prism-uncertainty` npm package.
+Prism is a fully functional programming language with comprehensive uncertainty-aware features. The language is stable and actively used through the `@prism-lang/core` npm package.
 
 **Latest Version:** 1.0.21  
 **Test Coverage:** 44 test files with 600+ individual test cases  
-**Package:** [prism-uncertainty on npm](https://www.npmjs.com/package/prism-uncertainty)
+**Package:** [@prism-lang/core on npm](https://www.npmjs.com/package/@prism-lang/core)
 
 ## ✅ Completed Features
 

@@ -46,7 +46,7 @@ Interprets an AST node and returns the resulting value.
 
 **Example:**
 ```typescript
-import { parse, Interpreter } from '@prism/core';
+import { parse, Interpreter } from '@prism-lang/core';
 
 const interpreter = new Interpreter();
 const ast = parse('x = 10; y = x * 2;');
@@ -79,7 +79,7 @@ Sets the default LLM provider for `llm()` calls.
 
 **Example:**
 ```typescript
-import { MockLLMProvider } from '@prism/llm';
+import { MockLLMProvider } from '@prism-lang/llm';
 
 const interpreter = new Interpreter();
 const mockProvider = new MockLLMProvider();
@@ -506,7 +506,7 @@ Supports array and object destructuring with confidence:
 ## Example: Custom Function Registration
 
 ```typescript
-import { Interpreter, FunctionValue, NumberValue, Value } from '@prism/core';
+import { Interpreter, FunctionValue, NumberValue, Value } from '@prism-lang/core';
 
 const interpreter = new Interpreter();
 

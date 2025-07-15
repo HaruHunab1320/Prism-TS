@@ -45,7 +45,7 @@ Parses the tokens into a complete program AST.
 
 **Example:**
 ```typescript
-import { tokenize, Parser } from '@prism/core';
+import { tokenize, Parser } from '@prism-lang/core';
 
 const source = `
   x = 42;
@@ -74,7 +74,7 @@ Convenience function that handles tokenization and parsing in one step.
 
 **Example:**
 ```typescript
-import { parse } from '@prism/core';
+import { parse } from '@prism-lang/core';
 
 const ast = parse('x = 10 ~> 0.9;');
 ```
@@ -339,7 +339,7 @@ abstract class ASTNode {
 ## Example: Custom AST Traversal
 
 ```typescript
-import { parse, ASTNode, IdentifierExpression } from '@prism/core';
+import { parse, ASTNode, IdentifierExpression } from '@prism-lang/core';
 
 function findIdentifiers(node: ASTNode): string[] {
   const identifiers: string[] = [];

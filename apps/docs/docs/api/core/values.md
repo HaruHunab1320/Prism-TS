@@ -311,7 +311,7 @@ class ConfidenceValue extends Value {
 
 **Example:**
 ```typescript
-import { ConfidenceLib } from '@prism/core';
+import { ConfidenceLib } from '@prism-lang/core';
 
 const confidentStr = new ConfidenceValue(
   new StringValue("prediction"),

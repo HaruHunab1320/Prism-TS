@@ -67,7 +67,7 @@ Prism excels in domains where uncertainty matters:
 
 ## Community & Support
 
-- 📦 [npm package](https://www.npmjs.com/package/prism-uncertainty)
+- 📦 [npm package](https://www.npmjs.com/package/@prism-lang/core)
 - 💬 [GitHub Discussions](https://github.com/HaruHunab1320/Prism-TS/discussions)
 - 🐛 [Issue Tracker](https://github.com/HaruHunab1320/Prism-TS/issues)
 - 📚 [Examples](https://github.com/HaruHunab1320/Prism-TS/tree/main/examples)

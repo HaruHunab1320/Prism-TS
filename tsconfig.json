@@ -20,9 +20,11 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "@prism/core": ["./packages/prism-core/src"],
-      "@prism/llm": ["./packages/prism-llm/src"],
-      "@prism/repl": ["./apps/repl/src"]
+      "@prism-lang/core": ["./packages/prism-core/src"],
+      "@prism-lang/llm": ["./packages/prism-llm/src"],
+      "@prism-lang/confidence": ["./packages/prism-confidence/src"],
+      "@prism-lang/repl": ["./apps/repl/src"],
+      "@prism-lang/cli": ["./apps/cli/src"]
     }
   },
   "references": [

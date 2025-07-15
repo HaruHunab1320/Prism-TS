@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![npm version](https://img.shields.io/npm/v/@prism/core.svg?style=for-the-badge)](https://www.npmjs.com/package/@prism/core)
+[![npm version](https://img.shields.io/npm/v/@prism-lang/core.svg?style=for-the-badge)](https://www.npmjs.com/package/@prism-lang/core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
@@ -16,11 +16,11 @@
 
 ## 📦 Important: Package Migration
 
-> **If you're using `prism-uncertainty`, please migrate to `@prism/core`**
+> **If you're using `prism-uncertainty`, please migrate to `@prism-lang/core`**
 > 
 > ```bash
 > npm uninstall prism-uncertainty
-> npm install @prism/core
+> npm install @prism-lang/core
 > ```
 
 ## 🚀 Quick Start
@@ -29,25 +29,25 @@ Install using your preferred package manager:
 
 ```bash
 # npm
-npm install @prism/core
-npm install @prism/confidence  # optional
+npm install @prism-lang/core
+npm install @prism-lang/confidence  # optional
 
 # yarn
-yarn add @prism/core
-yarn add @prism/confidence     # optional
+yarn add @prism-lang/core
+yarn add @prism-lang/confidence     # optional
 
 # pnpm
-pnpm add @prism/core
-pnpm add @prism/confidence     # optional
+pnpm add @prism-lang/core
+pnpm add @prism-lang/confidence     # optional
 
 # Install CLI globally
-npm install -g @prism/cli      # or yarn/pnpm
+npm install -g @prism-lang/cli      # or yarn/pnpm
 ```
 
 ### Your First Prism Program
 
 ```typescript
-import { parse, createRuntime } from '@prism/core';
+import { parse, createRuntime } from '@prism-lang/core';
 
 const code = `
   // AI responses with confidence
@@ -72,11 +72,11 @@ Prism is organized as a monorepo with focused, modular packages:
 
 | Package | Description | Version |
 |---------|-------------|---------|
-| [`@prism/core`](./packages/prism-core) | Core language implementation (parser, runtime, types) | ![npm](https://img.shields.io/npm/v/@prism/core.svg) |
-| [`@prism/confidence`](./packages/prism-confidence) | Confidence extraction from LLMs and other sources | ![npm](https://img.shields.io/npm/v/@prism/confidence.svg) |
-| [`@prism/llm`](./packages/prism-llm) | LLM provider integrations (Claude, Gemini, OpenAI) | ![npm](https://img.shields.io/npm/v/@prism/llm.svg) |
-| [`@prism/cli`](./apps/cli) | Command-line interface | ![npm](https://img.shields.io/npm/v/@prism/cli.svg) |
-| [`@prism/repl`](./apps/repl) | Interactive REPL | ![npm](https://img.shields.io/npm/v/@prism/repl.svg) |
+| [`@prism-lang/core`](./packages/prism-core) | Core language implementation (parser, runtime, types) | ![npm](https://img.shields.io/npm/v/@prism-lang/core.svg) |
+| [`@prism-lang/confidence`](./packages/prism-confidence) | Confidence extraction from LLMs and other sources | ![npm](https://img.shields.io/npm/v/@prism-lang/confidence.svg) |
+| [`@prism-lang/llm`](./packages/prism-llm) | LLM provider integrations (Claude, Gemini, OpenAI) | ![npm](https://img.shields.io/npm/v/@prism-lang/llm.svg) |
+| [`@prism-lang/cli`](./apps/cli) | Command-line interface | ![npm](https://img.shields.io/npm/v/@prism-lang/cli.svg) |
+| [`@prism-lang/repl`](./apps/repl) | Interactive REPL | ![npm](https://img.shields.io/npm/v/@prism-lang/repl.svg) |
 
 ## ✨ Why Prism?
 
@@ -115,10 +115,10 @@ decision = best_analysis ~?? fallback_analysis ~?? "manual_review"
 
 ### 📊 Confidence Extraction Made Easy
 
-With `@prism/confidence`:
+With `@prism-lang/confidence`:
 
 ```typescript
-import { confidence } from '@prism/confidence';
+import { confidence } from '@prism-lang/confidence';
 
 // Extract confidence from any LLM response
 const response = await llm("Is this safe?");
@@ -199,7 +199,7 @@ pnpm dev
 
 **Users**: Install our packages with any package manager (npm, yarn, pnpm)
 ```bash
-npm install @prism/core    # Works with npm, yarn, or pnpm!
+npm install @prism-lang/core    # Works with npm, yarn, or pnpm!
 ```
 
 **Contributors**: Development requires pnpm for workspace management
@@ -227,7 +227,7 @@ prism/
 
 - [Language Guide](./docs/LANGUAGE_GUIDE.md) - Complete language reference
 - [API Documentation](./docs/API.md) - All operators and functions
-- [Confidence Extraction](./packages/prism-confidence/README.md) - Using @prism/confidence
+- [Confidence Extraction](./packages/prism-confidence/README.md) - Using @prism-lang/confidence
 - [Examples](./examples/) - Real-world usage patterns
 
 ## 🌟 Examples

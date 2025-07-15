@@ -43,7 +43,7 @@ Extract confidence using automatic method selection.
 
 **Example:**
 ```typescript
-import { ConfidenceExtractor } from '@prism/confidence';
+import { ConfidenceExtractor } from '@prism-lang/confidence';
 
 const extractor = new ConfidenceExtractor();
 const result = await extractor.extract(
@@ -360,7 +360,7 @@ const combined = {
 ## Example: Complete Extraction Flow
 
 ```typescript
-import { ConfidenceExtractor } from '@prism/confidence';
+import { ConfidenceExtractor } from '@prism-lang/confidence';
 
 async function analyzeResponse(question: string) {
   const extractor = new ConfidenceExtractor();

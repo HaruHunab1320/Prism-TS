@@ -1,9 +1,10 @@
 {
   "name": "@prism-lang/llm",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "LLM provider integrations for Prism",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "license": "MIT",
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
     "dev": "tsc -b tsconfig.build.json -w",
@@ -25,8 +26,9 @@
   "peerDependencies": {
     "@prism-lang/confidence": "workspace:*"
   },
+  "homepage": "https://github.com/HaruHunab1320/Prism-TS/tree/main/packages/prism-llm#readme",
   "peerDependenciesMeta": {
-    "@prism/confidence": {
+    "@prism-lang/confidence": {
       "optional": true
     }
   },
@@ -51,7 +53,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/prism-lang/prism-ts.git",
+    "url": "https://github.com/HaruHunab1320/Prism-TS.git",
     "directory": "packages/prism-llm"
   }
 }
