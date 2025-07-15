@@ -4,17 +4,19 @@
   # Stay at repository root for monorepo
   base = ""
   
-  # Build command for the docs site
-  command = "npm install && npm run build --workspace=apps/docs"
+  # Build command for the docs site (using pnpm)
+  command = "pnpm install && pnpm --filter apps/docs build"
   
   # Publish directory (Docusaurus output)
   publish = "apps/docs/build"
 
 [build.environment]
-  # Node version (matches package.json engine requirement)
-  NODE_VERSION = "18"
-  # Enable npm workspaces
-  NPM_FLAGS = "--prefix=/"
+  # Node version - using latest LTS
+  NODE_VERSION = "20"
+  # Enable pnpm
+  NETLIFY_USE_PNPM = "true"
+  # pnpm version to match packageManager field
+  PNPM_VERSION = "8.15.1"
 
 # Headers for security and performance
 [[headers]]
