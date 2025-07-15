@@ -2,6 +2,8 @@
 
 Core implementation of the Prism programming language - a language designed for expressing and managing uncertainty in computational systems.
 
+📚 **[Full Documentation](https://docs.prismlang.dev/)** | 🚀 **[Getting Started](https://docs.prismlang.dev/docs/intro)** | 📖 **[API Reference](https://docs.prismlang.dev/docs/api/core/parser)**
+
 ## Installation
 
 ```bash

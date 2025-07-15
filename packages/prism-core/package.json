@@ -1,6 +1,6 @@
 {
   "name": "@prism-lang/core",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "description": "A programming language for uncertainty",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
     "llm",
     "ai"
   ],
-  "homepage": "https://github.com/HaruHunab1320/Prism-TS/tree/main/packages/prism-core#readme",
+  "homepage": "https://docs.prismlang.dev/",
   "repository": {
     "type": "git",
     "url": "https://github.com/HaruHunab1320/Prism-TS.git",

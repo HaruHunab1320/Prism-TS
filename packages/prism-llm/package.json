@@ -1,6 +1,6 @@
 {
   "name": "@prism-lang/llm",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "LLM provider integrations for Prism",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,7 +26,7 @@
   "peerDependencies": {
     "@prism-lang/confidence": "workspace:*"
   },
-  "homepage": "https://github.com/HaruHunab1320/Prism-TS/tree/main/packages/prism-llm#readme",
+  "homepage": "https://docs.prismlang.dev/docs/api/llm/",
   "peerDependenciesMeta": {
     "@prism-lang/confidence": {
       "optional": true

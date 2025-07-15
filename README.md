@@ -8,7 +8,7 @@
 
 **A programming language where uncertainty is a first-class citizen.**
 
-[Quick Start](#-quick-start) • [Packages](#-packages) • [Documentation](#-documentation) • [Examples](#-examples) • [Contributing](#-contributing)
+[Documentation](https://docs.prismlang.dev/) • [Quick Start](#-quick-start) • [Packages](#-packages) • [Examples](#-examples) • [Contributing](#-contributing)
 
 </div>
 
@@ -225,10 +225,13 @@ prism/
 
 ## 📖 Documentation
 
-- [Language Guide](./docs/LANGUAGE_GUIDE.md) - Complete language reference
-- [API Documentation](./docs/API.md) - All operators and functions
-- [Confidence Extraction](./packages/prism-confidence/README.md) - Using @prism-lang/confidence
-- [Examples](./examples/) - Real-world usage patterns
+**[📚 Full Documentation](https://docs.prismlang.dev/)**
+
+- [Getting Started](https://docs.prismlang.dev/docs/intro) - Quick start guide
+- [Language Guide](https://docs.prismlang.dev/docs/language-guide/) - Complete language reference
+- [API Reference](https://docs.prismlang.dev/docs/api/core/parser) - All functions and operators
+- [Confidence Extraction](https://docs.prismlang.dev/docs/confidence/) - Using @prism-lang/confidence
+- [Examples](https://docs.prismlang.dev/docs/examples/) - Real-world usage patterns
 
 ## 🌟 Examples
 

@@ -2,6 +2,8 @@
 
 Confidence extraction library for Prism - standardized patterns for extracting confidence values from LLMs and other sources.
 
+📚 **[Full Documentation](https://docs.prismlang.dev/docs/confidence/)** | 🔧 **[API Reference](https://docs.prismlang.dev/docs/api/confidence/)** | 💡 **[Examples](https://docs.prismlang.dev/docs/examples/confidence-extraction)**
+
 ## Overview
 
 Since most LLM providers (except OpenAI) don't provide log probabilities, this library focuses on practical confidence extraction methods:

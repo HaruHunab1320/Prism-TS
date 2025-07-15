@@ -1,6 +1,6 @@
 {
   "name": "@prism-lang/confidence",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Confidence extraction library for Prism - standardized patterns for extracting confidence values from LLMs and other sources",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,7 +21,7 @@
     "extraction",
     "calibration"
   ],
-  "homepage": "https://github.com/HaruHunab1320/Prism-TS/tree/main/packages/prism-confidence#readme",
+  "homepage": "https://docs.prismlang.dev/docs/confidence/",
   "dependencies": {
     "@prism-lang/core": "workspace:*"
   },
