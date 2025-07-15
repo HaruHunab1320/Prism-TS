@@ -1,11 +1,11 @@
-# @prism/llm
+# @prism-lang/llm
 
 LLM provider integrations for the Prism programming language. Supports multiple providers with automatic fallback and confidence extraction.
 
 ## Installation
 
 ```bash
-npm install @prism/llm
+npm install @prism-lang/llm
 ```
 
 ## Features
@@ -19,7 +19,7 @@ npm install @prism/llm
 ## Quick Start
 
 ```javascript
-import { LLMConfigManager, LLMProviderRegistry } from '@prism/llm';
+import { LLMConfigManager, LLMProviderRegistry } from '@prism-lang/llm';
 
 // Automatic setup from environment
 const providers = LLMConfigManager.createFromEnvironment();
@@ -72,7 +72,7 @@ print("Confidence: " + conf)
 
 ### Claude (Anthropic)
 ```javascript
-import { ClaudeProvider } from '@prism/llm';
+import { ClaudeProvider } from '@prism-lang/llm';
 
 const claude = new ClaudeProvider(apiKey);
 const response = await claude.complete(request);
@@ -80,7 +80,7 @@ const response = await claude.complete(request);
 
 ### Gemini (Google)
 ```javascript
-import { GeminiProvider } from '@prism/llm';
+import { GeminiProvider } from '@prism-lang/llm';
 
 const gemini = new GeminiProvider(apiKey);
 const response = await gemini.complete(request);
@@ -88,7 +88,7 @@ const response = await gemini.complete(request);
 
 ### Mock Provider
 ```javascript
-import { MockLLMProvider } from '@prism/llm';
+import { MockLLMProvider } from '@prism-lang/llm';
 
 const mock = new MockLLMProvider();
 mock.setMockResponse('Test response', 0.85);

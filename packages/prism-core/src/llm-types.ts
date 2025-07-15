@@ -1,6 +1,6 @@
 /**
- * LLM type definitions for @prism/core
- * These are duplicated here to avoid hard dependency on @prism/llm
+ * LLM type definitions for @prism-lang/core
+ * These are duplicated here to avoid hard dependency on @prism-lang/llm
  */
 
 export interface LLMOptions {

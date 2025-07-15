@@ -10,9 +10,9 @@ module.exports = {
     }]
   },
   moduleNameMapper: {
-    '^@prism/core$': '<rootDir>/../prism-core/src',
-    '^@prism/core/(.*)$': '<rootDir>/../prism-core/src/$1',
-    '^@prism/llm$': '<rootDir>/../prism-llm/src',
-    '^@prism/llm/(.*)$': '<rootDir>/../prism-llm/src/$1'
+    '^@prism-lang/core$': '<rootDir>/../prism-core/src',
+    '^@prism-lang/core/(.*)$': '<rootDir>/../prism-core/src/$1',
+    '^@prism-lang/llm$': '<rootDir>/../prism-llm/src',
+    '^@prism-lang/llm/(.*)$': '<rootDir>/../prism-llm/src/$1'
   }
 };

@@ -2,7 +2,7 @@ import { generateObject, generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
 import { z } from 'zod';
-import type { ConfidenceExtractor } from '@prism/confidence';
+import type { ConfidenceExtractor } from '@prism-lang/confidence';
 
 // Schema for structured responses with confidence
 const ConfidentResponseSchema = z.object({

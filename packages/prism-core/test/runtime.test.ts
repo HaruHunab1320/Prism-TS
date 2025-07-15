@@ -10,7 +10,7 @@ import {
 } from '../src/runtime';
 import { parse } from '../src/parser';
 import { ConfidenceValue as ConfidenceLib } from '../src/confidence';
-import { MockLLMProvider } from '@prism/llm';
+import { MockLLMProvider } from '@prism-lang/llm';
 
 describe('Runtime System', () => {
   describe('Values', () => {

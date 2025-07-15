@@ -1,4 +1,4 @@
-# @prism/confidence
+# @prism-lang/confidence
 
 Confidence extraction library for Prism - standardized patterns for extracting confidence values from LLMs and other sources.
 
@@ -15,7 +15,7 @@ Since most LLM providers (except OpenAI) don't provide log probabilities, this l
 ## Installation
 
 ```bash
-npm install @prism/confidence
+npm install @prism-lang/confidence
 ```
 
 ## Quick Start
@@ -23,7 +23,7 @@ npm install @prism/confidence
 ### Level 1: Simple API
 
 ```typescript
-import { confidence } from '@prism/confidence';
+import { confidence } from '@prism-lang/confidence';
 
 // Extract confidence from any response
 const response = "I'm fairly certain this is a SQL injection vulnerability.";
@@ -35,7 +35,7 @@ console.log(result.explanation); // "Response analysis confidence: 72.0% based o
 ### Level 2: Controlled Extraction
 
 ```typescript
-import { confidence } from '@prism/confidence';
+import { confidence } from '@prism-lang/confidence';
 
 // Specify extraction method
 const result = await confidence.extractWithOptions(response, {
@@ -48,7 +48,7 @@ const result = await confidence.extractWithOptions(response, {
 ### Level 3: Full Control
 
 ```typescript
-import { ConfidenceExtractor, ConfidenceEnsemble, SecurityCalibrator } from '@prism/confidence';
+import { ConfidenceExtractor, ConfidenceEnsemble, SecurityCalibrator } from '@prism-lang/confidence';
 
 const extractor = new ConfidenceExtractor();
 const ensemble = new ConfidenceEnsemble({ 
@@ -110,7 +110,7 @@ const result = await extractor.fromStructuredResponse(response);
 
 ```typescript
 // Pre-built calibrators
-import { calibrators } from '@prism/confidence';
+import { calibrators } from '@prism-lang/confidence';
 
 const calibrated = await calibrators.security.calibrate(0.8, {
   type: 'sql_injection',
@@ -189,7 +189,7 @@ const confidence = apiExtractor.fromAPIReliability({
 ## Using with Prism
 
 ```prism
-import confidence from "@prism/confidence"
+import confidence from "@prism-lang/confidence"
 
 // Simple extraction
 response = llm("Analyze this code")

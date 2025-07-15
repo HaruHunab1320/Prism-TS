@@ -1,5 +1,5 @@
 {
-  "name": "@prism/llm",
+  "name": "@prism-lang/llm",
   "version": "1.0.0",
   "description": "LLM provider integrations for Prism",
   "main": "dist/index.js",
@@ -23,7 +23,7 @@
     "zod": "^3.24.1"
   },
   "peerDependencies": {
-    "@prism/confidence": "workspace:*"
+    "@prism-lang/confidence": "workspace:*"
   },
   "peerDependenciesMeta": {
     "@prism/confidence": {
@@ -31,7 +31,7 @@
     }
   },
   "devDependencies": {
-    "@prism/confidence": "workspace:*",
+    "@prism-lang/confidence": "workspace:*",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.30",
     "@typescript-eslint/eslint-plugin": "^7.3.1",

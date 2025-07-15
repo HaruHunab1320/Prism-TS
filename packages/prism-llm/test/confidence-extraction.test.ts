@@ -1,5 +1,5 @@
 import { GeminiProvider, LLMRequest } from '../src';
-import { ConfidenceExtractor } from '@prism/confidence';
+import { ConfidenceExtractor } from '@prism-lang/confidence';
 import { config } from 'dotenv';
 import { resolve } from 'path';
 
@@ -12,7 +12,7 @@ describe('Confidence Extraction Integration Tests', () => {
   // Skip tests if no API key is available
   const describeIfApiKey = apiKey ? describe : describe.skip;
   
-  describeIfApiKey('Using @prism/confidence for extraction', () => {
+  describeIfApiKey('Using @prism-lang/confidence for extraction', () => {
     let provider: GeminiProvider;
     let extractor: ConfidenceExtractor;
     

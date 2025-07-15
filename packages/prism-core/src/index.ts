@@ -31,5 +31,5 @@ export * from './context';
 // Main entry points for convenience
 export { parse } from './parser';
 
-// LLM types (to avoid hard dependency on @prism/llm)
+// LLM types (to avoid hard dependency on @prism-lang/llm)
 export * from './llm-types';

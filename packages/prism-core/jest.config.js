@@ -9,8 +9,8 @@ module.exports = {
     }],
   },
   moduleNameMapper: {
-    '^@prism/llm$': '<rootDir>/../prism-llm/src',
-    '^@prism/llm/(.*)$': '<rootDir>/../prism-llm/src/$1',
+    '^@prism-lang/llm$': '<rootDir>/../prism-llm/src',
+    '^@prism-lang/llm/(.*)$': '<rootDir>/../prism-llm/src/$1',
   },
   moduleDirectories: ['node_modules', '<rootDir>/src'],
   collectCoverageFrom: [

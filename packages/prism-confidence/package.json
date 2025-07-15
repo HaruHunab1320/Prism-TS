@@ -1,5 +1,5 @@
 {
-  "name": "@prism/confidence",
+  "name": "@prism-lang/confidence",
   "version": "0.1.0",
   "description": "Confidence extraction library for Prism - standardized patterns for extracting confidence values from LLMs and other sources",
   "main": "dist/index.js",
@@ -24,7 +24,7 @@
     "@prism/core": "workspace:*"
   },
   "devDependencies": {
-    "@prism/llm": "workspace:*",
+    "@prism-lang/llm": "workspace:*",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.30",
     "dotenv": "^16.5.0",

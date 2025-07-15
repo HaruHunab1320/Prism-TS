@@ -1,8 +1,8 @@
-# @prism/confidence Test Coverage
+# @prism-lang/confidence Test Coverage
 
 ## Overview
 
-The @prism/confidence package has comprehensive test coverage including unit tests and integration tests with real LLM outputs.
+The @prism-lang/confidence package has comprehensive test coverage including unit tests and integration tests with real LLM outputs.
 
 ## Unit Tests
 
@@ -61,7 +61,7 @@ Tests ALL package features with real LLM outputs:
 
 ## LLM Integration Tests
 
-### @prism/llm Integration (`../prism-llm/test/integration-with-confidence.test.ts`)
+### @prism-lang/llm Integration (`../prism-llm/test/integration-with-confidence.test.ts`)
 - ✅ Structured output vs extracted confidence comparison
 - ✅ Different extraction methods (response analysis, consistency)
 - ✅ Real-world scenarios (documentation, code generation)

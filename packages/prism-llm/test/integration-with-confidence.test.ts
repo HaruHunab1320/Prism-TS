@@ -1,5 +1,5 @@
 import { GeminiProvider, LLMRequest } from '../src';
-import { ConfidenceExtractor } from '@prism/confidence';
+import { ConfidenceExtractor } from '@prism-lang/confidence';
 import { config } from 'dotenv';
 import { resolve } from 'path';
 

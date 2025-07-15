@@ -6,8 +6,8 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@prism/llm": ["../prism-llm/src"],
-      "@prism/llm/*": ["../prism-llm/src/*"]
+      "@prism-lang/llm": ["../prism-llm/src"],
+      "@prism-lang/llm/*": ["../prism-llm/src/*"]
     }
   },
   "include": ["src/**/*"],

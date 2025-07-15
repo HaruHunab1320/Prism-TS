@@ -1,17 +1,17 @@
-# @prism/core
+# @prism-lang/core
 
 Core implementation of the Prism programming language - a language designed for expressing and managing uncertainty in computational systems.
 
 ## Installation
 
 ```bash
-npm install @prism/core
+npm install @prism-lang/core
 ```
 
 ## Quick Start
 
 ```javascript
-import { parse, createRuntime } from '@prism/core';
+import { parse, createRuntime } from '@prism-lang/core';
 
 const code = `
   // Confidence values
@@ -109,10 +109,10 @@ See the [examples directory](https://github.com/uncertainty-lang/prism/tree/main
 
 ## Related Packages
 
-- [`@prism/llm`](https://www.npmjs.com/package/@prism/llm) - LLM provider integrations
-- [`@prism/confidence`](https://www.npmjs.com/package/@prism/confidence) - Confidence extraction utilities
-- [`@prism/cli`](https://www.npmjs.com/package/@prism/cli) - Command-line interface
-- [`@prism/repl`](https://www.npmjs.com/package/@prism/repl) - Interactive REPL
+- [`@prism-lang/llm`](https://www.npmjs.com/package/@prism-lang/llm) - LLM provider integrations
+- [`@prism-lang/confidence`](https://www.npmjs.com/package/@prism-lang/confidence) - Confidence extraction utilities
+- [`@prism-lang/cli`](https://www.npmjs.com/package/@prism-lang/cli) - Command-line interface
+- [`@prism-lang/repl`](https://www.npmjs.com/package/@prism-lang/repl) - Interactive REPL
 
 ## License
 

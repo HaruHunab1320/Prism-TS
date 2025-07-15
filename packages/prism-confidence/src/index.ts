@@ -1,5 +1,5 @@
 /**
- * @prism/confidence - Confidence extraction library for Prism
+ * @prism-lang/confidence - Confidence extraction library for Prism
  * 
  * Provides standardized patterns for extracting confidence values from LLMs and other sources
  */

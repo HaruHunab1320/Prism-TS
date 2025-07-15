@@ -12,7 +12,7 @@ import {
   APIConfidenceExtractor,
   smartExtract
 } from '../src';
-import { GeminiProvider, LLMRequest } from '@prism/llm';
+import { GeminiProvider, LLMRequest } from '@prism-lang/llm';
 import { config } from 'dotenv';
 import { resolve } from 'path';
 
