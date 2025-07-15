@@ -34,7 +34,7 @@
     "@prism-lang/llm": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@prism/llm": {
+    "@prism-lang/llm": {
       "optional": true
     }
   },
