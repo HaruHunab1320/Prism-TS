@@ -1,6 +1,9 @@
 # Netlify configuration for Prism-TS monorepo
 
 [build]
+  # Stay at repository root for monorepo
+  base = ""
+  
   # Build command for the docs site
   command = "npm install && npm run build --workspace=apps/docs"
   
