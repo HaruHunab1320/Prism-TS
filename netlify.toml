@@ -1,0 +1,61 @@
+# Netlify configuration for Prism-TS monorepo
+
+[build]
+  # Build command for the docs site
+  command = "npm install && npm run build --workspace=apps/docs"
+  
+  # Publish directory (Docusaurus output)
+  publish = "apps/docs/build"
+  
+  # Node version (matches package.json engine requirement)
+  environment = { NODE_VERSION = "18" }
+
+# Build settings
+[build.environment]
+  # Enable npm workspaces
+  NPM_FLAGS = "--prefix=/"
+
+# Headers for security and performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Cache control for static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Redirects for Docusaurus client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  conditions = {Role = ["admin", "user"]}
+
+# Handle 404s with Docusaurus 404 page
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
+# Optional: Redirect netlify subdomain to custom domain (update when you have one)
+# [[redirects]]
+#   from = "https://prism-ts.netlify.app/*"
+#   to = "https://prismlang.dev/:splat"
+#   status = 301
+#   force = true

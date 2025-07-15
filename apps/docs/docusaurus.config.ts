@@ -15,7 +15,7 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: "https://prism-docs.vercel.app", // Update with your actual URL
+  url: "https://docs.prismlang.dev", // Update with your actual URL
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/",
@@ -69,7 +69,7 @@ const config: Config = {
     // Replace with your project's social card
     image: "img/docusaurus-social-card.jpg",
     colorMode: {
-      defaultMode: 'light',
+      defaultMode: "light",
       disableSwitch: false,
       respectPrefersColorScheme: true,
     },
@@ -119,14 +119,6 @@ const config: Config = {
           title: "Community",
           items: [
             {
-              label: "Stack Overflow",
-              href: "https://stackoverflow.com/questions/tagged/prism-lang",
-            },
-            {
-              label: "Discord",
-              href: "https://discord.gg/prism", // Update with actual Discord
-            },
-            {
               label: "npm",
               href: "https://www.npmjs.com/package/@prism-lang/core",
             },
@@ -142,7 +134,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Prism Project. Built with Docusaurus.`,
+      copyright: `Copyright ${new Date().getFullYear()} by Project89`,
     },
     prism: {
       theme: prismThemes.github,
