@@ -26,7 +26,6 @@
     "@prism-lang/core": "workspace:*"
   },
   "devDependencies": {
-    "@prism-lang/llm": "workspace:*",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.30",
     "dotenv": "^16.5.0",

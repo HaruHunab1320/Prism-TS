@@ -4,9 +4,8 @@
   # Stay at repository root for monorepo
   base = ""
   
-  # Build command for the docs site (using pnpm)
-  # Building docs directly to avoid cyclic dependency issues
-  command = "pnpm install --filter=@prism-lang/docs... && pnpm --filter=@prism-lang/docs build"
+  # Build command for the docs site (using pnpm and turbo)
+  command = "pnpm install && pnpm turbo run build --filter=@prism-lang/docs"
   
   # Publish directory (Docusaurus output)
   publish = "apps/docs/build"
