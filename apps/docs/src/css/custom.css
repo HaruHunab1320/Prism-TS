@@ -26,7 +26,7 @@
   /* Light backgrounds */
   --ifm-background-color: #ffffff;
   --ifm-background-surface-color: #f8f9fa;
-  --ifm-navbar-background-color: #ffffff;
+  --ifm-navbar-background-color: rgba(255, 255, 255, 0.95);
   --ifm-toc-border-color: #e5e7eb;
   
   /* Code block styling */
@@ -48,9 +48,9 @@
   /* Dark backgrounds */
   --ifm-background-color: #0f172a;
   --ifm-background-surface-color: #1e293b;
-  --ifm-navbar-background-color: #0f172a;
+  --ifm-navbar-background-color: rgba(15, 23, 42, 0.95);
   --ifm-footer-background-color: #1e293b;
-  --ifm-sidebar-background-color: #1e293b;
+  --ifm-sidebar-background-color: #0f172a;
   --ifm-toc-border-color: #334155;
   --ifm-color-emphasis-300: #334155;
   
@@ -114,7 +114,14 @@ body::before {
 
 /* Navbar styling */
 .navbar {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+[data-theme='dark'] .navbar {
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
 }
 
 .navbar__title {
@@ -134,11 +141,11 @@ body::before {
 /* Sidebar styling */
 .theme-doc-sidebar-container {
   border-right: 1px solid #e5e7eb !important;
-  background: #1e293b;
+  background: #ffffff;
 }
 
 [data-theme='dark'] .theme-doc-sidebar-container {
-  background: #1e293b;
+  background: var(--ifm-sidebar-background-color);
   border-right: 1px solid #334155 !important;
 }
 
