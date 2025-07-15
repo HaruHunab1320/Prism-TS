@@ -6,6 +6,17 @@ export interface ConfidenceResult {
   value: number;
   explanation?: string;
   provenance?: ConfidenceProvenance;
+  metadata?: {
+    method?: string;
+    hedgingIndicators?: string[];
+    certaintyIndicators?: string[];
+    uncertaintyScore?: number;
+    consistency?: number;
+    overlap?: number;
+    samples?: string[];
+    parsed?: any;
+    [key: string]: any;
+  };
 }
 
 export interface ConfidenceProvenance {

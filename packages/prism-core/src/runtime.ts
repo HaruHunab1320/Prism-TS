@@ -45,7 +45,7 @@ import {
 } from './ast';
 import { ConfidenceValue as ConfidenceLib, ConfidenceLevel } from './confidence';
 import { Context, ContextManager } from './context';
-import { LLMProvider, LLMRequest, MockLLMProvider } from '@prism/llm';
+import { LLMProvider, LLMRequest, MockLLMProvider } from './llm-types';
 
 export class RuntimeError extends Error {
   public line?: number;

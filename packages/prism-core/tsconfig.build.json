@@ -12,7 +12,5 @@
   },
   "include": ["src/**/*"],
   "exclude": ["test/**/*", "**/*.test.ts", "**/*.spec.ts"],
-  "references": [
-    { "path": "../prism-llm" }
-  ]
+  "references": []
 }

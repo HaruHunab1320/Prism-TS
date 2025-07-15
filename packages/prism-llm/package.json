@@ -43,9 +43,15 @@
   },
   "files": [
     "dist",
-    "src"
+    "src",
+    "README.md"
   ],
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prism-lang/prism-ts.git",
+    "directory": "packages/prism-llm"
   }
 }

@@ -1,4 +1,4 @@
-import { ClaudeProvider, GeminiProvider, MockLLMProvider, LLMProvider, LLMError } from './provider';
+import { ClaudeProvider, GeminiProvider, MockLLMProvider, LLMProvider, LLMError } from './provider-ai-sdk';
 
 // Load environment variables from .env file
 try {
@@ -49,7 +49,7 @@ export class LLMConfigManager {
             'MISSING_API_KEY'
           );
         }
-        return new ClaudeProvider(key, options);
+        return new ClaudeProvider(key, options.model as string);
       }
 
       case 'gemini': {
@@ -60,7 +60,7 @@ export class LLMConfigManager {
             'MISSING_API_KEY'
           );
         }
-        return new GeminiProvider(key, options);
+        return new GeminiProvider(key, options.model as string);
       }
 
       case 'mock':

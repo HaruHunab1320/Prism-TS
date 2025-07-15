@@ -201,12 +201,17 @@ describe('LLM Providers', () => {
     });
 
     it('should determine default provider based on available API keys', () => {
-      const originalEnv = process.env;
+      // Save original values
+      const originalClaude = process.env.CLAUDE_API_KEY;
+      const originalAnthropicKey = process.env.ANTHROPIC_API_KEY;
+      const originalGemini = process.env.GEMINI_API_KEY;
+      const originalGoogle = process.env.GOOGLE_API_KEY;
       
       // Test with no API keys
-      process.env = { ...originalEnv };
       delete process.env.CLAUDE_API_KEY;
+      delete process.env.ANTHROPIC_API_KEY;
       delete process.env.GEMINI_API_KEY;
+      delete process.env.GOOGLE_API_KEY;
       expect(LLMConfigManager.getDefaultProvider()).toBe('mock');
       
       // Test with Claude key
@@ -223,8 +228,15 @@ describe('LLM Providers', () => {
       process.env.GEMINI_API_KEY = 'test-key';
       expect(LLMConfigManager.getDefaultProvider()).toBe('claude');
       
-      // Restore env
-      process.env = originalEnv;
+      // Restore original values
+      if (originalClaude) process.env.CLAUDE_API_KEY = originalClaude;
+      else delete process.env.CLAUDE_API_KEY;
+      if (originalAnthropicKey) process.env.ANTHROPIC_API_KEY = originalAnthropicKey;
+      else delete process.env.ANTHROPIC_API_KEY;
+      if (originalGemini) process.env.GEMINI_API_KEY = originalGemini;
+      else delete process.env.GEMINI_API_KEY;
+      if (originalGoogle) process.env.GOOGLE_API_KEY = originalGoogle;
+      else delete process.env.GOOGLE_API_KEY;
     });
   });
 

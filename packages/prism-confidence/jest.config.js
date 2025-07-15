@@ -11,6 +11,8 @@ module.exports = {
   },
   moduleNameMapper: {
     '^@prism/core$': '<rootDir>/../prism-core/src',
-    '^@prism/core/(.*)$': '<rootDir>/../prism-core/src/$1'
+    '^@prism/core/(.*)$': '<rootDir>/../prism-core/src/$1',
+    '^@prism/llm$': '<rootDir>/../prism-llm/src',
+    '^@prism/llm/(.*)$': '<rootDir>/../prism-llm/src/$1'
   }
 };
