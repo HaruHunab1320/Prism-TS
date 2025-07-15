@@ -40,7 +40,7 @@ const config: Config = {
     [
       "@docusaurus/plugin-google-gtag",
       {
-        trackingID: process.env.GOOGLE_ANALYTICS_ID || "G-xxxxxxxxxx",
+        trackingID: "G-WCQZPZ11LP",
         anonymizeIP: true,
       },
     ],

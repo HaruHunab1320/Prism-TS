@@ -2,7 +2,13 @@
   // This file is not used in compilation. It is here just for a nice editor experience.
   "extends": "@docusaurus/tsconfig",
   "compilerOptions": {
-    "baseUrl": "."
+    "baseUrl": ".",
+    "types": ["node", "@docusaurus/types", "@docusaurus/preset-classic"],
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
-  "exclude": [".docusaurus", "build"]
+  "include": ["src/**/*", "*.ts", "*.js"],
+  "exclude": [".docusaurus", "build", "node_modules"]
 }
