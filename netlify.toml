@@ -6,12 +6,10 @@
   
   # Publish directory (Docusaurus output)
   publish = "apps/docs/build"
-  
-  # Node version (matches package.json engine requirement)
-  environment = { NODE_VERSION = "18" }
 
-# Build settings
 [build.environment]
+  # Node version (matches package.json engine requirement)
+  NODE_VERSION = "18"
   # Enable npm workspaces
   NPM_FLAGS = "--prefix=/"
 
