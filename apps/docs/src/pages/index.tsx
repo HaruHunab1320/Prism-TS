@@ -1,42 +1,44 @@
-import clsx from 'clsx';
-import Link from '@docusaurus/Link';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import Layout from '@theme/Layout';
-import Heading from '@theme/Heading';
-import React from 'react';
-import BrowserOnly from '@docusaurus/BrowserOnly';
+import clsx from "clsx";
+import Link from "@docusaurus/Link";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import Layout from "@theme/Layout";
+import React from "react";
+import BrowserOnly from "@docusaurus/BrowserOnly";
 
-import styles from './index.module.css';
+import styles from "./index.module.css";
 
 function HomepageHeader() {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext();
 
   return (
     <header className={styles.hero}>
       <div className={styles.particleContainer}>
         <BrowserOnly fallback={<div />}>
           {() => {
-            const ParticleBackground = require('../components/ParticleBackground').default;
+            const ParticleBackground =
+              require("../components/ParticleBackground").default;
             return <ParticleBackground />;
           }}
         </BrowserOnly>
       </div>
       <div className={styles.heroContent}>
-        <img 
-          src="/img/prism-logo-v1.png" 
-          alt="Prism - Programming with Confidence" 
+        <img
+          src="/img/prism-logo-v1.png"
+          alt="Prism - Programming with Confidence"
           className={styles.heroLogo}
         />
         <p className={styles.heroSubtitle}>{siteConfig.tagline}</p>
         <div className={styles.heroButtons}>
           <Link
-            className={clsx('button', styles.primaryButton)}
-            to="/docs/intro">
+            className={clsx("button", styles.primaryButton)}
+            to="/docs/intro"
+          >
             Get Started
           </Link>
           <Link
-            className={clsx('button', styles.secondaryButton)}
-            to="https://github.com/HaruHunab1320/Prism-TS">
+            className={clsx("button", styles.secondaryButton)}
+            to="https://github.com/HaruHunab1320/Prism-TS"
+          >
             View on GitHub
           </Link>
         </div>
@@ -58,7 +60,15 @@ uncertain if (security_check) {
   );
 }
 
-function Feature({title, description, icon}: {title: string; description: string; icon: string}) {
+function Feature({
+  title,
+  description,
+  icon,
+}: {
+  title: string;
+  description: string;
+  icon: string;
+}) {
   return (
     <div className={styles.feature}>
       <div className={styles.featureIcon}>{icon}</div>
@@ -115,24 +125,37 @@ function UseCases() {
       <div className="container">
         <h2 className={styles.sectionTitle}>Built for the Age of AI</h2>
         <p className={styles.sectionSubtitle}>
-          Handle uncertainty in AI responses, sensor data, and complex computations with confidence
+          Handle uncertainty in AI responses, sensor data, and complex
+          computations with confidence
         </p>
         <div className={styles.useCaseGrid}>
           <div className={styles.useCase}>
             <h3>AI Applications</h3>
-            <p>Handle LLM responses with explicit confidence tracking and decision thresholds.</p>
+            <p>
+              Handle LLM responses with explicit confidence tracking and
+              decision thresholds.
+            </p>
           </div>
           <div className={styles.useCase}>
             <h3>IoT & Sensors</h3>
-            <p>Manage noisy sensor data with uncertainty bounds and confidence propagation.</p>
+            <p>
+              Manage noisy sensor data with uncertainty bounds and confidence
+              propagation.
+            </p>
           </div>
           <div className={styles.useCase}>
             <h3>Risk Analysis</h3>
-            <p>Make risk-aware decisions with confidence budgets and differential analysis.</p>
+            <p>
+              Make risk-aware decisions with confidence budgets and differential
+              analysis.
+            </p>
           </div>
           <div className={styles.useCase}>
             <h3>Scientific Computing</h3>
-            <p>Propagate measurement errors and uncertainty through complex calculations.</p>
+            <p>
+              Propagate measurement errors and uncertainty through complex
+              calculations.
+            </p>
           </div>
         </div>
       </div>
@@ -141,11 +164,12 @@ function UseCases() {
 }
 
 export default function Home() {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
       title={`${siteConfig.title} - Programming with Confidence`}
-      description="A programming language where uncertainty is a first-class citizen. Handle AI responses, sensor data, and complex computations with explicit confidence tracking.">
+      description="A programming language where uncertainty is a first-class citizen. Handle AI responses, sensor data, and complex computations with explicit confidence tracking."
+    >
       <HomepageHeader />
       <main>
         <HomepageFeatures />
