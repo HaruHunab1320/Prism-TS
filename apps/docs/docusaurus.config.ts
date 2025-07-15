@@ -38,13 +38,6 @@ const config: Config = {
 
   plugins: [
     [
-      "@docusaurus/plugin-google-gtag",
-      {
-        trackingID: "G-WCQZPZ11LP",
-        anonymizeIP: true,
-      },
-    ],
-    [
       require.resolve("@easyops-cn/docusaurus-search-local"),
       {
         hashed: true,
@@ -74,6 +67,10 @@ const config: Config = {
         blog: false,
         theme: {
           customCss: "./src/css/custom.css",
+        },
+        gtag: {
+          trackingID: "G-WCQZPZ11LP",
+          anonymizeIP: true,
         },
       } satisfies Preset.Options,
     ],
