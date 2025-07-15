@@ -356,6 +356,57 @@ a:hover {
   color: #e2e8f0;
 }
 
+/* Local search plugin styling */
+.navbar__search {
+  margin-right: 1rem;
+}
+
+.navbar__search-input {
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  padding-left: 2.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.navbar__search-input:focus {
+  outline: none;
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 2px rgba(8, 145, 178, 0.1);
+}
+
+[data-theme='dark'] .navbar__search-input:focus {
+  border-color: #22d3ee;
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.1);
+}
+
+/* Search results dropdown */
+.dropdown-menu {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+[data-theme='dark'] .dropdown-menu {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Search result items */
+.dropdown-menu .dropdown-item {
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background: #f3f4f6;
+}
+
+[data-theme='dark'] .dropdown-menu .dropdown-item:hover {
+  background: #334155;
+}
+
 /* Homepage specific styles */
 .hero-gradient {
   background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);

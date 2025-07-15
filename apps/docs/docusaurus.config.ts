@@ -40,8 +40,22 @@ const config: Config = {
     [
       "@docusaurus/plugin-google-gtag",
       {
-        trackingID: "G-WCQZPZ11LP",
+        trackingID: process.env.GOOGLE_ANALYTICS_ID || "G-xxxxxxxxxx",
         anonymizeIP: true,
+      },
+    ],
+    [
+      require.resolve("@easyops-cn/docusaurus-search-local"),
+      {
+        hashed: true,
+        language: ["en"],
+        indexDocs: true,
+        indexPages: true,
+        docsRouteBasePath: "/docs",
+        highlightSearchTermsOnTargetPage: true,
+        searchResultLimits: 8,
+        searchResultContextMaxLength: 50,
+        explicitSearchResultPath: true,
       },
     ],
   ],
