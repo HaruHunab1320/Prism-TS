@@ -26,5 +26,22 @@
   "files": [
     "dist",
     "src"
-  ]
+  ],
+  "homepage": "https://docs.prismlang.dev/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HaruHunab1320/Prism-TS.git",
+    "directory": "apps/repl"
+  },
+  "keywords": [
+    "prism",
+    "repl",
+    "interactive",
+    "uncertainty",
+    "programming-language"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
 }

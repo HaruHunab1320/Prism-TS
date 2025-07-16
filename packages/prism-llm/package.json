@@ -1,6 +1,6 @@
 {
   "name": "@prism-lang/llm",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "LLM provider integrations for Prism",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
