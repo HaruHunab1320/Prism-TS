@@ -77,7 +77,7 @@ result = (confidence > 0.8) ?
 ```prism
 // Traditional for loop
 for i = 0; i < 10; i = i + 1 {
-  print(i)
+  console.log(i)
 }
 
 // With break
@@ -105,25 +105,25 @@ Iterate over collections:
 // Iterate over array values
 numbers = [1, 2, 3, 4, 5]
 for num in numbers {
-  print(num * 2)
+  console.log(num * 2)
 }
 
 // With index
 for value, index in numbers {
-  print(`Index ${index}: ${value}`)
+  console.log(`Index ${index}: ${value}`)
 }
 
 // Iterate over object properties
 person = {name: "Alice", age: 30, city: "NYC"}
 for key in person {
-  print(`${key}: ${person[key]}`)
+  console.log(`${key}: ${person[key]}`)
 }
 
 // Destructuring in loops
 points = [{x: 1, y: 2}, {x: 3, y: 4}, {x: 5, y: 6}]
 for {x, y} in points {
   distance = Math.sqrt(x * x + y * y)
-  print(`Distance: ${distance}`)
+  console.log(`Distance: ${distance}`)
 }
 ```
 
@@ -133,7 +133,7 @@ for {x, y} in points {
 // Basic while loop
 count = 0
 while count < 10 {
-  print(count)
+  console.log(count)
   count = count + 1
 }
 
@@ -280,7 +280,7 @@ temp2 = 26 ~> 0.85
 
 if temp1 ~< temp2 {
   // Comparison considers confidence
-  print("temp1 is less than temp2")
+  console.log("temp1 is less than temp2")
 }
 
 // Confidence extraction in conditions

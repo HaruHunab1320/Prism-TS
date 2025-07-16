@@ -10,7 +10,7 @@
     "test:coverage": "turbo run test:coverage",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "dev": "turbo run dev --filter=@prism/cli",
+    "dev": "turbo run dev --filter=@prism-lang/cli",
     "clean": "turbo run clean",
     "publish:all": "turbo run build && pnpm publish -r --access public",
     "publish:core": "turbo run build --filter=@prism-lang/core && pnpm publish --filter @prism-lang/core --access public",

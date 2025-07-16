@@ -44,14 +44,15 @@ function HomepageHeader() {
         </div>
         <div className={styles.codeExample}>
           <pre>
-            <code>{`// AI responses with automatic confidence extraction
-security_check = llm("Analyze this code for vulnerabilities")
-// Confidence automatically extracted from LLM response!
+            <code>{`// AI responses automatically include confidence
+analysis = llm("Analyze this code for vulnerabilities")
+// Returns: "No critical issues found" with 85% confidence
 
-uncertain if (security_check) {
-  high { deploy_to_production() }    // >0.8 confidence
-  medium { request_human_review() }  // 0.5-0.8
-  low { block_deployment() }         // <0.5
+// Make decisions based on the confidence level
+uncertain if (analysis) {
+  high { deploy_to_production() }    // confidence ≥ 0.7
+  medium { request_human_review() }  // 0.5 ≤ confidence < 0.7
+  low { block_deployment() }         // confidence < 0.5
 }`}</code>
           </pre>
         </div>

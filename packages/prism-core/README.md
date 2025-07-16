@@ -27,10 +27,11 @@ const result2 = await runPrism('PI * radius * radius', {
 });
 
 // With LLM provider
-import { createProvider } from '@prism-lang/llm';
+import { MockLLMProvider } from '@prism-lang/llm';
 
+const provider = new MockLLMProvider();
 const result3 = await runPrism('response = llm("Hello"); response', {
-  llmProvider: createProvider()
+  llmProvider: provider
 });
 ```
 
@@ -67,7 +68,7 @@ const result = await runtime.execute(ast);
 - **Adaptive Confidence**: Default branches for confidence recalibration and fallback logic
 - **LLM Integration**: Built-in `llm()` function with automatic confidence
 - **Functional Programming**: Lambdas, array methods, destructuring
-- **Pattern Matching**: Powerful pattern matching with confidence support
+- **Pipeline Operator**: Chain operations with `|>` for cleaner code
 
 ## Language Guide
 
@@ -123,7 +124,8 @@ uncertain while (sensor_reading ~> confidence) {
 ### LLM Integration
 
 ```prism
-response = llm("Is this safe?", { model: "claude" })
+// Note: llm() requires provider setup first
+response = llm("Is this safe?")
 conf = <~ response  // Automatic confidence extraction
 
 // With confidence threshold
@@ -163,7 +165,8 @@ if (<~ safe >= 0.9) {
 - `reduce(array: Array, fn: Function, initial?: any)` - Reduce array to single value
 - `max(...values: number[])` - Find maximum value
 - `min(...values: number[])` - Find minimum value
-- `print(...values: any[])` - Print values to console
+- Array and Object methods are available as built-in functions
+- Note: Use `console.log()` for output (no built-in `print` function)
 
 ### Array Methods
 Arrays support the following methods:

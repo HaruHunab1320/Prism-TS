@@ -12,7 +12,7 @@ npm install @prism-lang/llm
 
 ## Features
 
-- **Multiple Providers**: Claude (Anthropic), Gemini (Google), OpenAI support
+- **Multiple Providers**: Claude (Anthropic), Gemini (Google), Mock provider
 - **Automatic Fallback**: Configurable provider priority
 - **Mock Provider**: For testing without API calls
 - **Confidence Integration**: Works seamlessly with Prism's confidence system
@@ -21,11 +21,17 @@ npm install @prism-lang/llm
 ## Quick Start
 
 ```javascript
-import { LLMConfigManager, LLMProviderRegistry } from '@prism-lang/llm';
+import { LLMConfigManager, LLMProviderRegistry, LLMRequest } from '@prism-lang/llm';
 
 // Automatic setup from environment
 const providers = LLMConfigManager.createFromEnvironment();
-const registry = LLMConfigManager.createRegistry(providers);
+const registry = new LLMProviderRegistry();
+
+// Register providers
+for (const [name, provider] of Object.entries(providers)) {
+  registry.register(name, provider);
+}
+registry.setDefault(LLMConfigManager.getDefaultProvider());
 
 // Make a request
 const request = new LLMRequest('What is the weather like?');
@@ -40,16 +46,14 @@ console.log(response.confidence);  // 0.95
 Set your API keys in environment variables:
 
 ```bash
-export CLAUDE_API_KEY=your-claude-key
-export GEMINI_API_KEY=your-gemini-key
-export OPENAI_API_KEY=your-openai-key
+export CLAUDE_API_KEY=your-claude-key      # or ANTHROPIC_API_KEY
+export GEMINI_API_KEY=your-gemini-key      # or GOOGLE_API_KEY
 ```
 
 The library automatically detects available providers and sets the default based on priority:
-1. Claude (if CLAUDE_API_KEY is set)
-2. Gemini (if GEMINI_API_KEY is set)
-3. OpenAI (if OPENAI_API_KEY is set)
-4. Mock (always available)
+1. Claude (if CLAUDE_API_KEY or ANTHROPIC_API_KEY is set)
+2. Gemini (if GEMINI_API_KEY or GOOGLE_API_KEY is set)
+3. Mock (always available as fallback)
 
 ## Usage in Prism
 
@@ -67,24 +71,26 @@ response = llm("Translate to Spanish", {
 
 // Confidence is automatically attached
 conf = <~ response
-print("Confidence: " + conf)
+console.log("Confidence: " + conf)
 ```
 
 ## Providers
 
 ### Claude (Anthropic)
 ```javascript
-import { ClaudeProvider } from '@prism-lang/llm';
+import { ClaudeProvider, LLMRequest } from '@prism-lang/llm';
 
 const claude = new ClaudeProvider(apiKey);
+const request = new LLMRequest('Your prompt here');
 const response = await claude.complete(request);
 ```
 
 ### Gemini (Google)
 ```javascript
-import { GeminiProvider } from '@prism-lang/llm';
+import { GeminiProvider, LLMRequest } from '@prism-lang/llm';
 
 const gemini = new GeminiProvider(apiKey);
+const request = new LLMRequest('Your prompt here');
 const response = await gemini.complete(request);
 ```
 
@@ -104,8 +110,9 @@ mock.setLatency(100); // Simulate network delay
 new LLMRequest(prompt: string, options?: {
   temperature?: number;
   maxTokens?: number;
-  systemPrompt?: string;
   timeout?: number;
+  structuredOutput?: boolean;
+  includeReasoning?: boolean;
 })
 ```
 
@@ -114,10 +121,11 @@ new LLMRequest(prompt: string, options?: {
 interface LLMResponse {
   content: string;
   confidence: number;
+  tokensUsed: number;
   model: string;
-  usage?: {
-    promptTokens: number;
-    completionTokens: number;
+  metadata?: {
+    reasoning?: string;
+    usage?: object;
   };
 }
 ```
@@ -133,6 +141,29 @@ const response = await registry.complete(request, 'claude');
 
 // Use default provider
 const response = await registry.complete(request);
+```
+
+## Integration with @prism-lang/confidence
+
+The LLM package integrates seamlessly with confidence extraction:
+
+```javascript
+import { GeminiProvider, LLMRequest } from '@prism-lang/llm';
+import { ConfidenceExtractor } from '@prism-lang/confidence';
+
+const provider = new GeminiProvider(apiKey);
+const extractor = new ConfidenceExtractor();
+
+// Get unstructured response and extract confidence
+const request = new LLMRequest('What will happen to crypto prices?', {
+  structuredOutput: false
+});
+const response = await provider.complete(request);
+
+// Extract confidence from the response text
+const extracted = await extractor.fromResponseAnalysis(response.content);
+console.log('Extracted confidence:', extracted.value);
+console.log('Hedging indicators:', extracted.metadata?.hedgingIndicators);
 ```
 
 ## Testing

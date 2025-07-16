@@ -14,12 +14,12 @@ Create a file called `hello.prism`:
 ```prism
 // Basic confidence assignment
 greeting = "Hello, World!" ~> 0.95
-print(greeting)
+console.log(greeting)
 
 // Working with uncertainty
 temperature = 72.5 ~> 0.9
 if (temperature > 70) {
-  print("It's warm today!")
+  console.log("It's warm today!")
 }
 ```
 
@@ -57,15 +57,15 @@ confidence = <~ analysis  // Extract confidence from LLM response
 // Multi-level decision making
 uncertain if (analysis ~> 0.8) {
   high {
-    print("✅ High confidence - deploying to production")
+    console.log("✅ High confidence - deploying to production")
     deploy_status = "approved"
   }
   medium {
-    print("⚠️ Medium confidence - requesting human review")
+    console.log("⚠️ Medium confidence - requesting human review")
     deploy_status = "review_required"
   }
   low {
-    print("❌ Low confidence - deployment blocked")
+    console.log("❌ Low confidence - deployment blocked")
     deploy_status = "blocked"
   }
 }
@@ -77,7 +77,7 @@ performance_check = llm("Performance impact acceptable?") ~> 0.9
 // Parallel confidence selection (picks highest confidence)
 final_decision = security_check ~||> performance_check
 
-print("Final deployment confidence: " + (<~ final_decision))
+console.log("Final deployment confidence: " + (<~ final_decision))
 ```
 
 ## Understanding the Output

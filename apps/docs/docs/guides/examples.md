@@ -27,11 +27,13 @@ combined = weather_prediction ~*> temperature  // "sunny", 72 with confidence 0.
 
 ```typescript
 import { createRuntime, parse } from '@prism-lang/core';
-import { ClaudeProvider } from '@prism-lang/llm';
+import { ClaudeProvider, LLMRequest } from '@prism-lang/llm';
 
 // Setup
 const runtime = createRuntime();
-runtime.setLLMProvider(new ClaudeProvider(process.env.CLAUDE_API_KEY));
+const provider = new ClaudeProvider(process.env.CLAUDE_API_KEY);
+runtime.registerLLMProvider('claude', provider);
+runtime.setDefaultLLMProvider('claude');
 
 // Prism code with LLM
 const code = `
@@ -78,8 +80,16 @@ uncertain if (avg_confidence > 0.8) {
 ### 1. Multi-Stage Decision Pipeline
 
 ```typescript
-import { ConfidenceExtractor, DomainCalibrator, ConfidenceBudgetManager } from '@prism-lang/confidence';
-import { ClaudeProvider, GeminiProvider } from '@prism-lang/llm';
+import { ConfidenceExtractor, DomainCalibrator, ConfidenceBudgetManager, ConfidenceEnsemble, ConfidenceResult } from '@prism-lang/confidence';
+import { ClaudeProvider, GeminiProvider, LLMRequest } from '@prism-lang/llm';
+
+interface DecisionResult {
+  primary: string;
+  secondary?: string;
+  confidence: number;
+  withinBudget: boolean;
+  recommendation: string;
+}
 
 class DecisionPipeline {
   private extractor = new ConfidenceExtractor();
@@ -163,11 +173,25 @@ const result = await pipeline.analyze('Should we approve this loan application?'
 ### 2. Real-time Confidence Monitoring
 
 ```typescript
-import { TemporalConfidence, ConfidenceVisualizer } from '@prism-lang/confidence';
+import { TemporalConfidence, SensorConfidenceExtractor } from '@prism-lang/confidence';
+
+interface ConfidenceReading {
+  timestamp: number;
+  value: any;
+  confidence: number;
+  source: string;
+}
+
+interface SensorData {
+  timestamp: number;
+  value: any;
+  source: string;
+  environment: any;
+  lastCalibration?: Date;
+}
 
 class RealTimeMonitor {
   private temporal = new TemporalConfidence(60, 'exponential'); // 60 min half-life
-  private visualizer = new ConfidenceVisualizer();
   private history: ConfidenceReading[] = [];
   
   async monitorStream(dataStream: AsyncIterable<SensorData>) {
@@ -222,14 +246,20 @@ class RealTimeMonitor {
     // Show last 10 readings
     const recent = this.history.slice(-10);
     
+    console.log('📊 Confidence History:');
+    console.log('='.repeat(50));
+    
     recent.forEach(reading => {
-      this.visualizer.record(
-        `${reading.source} @ ${new Date(reading.timestamp).toISOString()}`,
-        reading.confidence
+      const bar = '█'.repeat(Math.round(reading.confidence * 20));
+      const empty = '░'.repeat(20 - Math.round(reading.confidence * 20));
+      const timestamp = new Date(reading.timestamp).toLocaleTimeString();
+      
+      console.log(
+        `${reading.source.padEnd(10)} [${timestamp}] ${bar}${empty} ${(reading.confidence * 100).toFixed(1)}%`
       );
     });
     
-    this.visualizer.visualize();
+    console.log('='.repeat(50));
   }
   
   private async checkAnomalies() {
@@ -255,12 +285,31 @@ class RealTimeMonitor {
       }
     }
   }
+  
+  private async alert(message: string, details: any) {
+    console.log(`\n⚠️  ALERT: ${message}`);
+    console.log('Details:', JSON.stringify(details, null, 2));
+  }
 }
 ```
 
 ### 3. Confidence-Aware Caching
 
 ```typescript
+import { TemporalConfidence, ConfidenceExtractor } from '@prism-lang/confidence';
+import { ClaudeProvider, LLMRequest } from '@prism-lang/llm';
+
+interface CacheEntry<T> {
+  value: T;
+  confidence: number;
+  timestamp: number;
+}
+
+interface ConfidenceValue<T> {
+  value: T;
+  confidence: number;
+}
+
 class ConfidenceCache<T> {
   private cache = new Map<string, CacheEntry<T>>();
   private temporal = new TemporalConfidence(3600, 'linear'); // 1 hour
@@ -319,12 +368,16 @@ class ConfidenceCache<T> {
 
 // Usage
 const cache = new ConfidenceCache<string>();
+const llmProvider = new ClaudeProvider(process.env.CLAUDE_API_KEY);
+const extractor = new ConfidenceExtractor();
 
 const result = await cache.get(
   'weather-forecast',
   async () => {
-    const response = await llm.complete('What is the weather forecast?');
-    const confidence = await extractor.extract(response.content);
+    const response = await llmProvider.complete(
+      new LLMRequest('What is the weather forecast?')
+    );
+    const confidence = await extractor.fromResponseAnalysis(response.content);
     return { value: response.content, confidence: confidence.value };
   },
   0.8 // Require 80% confidence for caching
@@ -467,6 +520,15 @@ console.log('Diagnosis:', diagnosis);
 ### 2. Financial Risk Assessment
 
 ```typescript
+import { createRuntime, parse } from '@prism-lang/core';
+
+interface LoanApplication {
+  creditScore: number;
+  annualIncome: number;
+  debtToIncomeRatio: number;
+  employmentYears: number;
+}
+
 class FinancialRiskAssessment {
   private runtime = createRuntime();
   
@@ -533,16 +595,39 @@ class FinancialRiskAssessment {
       assessmentId: this.generateId()
     };
   }
+  
+  private generateId(): string {
+    return Math.random().toString(36).substring(2, 15);
+  }
 }
 ```
 
 ### 3. Content Moderation System
 
 ```typescript
+import { createRuntime, parse } from '@prism-lang/core';
+import { ConfidenceEnsemble, ConfidenceExtractor, ConfidenceResult } from '@prism-lang/confidence';
+import { ClaudeProvider, LLMRequest } from '@prism-lang/llm';
+
+interface ModerationResult {
+  action: string;
+  confidence: number;
+  breakdown: {
+    toxicity: number;
+    relevance: number;
+    quality: number;
+    safety: number;
+  };
+  reviewNeeded: boolean;
+  flags: string[];
+  explanation?: string;
+}
+
 class ContentModerationSystem {
   private runtime = createRuntime();
   private extractor = new ConfidenceExtractor();
   private ensemble: ConfidenceEnsemble;
+  private claude = new ClaudeProvider(process.env.CLAUDE_API_KEY || '');
   
   constructor() {
     this.ensemble = new ConfidenceEnsemble({
@@ -611,9 +696,9 @@ class ContentModerationSystem {
   }
   
   private async analyzeToxicity(content: string): Promise<ConfidenceResult> {
-    const response = await llm.complete(
-      `Analyze toxicity level of: "${content}". 
-       Rate from 0-1 where 0 is toxic and 1 is completely safe.`
+    const response = await this.claude.complete(
+      new LLMRequest(`Analyze toxicity level of: "${content}". 
+       Rate from 0-1 where 0 is toxic and 1 is completely safe.`)
     );
     
     return this.extractor.fromStructuredResponse(response.content);
@@ -637,7 +722,9 @@ const app = express();
 app.use(express.json());
 
 const runtime = createRuntime();
-runtime.setLLMProvider(new ClaudeProvider(process.env.CLAUDE_API_KEY));
+const provider = new ClaudeProvider(process.env.CLAUDE_API_KEY);
+runtime.registerLLMProvider('claude', provider);
+runtime.setDefaultLLMProvider('claude');
 
 // Confidence middleware
 const requireConfidence = (minConfidence: number) => {
@@ -708,9 +795,9 @@ app.listen(3000);
 ### 2. React Component with Confidence Display
 
 ```tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { createRuntime, parse } from '@prism-lang/core';
-import { ConfidenceVisualizer } from '@prism-lang/confidence';
+import { ClaudeProvider } from '@prism-lang/llm';
 
 const ConfidenceAnalyzer: React.FC = () => {
   const [input, setInput] = useState('');
@@ -719,6 +806,13 @@ const ConfidenceAnalyzer: React.FC = () => {
   const [confidenceHistory, setConfidenceHistory] = useState<number[]>([]);
   
   const runtime = createRuntime();
+  
+  // Set up LLM provider (in real app, this would be done once at app initialization)
+  React.useEffect(() => {
+    const provider = new ClaudeProvider(process.env.REACT_APP_CLAUDE_API_KEY || '');
+    runtime.registerLLMProvider('claude', provider);
+    runtime.setDefaultLLMProvider('claude');
+  }, []);
   
   const analyze = async () => {
     setLoading(true);
@@ -826,7 +920,7 @@ import {
   ConfidenceEnsemble,
   APIConfidenceExtractor 
 } from '@prism-lang/confidence';
-import { ClaudeProvider, GeminiProvider } from '@prism-lang/llm';
+import { ClaudeProvider, GeminiProvider, LLMRequest } from '@prism-lang/llm';
 
 interface WeatherPrediction {
   temperature: number;
@@ -844,7 +938,9 @@ class WeatherPredictionService {
   private cache = new Map<string, { prediction: WeatherPrediction; timestamp: number }>();
   
   constructor() {
-    this.runtime.setLLMProvider(this.claude);
+    this.runtime.registerLLMProvider('claude', this.claude);
+    this.runtime.registerLLMProvider('gemini', this.gemini);
+    this.runtime.setDefaultLLMProvider('claude');
   }
   
   async predictWeather(location: string, date: Date): Promise<WeatherPrediction> {
@@ -955,8 +1051,8 @@ class WeatherPredictionService {
   
   private async getLLMPrediction(provider: any, location: string, date: Date) {
     const response = await provider.complete(
-      `Predict weather for ${location} on ${date.toDateString()}. 
-       Provide temperature in Fahrenheit and conditions.`
+      new LLMRequest(`Predict weather for ${location} on ${date.toDateString()}. 
+       Provide temperature in Fahrenheit and conditions.`)
     );
     
     const confidence = await this.extractor.fromResponseAnalysis(response.content);
