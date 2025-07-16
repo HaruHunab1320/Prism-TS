@@ -289,9 +289,10 @@ export class IfStatement extends Statement {
 }
 
 export interface UncertainBranches {
-  high: Statement;
+  high?: Statement;
   medium?: Statement;
-  low: Statement;
+  low?: Statement;
+  default?: Statement;
 }
 
 export class UncertainIfStatement extends Statement {

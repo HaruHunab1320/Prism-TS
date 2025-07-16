@@ -294,10 +294,7 @@ export class Parser {
     this.consume(TokenType.RIGHT_PAREN, "Expected ')' after condition");
     this.consume(TokenType.LEFT_BRACE, "Expected '{' after condition");
     
-    const branches: UncertainBranches = {
-      high: new BlockStatement([]),
-      low: new BlockStatement([]),
-    };
+    const branches: UncertainBranches = {};
     
     while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
       if (this.match(TokenType.HIGH)) {
@@ -315,8 +312,13 @@ export class Parser {
         const statements = this.blockContents();
         branches.low = new BlockStatement(statements);
         this.consume(TokenType.RIGHT_BRACE, "Expected '}' after low branch");
+      } else if (this.match(TokenType.DEFAULT)) {
+        this.consume(TokenType.LEFT_BRACE, "Expected '{' after 'default'");
+        const statements = this.blockContents();
+        branches.default = new BlockStatement(statements);
+        this.consume(TokenType.RIGHT_BRACE, "Expected '}' after default branch");
       } else {
-        throw new ParseError("Expected 'high', 'medium', or 'low' branch", this.peek(), this.sourceCode);
+        throw new ParseError("Expected 'high', 'medium', 'low', or 'default' branch", this.peek(), this.sourceCode);
       }
     }
     
@@ -758,29 +760,43 @@ export class Parser {
   }
   
   private parseUncertainBranches(): UncertainBranches {
-    const branches: UncertainBranches = {
-      high: new BlockStatement([]),
-      low: new BlockStatement([]),
-    };
+    const branches: UncertainBranches = {};
     
     while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
       if (this.match(TokenType.HIGH)) {
+        if (branches.high) {
+          throw new ParseError("Duplicate 'high' branch in uncertain statement", this.previous(), this.sourceCode);
+        }
         this.consume(TokenType.LEFT_BRACE, "Expected '{' after 'high'");
         const statements = this.blockContents();
         branches.high = new BlockStatement(statements);
         this.consume(TokenType.RIGHT_BRACE, "Expected '}' after high branch");
       } else if (this.match(TokenType.MEDIUM)) {
+        if (branches.medium) {
+          throw new ParseError("Duplicate 'medium' branch in uncertain statement", this.previous(), this.sourceCode);
+        }
         this.consume(TokenType.LEFT_BRACE, "Expected '{' after 'medium'");
         const statements = this.blockContents();
         branches.medium = new BlockStatement(statements);
         this.consume(TokenType.RIGHT_BRACE, "Expected '}' after medium branch");
       } else if (this.match(TokenType.LOW)) {
+        if (branches.low) {
+          throw new ParseError("Duplicate 'low' branch in uncertain statement", this.previous(), this.sourceCode);
+        }
         this.consume(TokenType.LEFT_BRACE, "Expected '{' after 'low'");
         const statements = this.blockContents();
         branches.low = new BlockStatement(statements);
         this.consume(TokenType.RIGHT_BRACE, "Expected '}' after low branch");
+      } else if (this.match(TokenType.DEFAULT)) {
+        if (branches.default) {
+          throw new ParseError("Duplicate 'default' branch in uncertain statement", this.previous(), this.sourceCode);
+        }
+        this.consume(TokenType.LEFT_BRACE, "Expected '{' after 'default'");
+        const statements = this.blockContents();
+        branches.default = new BlockStatement(statements);
+        this.consume(TokenType.RIGHT_BRACE, "Expected '}' after default branch");
       } else {
-        throw new ParseError("Expected 'high', 'medium', or 'low' branch in uncertain loop", this.peek(), this.sourceCode);
+        throw new ParseError("Expected 'high', 'medium', 'low', or 'default' branch in uncertain statement", this.peek(), this.sourceCode);
       }
     }
     

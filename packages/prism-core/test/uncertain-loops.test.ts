@@ -168,9 +168,18 @@ describe('Uncertain Loop Statements', () => {
           }
         }
         
-        // Medium confidence (0.7)
+        // High confidence (0.7 - at threshold)
         i = 0
         uncertain while (i < 1) ~> 0.7 {
+          high {
+            results = [...results, "high"]
+            i = i + 1
+          }
+        }
+        
+        // Medium confidence (0.6)
+        i = 0
+        uncertain while (i < 1) ~> 0.6 {
           medium {
             results = [...results, "medium"]
             i = i + 1
@@ -178,6 +187,7 @@ describe('Uncertain Loop Statements', () => {
         }
         
         // Low confidence (0.4 and 0.2)
+        i = 0
         uncertain while (i < 1) ~> 0.4 {
           low {
             results = [...results, "low"]
@@ -197,11 +207,12 @@ describe('Uncertain Loop Statements', () => {
       const result = await execute(code);
       expect(result).toBeInstanceOf(ArrayValue);
       const array = (result as ArrayValue).value;
-      expect(array.length).toBe(4);
+      expect(array.length).toBe(5);
       expect((array[0] as StringValue).value).toBe("high");   // 0.9
-      expect((array[1] as StringValue).value).toBe("medium"); // 0.7
-      expect((array[2] as StringValue).value).toBe("low");    // 0.4
-      expect((array[3] as StringValue).value).toBe("low");    // 0.2
+      expect((array[1] as StringValue).value).toBe("high");   // 0.7 (at threshold)
+      expect((array[2] as StringValue).value).toBe("medium"); // 0.6
+      expect((array[3] as StringValue).value).toBe("low");    // 0.4
+      expect((array[4] as StringValue).value).toBe("low");    // 0.2
     });
 
     it('should handle break in uncertain while loop', async () => {

@@ -2257,8 +2257,10 @@ export class Interpreter {
       return await this.interpret(node.branches.high);
     } else if (level === ConfidenceLevel.MEDIUM && node.branches.medium) {
       return await this.interpret(node.branches.medium);
-    } else if (node.branches.low) {
+    } else if (level === ConfidenceLevel.LOW && node.branches.low) {
       return await this.interpret(node.branches.low);
+    } else if (node.branches.default) {
+      return await this.interpret(node.branches.default);
     }
 
     return new NumberValue(0); // Default return
@@ -2560,6 +2562,27 @@ export class Interpreter {
               throw error;
             }
           }
+        } else if (node.branches.default) {
+          // Execute default branch when no confidence level matches
+          try {
+            result = await this.interpret(node.branches.default);
+          } catch (error) {
+            if (error instanceof LoopControlError) {
+              if (error.type === 'break') {
+                break;
+              } else if (error.type === 'continue') {
+                // Continue to update expression
+              } else {
+                throw error;
+              }
+            } else {
+              throw error;
+            }
+          }
+        } else {
+          // No matching branch and no default - exit the loop
+          // This prevents infinite loops when confidence doesn't match any branch
+          break;
         }
 
         // Execute update
@@ -2623,6 +2646,25 @@ export class Interpreter {
             throw error;
           }
         }
+      } else if (node.branches.default) {
+        // Execute default branch when no confidence level matches
+        try {
+          result = await this.interpret(node.branches.default);
+        } catch (error) {
+          if (error instanceof LoopControlError) {
+            if (error.type === 'break') {
+              break;
+            } else if (error.type === 'continue') {
+              continue;
+            }
+          } else {
+            throw error;
+          }
+        }
+      } else {
+        // No matching branch and no default - exit the loop
+        // This prevents infinite loops when confidence doesn't match any branch
+        break;
       }
     }
 

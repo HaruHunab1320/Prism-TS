@@ -20,4 +20,6 @@ module.exports = {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
+  forceExit: true,
+  testTimeout: 10000,
 };
