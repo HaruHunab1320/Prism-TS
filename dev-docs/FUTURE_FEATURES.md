@@ -139,9 +139,104 @@ function* fibonacci() {
 fibs = fibonacci().take(10).toArray()
 ```
 
+### 8. Syntax Highlighting Theme Support
+**Priority:** MEDIUM  
+**Complexity:** Medium-High  
+**Value:** Enhanced code readability and developer experience
+
+Comprehensive syntax highlighting for Prism's unique features:
+- **100+ distinct tokens** requiring styling
+- **~20 confidence operators** needing visual distinction
+- **Semantic highlighting** for uncertainty levels (high/medium/low)
+- **Context-aware coloring** for agents and contexts
+
+Key requirements:
+```prism
+// Confidence operators should be visually distinct
+value = data ~> 0.9        // Confidence arrow
+extracted = result <~      // Confidence extraction
+chained = a ~~ b ~~ c      // Confidence chain
+parallel = tasks ~||> process  // Parallel confidence
+
+// Uncertainty blocks need clear visual hierarchy
+uncertain if (analysis) {
+  high { deployToProduction() }      // Success path
+  medium { requestReview() }         // Caution path
+  low { blockDeployment() }          // Failure path
+}
+
+// Context and agent blocks
+in context Medical {
+  diagnosis = analyzeSymptoms(patient)
+} shifting to Treatment {
+  plan = createTreatmentPlan(diagnosis)
+}
+```
+
+Implementation approach:
+- Extend existing Prism.js highlighting
+- Support both light and dark themes
+- Use distinct color families for confidence operators
+- Provide semantic token support for LSP integration
+
+### 9. Code Formatter (Prettier-style)
+**Priority:** MEDIUM  
+**Complexity:** High  
+**Value:** Consistent code style across projects
+
+A comprehensive code formatter handling Prism's unique syntax:
+- **37 AST node types** to format
+- **29 binary operators** with precedence rules
+- **Confidence-aware formatting** for readability
+
+Key formatting challenges:
+```prism
+// Confidence operator chains
+result = value ~> 0.9 ~&& condition ~> 0.8 ~|| fallback ~> 0.7
+
+// Pipeline formatting
+processed = data
+  |> filter(_, x => x.confidence > 0.5)
+  |> map(_, x => x ~> increaseConfidence(x))
+  |> reduce(_, (a, b) => a ~+ b, 0)
+
+// Uncertain control flow indentation
+uncertain for item in items {
+  high {
+    process(item)
+    commit()
+  }
+  medium {
+    review(item)
+    uncertain if (approved) {
+      high { process(item) }
+      low { reject(item) }
+    }
+  }
+  low { skip(item) }
+}
+
+// Complex destructuring with confidence
+[
+  first ~> 0.9,
+  second ~> 0.8,
+  ...rest
+] = analyzeResults(data) ~> threshold
+```
+
+Configuration options:
+- Indentation (spaces/tabs)
+- Line length limits
+- Confidence operator spacing
+- Pipeline operator alignment
+- Uncertain branch formatting
+- Comment preservation
+
+Implementation timeline: 4-6 weeks for production-ready formatter
+
 ## 🎨 Low Priority Features
 
-### 8. Set and Map Data Types
+### 10. Set and Map Data Types
 **Priority:** LOW  
 **Complexity:** Medium  
 **Value:** Additional data structures
@@ -161,7 +256,7 @@ userScores = Map([
 score = userScores.get("alice")  // 95 ~> 0.9
 ```
 
-### 9. Tagged Template Literals
+### 11. Tagged Template Literals
 **Priority:** LOW  
 **Complexity:** Medium  
 **Value:** Domain-specific string processing
@@ -181,7 +276,7 @@ report = confident`
 `
 ```
 
-### 10. Algebraic Effects
+### 12. Algebraic Effects
 **Priority:** LOW  
 **Complexity:** Very High  
 **Value:** Advanced control flow
@@ -213,7 +308,7 @@ handle process(myData) {
 }
 ```
 
-### 11. Partial Application and Currying
+### 13. Partial Application and Currying
 **Priority:** LOW  
 **Complexity:** Medium  
 **Value:** Functional programming patterns

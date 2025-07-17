@@ -1,0 +1,294 @@
+/**
+ * Prism Language Theme - Confidence-aware syntax highlighting
+ * Designed to highlight Prism's unique confidence operators and uncertainty constructs
+ */
+
+/* Base theme colors */
+:root {
+  /* Light theme colors */
+  --prism-foreground: #393A34;
+  --prism-background: #f8f8f2;
+  --prism-comment: #6c7680;
+  --prism-string: #032f62;
+  --prism-number: #005cc5;
+  --prism-boolean: #d73a49;
+  --prism-keyword: #d73a49;
+  --prism-function: #6f42c1;
+  --prism-operator: #d73a49;
+  --prism-punctuation: #6c7680;
+  
+  /* Confidence-specific colors */
+  --prism-confidence-primary: #0969da;
+  --prism-confidence-secondary: #1a7f37;
+  --prism-confidence-tertiary: #8250df;
+  
+  /* Uncertainty colors */
+  --prism-uncertainty-high: #1a7f37;
+  --prism-uncertainty-medium: #fb8500;
+  --prism-uncertainty-low: #cf222e;
+  --prism-uncertainty-default: #6c7680;
+  
+  /* Special constructs */
+  --prism-context: #8250df;
+  --prism-agent: #0969da;
+}
+
+/* Dark theme colors */
+[data-theme="dark"] {
+  --prism-foreground: #f8f8f2;
+  --prism-background: #282a36;
+  --prism-comment: #6272a4;
+  --prism-string: #f1fa8c;
+  --prism-number: #bd93f9;
+  --prism-boolean: #ff79c6;
+  --prism-keyword: #ff79c6;
+  --prism-function: #50fa7b;
+  --prism-operator: #ff79c6;
+  --prism-punctuation: #f8f8f2;
+  
+  /* Confidence-specific colors */
+  --prism-confidence-primary: #8be9fd;
+  --prism-confidence-secondary: #50fa7b;
+  --prism-confidence-tertiary: #bd93f9;
+  
+  /* Uncertainty colors */
+  --prism-uncertainty-high: #50fa7b;
+  --prism-uncertainty-medium: #ffb86c;
+  --prism-uncertainty-low: #ff5555;
+  --prism-uncertainty-default: #6272a4;
+  
+  /* Special constructs */
+  --prism-context: #bd93f9;
+  --prism-agent: #8be9fd;
+}
+
+/* Base token styles */
+code[class*="language-"],
+pre[class*="language-"] {
+  color: var(--prism-foreground);
+  background: var(--prism-background);
+  text-shadow: none;
+  font-family: 'Fira Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  font-size: 1em;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.5;
+  tab-size: 4;
+  hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+  padding: 1em;
+  margin: 0.5em 0;
+  overflow: auto;
+  border-radius: 0.3em;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+  padding: 0.1em 0.3em;
+  border-radius: 0.3em;
+  white-space: normal;
+}
+
+/* Token styles */
+.token.comment {
+  color: var(--prism-comment);
+  font-style: italic;
+}
+
+.token.string {
+  color: var(--prism-string);
+}
+
+.token.number {
+  color: var(--prism-number);
+}
+
+.token.boolean,
+.token.null {
+  color: var(--prism-boolean);
+  font-weight: bold;
+}
+
+.token.keyword {
+  color: var(--prism-keyword);
+  font-weight: bold;
+}
+
+.token.builtin {
+  color: var(--prism-function);
+  font-style: italic;
+}
+
+.token.function,
+.token.function-name {
+  color: var(--prism-function);
+}
+
+.token.operator {
+  color: var(--prism-operator);
+}
+
+.token.punctuation {
+  color: var(--prism-punctuation);
+}
+
+.token.variable,
+.token.identifier {
+  color: var(--prism-foreground);
+}
+
+.token.property,
+.token.property-name {
+  color: var(--prism-function);
+}
+
+/* Confidence operators - the heart of Prism */
+.token.confidence-operator {
+  color: var(--prism-confidence-primary);
+  font-weight: bold;
+}
+
+.token.confidence-arrow {
+  color: var(--prism-confidence-primary);
+  font-weight: bold;
+}
+
+.token.confidence-chain {
+  color: var(--prism-confidence-secondary);
+  font-weight: bold;
+}
+
+.token.confidence-parallel,
+.token.confidence-pipeline {
+  color: var(--prism-confidence-tertiary);
+  font-weight: bold;
+}
+
+.token.confidence-threshold,
+.token.confidence-gate {
+  color: var(--prism-confidence-secondary);
+  font-weight: bold;
+  background-color: rgba(26, 127, 55, 0.1);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.token.confidence-logical,
+.token.confidence-arithmetic,
+.token.confidence-comparison {
+  color: var(--prism-confidence-primary);
+  font-weight: bold;
+}
+
+.token.confidence-coalesce,
+.token.confidence-dot {
+  color: var(--prism-confidence-secondary);
+  font-weight: bold;
+}
+
+/* Special operators */
+.token.pipeline {
+  color: var(--prism-confidence-tertiary);
+  font-weight: bold;
+}
+
+.token.spread {
+  color: var(--prism-operator);
+  font-weight: bold;
+}
+
+.token.arrow {
+  color: var(--prism-function);
+}
+
+/* Uncertainty keywords */
+.token.keyword.uncertain {
+  color: var(--prism-uncertainty-medium);
+  font-weight: bold;
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: var(--prism-uncertainty-medium);
+}
+
+.token.keyword.high {
+  color: var(--prism-uncertainty-high);
+  font-weight: bold;
+}
+
+.token.keyword.medium {
+  color: var(--prism-uncertainty-medium);
+  font-weight: bold;
+}
+
+.token.keyword.low {
+  color: var(--prism-uncertainty-low);
+  font-weight: bold;
+}
+
+.token.keyword.default {
+  color: var(--prism-uncertainty-default);
+  font-weight: bold;
+}
+
+/* Context and agent keywords */
+.token.keyword.context,
+.token.keyword.shifting,
+.token.keyword.agents,
+.token.keyword.agent {
+  color: var(--prism-context);
+  font-weight: bold;
+  font-style: italic;
+}
+
+/* Interpolation */
+.token.interpolation {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 2px;
+}
+
+[data-theme="dark"] .token.interpolation {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.token.interpolation-punctuation {
+  color: var(--prism-punctuation);
+  font-weight: bold;
+}
+
+/* Placeholder */
+.token.placeholder {
+  color: var(--prism-confidence-tertiary);
+  font-weight: bold;
+  background-color: rgba(130, 80, 223, 0.1);
+  padding: 0 4px;
+  border-radius: 2px;
+}
+
+/* Line highlighting */
+.line-highlight {
+  background: linear-gradient(to right, rgba(9, 105, 218, 0.1) 70%, rgba(9, 105, 218, 0));
+  border-left: 3px solid var(--prism-confidence-primary);
+  margin-top: 0.75em;
+}
+
+/* Selection */
+code[class*="language-"]::selection,
+pre[class*="language-"]::selection,
+code[class*="language-"] ::selection,
+pre[class*="language-"] ::selection {
+  background: rgba(9, 105, 218, 0.2);
+}
+
+/* Print styles */
+@media print {
+  code[class*="language-"],
+  pre[class*="language-"] {
+    text-shadow: none;
+  }
+}

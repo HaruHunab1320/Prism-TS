@@ -1,0 +1,59 @@
+{
+  "name": "prism-lang",
+  "displayName": "Prism Language Support",
+  "description": "Syntax highlighting and language support for the Prism programming language",
+  "version": "0.1.0",
+  "publisher": "prism-lang",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Themes"
+  ],
+  "keywords": [
+    "prism",
+    "confidence",
+    "uncertainty",
+    "programming",
+    "language"
+  ],
+  "icon": "images/icon.png",
+  "contributes": {
+    "languages": [
+      {
+        "id": "prism",
+        "aliases": ["Prism", "prism"],
+        "extensions": [".prism"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "prism",
+        "scopeName": "source.prism",
+        "path": "./syntaxes/prism.tmLanguage.json"
+      }
+    ],
+    "themes": [
+      {
+        "label": "Prism Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/prism-dark-theme.json"
+      },
+      {
+        "label": "Prism Light",
+        "uiTheme": "vs",
+        "path": "./themes/prism-light-theme.json"
+      }
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HaruHunab1320/Prism-TS"
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "echo 'No compilation needed for syntax highlighting'"
+  }
+}

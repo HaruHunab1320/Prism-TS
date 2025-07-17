@@ -20,6 +20,7 @@ const sidebars: SidebarsConfig = {
         'concepts/confidence-operators',
         'concepts/uncertainty-propagation',
         'concepts/control-flow',
+        'concepts/syntax-highlighting-demo',
       ],
     },
     {

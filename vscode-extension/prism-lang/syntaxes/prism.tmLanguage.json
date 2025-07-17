@@ -1,0 +1,325 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Prism",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#constants" },
+    { "include": "#keywords" },
+    { "include": "#confidence-operators" },
+    { "include": "#operators" },
+    { "include": "#functions" },
+    { "include": "#variables" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.prism",
+          "match": "//.*$"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.prism",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.prism",
+              "match": "\\\\."
+            },
+            {
+              "name": "meta.template.expression.prism",
+              "begin": "\\$\\{",
+              "end": "\\}",
+              "beginCaptures": {
+                "0": { "name": "punctuation.definition.template-expression.begin.prism" }
+              },
+              "endCaptures": {
+                "0": { "name": "punctuation.definition.template-expression.end.prism" }
+              },
+              "patterns": [
+                { "include": "$self" }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "string.template.prism",
+          "begin": "`",
+          "end": "`",
+          "patterns": [
+            {
+              "name": "constant.character.escape.prism",
+              "match": "\\\\."
+            },
+            {
+              "name": "meta.template.expression.prism",
+              "begin": "\\$\\{",
+              "end": "\\}",
+              "beginCaptures": {
+                "0": { "name": "punctuation.definition.template-expression.begin.prism" }
+              },
+              "endCaptures": {
+                "0": { "name": "punctuation.definition.template-expression.end.prism" }
+              },
+              "patterns": [
+                { "include": "$self" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.prism",
+          "match": "\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.true.prism",
+          "match": "\\btrue\\b"
+        },
+        {
+          "name": "constant.language.boolean.false.prism",
+          "match": "\\bfalse\\b"
+        },
+        {
+          "name": "constant.language.null.prism",
+          "match": "\\bnull\\b"
+        },
+        {
+          "name": "constant.language.undefined.prism",
+          "match": "\\bundefined\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.conditional.prism",
+          "match": "\\b(if|else)\\b"
+        },
+        {
+          "name": "keyword.control.loop.prism",
+          "match": "\\b(for|while|do|in)\\b"
+        },
+        {
+          "name": "keyword.control.flow.prism",
+          "match": "\\b(break|continue|return)\\b"
+        },
+        {
+          "name": "keyword.other.prism",
+          "match": "\\b(function|let|const|typeof|instanceof)\\b"
+        },
+        {
+          "name": "keyword.control.uncertainty.prism",
+          "match": "\\b(uncertain)\\b"
+        },
+        {
+          "name": "keyword.control.uncertainty.high.prism",
+          "match": "\\b(high)\\b"
+        },
+        {
+          "name": "keyword.control.uncertainty.medium.prism",
+          "match": "\\b(medium)\\b"
+        },
+        {
+          "name": "keyword.control.uncertainty.low.prism",
+          "match": "\\b(low)\\b"
+        },
+        {
+          "name": "keyword.control.uncertainty.default.prism",
+          "match": "\\b(default)\\b"
+        },
+        {
+          "name": "keyword.control.context.prism",
+          "match": "\\b(context|shifting|to)\\b"
+        },
+        {
+          "name": "keyword.control.agent.prism",
+          "match": "\\b(agents|agent)\\b"
+        },
+        {
+          "name": "keyword.other.confidence.prism",
+          "match": "\\b(confidence)\\b"
+        }
+      ]
+    },
+    "confidence-operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.confidence.parallel.prism",
+          "match": "~\\|\\|>"
+        },
+        {
+          "name": "keyword.operator.confidence.threshold.prism",
+          "match": "~@>"
+        },
+        {
+          "name": "keyword.operator.confidence.pipeline.prism",
+          "match": "~\\|>"
+        },
+        {
+          "name": "keyword.operator.confidence.gate.prism",
+          "match": "~\\?>"
+        },
+        {
+          "name": "keyword.operator.confidence.arrow.prism",
+          "match": "~>|<~"
+        },
+        {
+          "name": "keyword.operator.confidence.chain.prism",
+          "match": "~~"
+        },
+        {
+          "name": "keyword.operator.confidence.coalesce.prism",
+          "match": "~\\?\\?"
+        },
+        {
+          "name": "keyword.operator.confidence.logical.prism",
+          "match": "~&&|~\\|\\|"
+        },
+        {
+          "name": "keyword.operator.confidence.arithmetic.prism",
+          "match": "~[+\\-*/%]"
+        },
+        {
+          "name": "keyword.operator.confidence.comparison.prism",
+          "match": "~(==|!=|<=?|>=?)"
+        },
+        {
+          "name": "keyword.operator.confidence.dot.prism",
+          "match": "~\\."
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.pipeline.prism",
+          "match": "\\|>"
+        },
+        {
+          "name": "keyword.operator.nullish.prism",
+          "match": "\\?\\?"
+        },
+        {
+          "name": "keyword.operator.optional.prism",
+          "match": "\\?\\.?"
+        },
+        {
+          "name": "keyword.operator.spread.prism",
+          "match": "\\.\\.\\."
+        },
+        {
+          "name": "keyword.operator.arrow.prism",
+          "match": "=>|->"
+        },
+        {
+          "name": "keyword.operator.assignment.compound.prism",
+          "match": "[+\\-*/%]=|\\+\\+|--"
+        },
+        {
+          "name": "keyword.operator.comparison.prism",
+          "match": "==|!=|<=?|>=?"
+        },
+        {
+          "name": "keyword.operator.logical.prism",
+          "match": "&&|\\|\\||!"
+        },
+        {
+          "name": "keyword.operator.arithmetic.prism",
+          "match": "[+\\-*/%]|\\*\\*"
+        },
+        {
+          "name": "keyword.operator.assignment.prism",
+          "match": "="
+        },
+        {
+          "name": "keyword.operator.bitwise.prism",
+          "match": "&|\\||\\^|~|<<|>>|>>>"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "support.function.builtin.prism",
+          "match": "\\b(llm|extract|combine|print|console)\\b(?=\\s*\\()"
+        },
+        {
+          "name": "entity.name.function.prism",
+          "match": "\\b[a-zA-Z_]\\w*\\b(?=\\s*\\()"
+        },
+        {
+          "name": "entity.name.function.prism",
+          "match": "\\b(function)\\s+([a-zA-Z_]\\w*)\\b",
+          "captures": {
+            "1": { "name": "keyword.other.prism" },
+            "2": { "name": "entity.name.function.prism" }
+          }
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "name": "variable.other.constant.prism",
+          "match": "\\b[A-Z][A-Z0-9_]*\\b"
+        },
+        {
+          "name": "variable.other.prism",
+          "match": "\\b[a-zA-Z_]\\w*\\b"
+        },
+        {
+          "name": "variable.language.placeholder.prism",
+          "match": "\\b_\\b"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.terminator.statement.prism",
+          "match": ";"
+        },
+        {
+          "name": "punctuation.separator.comma.prism",
+          "match": ","
+        },
+        {
+          "name": "punctuation.accessor.prism",
+          "match": "\\."
+        },
+        {
+          "name": "punctuation.definition.block.prism",
+          "match": "[{}]"
+        },
+        {
+          "name": "punctuation.definition.array.prism",
+          "match": "[\\[\\]]"
+        },
+        {
+          "name": "punctuation.definition.parameters.prism",
+          "match": "[()]"
+        },
+        {
+          "name": "punctuation.separator.key-value.prism",
+          "match": ":"
+        }
+      ]
+    }
+  },
+  "scopeName": "source.prism"
+}

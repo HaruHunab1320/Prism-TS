@@ -1,0 +1,174 @@
+{
+  "name": "Prism Dark",
+  "type": "dark",
+  "colors": {
+    "editor.background": "#0f172a",
+    "editor.foreground": "#f8f8f2",
+    "editorLineNumber.foreground": "#6272a4",
+    "editorCursor.foreground": "#f8f8f2",
+    "editor.selectionBackground": "#44475a",
+    "editor.lineHighlightBackground": "#44475a75"
+  },
+  "tokenColors": [
+    {
+      "name": "Comments",
+      "scope": "comment",
+      "settings": {
+        "foreground": "#6272a4",
+        "fontStyle": "italic"
+      }
+    },
+    {
+      "name": "Strings",
+      "scope": "string",
+      "settings": {
+        "foreground": "#f1fa8c"
+      }
+    },
+    {
+      "name": "Numbers",
+      "scope": "constant.numeric",
+      "settings": {
+        "foreground": "#bd93f9"
+      }
+    },
+    {
+      "name": "Built-in constants",
+      "scope": "constant.language",
+      "settings": {
+        "foreground": "#bd93f9"
+      }
+    },
+    {
+      "name": "Keywords",
+      "scope": "keyword",
+      "settings": {
+        "foreground": "#ff79c6",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Uncertainty High",
+      "scope": "keyword.control.uncertainty.high",
+      "settings": {
+        "foreground": "#50fa7b",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Uncertainty Medium",
+      "scope": "keyword.control.uncertainty.medium",
+      "settings": {
+        "foreground": "#ffb86c",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Uncertainty Low",
+      "scope": "keyword.control.uncertainty.low",
+      "settings": {
+        "foreground": "#ff5555",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Context Keywords",
+      "scope": "keyword.control.context",
+      "settings": {
+        "foreground": "#bd93f9",
+        "fontStyle": "bold italic"
+      }
+    },
+    {
+      "name": "Agent Keywords",
+      "scope": "keyword.control.agent",
+      "settings": {
+        "foreground": "#8be9fd",
+        "fontStyle": "bold italic"
+      }
+    },
+    {
+      "name": "Confidence Operators",
+      "scope": "keyword.operator.confidence",
+      "settings": {
+        "foreground": "#8be9fd",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Confidence Arrow",
+      "scope": "keyword.operator.confidence.arrow",
+      "settings": {
+        "foreground": "#8be9fd",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Confidence Chain",
+      "scope": "keyword.operator.confidence.chain",
+      "settings": {
+        "foreground": "#50fa7b",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Confidence Parallel/Pipeline",
+      "scope": "keyword.operator.confidence.parallel, keyword.operator.confidence.pipeline",
+      "settings": {
+        "foreground": "#bd93f9",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Operators",
+      "scope": "keyword.operator",
+      "settings": {
+        "foreground": "#ff79c6"
+      }
+    },
+    {
+      "name": "Functions",
+      "scope": "entity.name.function, support.function",
+      "settings": {
+        "foreground": "#50fa7b"
+      }
+    },
+    {
+      "name": "Variables",
+      "scope": "variable",
+      "settings": {
+        "foreground": "#f8f8f2"
+      }
+    },
+    {
+      "name": "Constants",
+      "scope": "variable.other.constant",
+      "settings": {
+        "foreground": "#bd93f9"
+      }
+    },
+    {
+      "name": "Placeholder",
+      "scope": "variable.language.placeholder",
+      "settings": {
+        "foreground": "#bd93f9",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Punctuation",
+      "scope": "punctuation",
+      "settings": {
+        "foreground": "#f8f8f2"
+      }
+    },
+    {
+      "name": "Template Expression",
+      "scope": "punctuation.definition.template-expression",
+      "settings": {
+        "foreground": "#ff79c6",
+        "fontStyle": "bold"
+      }
+    }
+  ]
+}
