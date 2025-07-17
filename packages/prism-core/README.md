@@ -12,6 +12,8 @@ npm install @prism-lang/core
 
 ## Quick Start
 
+The easiest way to run Prism code is using the `runPrism` helper function, which handles parsing and runtime setup for you.
+
 ### Simple Usage
 
 ```javascript
@@ -19,20 +21,29 @@ import { runPrism } from '@prism-lang/core';
 
 // Run Prism code directly
 const result = await runPrism('x = 5 ~> 0.9; x * 2');
-console.log(result); // { value: 10, confidence: 0.9 }
+console.log(result); // ConfidenceValue { value: 10, confidence: 0.9 }
+
+// Access the actual value
+console.log(result.value); // 10
+console.log(result.confidence); // 0.9
 
 // With custom globals
 const result2 = await runPrism('PI * radius * radius', {
   globals: { PI: 3.14159, radius: 5 }
 });
+console.log(result2); // 78.53975
 
 // With LLM provider
 import { MockLLMProvider } from '@prism-lang/llm';
 
 const provider = new MockLLMProvider();
+provider.setMockResponse('Hello! How can I help?', 0.85);
+
 const result3 = await runPrism('response = llm("Hello"); response', {
   llmProvider: provider
 });
+console.log(result3.value); // "Hello! How can I help?"
+console.log(result3.confidence); // 0.85
 ```
 
 > **Note**: The `globals` option currently only supports primitive values (numbers, strings, booleans) and simple objects. Functions cannot be injected as globals due to runtime limitations.
