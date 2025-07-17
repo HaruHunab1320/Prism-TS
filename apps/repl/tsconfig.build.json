@@ -4,13 +4,9 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "composite": true,
+    "declaration": true,
+    "declarationMap": true,
     "baseUrl": ".",
-    "paths": {
-      "@prism/core": ["../../packages/prism-core/src"],
-      "@prism/core/*": ["../../packages/prism-core/src/*"],
-      "@prism/llm": ["../../packages/prism-llm/src"],
-      "@prism/llm/*": ["../../packages/prism-llm/src/*"]
-    }
   },
   "include": ["src/**/*"],
   "exclude": ["**/*.test.ts"],
