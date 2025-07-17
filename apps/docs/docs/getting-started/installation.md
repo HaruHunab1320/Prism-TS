@@ -35,7 +35,7 @@ npm install @prism-lang/confidence
 ```
 
 #### LLM Integrations
-Support for Claude, Gemini, and OpenAI:
+Support for Claude and Gemini:
 ```bash
 npm install @prism-lang/llm
 ```
@@ -74,9 +74,8 @@ If you're using LLM features, set up your API keys:
 
 ```bash
 # .env file
-ANTHROPIC_API_KEY=your-claude-api-key
+CLAUDE_API_KEY=your-claude-api-key
 GEMINI_API_KEY=your-gemini-api-key
-OPENAI_API_KEY=your-openai-api-key
 ```
 
 ### TypeScript Configuration

@@ -1,6 +1,5 @@
-import { PrismREPL } from './repl';
-import { MockLLMProvider } from '@prism/llm';
-import { BaseConfidenceValue as ConfidenceValue } from '@prism/core';
+import { PrismREPL } from '../src/repl';
+import { MockLLMProvider } from '@prism-lang/llm';
 
 describe('Prism REPL', () => {
   let repl: PrismREPL;
@@ -10,7 +9,7 @@ describe('Prism REPL', () => {
     
     // Set up mock LLM provider
     const mockProvider = new MockLLMProvider();
-    mockProvider.setMockResponse('Hello from AI!', new ConfidenceValue(0.9));
+    mockProvider.setMockResponse('Hello from AI!', 0.9);
     repl.registerLLMProvider('mock', mockProvider);
     repl.setDefaultLLMProvider('mock');
   });

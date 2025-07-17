@@ -25,7 +25,22 @@ async function runFile(filename: string): Promise<void> {
     const result = await executeCode(code);
     
     if (result !== undefined && result !== null) {
-      console.log('\nResult:', result);
+      // Format the result similar to evalCode
+      if (typeof result === 'object' && 'value' in result) {
+        if ('confidence' in result && result.confidence) {
+          const value = result.value.value !== undefined ? result.value.value : result.value;
+          const confidence = typeof result.confidence === 'object' && 'value' in result.confidence 
+            ? result.confidence.value 
+            : result.confidence;
+          console.log(`\nResult: ${value} (~${confidence})`);
+        } else if ('value' in result) {
+          console.log('\nResult:', result.value);
+        } else {
+          console.log('\nResult:', result);
+        }
+      } else {
+        console.log('\nResult:', result);
+      }
     }
   } catch (error) {
     console.error(`❌ Error: ${error instanceof Error ? error.message : String(error)}`);
@@ -38,7 +53,25 @@ async function evalCode(code: string): Promise<void> {
     const result = await executeCode(code);
     
     if (result !== undefined && result !== null) {
-      console.log(result);
+      // Format the output based on the value type
+      if (typeof result === 'object' && 'value' in result) {
+        // It's a Value object from Prism
+        if ('confidence' in result && result.confidence) {
+          // ConfidenceValue - show both value and confidence
+          const value = result.value.value !== undefined ? result.value.value : result.value;
+          const confidence = typeof result.confidence === 'object' && 'value' in result.confidence 
+            ? result.confidence.value 
+            : result.confidence;
+          console.log(`${value} (~${confidence})`);
+        } else if ('value' in result) {
+          // Regular Value object
+          console.log(result.value);
+        } else {
+          console.log(result);
+        }
+      } else {
+        console.log(result);
+      }
     }
   } catch (error) {
     console.error(`❌ Error: ${error instanceof Error ? error.message : String(error)}`);
@@ -65,7 +98,7 @@ async function startREPL(): Promise<void> {
   // Show provider status
   const availableProviders = LLMConfigManager.getAvailableProviders();
   if (availableProviders.length === 1 && availableProviders[0] === 'mock') {
-    console.log('⚠️  Only mock LLM provider available. Set ANTHROPIC_API_KEY, GOOGLE_GENERATIVE_AI_API_KEY, or OPENAI_API_KEY for real AI integration.');
+    console.log('⚠️  Only mock LLM provider available. Set CLAUDE_API_KEY or GEMINI_API_KEY for real AI integration.');
   } else {
     console.log(`🤖 LLM providers: ${availableProviders.join(', ')} (default: ${defaultProvider})`);
   }

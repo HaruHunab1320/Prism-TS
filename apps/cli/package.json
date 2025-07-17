@@ -1,8 +1,9 @@
 {
   "name": "@prism-lang/cli",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "description": "Command-line interface for Prism language",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "prism": "dist/index.js"
   },
@@ -31,7 +32,8 @@
     "typescript": "^5.4.3"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "homepage": "https://docs.prismlang.dev/",
   "repository": {

@@ -49,13 +49,10 @@ Set up LLM providers with environment variables:
 
 ```bash
 # Anthropic Claude
-export ANTHROPIC_API_KEY=your-key
+export CLAUDE_API_KEY=your-key
 
 # Google Gemini
-export GOOGLE_GENERATIVE_AI_API_KEY=your-key
-
-# OpenAI
-export OPENAI_API_KEY=your-key
+export GEMINI_API_KEY=your-key
 ```
 
 ## Examples

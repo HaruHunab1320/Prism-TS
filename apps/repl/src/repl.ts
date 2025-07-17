@@ -1,5 +1,5 @@
-import { parse, Runtime, Value, NumberValue, StringValue, BooleanValue, ConfidenceValue as RuntimeConfidenceValue } from '@prism/core';
-import { LLMProvider, LLMConfigManager } from '@prism/llm';
+import { parse, Runtime, Value, NumberValue, StringValue, BooleanValue, ConfidenceValue as RuntimeConfidenceValue } from '@prism-lang/core';
+import { LLMProvider, LLMConfigManager } from '@prism-lang/llm';
 
 export interface REPLSuccessResult {
   success: true;

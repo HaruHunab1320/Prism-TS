@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { parse, createRuntime } from '@prism-lang/core';
+import { createRuntime, runPrism } from '@prism-lang/core';
 import { LLMConfigManager } from '@prism-lang/llm';
 
 export function getVersion(): string {
@@ -19,24 +19,35 @@ export async function setupRuntimeWithLLM() {
   const providers = LLMConfigManager.createFromEnvironment();
   const defaultProvider = LLMConfigManager.getDefaultProvider();
   
-  // Register LLM function if providers are available
-  if (Object.keys(providers).length > 0) {
-    runtime.setGlobal('llm', async (prompt: string) => {
-      const provider = providers[defaultProvider];
-      if (provider) {
-        return await provider.complete(prompt);
-      }
-      throw new Error('No LLM provider available');
-    });
+  // Register providers in the runtime
+  for (const [name, provider] of Object.entries(providers)) {
+    runtime.registerLLMProvider(name, provider);
+  }
+  
+  if (defaultProvider && providers[defaultProvider]) {
+    runtime.setDefaultLLMProvider(defaultProvider);
   }
   
   return { runtime, providers, defaultProvider };
 }
 
 export async function executeCode(code: string) {
-  const { runtime } = await setupRuntimeWithLLM();
-  const ast = parse(code);
-  return await runtime.execute(ast);
+  // Use runPrism helper which handles everything
+  const providers = LLMConfigManager.createFromEnvironment();
+  const defaultProvider = LLMConfigManager.getDefaultProvider();
+  
+  let result;
+  if (defaultProvider && providers[defaultProvider]) {
+    result = await runPrism(code, {
+      llmProvider: providers[defaultProvider],
+      defaultProviderName: defaultProvider
+    });
+  } else {
+    // No LLM provider, just run the code
+    result = await runPrism(code);
+  }
+  
+  return result;
 }
 
 export function readFileSync(filename: string): string {

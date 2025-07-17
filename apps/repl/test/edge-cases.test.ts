@@ -1,5 +1,5 @@
 import { PrismREPL } from '../src/repl';
-import { MockLLMProvider } from '@prism/llm';
+import { MockLLMProvider } from '@prism-lang/llm';
 
 describe('REPL Edge Cases', () => {
   let repl: PrismREPL;

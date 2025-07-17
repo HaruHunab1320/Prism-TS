@@ -1,12 +1,12 @@
 {
   "name": "@prism-lang/repl",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Interactive REPL for Prism language",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "dev": "ts-node src/cli.ts",
+    "dev": "ts-node src/index.ts",
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
@@ -25,7 +25,7 @@
   },
   "files": [
     "dist",
-    "src"
+    "README.md"
   ],
   "homepage": "https://docs.prismlang.dev/",
   "repository": {

@@ -32,20 +32,21 @@ describe('CLI Utils', () => {
   describe('executeCode', () => {
     it('should execute simple arithmetic', async () => {
       const result = await executeCode('2 + 3');
-      expect(result).toBe(5);
+      expect(result.type).toBe('number');
+      expect(result.value).toBe(5);
     });
 
     it('should execute code with variables', async () => {
       const result = await executeCode('x = 10; y = 20; x + y');
-      expect(result).toBe(30);
+      expect(result.type).toBe('number');
+      expect(result.value).toBe(30);
     });
 
     it('should handle confidence values', async () => {
       const result = await executeCode('42 ~> 0.9');
-      expect(result).toMatchObject({
-        value: 42,
-        confidence: 0.9
-      });
+      expect(result.value.type).toBe('number');
+      expect(result.value.value).toBe(42);
+      expect(result.confidence.value).toBeCloseTo(0.9);
     });
 
     it('should throw on invalid syntax', async () => {

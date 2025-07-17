@@ -197,7 +197,7 @@ Without API keys:
 ```bash
 prism
 🚀 Prism REPL v1.0.0
-⚠️  Only mock LLM provider available. Set ANTHROPIC_API_KEY or GEMINI_API_KEY for real AI integration.
+⚠️  Only mock LLM provider available. Set CLAUDE_API_KEY or GEMINI_API_KEY for real AI integration.
 Type :help for commands or :exit to quit
 
 prism>
