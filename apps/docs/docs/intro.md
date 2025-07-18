@@ -1,6 +1,8 @@
 ---
 sidebar_position: 1
 title: Introduction
+description: Prism is a programming language where uncertainty is a first-class citizen. Learn how to handle AI responses, sensor data, and complex computations with explicit confidence tracking.
+keywords: [prism, programming language, uncertainty, confidence, AI, LLM, machine learning, probabilistic programming, confidence values, uncertainty propagation]
 ---
 
 # Welcome to Prism

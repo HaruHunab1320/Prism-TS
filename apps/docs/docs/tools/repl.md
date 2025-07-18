@@ -1,5 +1,8 @@
 ---
 sidebar_position: 2
+title: Interactive REPL
+description: Explore the Prism REPL (Read-Eval-Print Loop) for interactive experimentation. Learn REPL commands, multi-line input, LLM integration, and advanced features for testing Prism code.
+keywords: [prism REPL, interactive programming, read-eval-print loop, prism commands, interactive shell, LLM testing, confidence tracking, developer tools, prism repl commands]
 ---
 
 # Interactive REPL

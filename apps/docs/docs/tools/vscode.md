@@ -1,5 +1,8 @@
 ---
 sidebar_position: 3
+title: VS Code Extension
+description: Get full Prism language support in Visual Studio Code with syntax highlighting, custom themes, and confidence operator highlighting. Install the extension for enhanced development experience.
+keywords: [VS Code extension, syntax highlighting, prism language, code editor, IDE support, confidence operators, custom themes, developer tools, visual studio code, prism-lang extension]
 ---
 
 # VS Code Extension

@@ -1,6 +1,8 @@
 ---
 sidebar_position: 1
 title: Installation
+description: Install Prism programming language and get started in minutes. Learn how to set up the core package, CLI tools, LLM integrations, and VS Code extension for uncertainty-aware programming.
+keywords: [prism installation, npm install, prism-lang, CLI tools, VS Code extension, LLM integration, Claude API, Gemini API, TypeScript setup, package manager]
 ---
 
 # Installation

@@ -1,6 +1,8 @@
 ---
 sidebar_position: 2
 title: Confidence Operators
+description: Master Prism's unique confidence operators for uncertainty handling. Learn how to attach, extract, propagate, and combine confidence values with arithmetic, comparison, and logical operators.
+keywords: [confidence operators, uncertainty operators, prism operators, confidence propagation, threshold gate, confident arithmetic, uncertainty programming, confidence extraction, parallel confidence, confidence pipeline]
 ---
 
 # Confidence Operators

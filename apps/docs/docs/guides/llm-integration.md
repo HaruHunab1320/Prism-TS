@@ -1,6 +1,8 @@
 ---
 sidebar_position: 1
 title: LLM Integration
+description: Seamlessly integrate Large Language Models (LLMs) like Claude and Gemini with Prism. Complete guide covering installation, configuration, API usage, confidence extraction, and best practices.
+keywords: [LLM integration, Claude API, Gemini API, AI programming, language models, Anthropic, Google AI, API configuration, confidence scoring, prism-lang/llm]
 ---
 
 # LLM Integration

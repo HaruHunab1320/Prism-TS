@@ -1,0 +1,53 @@
+{
+  "@context": "https://schema.org",
+  "@type": "ComputerLanguage",
+  "name": "Prism",
+  "alternateName": "Prism Programming Language",
+  "url": "https://docs.prismlang.dev",
+  "description": "A programming language where uncertainty is a first-class citizen. Designed for AI applications with built-in confidence tracking and uncertainty management.",
+  "creator": {
+    "@type": "Organization",
+    "name": "Prism Language Team",
+    "url": "https://github.com/HaruHunab1320/Prism-TS"
+  },
+  "dateCreated": "2024",
+  "programmingParadigm": [
+    "Multi-paradigm",
+    "Functional",
+    "Imperative",
+    "Uncertainty-aware"
+  ],
+  "typicalUse": [
+    "AI/ML Applications",
+    "LLM Integration",
+    "Uncertainty Quantification",
+    "Confidence Tracking",
+    "Risk-aware Programming"
+  ],
+  "documentation": "https://docs.prismlang.dev",
+  "softwareHelp": {
+    "@type": "WebPage",
+    "url": "https://docs.prismlang.dev/docs/intro"
+  },
+  "downloadUrl": "https://www.npmjs.com/package/@prism-lang/core",
+  "releaseNotes": "https://github.com/HaruHunab1320/Prism-TS/releases",
+  "softwareVersion": "1.0.25",
+  "fileExtension": ".prism",
+  "keywords": [
+    "programming language",
+    "uncertainty",
+    "confidence",
+    "AI",
+    "LLM",
+    "confidence values",
+    "uncertainty propagation"
+  ],
+  "license": "https://opensource.org/licenses/MIT",
+  "isAccessibleForFree": true,
+  "operatingSystem": [
+    "Windows",
+    "macOS", 
+    "Linux"
+  ],
+  "softwareRequirements": "Node.js 16.0 or higher"
+}

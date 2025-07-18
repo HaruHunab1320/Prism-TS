@@ -1,5 +1,8 @@
 ---
 sidebar_position: 1
+title: Command Line Interface (CLI)
+description: Complete guide to the Prism CLI for developing and running Prism programs. Learn how to execute files, evaluate expressions, use the interactive REPL, and configure LLM providers.
+keywords: [prism CLI, command line interface, prism run, prism eval, prism REPL, interactive development, LLM configuration, prism-lang/cli, developer tools]
 ---
 
 # Command Line Interface (CLI)

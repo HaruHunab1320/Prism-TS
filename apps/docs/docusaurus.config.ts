@@ -72,13 +72,30 @@ const config: Config = {
           trackingID: "G-WCQZPZ11LP",
           anonymizeIP: true,
         },
+        sitemap: {
+          changefreq: 'weekly' as const,
+          priority: 0.5,
+          ignorePatterns: ['/tags/**'],
+          filename: 'sitemap.xml',
+        },
       } satisfies Preset.Options,
     ],
   ],
 
   themeConfig: {
-    // Replace with your project's social card
-    image: "img/docusaurus-social-card.jpg",
+    // SEO and social sharing
+    image: "img/prism-social-card.png",
+    metadata: [
+      {name: 'keywords', content: 'prism, programming language, uncertainty, confidence, AI, LLM, confidence values'},
+      {name: 'description', content: 'Prism is a programming language where uncertainty is a first-class citizen. Handle AI responses with explicit confidence tracking.'},
+      {property: 'og:title', content: 'Prism Programming Language'},
+      {property: 'og:description', content: 'A programming language designed for the AI era with built-in confidence tracking and uncertainty management.'},
+      {property: 'og:type', content: 'website'},
+      {property: 'og:url', content: 'https://docs.prismlang.dev'},
+      {name: 'twitter:card', content: 'summary_large_image'},
+      {name: 'twitter:title', content: 'Prism Programming Language'},
+      {name: 'twitter:description', content: 'Programming with confidence in an uncertain world'},
+    ],
     colorMode: {
       defaultMode: "light",
       disableSwitch: false,
