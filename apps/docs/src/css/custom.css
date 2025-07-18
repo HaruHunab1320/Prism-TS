@@ -155,6 +155,85 @@ body::before {
   border-right: 1px solid #334155 !important;
 }
 
+/* Sidebar category headers - make them blue and bold */
+.menu__list-item > .menu__link--sublist {
+  color: var(--ifm-color-primary) !important;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
+[data-theme='dark'] .menu__list-item > .menu__link--sublist {
+  color: var(--ifm-color-primary-light) !important;
+}
+
+/* Sidebar category headers on hover */
+.menu__list-item > .menu__link--sublist:hover {
+  color: var(--ifm-color-primary-dark) !important;
+  background: rgba(8, 145, 178, 0.05);
+}
+
+[data-theme='dark'] .menu__list-item > .menu__link--sublist:hover {
+  color: var(--ifm-color-primary-lighter) !important;
+  background: rgba(34, 211, 238, 0.05);
+}
+
+/* Sidebar sub-pages - lighter color */
+.menu__list .menu__list .menu__link {
+  color: #6b7280 !important;
+  font-weight: 400;
+  font-size: 0.875rem;
+}
+
+[data-theme='dark'] .menu__list .menu__list .menu__link {
+  color: #9ca3af !important;
+}
+
+/* Active sub-page */
+.menu__list .menu__list .menu__link--active {
+  color: var(--ifm-color-primary) !important;
+  font-weight: 500;
+  background: rgba(8, 145, 178, 0.1);
+}
+
+[data-theme='dark'] .menu__list .menu__list .menu__link--active {
+  color: var(--ifm-color-primary-light) !important;
+  background: rgba(34, 211, 238, 0.1);
+}
+
+/* Sub-page hover */
+.menu__list .menu__list .menu__link:hover {
+  color: var(--ifm-color-primary) !important;
+  background: rgba(8, 145, 178, 0.05);
+}
+
+[data-theme='dark'] .menu__list .menu__list .menu__link:hover {
+  color: var(--ifm-color-primary-light) !important;
+  background: rgba(34, 211, 238, 0.05);
+}
+
+/* Category expand/collapse arrow */
+.menu__link--sublist-caret:after {
+  background: var(--ifm-menu-link-sublist-icon) 50% / 1.5rem 1.5rem;
+  filter: var(--ifm-color-primary-filter);
+  opacity: 1;
+}
+
+[data-theme='dark'] .menu__link--sublist-caret:after {
+  filter: var(--ifm-color-primary-light-filter);
+  opacity: 1;
+}
+
+/* Color the arrow to match the header */
+.menu__link--sublist:after {
+  background: var(--ifm-menu-link-sublist-icon) 50% / 1.5rem 1.5rem;
+  filter: brightness(0) saturate(100%) invert(34%) sepia(94%) saturate(1352%) hue-rotate(166deg) brightness(90%) contrast(101%);
+}
+
+[data-theme='dark'] .menu__link--sublist:after {
+  filter: brightness(0) saturate(100%) invert(71%) sepia(52%) saturate(1717%) hue-rotate(165deg) brightness(103%) contrast(95%);
+}
+
 /* Content styling */
 .main-wrapper {
   position: relative;

@@ -85,7 +85,7 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: "Prism",
+      title: "",
       logo: {
         alt: "Prism Logo",
         src: "img/prism-logo-no-text.png",
