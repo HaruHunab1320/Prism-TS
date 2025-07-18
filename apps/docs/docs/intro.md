@@ -53,7 +53,27 @@ decision = response ~@> "approve"  // Threshold gate
 
 ## Getting Started
 
-Ready to start programming with uncertainty? Head to our [Quick Start Guide](./getting-started/installation) to install Prism and write your first uncertainty-aware program.
+Ready to start programming with uncertainty? 
+
+1. **[Install Prism](./getting-started/installation)** - Get the CLI and core packages
+2. **[Set up your editor](./tools/vscode)** - Install VS Code extension for syntax highlighting
+3. **[Write your first program](./getting-started/first-program)** - Learn the basics
+4. **[Explore the REPL](./tools/repl)** - Experiment interactively
+
+### Quick Install
+
+```bash
+# Install CLI globally
+npm install -g @prism-lang/cli
+
+# Install VS Code extension
+curl -L https://github.com/HaruHunab1320/Prism-TS/releases/download/v0.1.0/prism-lang-0.1.0.vsix -o prism-lang.vsix
+code --install-extension prism-lang.vsix
+rm prism-lang.vsix
+
+# Start coding!
+prism
+```
 
 ## Use Cases
 

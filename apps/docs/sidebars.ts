@@ -34,6 +34,16 @@ const sidebars: SidebarsConfig = {
         'guides/examples',
       ],
     },
+    {
+      type: 'category',
+      label: 'Developer Tools',
+      items: [
+        'tools/index',
+        'tools/cli',
+        'tools/repl',
+        'tools/vscode',
+      ],
+    },
   ],
   
   apiSidebar: [

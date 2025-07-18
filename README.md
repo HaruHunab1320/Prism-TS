@@ -63,6 +63,41 @@ Features:
 
 ### Your First Prism Program
 
+#### Using the CLI (Recommended)
+
+Create a file `hello.prism`:
+
+```prism
+// hello.prism
+name = "World"
+greeting = llm("Create a friendly greeting for ${name}")
+
+console.log(greeting)
+
+// Make decisions based on confidence
+response = llm("Should we proceed?") ~> 0.75
+uncertain if (response) {
+  high { console.log("✅ Proceeding with confidence!") }
+  medium { console.log("⚠️ Proceeding with caution...") }
+  low { console.log("❌ Too uncertain, aborting.") }
+}
+```
+
+Run it:
+
+```bash
+# Execute a Prism file
+prism run hello.prism
+
+# Or use the REPL for interactive development
+prism
+
+# Evaluate expressions directly
+prism eval "2 + 2 ~> 0.99"
+```
+
+#### Using as a TypeScript Library
+
 ```typescript
 import { parse, createRuntime } from '@prism-lang/core';
 

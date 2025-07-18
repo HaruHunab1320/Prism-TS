@@ -96,12 +96,27 @@ For TypeScript projects, ensure your `tsconfig.json` includes:
 
 ## VS Code Extension
 
-Install the Prism VS Code extension for syntax highlighting and IntelliSense:
+Get full syntax highlighting and language support in VS Code:
 
-1. Open VS Code
-2. Go to Extensions (Cmd/Ctrl + Shift + X)
-3. Search for "Prism Language"
-4. Click Install
+```bash
+# Download and install the extension
+curl -L https://github.com/HaruHunab1320/Prism-TS/releases/download/v0.1.0/prism-lang-0.1.0.vsix -o prism-lang.vsix
+code --install-extension prism-lang.vsix
+rm prism-lang.vsix
+```
+
+Or manually:
+1. Download [prism-lang-0.1.0.vsix](https://github.com/HaruHunab1320/Prism-TS/releases/download/v0.1.0/prism-lang-0.1.0.vsix)
+2. Open VS Code → Extensions → "..." → Install from VSIX
+3. Select the downloaded file
+
+Features:
+- 🎨 Complete syntax highlighting for all Prism features
+- 🌈 Semantic colors for confidence operators
+- 🎯 Light and dark themes optimized for Prism
+- 📝 Auto-indentation and bracket matching
+
+[Learn more about the VS Code extension →](../tools/vscode)
 
 ## Next Steps
 
