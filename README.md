@@ -44,6 +44,23 @@ pnpm add @prism-lang/confidence     # optional
 npm install -g @prism-lang/cli      # or yarn/pnpm
 ```
 
+### 🎨 VS Code Extension
+
+Get syntax highlighting and language support for VS Code:
+
+```bash
+# Download and install the extension
+curl -L https://github.com/HaruHunab1320/Prism-TS/releases/download/v0.1.0/prism-lang-0.1.0.vsix -o prism-lang.vsix
+code --install-extension prism-lang.vsix
+rm prism-lang.vsix
+```
+
+Features:
+- ✨ Full syntax highlighting for all Prism features
+- 🎨 Semantic colors for confidence operators
+- 🌈 Light and dark themes optimized for Prism
+- 📝 Auto-indentation and bracket matching
+
 ### Your First Prism Program
 
 ```typescript
