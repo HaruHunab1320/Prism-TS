@@ -212,6 +212,27 @@ uncertain if prediction > 0.8 {  // Custom threshold
   }
 }
 
+// With default branch (like switch statement default)
+analysis = llm("Analyze this") ~> customConfidence
+
+uncertain if analysis {
+  high {
+    deploy()
+  }
+  medium {
+    review()
+  }
+  low {
+    reject()
+  }
+  default {
+    // Executes when confidence doesn't match any threshold
+    // Useful for custom confidence levels or edge cases
+    log("Unexpected confidence level: ${customConfidence}")
+    requestHumanIntervention()
+  }
+}
+
 // Conditional confidence checking
 result = complexCalculation() ~> calcConfidence
 
@@ -247,7 +268,7 @@ uncertain for i = 0; i < dataPoints.length; i = i + 1 {
   }
 }
 
-// Uncertain while loop
+// Uncertain while loop with default
 attempts = 0
 uncertain while (attempts < maxAttempts) ~> 0.9 {
   high {
@@ -266,8 +287,62 @@ uncertain while (attempts < maxAttempts) ~> 0.9 {
     result = abortWithDefault()
     break
   }
+  default {
+    // Handle unexpected confidence levels
+    log("Unexpected confidence in loop")
+    attempts = attempts + 1
+  }
 }
 ```
+
+### Default Branch
+
+The `default` branch in uncertain constructs acts like a switch statement's default case, executing when the confidence level doesn't match any of the standard thresholds:
+
+```prism
+// Use cases for default branch
+uncertain if (apiResponse) {
+  high { processNormally() }
+  medium { validateFirst() }
+  low { reject() }
+  default {
+    // Handles edge cases like:
+    // - Custom confidence thresholds
+    // - Undefined confidence
+    // - NaN confidence values
+    // - Confidence calculation errors
+    handleUnexpectedCase()
+  }
+}
+
+// Adaptive threshold adjustment
+threshold = 0.7
+uncertain if (measurement) {
+  high { 
+    // Confidence >= threshold
+    accept() 
+  }
+  default {
+    // Confidence < threshold but not low enough for 'low'
+    // Adjust threshold for next iteration
+    threshold = threshold - 0.1
+    retry()
+  }
+}
+
+// Data gathering pattern
+uncertain if (prediction) {
+  high { execute() }
+  low { abort() }
+  default {
+    // Medium confidence - gather more data
+    additionalData = gatherMoreInfo()
+    reanalyze(additionalData)
+  }
+}
+```
+
+The default branch ensures your uncertainty-aware code can gracefully handle all possible confidence scenarios.
 
 ### Confidence in Conditions
 
