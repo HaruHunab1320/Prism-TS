@@ -521,7 +521,31 @@ minimum = min(...values)     // 5
 ```
 
 ### Parameterized Primitives
+Prism supports type-parameterized primitives for type-safe operations:
+
 ```prism
+// Array operations with type parameters
+numbers = [3, 1, 4, 1, 5]
+sorted = sort<number>(numbers, (a, b) => a - b)
+filtered = filter<number>(numbers, n => n > 2)
+
+// Working with complex types
+users = [
+  {name: "Alice", age: 30},
+  {name: "Bob", age: 25}
+]
+adults = filter<{name: string, age: number}>(users, u => u.age >= 18)
+sortedByAge = sort<{name: string, age: number}>(users, (a, b) => a.age - b.age)
+
+// Map with type transformation
+squared = map<number, number>(numbers, n => n * n)
+names = map<{name: string}, string>(users, u => u.name)
+
+// Reduce with accumulator type
+sum = reduce<number, number>(numbers, 0, (acc, n) => acc + n)
+concatenated = reduce<string, string>(names, "", (acc, name) => acc + ", " + name)
+
+// First-class function behavior
 // Create confidence-wrapped functions
 confidenceWrapper = confidence(0.8)
 processor = x => x * 2

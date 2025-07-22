@@ -49,29 +49,47 @@ const sidebars: SidebarsConfig = {
   apiSidebar: [
     {
       type: 'category',
-      label: 'Core API',
+      label: 'Packages',
+      collapsed: false,
       items: [
-        'api/core/parser',
-        'api/core/runtime',
-        'api/core/types',
-        'api/core/values',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Confidence API',
-      items: [
-        'api/confidence/extractor',
-        'api/confidence/calibration',
-        'api/confidence/patterns',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'LLM API',
-      items: [
-        'api/llm/providers',
-        'api/llm/configuration',
+        {
+          type: 'category',
+          label: '@prism-lang/core',
+          items: [
+            'api/core/parser',
+            'api/core/runtime',
+            'api/core/types',
+            'api/core/values',
+          ],
+        },
+        {
+          type: 'category',
+          label: '@prism-lang/confidence',
+          items: [
+            'api/confidence/extractor',
+            'api/confidence/calibration',
+            'api/confidence/patterns',
+          ],
+        },
+        {
+          type: 'category',
+          label: '@prism-lang/llm',
+          items: [
+            'api/llm/providers',
+            'api/llm/configuration',
+          ],
+        },
+        {
+          type: 'category',
+          label: '@prism-lang/validator',
+          items: [
+            'api/validator/overview',
+            'api/validator/syntax-validation',
+            'api/validator/type-checking',
+            'api/validator/linting',
+            'api/validator/streaming',
+          ],
+        },
       ],
     },
   ],
