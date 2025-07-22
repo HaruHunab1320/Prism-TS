@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "references": [
+    { "path": "../prism-core/tsconfig.build.json" }
+  ]
+}
