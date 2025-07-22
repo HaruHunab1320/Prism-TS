@@ -17,7 +17,8 @@
     "publish:confidence": "turbo run build --filter=@prism-lang/confidence && pnpm publish --filter @prism-lang/confidence --access public",
     "publish:llm": "turbo run build --filter=@prism-lang/llm && pnpm publish --filter @prism-lang/llm --access public",
     "publish:cli": "turbo run build --filter=@prism-lang/cli && pnpm publish --filter @prism-lang/cli --access public",
-    "publish:repl": "turbo run build --filter=@prism-lang/repl && pnpm publish --filter @prism-lang/repl --access public"
+    "publish:repl": "turbo run build --filter=@prism-lang/repl && pnpm publish --filter @prism-lang/repl --access public",
+    "publish:validator": "turbo run build --filter=@prism-lang/validator && pnpm publish --filter @prism-lang/validator --access public"
   },
   "keywords": [
     "llm",
