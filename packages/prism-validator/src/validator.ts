@@ -131,6 +131,18 @@ export class Validator implements PrismValidator {
         this.validateNode(n.value, errors, warnings);
         break;
 
+      case 'ConstDeclaration':
+        this.validateConstDeclaration(n, errors, warnings);
+        break;
+
+      case 'LetDeclaration':
+        this.validateLetDeclaration(n, errors, warnings);
+        break;
+
+      case 'FunctionDeclaration':
+        this.validateFunctionDeclaration(n, errors, warnings);
+        break;
+
       case 'BinaryExpression':
         this.validateBinaryExpression(n, errors, warnings);
         break;
@@ -199,6 +211,18 @@ export class Validator implements PrismValidator {
 
       case 'AgentDeclaration':
         // No body to validate
+        break;
+
+      case 'ImportDeclaration':
+        this.validateImportDeclaration(n, errors, warnings);
+        break;
+
+      case 'ExportDeclaration':
+        this.validateExportDeclaration(n, errors, warnings);
+        break;
+
+      case 'ReturnStatement':
+        this.validateReturnStatement(n, errors, warnings);
         break;
 
       case 'ForInLoop':
@@ -396,6 +420,230 @@ export class Validator implements PrismValidator {
     this.validateNode(node.callee, errors, warnings);
     if (node.arguments) {
       node.arguments.forEach((arg: any) => this.validateNode(arg, errors, warnings));
+    }
+  }
+
+  private validateConstDeclaration(node: any, errors: SyntaxError[], warnings: Warning[]): void {
+    // const declarations must have an initializer
+    if (!node.init && !node.value) {
+      errors.push({
+        ...this.getLocation(node),
+        message: 'const declarations must have an initializer',
+        code: 'CONST_WITHOUT_INITIALIZER',
+        severity: 'error'
+      });
+    }
+
+    // Validate the initializer
+    if (node.init) {
+      this.validateNode(node.init, errors, warnings);
+    } else if (node.value) {
+      this.validateNode(node.value, errors, warnings);
+    }
+
+    // Validate identifier
+    if (!node.id && !node.identifier) {
+      errors.push({
+        ...this.getLocation(node),
+        message: 'const declaration missing identifier',
+        code: 'MISSING_IDENTIFIER',
+        severity: 'error'
+      });
+    }
+  }
+
+  private validateLetDeclaration(node: any, errors: SyntaxError[], warnings: Warning[]): void {
+    // let declarations can have optional initializer
+    if (node.init) {
+      this.validateNode(node.init, errors, warnings);
+    } else if (node.value) {
+      this.validateNode(node.value, errors, warnings);
+    }
+
+    // Validate identifier
+    if (!node.id && !node.identifier) {
+      errors.push({
+        ...this.getLocation(node),
+        message: 'let declaration missing identifier',
+        code: 'MISSING_IDENTIFIER',
+        severity: 'error'
+      });
+    }
+  }
+
+  private validateFunctionDeclaration(node: any, errors: SyntaxError[], warnings: Warning[]): void {
+    // Function must have a name
+    if (!node.id && !node.name) {
+      errors.push({
+        ...this.getLocation(node),
+        message: 'Function declaration must have a name',
+        code: 'MISSING_FUNCTION_NAME',
+        severity: 'error'
+      });
+    }
+
+    // Validate parameters
+    if (node.params || node.parameters) {
+      const params = node.params || node.parameters;
+      params.forEach((param: any) => {
+        if (param.type === 'RestElement') {
+          this.validateNode(param.argument, errors, warnings);
+        } else if (param.type === 'ObjectPattern' || param.type === 'ArrayPattern') {
+          this.validateNode(param, errors, warnings);
+        }
+      });
+    }
+
+    // Validate function body
+    if (node.body) {
+      this.validateNode(node.body, errors, warnings);
+    } else {
+      errors.push({
+        ...this.getLocation(node),
+        message: 'Function declaration must have a body',
+        code: 'MISSING_FUNCTION_BODY',
+        severity: 'error'
+      });
+    }
+
+    // Check for early returns
+    if (node.body && node.body.type === 'BlockStatement') {
+      this.checkEarlyReturns(node.body, errors, warnings);
+    }
+  }
+
+  private validateReturnStatement(node: any, errors: SyntaxError[], warnings: Warning[]): void {
+    // Return statements must be inside functions
+    // This is a simplified check - would need context tracking for full validation
+    
+    // Validate return argument if present
+    if (node.argument) {
+      this.validateNode(node.argument, errors, warnings);
+    }
+  }
+
+  private validateImportDeclaration(node: any, errors: SyntaxError[], warnings: Warning[]): void {
+    // Import must have a source
+    if (!node.source) {
+      errors.push({
+        ...this.getLocation(node),
+        message: 'Import declaration must have a source',
+        code: 'MISSING_IMPORT_SOURCE',
+        severity: 'error'
+      });
+      return;
+    }
+
+    // Validate source is a string
+    if (node.source.type !== 'StringLiteral') {
+      errors.push({
+        ...this.getLocation(node),
+        message: 'Import source must be a string literal',
+        code: 'INVALID_IMPORT_SOURCE',
+        severity: 'error'
+      });
+    }
+
+    // Validate specifiers
+    if (node.specifiers && node.specifiers.length === 0) {
+      warnings.push({
+        ...this.getLocation(node),
+        message: 'Import declaration has no specifiers',
+        code: 'EMPTY_IMPORT_SPECIFIERS',
+        severity: 'warning'
+      });
+    }
+
+    // Validate each specifier
+    if (node.specifiers) {
+      node.specifiers.forEach((spec: any) => {
+        if (spec.type === 'ImportDefaultSpecifier' && !spec.local) {
+          errors.push({
+            ...this.getLocation(spec),
+            message: 'Import default specifier must have a local name',
+            code: 'MISSING_LOCAL_NAME',
+            severity: 'error'
+          });
+        }
+        if (spec.type === 'ImportSpecifier' && (!spec.imported || !spec.local)) {
+          errors.push({
+            ...this.getLocation(spec),
+            message: 'Import specifier must have both imported and local names',
+            code: 'INCOMPLETE_IMPORT_SPECIFIER',
+            severity: 'error'
+          });
+        }
+      });
+    }
+  }
+
+  private validateExportDeclaration(node: any, errors: SyntaxError[], warnings: Warning[]): void {
+    // Export must have either declaration or specifiers
+    if (!node.declaration && (!node.specifiers || node.specifiers.length === 0)) {
+      errors.push({
+        ...this.getLocation(node),
+        message: 'Export declaration must have either a declaration or specifiers',
+        code: 'EMPTY_EXPORT',
+        severity: 'error'
+      });
+      return;
+    }
+
+    // Validate declaration if present
+    if (node.declaration) {
+      this.validateNode(node.declaration, errors, warnings);
+    }
+
+    // Validate specifiers if present
+    if (node.specifiers) {
+      node.specifiers.forEach((spec: any) => {
+        if (spec.type === 'ExportSpecifier' && (!spec.local || !spec.exported)) {
+          errors.push({
+            ...this.getLocation(spec),
+            message: 'Export specifier must have both local and exported names',
+            code: 'INCOMPLETE_EXPORT_SPECIFIER',
+            severity: 'error'
+          });
+        }
+      });
+    }
+
+    // Validate source for re-exports
+    if (node.source && node.source.type !== 'StringLiteral') {
+      errors.push({
+        ...this.getLocation(node),
+        message: 'Export source must be a string literal',
+        code: 'INVALID_EXPORT_SOURCE',
+        severity: 'error'
+      });
+    }
+  }
+
+  private checkEarlyReturns(blockNode: any, _errors: SyntaxError[], warnings: Warning[]): void {
+    if (!blockNode.statements) return;
+
+    let hasReturn = false;
+    let returnIndex = -1;
+
+    // Find first return statement
+    for (let i = 0; i < blockNode.statements.length; i++) {
+      const stmt = blockNode.statements[i];
+      if (stmt.type === 'ReturnStatement') {
+        hasReturn = true;
+        returnIndex = i;
+        break;
+      }
+    }
+
+    // Check for unreachable code after return
+    if (hasReturn && returnIndex < blockNode.statements.length - 1) {
+      const unreachableStmt = blockNode.statements[returnIndex + 1];
+      warnings.push({
+        ...this.getLocation(unreachableStmt),
+        message: 'Unreachable code after return statement',
+        code: 'UNREACHABLE_CODE',
+        severity: 'warning'
+      });
     }
   }
 }

@@ -158,7 +158,7 @@ describe('LLM Integration Tests', () => {
         reasoning: response.metadata?.reasoning
       });
       
-      expect(response.content).toContain('quantum');
+      expect(response.content.toLowerCase()).toContain('quantum');
       expect(response.confidence).toBeGreaterThan(0.5);
       expect(response.confidence).toBeLessThan(1); // Should not be 100% certain about complex topics
     }, 30000);

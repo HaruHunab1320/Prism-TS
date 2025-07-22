@@ -9,4 +9,8 @@ module.exports = {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
+  // Force sequential execution only for CLI tests to avoid child process interference
+  maxWorkers: 1,
+  // Add extra timeout for child process tests
+  testTimeout: 15000,
 };

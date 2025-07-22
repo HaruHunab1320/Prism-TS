@@ -53,7 +53,14 @@ export class Linter implements PrismLinter {
         'no-empty-blocks': true,
         'no-duplicate-confidence-branches': true,
         'prefer-confidence-operators': true,
-        'max-nested-uncertainty': true
+        'max-nested-uncertainty': true,
+        'const-requires-initializer': true,
+        'function-requires-name': true,
+        'function-requires-body': true,
+        'lambda-block-return-consistency': true,
+        'import-requires-source': true,
+        'empty-import': true,
+        'empty-export': true
       },
       maxConfidenceValue: 1,
       minConfidenceValue: 0,
@@ -168,6 +175,50 @@ export class Linter implements PrismLinter {
         }
         break;
 
+      case 'ConstDeclaration':
+        this.checkConstDeclaration(n);
+        if (context.declaredVars && (n.id || n.identifier)) {
+          const name = n.id?.name || n.identifier;
+          context.declaredVars.add(name);
+        }
+        if (n.init || n.value) {
+          this.lintNode(n.init || n.value, context);
+        }
+        break;
+
+      case 'LetDeclaration':
+        if (context.declaredVars && (n.id || n.identifier)) {
+          const name = n.id?.name || n.identifier;
+          context.declaredVars.add(name);
+        }
+        if (n.init || n.value) {
+          this.lintNode(n.init || n.value, context);
+        }
+        break;
+
+      case 'FunctionDeclaration':
+        this.checkFunctionDeclaration(n);
+        if (context.declaredVars && (n.id || n.name)) {
+          const name = n.id?.name || n.name;
+          context.declaredVars.add(name);
+        }
+        // Create new scope for function parameters
+        const funcContext = { ...context, inFunction: true, declaredVars: new Set(context.declaredVars) };
+        if (n.params || n.parameters) {
+          const params = n.params || n.parameters;
+          params.forEach((param: any) => {
+            if (typeof param === 'string') {
+              funcContext.declaredVars?.add(param);
+            } else if (param.name) {
+              funcContext.declaredVars?.add(param.name);
+            }
+          });
+        }
+        if (n.body) {
+          this.lintNode(n.body, funcContext);
+        }
+        break;
+
       case 'IdentifierExpression':
         if (context.usedVars && !['undefined', 'null', 'true', 'false'].includes(n.name)) {
           context.usedVars.add(n.name);
@@ -176,6 +227,7 @@ export class Linter implements PrismLinter {
         break;
 
       case 'LambdaExpression':
+        this.checkBlockStatementLambda(n);
         const newContext = { ...context, inFunction: true, declaredVars: new Set(context.declaredVars) };
         if (n.parameters && newContext.declaredVars) {
           n.parameters.forEach((param: any) => {
@@ -188,6 +240,28 @@ export class Linter implements PrismLinter {
         }
         if (n.body) {
           this.lintNode(n.body, newContext);
+        }
+        break;
+
+      case 'ImportDeclaration':
+        this.checkImportDeclaration(n);
+        // Add imported names to declared variables
+        if (n.specifiers && context.declaredVars) {
+          n.specifiers.forEach((spec: any) => {
+            if (spec.local) {
+              const localName = typeof spec.local === 'string' ? spec.local : spec.local.name;
+              if (localName) {
+                context.declaredVars?.add(localName);
+              }
+            }
+          });
+        }
+        break;
+
+      case 'ExportDeclaration':
+        this.checkExportDeclaration(n);
+        if (n.declaration) {
+          this.lintNode(n.declaration, context);
         }
         break;
 
@@ -553,7 +627,7 @@ export class Linter implements PrismLinter {
     if (!this.isRuleEnabled('variable-declared-before-use')) return;
     if (!context.declaredVars) return;
 
-    const builtins = ['undefined', 'null', 'true', 'false', 'llm', 'map', 'filter', 'reduce', 'Math', 'console', 'print', 'doSomething', 'doNothing'];
+    const builtins = ['undefined', 'null', 'true', 'false', 'llm', 'map', 'filter', 'reduce', 'max', 'min', 'Math', 'console', 'print', 'confidence', 'threshold', 'sortBy', 'groupBy', 'debounce', 'doSomething', 'doNothing', 'risky'];
     
     if (!builtins.includes(node.name) && !context.declaredVars.has(node.name)) {
       this.addResult({
@@ -747,8 +821,43 @@ export class Linter implements PrismLinter {
         }
         break;
       
+      case 'ConstDeclaration':
+      case 'LetDeclaration':
+        if (node.id) {
+          const name = typeof node.id === 'string' ? node.id : node.id.name;
+          if (name) declared.add(name);
+        } else if (node.identifier) {
+          declared.add(node.identifier);
+        }
+        if (node.init || node.value) {
+          this.collectVariables(node.init || node.value, declared, used);
+        }
+        break;
+      
+      case 'FunctionDeclaration':
+        if (node.id) {
+          const name = typeof node.id === 'string' ? node.id : node.id.name;
+          if (name) declared.add(name);
+        } else if (node.name) {
+          declared.add(node.name);
+        }
+        // Don't traverse into function body for variable collection
+        // as functions have their own scope
+        break;
+      
+      case 'ImportDeclaration':
+        if (node.specifiers) {
+          node.specifiers.forEach((spec: any) => {
+            if (spec.local) {
+              const name = typeof spec.local === 'string' ? spec.local : spec.local.name;
+              if (name) declared.add(name);
+            }
+          });
+        }
+        break;
+      
       case 'IdentifierExpression':
-        if (!['undefined', 'null', 'true', 'false', 'print', 'llm', 'map', 'filter', 'reduce'].includes(node.name)) {
+        if (!['undefined', 'null', 'true', 'false', 'print', 'llm', 'map', 'filter', 'reduce', 'max', 'min', 'console', 'confidence', 'threshold', 'sortBy', 'groupBy', 'debounce', 'risky'].includes(node.name)) {
           used.add(node.name);
         }
         break;
@@ -790,6 +899,18 @@ export class Linter implements PrismLinter {
         }
         break;
       
+      case 'ConstDeclaration':
+      case 'LetDeclaration':
+        const name = node.id?.name || node.identifier;
+        const value = node.init || node.value;
+        if (name && value) {
+          if (this.valueHasConfidence(value)) {
+            confidenceVars.add(name);
+          }
+          this.collectConfidenceVariables(value, confidenceVars);
+        }
+        break;
+      
       default:
         // Recursively check child nodes
         Object.values(node).forEach(child => {
@@ -828,6 +949,132 @@ export class Linter implements PrismLinter {
 
   private addResult(result: LintResult): void {
     this.results.push(result);
+  }
+
+  private checkConstDeclaration(node: any): void {
+    if (!this.isRuleEnabled('const-requires-initializer')) return;
+
+    if (!node.init && !node.value) {
+      this.addResult({
+        line: node.line || 1,
+        column: node.column || 1,
+        message: 'const declarations must have an initializer',
+        ruleId: 'const-requires-initializer',
+        severity: 'error',
+        fix: {
+          description: 'Add an initializer to the const declaration',
+          replacement: ' = /* value */',
+          startLine: node.line || 1,
+          startColumn: (node.column || 1) + (node.id?.name?.length || 3),
+          endLine: node.line || 1,
+          endColumn: (node.column || 1) + (node.id?.name?.length || 3)
+        }
+      });
+    }
+  }
+
+  private checkFunctionDeclaration(node: any): void {
+    if (!node.id && !node.name) {
+      this.addResult({
+        line: node.line || 1,
+        column: node.column || 1,
+        message: 'Function declaration must have a name',
+        ruleId: 'function-requires-name',
+        severity: 'error'
+      });
+    }
+
+    if (!node.body) {
+      this.addResult({
+        line: node.line || 1,
+        column: node.column || 1,
+        message: 'Function declaration must have a body',
+        ruleId: 'function-requires-body',
+        severity: 'error'
+      });
+    }
+  }
+
+  private checkBlockStatementLambda(node: any): void {
+    // Check if lambda has block statement body vs expression body
+    if (node.body && node.body.type === 'BlockStatement') {
+      // Check for proper return statements in block-statement lambdas
+      if (this.isRuleEnabled('lambda-block-return-consistency')) {
+        this.checkLambdaReturnConsistency(node);
+      }
+    }
+  }
+
+  private checkLambdaReturnConsistency(node: any): void {
+    if (!node.body || node.body.type !== 'BlockStatement') return;
+
+    const statements = node.body.statements || [];
+    if (statements.length === 0) return;
+
+    let hasExplicitReturn = false;
+    let hasImplicitReturn = false;
+
+    for (const stmt of statements) {
+      if (stmt.type === 'ReturnStatement') {
+        hasExplicitReturn = true;
+      } else if (stmt.type === 'ExpressionStatement' && stmt === statements[statements.length - 1]) {
+        // Last expression statement could be implicit return
+        hasImplicitReturn = true;
+      }
+    }
+
+    if (hasExplicitReturn && hasImplicitReturn) {
+      this.addResult({
+        line: node.line || 1,
+        column: node.column || 1,
+        message: 'Block-statement lambda has mixed explicit and implicit returns',
+        ruleId: 'lambda-block-return-consistency',
+        severity: 'warning',
+        example: 'Use either explicit returns: () => { return value; } or implicit: () => value'
+      });
+    }
+  }
+
+  private checkImportDeclaration(node: any): void {
+    if (!node.source) {
+      this.addResult({
+        line: node.line || 1,
+        column: node.column || 1,
+        message: 'Import declaration must have a source',
+        ruleId: 'import-requires-source',
+        severity: 'error'
+      });
+    }
+
+    if (node.specifiers && node.specifiers.length === 0) {
+      this.addResult({
+        line: node.line || 1,
+        column: node.column || 1,
+        message: 'Import declaration with no specifiers',
+        ruleId: 'empty-import',
+        severity: 'warning',
+        fix: {
+          description: 'Add import specifiers or remove import',
+          replacement: '',
+          startLine: node.line || 1,
+          startColumn: node.column || 1,
+          endLine: node.line || 1,
+          endColumn: node.column || 1
+        }
+      });
+    }
+  }
+
+  private checkExportDeclaration(node: any): void {
+    if (!node.declaration && (!node.specifiers || node.specifiers.length === 0)) {
+      this.addResult({
+        line: node.line || 1,
+        column: node.column || 1,
+        message: 'Export declaration must have either a declaration or specifiers',
+        ruleId: 'empty-export',
+        severity: 'error'
+      });
+    }
   }
 }
 

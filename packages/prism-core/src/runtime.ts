@@ -3115,7 +3115,7 @@ export class Interpreter {
           branchToExecute = node.branches.high;
         } else if (level === ConfidenceLevel.MEDIUM && node.branches.medium) {
           branchToExecute = node.branches.medium;
-        } else if (node.branches.low) {
+        } else if (level === ConfidenceLevel.LOW && node.branches.low) {
           branchToExecute = node.branches.low;
         }
 
@@ -3201,7 +3201,7 @@ export class Interpreter {
         branchToExecute = node.branches.high;
       } else if (level === ConfidenceLevel.MEDIUM && node.branches.medium) {
         branchToExecute = node.branches.medium;
-      } else if (node.branches.low) {
+      } else if (level === ConfidenceLevel.LOW && node.branches.low) {
         branchToExecute = node.branches.low;
       }
 

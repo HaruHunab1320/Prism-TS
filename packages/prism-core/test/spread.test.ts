@@ -199,7 +199,7 @@ describe('Spread Operator', () => {
 
     it('should work with computed property spread', async () => {
       const code = `
-        getObj = () => {a: 1, b: 2}
+        getObj = () => ({a: 1, b: 2})
         result = {...getObj(), c: 3}
         result
       `;

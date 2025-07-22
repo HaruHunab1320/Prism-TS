@@ -20,7 +20,7 @@ describe('Destructuring in Function Parameters', () => {
 
     it('should handle rest elements in array parameters', async () => {
       const program = parse(`
-        headAndTail = ([head, ...tail]) => {a: head, b: tail};
+        headAndTail = ([head, ...tail]) => ({a: head, b: tail});
         headAndTail([1, 2, 3, 4])
       `);
       const result = await runtime.execute(program);

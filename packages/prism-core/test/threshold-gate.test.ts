@@ -244,9 +244,9 @@ describe('Threshold Gate Operator ~?>', () => {
 
     it('should implement progressive enhancement pipeline', async () => {
       const program = parse(`
-        basicAnalysis = x => {result: x, level: "basic"}
-        advancedAnalysis = data => {result: data.result * 2, level: "advanced"}
-        expertAnalysis = data => {result: data.result * 3, level: "expert"}
+        basicAnalysis = x => ({result: x, level: "basic"})
+        advancedAnalysis = data => ({result: data.result * 2, level: "advanced"})
+        expertAnalysis = data => ({result: data.result * 3, level: "expert"})
         
         measurement = 100 ~> 0.95
         

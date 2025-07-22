@@ -7,8 +7,18 @@ import * as os from 'os';
 function runCLI(args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
   return new Promise((resolve) => {
     const cliPath = path.join(__dirname, '..', 'src', 'index.ts');
+    // Create completely fresh environment for each test
+    const freshEnv = {
+      ...process.env,
+      NODE_ENV: 'test',
+      // Clear any potential cache or state variables
+      NODE_OPTIONS: '',
+      TS_NODE_PROJECT: undefined,
+    };
     const child = spawn('ts-node', ['--project', 'tsconfig.dev.json', cliPath, ...args], {
-      env: { ...process.env, NODE_ENV: 'test' }
+      env: freshEnv,
+      stdio: ['pipe', 'pipe', 'pipe'], // Ensure clean stdio
+      detached: false
     });
 
     let stdout = '';
@@ -23,53 +33,39 @@ function runCLI(args: string[]): Promise<{ code: number; stdout: string; stderr:
     });
 
     child.on('close', (code) => {
-      resolve({ code: code || 0, stdout, stderr });
+      clearTimeout(timeout);
+      // Add small delay to ensure process cleanup
+      setTimeout(() => {
+        resolve({ code: code || 0, stdout, stderr });
+      }, 50);
     });
+
+    child.on('error', (error) => {
+      clearTimeout(timeout);
+      resolve({ code: 1, stdout: '', stderr: error.message });
+    });
+
+    // Add timeout to prevent hanging processes
+    const timeout = setTimeout(() => {
+      child.kill('SIGKILL');
+      resolve({ code: 1, stdout: '', stderr: 'Process timeout' });
+    }, 10000);
   });
 }
 
 describe('Prism CLI', () => {
   let tempDir: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Create temp directory for test files
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'prism-cli-test-'));
+    // Add small delay to ensure clean state between tests
+    await new Promise(resolve => setTimeout(resolve, 100));
   });
 
   afterEach(() => {
     // Clean up temp directory
     fs.rmSync(tempDir, { recursive: true, force: true });
-  });
-
-  describe('--version', () => {
-    it('should display version', async () => {
-      const { code, stdout } = await runCLI(['--version']);
-      expect(code).toBe(0);
-      expect(stdout).toMatch(/^Prism v\d+\.\d+\.\d+/);
-    });
-
-    it('should display version with -v flag', async () => {
-      const { code, stdout } = await runCLI(['-v']);
-      expect(code).toBe(0);
-      expect(stdout).toMatch(/^Prism v\d+\.\d+\.\d+/);
-    });
-  });
-
-  describe('--help', () => {
-    it('should display help', async () => {
-      const { code, stdout } = await runCLI(['--help']);
-      expect(code).toBe(0);
-      expect(stdout).toContain('Prism Programming Language CLI');
-      expect(stdout).toContain('Usage:');
-      expect(stdout).toContain('prism run <file>');
-      expect(stdout).toContain('prism eval <code>');
-    });
-
-    it('should display help with -h flag', async () => {
-      const { code, stdout } = await runCLI(['-h']);
-      expect(code).toBe(0);
-      expect(stdout).toContain('Prism Programming Language CLI');
-    });
   });
 
   describe('eval command', () => {
@@ -153,6 +149,37 @@ describe('Prism CLI', () => {
       const { code, stderr } = await runCLI(['unknown']);
       expect(code).toBe(1);
       expect(stderr).toContain('Unknown command: unknown');
+    });
+  });
+
+  describe('--version', () => {
+    it('should display version', async () => {
+      const { code, stdout } = await runCLI(['--version']);
+      expect(code).toBe(0);
+      expect(stdout).toMatch(/^Prism v\d+\.\d+\.\d+/);
+    });
+
+    it('should display version with -v flag', async () => {
+      const { code, stdout } = await runCLI(['-v']);
+      expect(code).toBe(0);
+      expect(stdout).toMatch(/^Prism v\d+\.\d+\.\d+/);
+    });
+  });
+
+  describe('--help', () => {
+    it('should display help', async () => {
+      const { code, stdout } = await runCLI(['--help']);
+      expect(code).toBe(0);
+      expect(stdout).toContain('Prism Programming Language CLI');
+      expect(stdout).toContain('Usage:');
+      expect(stdout).toContain('prism run <file>');
+      expect(stdout).toContain('prism eval <code>');
+    });
+
+    it('should display help with -h flag', async () => {
+      const { code, stdout } = await runCLI(['-h']);
+      expect(code).toBe(0);
+      expect(stdout).toContain('Prism Programming Language CLI');
     });
   });
 });

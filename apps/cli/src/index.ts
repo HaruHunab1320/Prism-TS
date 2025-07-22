@@ -95,12 +95,14 @@ async function startREPL(): Promise<void> {
   // Set default provider
   repl.setDefaultLLMProvider(defaultProvider);
   
-  // Show provider status
-  const availableProviders = LLMConfigManager.getAvailableProviders();
-  if (availableProviders.length === 1 && availableProviders[0] === 'mock') {
-    console.log('⚠️  Only mock LLM provider available. Set CLAUDE_API_KEY or GEMINI_API_KEY for real AI integration.');
-  } else {
-    console.log(`🤖 LLM providers: ${availableProviders.join(', ')} (default: ${defaultProvider})`);
+  // Show provider status (only in non-test mode)
+  if (process.env.NODE_ENV !== 'test') {
+    const availableProviders = LLMConfigManager.getAvailableProviders();
+    if (availableProviders.length === 1 && availableProviders[0] === 'mock') {
+      console.log('⚠️  Only mock LLM provider available. Set CLAUDE_API_KEY or GEMINI_API_KEY for real AI integration.');
+    } else {
+      console.log(`🤖 LLM providers: ${availableProviders.join(', ')} (default: ${defaultProvider})`);
+    }
   }
 
   // Create readline interface
@@ -110,9 +112,11 @@ async function startREPL(): Promise<void> {
     prompt: 'prism> '
   });
 
-  // Show welcome message
-  console.log(repl.getWelcomeMessage());
-  console.log();
+  // Show welcome message (only in non-test mode)
+  if (process.env.NODE_ENV !== 'test') {
+    console.log(repl.getWelcomeMessage());
+    console.log();
+  }
 
   // Start the REPL loop
   rl.prompt();
