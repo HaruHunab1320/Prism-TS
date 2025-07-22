@@ -39,7 +39,11 @@ export type NodeType =
   | 'ArrayPattern'
   | 'ObjectPattern'
   | 'RestElement'
-  | 'DestructuringAssignment';
+  | 'DestructuringAssignment'
+  | 'ImportStatement'
+  | 'ExportStatement'
+  | 'ImportSpecifier'
+  | 'ExportSpecifier';
 
 export abstract class ASTNode {
   abstract type: NodeType;
@@ -496,6 +500,56 @@ export class DestructuringAssignment extends Statement {
     public pattern: ArrayPattern | ObjectPattern,
     public value: Expression,
     public confidenceThreshold?: Expression  // For global threshold (Option 1)
+  ) {
+    super();
+  }
+}
+
+// Import/Export system
+export class ImportSpecifier extends ASTNode {
+  type: NodeType = 'ImportSpecifier';
+  
+  constructor(
+    public imported: string,  // Name in the module
+    public local?: string     // Local name (for "as" renaming)
+  ) {
+    super();
+  }
+}
+
+export class ExportSpecifier extends ASTNode {
+  type: NodeType = 'ExportSpecifier';
+  
+  constructor(
+    public local: string,     // Local name
+    public exported?: string  // Exported name (for "as" renaming)
+  ) {
+    super();
+  }
+}
+
+export class ImportStatement extends Statement {
+  type: NodeType = 'ImportStatement';
+  
+  constructor(
+    public specifiers: ImportSpecifier[],  // Named imports
+    public source: string,                 // Module path
+    public defaultImport?: string,         // Default import name
+    public namespaceImport?: string        // Namespace import name (import * as)
+  ) {
+    super();
+  }
+}
+
+export class ExportStatement extends Statement {
+  type: NodeType = 'ExportStatement';
+  
+  constructor(
+    public specifiers?: ExportSpecifier[],  // Named exports
+    public source?: string,                 // Re-export source
+    public declaration?: Statement,         // Direct export declaration
+    public isDefault?: boolean,             // export default
+    public isNamespace?: boolean            // export *
   ) {
     super();
   }

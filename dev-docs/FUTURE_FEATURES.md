@@ -65,9 +65,171 @@ import * as math from "./math.prism"
 result = sum(10, 20) * PI
 ```
 
+### 4. Standard Named Functions
+**Priority:** HIGH  
+**Complexity:** Medium  
+**Value:** Traditional function syntax alongside lambdas
+
+```prism
+// Named functions with block syntax
+function calculateScore(data, weights) {
+  scores = data.map((item, index) => item * weights[index])
+  total = scores.reduce((acc, score) => acc + score, 0)
+  return total ~> 0.9
+}
+
+// Still support lambda expressions for simple cases
+quickAdd = (a, b) => a + b
+
+// Functions with confidence declarations
+function riskAssessment(input) ~> 0.8 {
+  analysis = llm("Assess risk: ${input}")
+  return analysis.score
+}
+```
+
+### 5. Block-Statement Lambda Functions  
+**Priority:** HIGH  
+**Complexity:** Medium  
+**Value:** Complex logic in lambda expressions
+
+```prism
+// Current: expression-only lambdas
+process = (data) => data.filter(x => x > 0).map(x => x * 2)
+
+// Proposed: block-statement lambdas
+complexProcess = (data) => {
+  filtered = data.filter(x => x > 0)
+  transformed = filtered.map(x => x * 2)
+  validated = transformed.filter(x => x < 100)
+  return validated ~> 0.8
+}
+
+// Nested uncertain operations in lambdas
+riskProcessor = (items) => {
+  results = items.map(item => {
+    uncertain if (item.risk > 0.5) {
+      high { return item.value * 0.5 }
+      medium { return item.value * 0.7 }
+      low { return item.value }
+    }
+  })
+  return results
+}
+```
+
+### 6. Variable Declaration Keywords
+**Priority:** HIGH  
+**Complexity:** Low  
+**Value:** Explicit mutability and scoping
+
+```prism
+// Immutable bindings
+const PI = 3.14159
+const users = ["alice", "bob"] // Immutable reference, mutable contents
+
+// Mutable variables  
+let counter = 0
+let currentUser = null
+
+// Block scoping
+function example() {
+  const outer = "visible everywhere"
+  
+  if (condition) {
+    let inner = "only visible in this block"
+    const temp = process(inner)
+  }
+  // inner and temp not accessible here
+}
+
+// Const with confidence
+const analysis = llm("Analyze data") ~> 0.9
+```
+
 ## 🔧 Medium Priority Features
 
-### 4. Custom Operators
+### 7. Built-in Print/Console Functions
+**Priority:** MEDIUM  
+**Complexity:** Low  
+**Value:** Debugging and output capabilities
+
+```prism
+// Simple output
+print("Hello, World!")
+print(value, anotherValue, "with confidence:", confidence)
+
+// Formatted output with confidence
+console.log("Result: ${result ~> 0.9}")
+console.warn("Low confidence: ${analysis ~> 0.3}")
+console.error("Critical failure: ${error}")
+
+// Debug with confidence levels
+debug("Processing ${items.length} items")
+uncertain if (success) {
+  high { console.log("✅ Success: ${result}") }
+  medium { console.warn("⚠️ Partial success: ${result}") }
+  low { console.error("❌ Failed: ${error}") }
+}
+```
+
+### 8. Parameterized Primitives
+**Priority:** MEDIUM  
+**Complexity:** Medium  
+**Value:** Flexible built-in operations
+
+```prism
+// Parameterized confidence operations
+fuzzyEquals = confidence(threshold: 0.8) => (a, b) => {
+  similarity = calculateSimilarity(a, b)
+  return similarity ~> threshold
+}
+
+// Parameterized array operations
+sortBy = confidence(key: string, direction: "asc" | "desc" = "asc") => (array) => {
+  sorted = array.sort((a, b) => {
+    comparison = compare(a[key], b[key])
+    return direction === "asc" ? comparison : -comparison
+  })
+  return sorted ~> 0.95
+}
+
+// Usage
+isEqual = fuzzyEquals(threshold: 0.9)
+ascending = sortBy(key: "score", direction: "asc")
+```
+
+### 9. Array Pipeline Operations
+**Priority:** MEDIUM  
+**Complexity:** Medium  
+**Value:** Functional array processing with confidence
+
+```prism
+// Enhanced array methods with confidence propagation
+results = data
+  |> filter(x => x.score > 0.5)          // Remove low-confidence items
+  |> map(x => process(x) ~> 0.8)         // Process with confidence
+  |> confidenceFilter(threshold: 0.7)    // Filter by confidence
+  |> take(10)                            // Limit results
+  |> groupBy(x => x.category)            // Group results
+
+// Parallel processing pipelines
+processed = items
+  |> parallel(item => {
+      analysis = llm("Analyze: ${item}")
+      score = calculateScore(analysis)
+      return {item, analysis, score} ~> 0.85
+    })
+  |> collectConfident(threshold: 0.8)
+  |> sortBy(x => x.score)
+
+// Confidence-aware reduce operations
+total = values
+  |> map(x => x ~> 0.9)
+  |> confidenceReduce((acc, val) => acc ~+ val, 0 ~> 1.0)
+```
+
+### 10. Custom Operators
 **Priority:** MEDIUM  
 **Complexity:** Medium  
 **Value:** Domain-specific abstractions
@@ -380,8 +542,11 @@ When implementing new features, consider:
 ## 🗓️ Rough Roadmap
 
 ### Phase 1 (Next 3-6 months)
+- **Import/Export System** (📦 Starting implementation)
+- **Standard Named Functions** (function keyword support)
+- **Block-Statement Lambda Functions** ((){} syntax)
+- **Variable Declaration Keywords** (const/let support)
 - Pattern Matching
-- Import/Export System
 - Basic Async/Await
 
 ### Phase 2 (6-12 months)

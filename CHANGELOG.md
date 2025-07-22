@@ -2,6 +2,64 @@
 
 All notable changes to @prism-lang/core will be documented in this file.
 
+## [1.0.26] - 2025-07-22
+
+### Added
+- **Module import/export system** - ES-module style imports and exports for code organization
+- **Import statements** - Full support for all import patterns
+  - Default imports: `import defaultName from "module"`
+  - Named imports: `import {name1, name2} from "module"`
+  - Renamed imports: `import {original as renamed} from "module"`
+  - Namespace imports: `import * as name from "module"`
+  - Mixed imports: `import defaultName, {named1, named2} from "module"`
+  - Empty imports: `import {} from "side-effects-only"`
+- **Export statements** - Comprehensive export functionality
+  - Default exports: `export default expression`
+  - Named exports: `export {name1, name2}`
+  - Renamed exports: `export {local as exported}`
+  - Re-exports: `export {names} from "other-module"`
+  - Namespace re-exports: `export * from "utilities"`
+  - Direct exports: `export result = calculate()`
+- **New keywords** - `import`, `export`, `from`, `as` for module syntax
+- **AST support** - New AST node types: `ImportStatement`, `ExportStatement`, `ImportSpecifier`, `ExportSpecifier`
+- **Comprehensive test suite** - 31 tests covering all import/export patterns and error cases
+- **Trailing comma support** - Allows trailing commas in import/export specifier lists
+- **Proper error handling** - Clear error messages for malformed module syntax
+
+### Example
+```prism
+// math.prism - utility module
+export sum = (a, b) => a + b
+export multiply = (a, b) => a * b
+export const PI = 3.14159
+
+// main.prism - application code
+import {sum, PI} from "./math.prism"
+import * as math from "./math.prism"
+import defaultCalculator, {advanced} from "./calculator.prism"
+
+// Use imported functions
+result = sum(10, 20) * PI  // 94.2477
+product = math.multiply(5, 6)  // 30
+
+// Export processed results
+export processedData = data.map(x => sum(x, 1))
+export default finalResult = processedData.reduce(sum, 0)
+
+// Re-export utilities
+export {helper1, helper2} from "./helpers.prism"
+export * from "./shared-utilities.prism"
+```
+
+### Breaking Changes
+- None - this is a pure addition to the language
+
+### Implementation Notes
+- Module loading and resolution will be implemented in future versions
+- Import/export statements are parsed and represented in the AST
+- Runtime module system will follow ES module semantics
+- Supports relative paths, absolute paths, and package imports
+
 ## [1.0.20] - 2025-07-08
 
 ### Added

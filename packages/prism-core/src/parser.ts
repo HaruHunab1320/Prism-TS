@@ -48,6 +48,10 @@ import {
   ObjectPattern,
   RestElement,
   DestructuringAssignment,
+  ImportStatement,
+  ExportStatement,
+  ImportSpecifier,
+  ExportSpecifier,
 } from './ast';
 
 export class ParseError extends Error {
@@ -148,6 +152,14 @@ export class Parser {
       
       if (this.match(TokenType.IN)) {
         return this.contextStatement();
+      }
+      
+      if (this.match(TokenType.IMPORT)) {
+        return this.importStatement();
+      }
+      
+      if (this.match(TokenType.EXPORT)) {
+        return this.exportStatement();
       }
       
       // Check for potential destructuring patterns
@@ -801,6 +813,149 @@ export class Parser {
     }
     
     return branches;
+  }
+
+  private importStatement(): ImportStatement {
+    const specifiers: ImportSpecifier[] = [];
+    let defaultImport: string | undefined;
+    let namespaceImport: string | undefined;
+    let source: string;
+
+    // Check for namespace import: import * as name from "module"
+    if (this.match(TokenType.STAR)) {
+      this.consume(TokenType.AS, "Expected 'as' after '*'");
+      namespaceImport = this.consume(TokenType.IDENTIFIER, "Expected namespace name after 'as'").value;
+    }
+    // Check for named imports: import {name1, name2} from "module"
+    else if (this.check(TokenType.LEFT_BRACE)) {
+      this.advance(); // consume {
+      while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+        const imported = this.consume(TokenType.IDENTIFIER, "Expected import name").value;
+        let local = imported; // Default to same name
+
+        // Check for renaming: import {original as renamed}
+        if (this.match(TokenType.AS)) {
+          local = this.consume(TokenType.IDENTIFIER, "Expected local name after 'as'").value;
+        }
+
+        specifiers.push(new ImportSpecifier(imported, local !== imported ? local : undefined));
+
+        if (this.match(TokenType.COMMA)) {
+          // Allow trailing comma
+          if (this.check(TokenType.RIGHT_BRACE)) {
+            break;
+          }
+        } else if (!this.check(TokenType.RIGHT_BRACE)) {
+          throw new ParseError("Expected ',' or '}' after import specifier", this.peek(), this.sourceCode);
+        }
+      }
+      this.consume(TokenType.RIGHT_BRACE, "Expected '}' after import specifiers");
+    }
+    // Check for default import: import defaultName from "module"
+    else if (this.check(TokenType.IDENTIFIER)) {
+      defaultImport = this.advance().value;
+      
+      // Check for mixed import: import defaultName, {named} from "module"
+      if (this.match(TokenType.COMMA)) {
+        if (this.match(TokenType.LEFT_BRACE)) {
+          while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+            const imported = this.consume(TokenType.IDENTIFIER, "Expected import name").value;
+            let local = imported;
+
+            if (this.match(TokenType.AS)) {
+              local = this.consume(TokenType.IDENTIFIER, "Expected local name after 'as'").value;
+            }
+
+            specifiers.push(new ImportSpecifier(imported, local !== imported ? local : undefined));
+
+            if (this.match(TokenType.COMMA)) {
+              if (this.check(TokenType.RIGHT_BRACE)) {
+                break;
+              }
+            } else if (!this.check(TokenType.RIGHT_BRACE)) {
+              throw new ParseError("Expected ',' or '}' after import specifier", this.peek(), this.sourceCode);
+            }
+          }
+          this.consume(TokenType.RIGHT_BRACE, "Expected '}' after import specifiers");
+        }
+      }
+    } else {
+      // No valid import pattern found - this is an error
+      throw new ParseError("Expected import specifier", this.peek(), this.sourceCode);
+    }
+
+    // Expect 'from' keyword
+    this.consume(TokenType.FROM, "Expected 'from' after import specifiers");
+
+    // Parse module source
+    source = this.consume(TokenType.STRING, "Expected module path after 'from'").value;
+
+    this.match(TokenType.SEMICOLON); // Optional semicolon
+
+    return new ImportStatement(specifiers, source, defaultImport, namespaceImport);
+  }
+
+  private exportStatement(): ExportStatement {
+    // Check for different export patterns
+    
+    // export default expression
+    if (this.match(TokenType.DEFAULT)) {
+      const declaration = this.expressionStatement();
+      return new ExportStatement(undefined, undefined, declaration, true);
+    }
+    
+    // export * from "module"
+    if (this.match(TokenType.STAR)) {
+      this.consume(TokenType.FROM, "Expected 'from' after 'export *'");
+      const source = this.consume(TokenType.STRING, "Expected module path after 'from'").value;
+      this.match(TokenType.SEMICOLON); // Optional semicolon
+      return new ExportStatement(undefined, source, undefined, false, true);
+    }
+    
+    // export {name1, name2} or export {name1, name2} from "module"
+    if (this.match(TokenType.LEFT_BRACE)) {
+      const specifiers: ExportSpecifier[] = [];
+      
+      while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+        const local = this.consume(TokenType.IDENTIFIER, "Expected export name").value;
+        let exported = local; // Default to same name
+
+        // Check for renaming: export {original as renamed}
+        if (this.match(TokenType.AS)) {
+          exported = this.consume(TokenType.IDENTIFIER, "Expected exported name after 'as'").value;
+        }
+
+        specifiers.push(new ExportSpecifier(local, exported !== local ? exported : undefined));
+
+        if (this.match(TokenType.COMMA)) {
+          // Allow trailing comma
+          if (this.check(TokenType.RIGHT_BRACE)) {
+            break;
+          }
+        } else if (!this.check(TokenType.RIGHT_BRACE)) {
+          throw new ParseError("Expected ',' or '}' after export specifier", this.peek(), this.sourceCode);
+        }
+      }
+      
+      this.consume(TokenType.RIGHT_BRACE, "Expected '}' after export specifiers");
+      
+      // Check for re-export: export {names} from "module"
+      let source: string | undefined;
+      if (this.match(TokenType.FROM)) {
+        source = this.consume(TokenType.STRING, "Expected module path after 'from'").value;
+      }
+      
+      this.match(TokenType.SEMICOLON); // Optional semicolon
+      return new ExportStatement(specifiers, source);
+    }
+    
+    // export statement (direct export)
+    const declaration = this.statement();
+    if (!declaration) {
+      throw new ParseError("Expected declaration after 'export'", this.peek(), this.sourceCode);
+    }
+    
+    return new ExportStatement(undefined, undefined, declaration);
   }
 
   private expression(): Expression | null {

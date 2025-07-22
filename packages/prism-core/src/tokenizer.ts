@@ -35,6 +35,10 @@ export enum TokenType {
   CONTINUE = 'CONTINUE',
   TYPEOF = 'TYPEOF',
   INSTANCEOF = 'INSTANCEOF',
+  IMPORT = 'IMPORT',
+  EXPORT = 'EXPORT',
+  FROM = 'FROM',
+  AS = 'AS',
 
   // Operators
   PLUS = 'PLUS',
@@ -141,6 +145,10 @@ const keywords: { [key: string]: TokenType } = {
   'continue': TokenType.CONTINUE,
   'typeof': TokenType.TYPEOF,
   'instanceof': TokenType.INSTANCEOF,
+  'import': TokenType.IMPORT,
+  'export': TokenType.EXPORT,
+  'from': TokenType.FROM,
+  'as': TokenType.AS,
 };
 
 export class Tokenizer {
