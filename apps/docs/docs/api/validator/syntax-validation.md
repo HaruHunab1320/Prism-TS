@@ -160,7 +160,7 @@ module.exports = {
 - Validation is performed in a single pass
 - AST is cached for subsequent checks
 - Incremental validation available for editors
-- Typical validation time: <10ms for 1000 LOC
+- Typical validation time: less than 10ms for 1000 LOC
 
 ## Best Practices
 
