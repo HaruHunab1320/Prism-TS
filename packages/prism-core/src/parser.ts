@@ -54,6 +54,7 @@ import {
   ExportSpecifier,
   FunctionDeclaration,
   ReturnStatement,
+  VariableDeclaration,
 } from './ast';
 
 export class ParseError extends Error {
@@ -117,6 +118,10 @@ export class Parser {
       
       if (this.match(TokenType.RETURN)) {
         return this.returnStatement();
+      }
+      
+      if (this.match(TokenType.CONST, TokenType.LET)) {
+        return this.variableDeclaration();
       }
       
       if (this.match(TokenType.AGENTS)) {
@@ -1053,6 +1058,44 @@ export class Parser {
     return new ReturnStatement(value);
   }
 
+  private variableDeclaration(): VariableDeclaration {
+    // Get the declaration kind (const or let)
+    const kind = this.previous().value as 'const' | 'let';
+    
+    // Check for destructuring pattern
+    if (this.check(TokenType.LEFT_BRACKET) || this.check(TokenType.LEFT_BRACE)) {
+      const pattern = this.tryParseDestructuringPattern();
+      if (pattern) {
+        // Pattern destructuring: const [a, b] = array or const {x, y} = obj
+        this.consume(TokenType.EQUAL, "Expected '=' after destructuring pattern");
+        const initializer = this.expression();
+        if (!initializer) {
+          throw new ParseError("Expected expression after '='", this.peek(), this.sourceCode);
+        }
+        this.match(TokenType.SEMICOLON); // Optional semicolon
+        return new VariableDeclaration(kind, '', initializer, pattern);
+      }
+    }
+    
+    // Regular variable declaration: const/let name = value
+    const identifier = this.consume(TokenType.IDENTIFIER, "Expected variable name").value;
+    
+    // const requires an initializer, let allows optional initializer
+    let initializer: Expression | undefined;
+    if (this.match(TokenType.EQUAL)) {
+      const expr = this.expression();
+      if (!expr) {
+        throw new ParseError("Expected expression after '='", this.previous(), this.sourceCode);
+      }
+      initializer = expr;
+    } else if (kind === 'const') {
+      throw new ParseError("const declarations must have an initializer", this.peek(), this.sourceCode);
+    }
+    
+    this.match(TokenType.SEMICOLON); // Optional semicolon
+    return new VariableDeclaration(kind, identifier, initializer);
+  }
+
   private expression(): Expression | null {
     return this.pipeline();
   }
@@ -1357,11 +1400,19 @@ export class Parser {
       // Check for single-parameter lambda without parentheses
       if (this.check(TokenType.ARROW)) {
         this.advance(); // consume =>
-        const body = this.ternary();
-        if (!body) {
-          throw new ParseError("Expected expression after '=>'", this.previous(), this.sourceCode);
+        
+        // Check for block statement body or expression body
+        if (this.check(TokenType.LEFT_BRACE)) {
+          this.advance(); // consume {
+          const body = this.blockStatement();
+          return new LambdaExpression([identifier], body);
+        } else {
+          const body = this.ternary();
+          if (!body) {
+            throw new ParseError("Expected expression after '=>'", this.previous(), this.sourceCode);
+          }
+          return new LambdaExpression([identifier], body);
         }
-        return new LambdaExpression([identifier], body);
       }
       
       return new IdentifierExpression(identifier).setLocation(identToken.line, identToken.column);
@@ -1432,11 +1483,19 @@ export class Parser {
       
       if (isLambda) {
         this.consume(TokenType.ARROW, "Expected '=>' after lambda parameters");
-        const body = this.ternary(); // Parse lambda body
-        if (!body) {
-          throw new ParseError("Expected expression after '=>'", this.previous(), this.sourceCode);
+        
+        // Check for block statement body or expression body
+        if (this.check(TokenType.LEFT_BRACE)) {
+          this.advance(); // consume {
+          const body = this.blockStatement();
+          return new LambdaExpression(params, body, restParam);
+        } else {
+          const body = this.ternary(); // Parse lambda body
+          if (!body) {
+            throw new ParseError("Expected expression after '=>'", this.previous(), this.sourceCode);
+          }
+          return new LambdaExpression(params, body, restParam);
         }
-        return new LambdaExpression(params, body, restParam);
       }
       
       // Not a lambda, restore position and parse as grouped expression

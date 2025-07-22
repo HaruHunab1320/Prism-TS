@@ -42,6 +42,7 @@ import {
   DestructuringAssignment,
   FunctionDeclaration,
   ReturnStatement,
+  VariableDeclaration,
 } from './ast';
 import { ConfidenceValue as ConfidenceLib, ConfidenceLevel } from './confidence';
 import { Context, ContextManager } from './context';
@@ -297,18 +298,28 @@ export class FunctionValue extends Value {
   }
 }
 
+interface VariableInfo {
+  value: Value;
+  mutable: boolean;  // true for let, false for const
+  declared: boolean; // true for const/let, false for legacy assignments
+}
+
 export class Environment {
-  private variables = new Map<string, Value>();
+  private variables = new Map<string, VariableInfo>();
 
   constructor(private parent?: Environment) {}
 
-  define(name: string, value: Value): void {
-    this.variables.set(name, value);
+  // Define a variable with mutability info (for const/let)
+  define(name: string, value: Value, mutable: boolean = true, declared: boolean = false): void {
+    if (this.variables.has(name) && this.variables.get(name)!.declared) {
+      throw new RuntimeError(`Variable '${name}' already declared in this scope`);
+    }
+    this.variables.set(name, { value, mutable, declared });
   }
 
   get(name: string): Value {
     if (this.variables.has(name)) {
-      return this.variables.get(name)!;
+      return this.variables.get(name)!.value;
     }
 
     if (this.parent) {
@@ -320,7 +331,11 @@ export class Environment {
 
   set(name: string, value: Value): void {
     if (this.variables.has(name)) {
-      this.variables.set(name, value);
+      const varInfo = this.variables.get(name)!;
+      if (!varInfo.mutable) {
+        throw new RuntimeError(`Cannot assign to const variable '${name}'`);
+      }
+      this.variables.set(name, { ...varInfo, value });
       return;
     }
 
@@ -330,16 +345,21 @@ export class Environment {
         this.parent.set(name, value);
         return;
       } catch {
-        // Variable doesn't exist in parent, create in current scope
+        // Variable doesn't exist in parent, create in current scope (legacy behavior)
       }
     }
 
-    this.variables.set(name, value);
+    // Legacy assignment behavior - creates mutable variables
+    this.variables.set(name, { value, mutable: true, declared: false });
   }
 
   // Method to get all variables in current scope (for context copying)
   getAllVariables(): Map<string, Value> {
-    return new Map(this.variables);
+    const result = new Map<string, Value>();
+    for (const [name, info] of this.variables) {
+      result.set(name, info.value);
+    }
+    return result;
   }
 }
 
@@ -584,6 +604,346 @@ export class Interpreter {
       }
       return minVal!;
     }));
+
+    // Print function - outputs values to console
+    this.environment.define('print', new FunctionValue('print', async (args) => {
+      const output = args.map(arg => {
+        const value = arg instanceof ConfidenceValue ? arg.value : arg;
+        // Handle confidence display
+        if (arg instanceof ConfidenceValue) {
+          return `${value.toString()} ~> ${arg.confidence.value.toFixed(2)}`;
+        }
+        return value.toString();
+      }).join(' ');
+      
+      console.log(output);
+      return new UndefinedValue();
+    }));
+
+    // Console object with log, warn, error methods
+    const consoleObject = new Map<string, Value>();
+    
+    consoleObject.set('log', new FunctionValue('log', async (args) => {
+      const output = args.map(arg => {
+        const value = arg instanceof ConfidenceValue ? arg.value : arg;
+        if (arg instanceof ConfidenceValue) {
+          return `${value.toString()} ~> ${arg.confidence.value.toFixed(2)}`;
+        }
+        return value.toString();
+      }).join(' ');
+      
+      console.log(output);
+      return new UndefinedValue();
+    }));
+
+    consoleObject.set('warn', new FunctionValue('warn', async (args) => {
+      const output = args.map(arg => {
+        const value = arg instanceof ConfidenceValue ? arg.value : arg;
+        if (arg instanceof ConfidenceValue) {
+          return `${value.toString()} ~> ${arg.confidence.value.toFixed(2)}`;
+        }
+        return value.toString();
+      }).join(' ');
+      
+      console.warn(output);
+      return new UndefinedValue();
+    }));
+
+    consoleObject.set('error', new FunctionValue('error', async (args) => {
+      const output = args.map(arg => {
+        const value = arg instanceof ConfidenceValue ? arg.value : arg;
+        if (arg instanceof ConfidenceValue) {
+          return `${value.toString()} ~> ${arg.confidence.value.toFixed(2)}`;
+        }
+        return value.toString();
+      }).join(' ');
+      
+      console.error(output);
+      return new UndefinedValue();
+    }));
+
+    // Debug function with more detailed output
+    consoleObject.set('debug', new FunctionValue('debug', async (args) => {
+      const formattedArgs = args.map(arg => {
+        const value = arg instanceof ConfidenceValue ? arg.value : arg;
+        if (arg instanceof ConfidenceValue) {
+          return `${value.toString()} ~> ${arg.confidence.value.toFixed(2)}`;
+        }
+        return value.toString();
+      }).join(' ');
+      
+      console.debug(`[DEBUG] ${formattedArgs}`);
+      return new UndefinedValue();
+    }));
+
+    this.environment.define('console', new ObjectValue(consoleObject));
+
+    // Parameterized Primitives - Higher-order functions with configuration
+    
+    // confidence() - Creates confidence-parameterized functions
+    this.environment.define('confidence', new FunctionValue('confidence', async (args) => {
+      if (args.length !== 1) {
+        throw new RuntimeError('confidence() requires exactly one argument: threshold');
+      }
+
+      const thresholdArg = args[0];
+      const threshold = thresholdArg instanceof ConfidenceValue ? thresholdArg.value : thresholdArg;
+
+      if (!(threshold instanceof NumberValue)) {
+        throw new RuntimeError('confidence() threshold must be a number');
+      }
+
+      const thresholdVal = threshold.value;
+      if (thresholdVal < 0 || thresholdVal > 1) {
+        throw new RuntimeError('confidence() threshold must be between 0 and 1');
+      }
+
+      // Return a function that applies the threshold
+      return new FunctionValue('confidenceThreshold', async (funcArgs) => {
+        if (funcArgs.length !== 1) {
+          throw new RuntimeError('confidence-configured function requires exactly one argument: function');
+        }
+
+        const func = funcArgs[0];
+        if (!(func instanceof FunctionValue)) {
+          throw new RuntimeError('confidence-configured function requires a function argument');
+        }
+
+        // Return a new function that applies confidence threshold to results
+        return new FunctionValue('confidenceWrapper', async (innerArgs) => {
+          const result = await func.value(innerArgs);
+          return new ConfidenceValue(result, new ConfidenceLib(thresholdVal));
+        });
+      });
+    }));
+
+    // threshold() - Creates threshold-filtering functions  
+    this.environment.define('threshold', new FunctionValue('threshold', async (args) => {
+      if (args.length !== 1) {
+        throw new RuntimeError('threshold() requires exactly one argument: minimum confidence');
+      }
+
+      const thresholdArg = args[0];
+      const threshold = thresholdArg instanceof ConfidenceValue ? thresholdArg.value : thresholdArg;
+
+      if (!(threshold instanceof NumberValue)) {
+        throw new RuntimeError('threshold() requires a number');
+      }
+
+      const thresholdVal = threshold.value;
+
+      // Return a function that filters by confidence threshold
+      return new FunctionValue('thresholdFilter', async (filterArgs) => {
+        if (filterArgs.length !== 1) {
+          throw new RuntimeError('threshold filter requires exactly one argument: array');
+        }
+
+        const arrayArg = filterArgs[0];
+        const array = arrayArg instanceof ConfidenceValue ? arrayArg.value : arrayArg;
+
+        if (!(array instanceof ArrayValue)) {
+          throw new RuntimeError('threshold filter requires an array');
+        }
+
+        const filtered = array.elements.filter(element => {
+          if (element instanceof ConfidenceValue) {
+            return element.confidence.value >= thresholdVal;
+          }
+          // Check if element is an object with confident properties
+          if (element instanceof ObjectValue) {
+            for (const [, value] of element.properties) {
+              if (value instanceof ConfidenceValue && value.confidence.value < thresholdVal) {
+                return false;
+              }
+            }
+          }
+          return true; // Non-confident values pass through
+        });
+
+        return new ArrayValue(filtered);
+      });
+    }));
+
+    // sortBy() - Creates parameterized sorting functions
+    this.environment.define('sortBy', new FunctionValue('sortBy', async (args) => {
+      if (args.length < 1 || args.length > 2) {
+        throw new RuntimeError('sortBy() requires 1-2 arguments: key [, direction]');
+      }
+
+      const keyArg = args[0];
+      const key = keyArg instanceof ConfidenceValue ? keyArg.value : keyArg;
+
+      if (!(key instanceof StringValue)) {
+        throw new RuntimeError('sortBy() key must be a string');
+      }
+
+      const direction = args.length === 2 ? args[1] : new StringValue('asc');
+      const dirValue = direction instanceof ConfidenceValue ? direction.value : direction;
+
+      if (!(dirValue instanceof StringValue)) {
+        throw new RuntimeError('sortBy() direction must be a string');
+      }
+
+      const isAscending = dirValue.value === 'asc';
+      const keyName = key.value;
+
+      // Return a sorting function
+      return new FunctionValue('sorter', async (sortArgs) => {
+        if (sortArgs.length !== 1) {
+          throw new RuntimeError('sortBy sorter requires exactly one argument: array');
+        }
+
+        const arrayArg = sortArgs[0];
+        const array = arrayArg instanceof ConfidenceValue ? arrayArg.value : arrayArg;
+
+        if (!(array instanceof ArrayValue)) {
+          throw new RuntimeError('sortBy sorter requires an array');
+        }
+
+        // Sort the array by the specified key
+        const sorted = [...array.elements].sort((a, b) => {
+          let aVal = a instanceof ConfidenceValue ? a.value : a;
+          let bVal = b instanceof ConfidenceValue ? b.value : b;
+
+          // Extract property values
+          if (aVal instanceof ObjectValue && bVal instanceof ObjectValue) {
+            const aProp = aVal.properties.get(keyName);
+            const bProp = bVal.properties.get(keyName);
+
+            if (!aProp || !bProp) {
+              // Handle missing properties by treating them as undefined
+              aVal = aProp ? (aProp instanceof ConfidenceValue ? aProp.value : aProp) : new UndefinedValue();
+              bVal = bProp ? (bProp instanceof ConfidenceValue ? bProp.value : bProp) : new UndefinedValue();
+            } else {
+              aVal = aProp instanceof ConfidenceValue ? aProp.value : aProp;
+              bVal = bProp instanceof ConfidenceValue ? bProp.value : bProp;
+            }
+          }
+
+          // Compare values
+          let comparison = 0;
+          if (aVal instanceof NumberValue && bVal instanceof NumberValue) {
+            comparison = aVal.value - bVal.value;
+          } else if (aVal instanceof StringValue && bVal instanceof StringValue) {
+            comparison = aVal.value.localeCompare(bVal.value);
+          } else {
+            comparison = aVal.toString().localeCompare(bVal.toString());
+          }
+
+          return isAscending ? comparison : -comparison;
+        });
+
+        return new ConfidenceValue(new ArrayValue(sorted), new ConfidenceLib(0.95));
+      });
+    }));
+
+    // groupBy() - Creates parameterized grouping functions
+    this.environment.define('groupBy', new FunctionValue('groupBy', async (args) => {
+      if (args.length !== 1) {
+        throw new RuntimeError('groupBy() requires exactly one argument: key or function');
+      }
+
+      const keyOrFunc = args[0];
+
+      // Return a grouping function
+      return new FunctionValue('grouper', async (groupArgs) => {
+        if (groupArgs.length !== 1) {
+          throw new RuntimeError('groupBy grouper requires exactly one argument: array');
+        }
+
+        const arrayArg = groupArgs[0];
+        const array = arrayArg instanceof ConfidenceValue ? arrayArg.value : arrayArg;
+
+        if (!(array instanceof ArrayValue)) {
+          throw new RuntimeError('groupBy grouper requires an array');
+        }
+
+        const groups = new Map<string, Value[]>();
+
+        for (const element of array.elements) {
+          let groupKey: string;
+
+          if (keyOrFunc instanceof StringValue) {
+            // Group by property key
+            const obj = element instanceof ConfidenceValue ? element.value : element;
+            if (obj instanceof ObjectValue) {
+              const prop = obj.properties.get(keyOrFunc.value);
+              groupKey = prop ? prop.toString() : 'undefined';
+            } else {
+              groupKey = obj.toString();
+            }
+          } else if (keyOrFunc instanceof FunctionValue) {
+            // Group by function result
+            const result = await keyOrFunc.value([element]);
+            groupKey = result.toString();
+          } else {
+            throw new RuntimeError('groupBy() requires a string key or function');
+          }
+
+          if (!groups.has(groupKey)) {
+            groups.set(groupKey, []);
+          }
+          groups.get(groupKey)!.push(element);
+        }
+
+        // Convert to object
+        const resultObj = new Map<string, Value>();
+        for (const [key, values] of groups) {
+          resultObj.set(key, new ArrayValue(values));
+        }
+
+        return new ObjectValue(resultObj);
+      });
+    }));
+
+    // debounce() - Creates debounced function wrappers
+    this.environment.define('debounce', new FunctionValue('debounce', async (args) => {
+      if (args.length !== 1) {
+        throw new RuntimeError('debounce() requires exactly one argument: delay in milliseconds');
+      }
+
+      const delayArg = args[0];
+      const delay = delayArg instanceof ConfidenceValue ? delayArg.value : delayArg;
+
+      if (!(delay instanceof NumberValue)) {
+        throw new RuntimeError('debounce() delay must be a number');
+      }
+
+      const delayMs = delay.value;
+
+      // Return a function that creates debounced versions
+      return new FunctionValue('debouncer', async (debounceArgs) => {
+        if (debounceArgs.length !== 1) {
+          throw new RuntimeError('debounce creator requires exactly one argument: function');
+        }
+
+        const func = debounceArgs[0];
+        if (!(func instanceof FunctionValue)) {
+          throw new RuntimeError('debounce creator requires a function argument');
+        }
+
+        let timeoutId: NodeJS.Timeout | null = null;
+        let lastResult: Value = new UndefinedValue();
+
+        // Return debounced function
+        return new FunctionValue('debouncedFunction', async (innerArgs) => {
+          return new Promise<Value>((resolve) => {
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+            }
+
+            timeoutId = setTimeout(async () => {
+              try {
+                lastResult = await func.value(innerArgs);
+                resolve(lastResult);
+              } catch (error) {
+                resolve(new UndefinedValue());
+              }
+            }, delayMs);
+          });
+        });
+      });
+    }));
   }
 
   registerLLMProvider(name: string, provider: LLMProvider): void {
@@ -688,6 +1048,8 @@ export class Interpreter {
         return this.interpretFunctionDeclaration(node as FunctionDeclaration);
       case 'ReturnStatement':
         throw await this.interpretReturnStatement(node as ReturnStatement);
+      case 'VariableDeclaration':
+        return this.interpretVariableDeclaration(node as VariableDeclaration);
       default:
         throw new RuntimeError(`Unknown node type: ${(node as any).type}`, node);
     }
@@ -1671,6 +2033,13 @@ export class Interpreter {
         });
       }
     }
+
+    // Handle string properties
+    if (object instanceof StringValue) {
+      if (node.property === 'length') {
+        return new NumberValue(object.value.length);
+      }
+    }
     
     // Handle object property access
     if (object instanceof ObjectValue) {
@@ -2012,7 +2381,25 @@ export class Interpreter {
       this.environment = lambdaEnv;
       
       try {
-        const result = await this.interpret(node.body);
+        let result: Value;
+        if (node.body.type === 'BlockStatement') {
+          // Handle block statement body with return statement support
+          try {
+            result = new NumberValue(0); // Default return value
+            for (const statement of (node.body as BlockStatement).statements) {
+              result = await this.interpret(statement);
+            }
+          } catch (error) {
+            if (error instanceof ReturnException) {
+              result = error.value || new NumberValue(0);
+            } else {
+              throw error;
+            }
+          }
+        } else {
+          // Handle expression body (current behavior)
+          result = await this.interpret(node.body);
+        }
         return result;
       } finally {
         this.environment = previousEnv;
@@ -2418,6 +2805,49 @@ export class Interpreter {
     
     return new ReturnException(value);
   }
+
+  private async interpretVariableDeclaration(node: VariableDeclaration): Promise<Value> {
+    const isMutable = node.kind === 'let';
+    
+    if (node.pattern) {
+      // Destructuring declaration: const [a, b] = array or const {x, y} = obj
+      if (!node.initializer) {
+        throw new RuntimeError(`${node.kind} destructuring declaration requires an initializer`);
+      }
+      
+      // For now, use the existing DestructuringAssignment logic by creating a temporary
+      // DestructuringAssignment and overriding the environment definition behavior
+      const tempDestructuring = new DestructuringAssignment(node.pattern, node.initializer);
+      
+      // Store original define method
+      const originalDefine = this.environment.define.bind(this.environment);
+      
+      // Override define to use const/let semantics
+      this.environment.define = (name: string, value: Value) => {
+        originalDefine(name, value, isMutable, true);
+      };
+      
+      try {
+        await this.interpretDestructuringAssignment(tempDestructuring);
+      } finally {
+        // Restore original define method
+        this.environment.define = originalDefine;
+      }
+    } else {
+      // Regular declaration: const/let name = value
+      let value: Value = new NumberValue(0); // Default value for let without initializer
+      
+      if (node.initializer) {
+        value = await this.interpret(node.initializer);
+      }
+      
+      // Define the variable with mutability info
+      this.environment.define(node.identifier, value, isMutable, true);
+    }
+    
+    return new NumberValue(0); // Variable declarations return 0
+  }
+
 
   private async bindParameters(
     parameters: any[], 

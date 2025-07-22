@@ -45,7 +45,8 @@ export type NodeType =
   | 'ImportSpecifier'
   | 'ExportSpecifier'
   | 'FunctionDeclaration'
-  | 'ReturnStatement';
+  | 'ReturnStatement'
+  | 'VariableDeclaration';
 
 export abstract class ASTNode {
   abstract type: NodeType;
@@ -191,7 +192,7 @@ export class LambdaExpression extends Expression {
   
   constructor(
     public parameters: LambdaParameter[],
-    public body: Expression,
+    public body: Expression | BlockStatement,
     public restParameter?: string | ArrayPattern | ObjectPattern
   ) {
     super();
@@ -577,6 +578,20 @@ export class ReturnStatement extends Statement {
   
   constructor(
     public value?: Expression  // Optional return value
+  ) {
+    super();
+  }
+}
+
+// Variable Declaration with const/let support
+export class VariableDeclaration extends Statement {
+  type: NodeType = 'VariableDeclaration';
+  
+  constructor(
+    public kind: 'const' | 'let',           // Variable declaration kind
+    public identifier: string,              // Variable name
+    public initializer?: Expression,        // Optional initial value
+    public pattern?: ArrayPattern | ObjectPattern  // Optional destructuring pattern
   ) {
     super();
   }

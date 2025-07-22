@@ -75,6 +75,467 @@ uncertain if (avg_confidence > 0.8) {
 }
 ```
 
+## Modern Language Features
+
+### 1. Variable Declarations and Block Scoping
+
+```prism
+// Using const/let with block scoping
+function userProcessing() {
+  const API_BASE = "https://api.example.com"
+  let processedCount = 0
+  
+  if (users.length > 0) {
+    const batchSize = 10
+    let currentBatch = []
+    
+    for user in users {
+      currentBatch.push(user)
+      
+      if (currentBatch.length >= batchSize) {
+        // Process batch
+        result = processBatch(currentBatch)
+        processedCount += result.length
+        
+        // Clear batch for next iteration
+        currentBatch = []
+        
+        print("Processed batch, total:", processedCount)
+      }
+    }
+    
+    // batchSize and currentBatch not accessible here
+  }
+  
+  console.log("Final count:", processedCount)
+  return processedCount
+}
+```
+
+### 2. Named Functions with Returns
+
+```prism
+// Traditional function declarations with hoisting
+function calculateRiskScore(transactions, userProfile) {
+  // Early return for invalid input
+  if (!transactions || transactions.length == 0) {
+    return 0 ~> 0.1  // Low confidence for no data
+  }
+  
+  const weights = {
+    amount: 0.4,
+    frequency: 0.3,
+    pattern: 0.3
+  }
+  
+  // Calculate component scores
+  let amountScore = calculateAmountRisk(transactions)
+  let frequencyScore = calculateFrequencyRisk(transactions)
+  let patternScore = calculatePatternRisk(transactions, userProfile)
+  
+  // Weighted combination
+  const totalScore = 
+    (amountScore * weights.amount) +
+    (frequencyScore * weights.frequency) +
+    (patternScore * weights.pattern)
+  
+  // Return with confidence based on data quality
+  const dataQuality = assessDataQuality(transactions)
+  return totalScore ~> dataQuality
+}
+
+// Support functions
+function calculateAmountRisk(transactions) {
+  const amounts = transactions.map(t => t.amount)
+  const avgAmount = amounts.reduce((a, b) => a + b, 0) / amounts.length
+  return avgAmount > 1000 ? 0.8 : 0.2
+}
+
+function calculateFrequencyRisk(transactions) {
+  const timeSpan = getTimeSpan(transactions)
+  const frequency = transactions.length / timeSpan
+  return frequency > 5 ? 0.9 : 0.1
+}
+
+function calculatePatternRisk(transactions, profile) {
+  // Pattern analysis implementation
+  return 0.5  // Placeholder
+}
+
+function assessDataQuality(transactions) {
+  const complete = transactions.filter(t => t.amount && t.date && t.description)
+  return complete.length / transactions.length
+}
+
+// Usage - works due to hoisting
+const userRisk = calculateRiskScore(userTransactions, userProfile)
+console.log("Risk assessment:", userRisk)
+```
+
+### 3. Block-Statement Lambdas
+
+```prism
+// Complex data processing with block-statement lambdas
+const users = [
+  {name: "Alice", age: 28, score: 85},
+  {name: "Bob", age: 34, score: 92},
+  {name: "Carol", age: 23, score: 78}
+]
+
+// Block lambda for complex processing
+const enhancedProcessor = user => {
+  // Calculate age group
+  let ageGroup = "young"
+  if (user.age >= 30) {
+    ageGroup = "mature"
+  } else if (user.age >= 25) {
+    ageGroup = "young-adult"
+  }
+  
+  // Calculate performance tier
+  let tier = "standard"
+  if (user.score >= 90) {
+    tier = "platinum"
+  } else if (user.score >= 80) {
+    tier = "gold"
+  }
+  
+  // Generate confidence based on data completeness
+  const confidence = (user.name && user.age && user.score) ? 0.95 : 0.6
+  
+  return {
+    ...user,
+    ageGroup,
+    tier,
+    processedAt: Date.now()
+  } ~> confidence
+}
+
+// Use with array methods
+const processed = users.map(enhancedProcessor)
+print("Processed users:", processed.length)
+
+// Block lambda with early returns for validation
+const validator = data => {
+  console.debug("Validating:", data)
+  
+  if (!data) {
+    console.warn("No data provided")
+    return false
+  }
+  
+  if (typeof data !== "object") {
+    console.error("Data must be an object")
+    return false
+  }
+  
+  const required = ["name", "email", "age"]
+  for field in required {
+    if (!data[field]) {
+      console.error("Missing required field:", field)
+      return false
+    }
+  }
+  
+  console.log("Validation passed")
+  return true
+}
+
+// Block lambda with loops
+const aggregator = items => {
+  let totalValue = 0
+  let validCount = 0
+  const categories = {}
+  
+  for item in items {
+    if (item.value && item.value > 0) {
+      totalValue += item.value
+      validCount += 1
+      
+      // Group by category
+      const cat = item.category || "uncategorized"
+      if (!categories[cat]) {
+        categories[cat] = []
+      }
+      categories[cat].push(item)
+    }
+  }
+  
+  return {
+    total: totalValue,
+    average: validCount > 0 ? totalValue / validCount : 0,
+    count: validCount,
+    categories
+  }
+}
+```
+
+### 4. Parameterized Primitives and Pipeline Operations
+
+```prism
+// Create reusable, configurable functions
+const highConfidenceFilter = threshold(0.8)
+const scoreSorter = sortBy("score", "desc")
+const categoryGrouper = groupBy("category")
+const confidentProcessor = confidence(0.9)
+
+// Data processing pipeline
+const analysisData = [
+  {name: "Analysis A", score: 85, category: "research"} ~> 0.9,
+  {name: "Analysis B", score: 92, category: "research"} ~> 0.7,
+  {name: "Analysis C", score: 78, category: "testing"} ~> 0.85,
+  {name: "Analysis D", score: 88, category: "testing"} ~> 0.95
+]
+
+// Pipeline with parameterized functions
+const result = analysisData
+  |> highConfidenceFilter(_)           // Keep only high-confidence items
+  |> scoreSorter(_)                    // Sort by score descending
+  |> categoryGrouper(_)                // Group by category
+
+print("Filtered and grouped results:", result)
+
+// Create domain-specific processors
+const createDataValidator = (minScore, requiredFields) => {
+  return data => {
+    // Check score threshold
+    if (data.score < minScore) {
+      return false
+    }
+    
+    // Check required fields
+    for field in requiredFields {
+      if (!data[field]) {
+        return false
+      }
+    }
+    
+    return true
+  }
+}
+
+const researchValidator = createDataValidator(80, ["methodology", "sample_size"])
+const productValidator = createDataValidator(90, ["version", "testing_complete"])
+
+// Custom confidence wrapper for specific use case
+const medicalConfidence = confidence(0.95)  // High threshold for medical data
+const medicalAnalyzer = medicalConfidence(data => {
+  // Medical analysis logic
+  const riskFactors = data.symptoms.length + data.history.length
+  return riskFactors > 5 ? "high-risk" : "low-risk"
+})
+
+// Chained parameterized operations
+const qualityAnalysis = data
+  |> threshold(0.85)(_)                    // High confidence only
+  |> sortBy("timestamp", "desc")(_)        // Most recent first
+  |> groupBy(item => item.priority)(_)     // Group by priority
+  |> map(group => {                        // Process each group
+      const summary = group.reduce((acc, item) => {
+        acc.total += item.value
+        acc.count += 1
+        return acc
+      }, {total: 0, count: 0})
+      
+      return {
+        ...summary,
+        average: summary.total / summary.count
+      }
+    })
+
+console.log("Quality analysis complete:", qualityAnalysis)
+```
+
+### 5. Import/Export Module System
+
+```prism
+// math-utils.prism - Utility module
+export const PI = 3.14159
+export const E = 2.71828
+
+export function circleArea(radius) {
+  return PI * radius * radius
+}
+
+export function exponentialGrowth(initial, rate, time) {
+  return initial * Math.pow(E, rate * time)
+}
+
+// Default export
+export default function calculate(operation, ...args) {
+  switch (operation) {
+    case "area":
+      return circleArea(args[0])
+    case "growth":
+      return exponentialGrowth(args[0], args[1], args[2])
+    default:
+      return 0
+  }
+}
+
+// validation.prism - Validation utilities
+export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+export const PHONE_REGEX = /^\+?[\d\s\-\(\)]+$/
+
+export function validateEmail(email) {
+  const isValid = EMAIL_REGEX.test(email)
+  return isValid ~> (isValid ? 0.95 : 0.1)
+}
+
+export function validatePhone(phone) {
+  const isValid = PHONE_REGEX.test(phone)
+  return isValid ~> (isValid ? 0.9 : 0.1)
+}
+
+export function validateAge(age) {
+  const isNumber = typeof age === "number"
+  const inRange = age >= 0 && age <= 150
+  const isValid = isNumber && inRange
+  
+  return isValid ~> (isValid ? 0.99 : 0.0)
+}
+
+// main.prism - Main application
+import {PI, circleArea, exponentialGrowth} from "./math-utils.prism"
+import {validateEmail, validatePhone, validateAge} from "./validation.prism"
+import calculate from "./math-utils.prism"  // Default import
+
+// Using imported functions
+function processUserData(userData) {
+  print("Processing user:", userData.name)
+  
+  // Validate input data
+  const emailValid = validateEmail(userData.email)
+  const phoneValid = validatePhone(userData.phone)
+  const ageValid = validateAge(userData.age)
+  
+  console.log("Email validation:", emailValid)
+  console.log("Phone validation:", phoneValid)
+  console.log("Age validation:", ageValid)
+  
+  // Calculate some metrics
+  if (userData.radius) {
+    const area = circleArea(userData.radius)
+    console.log("Circle area:", area)
+  }
+  
+  // Use default export
+  const result = calculate("growth", 100, 0.05, userData.age)
+  console.log("Growth calculation:", result)
+  
+  // Overall confidence based on validations
+  const overallConfidence = (emailValid + phoneValid + ageValid) / 3
+  
+  return {
+    ...userData,
+    validated: true,
+    confidence: overallConfidence
+  }
+}
+
+// Usage
+const user = {
+  name: "Alice Johnson",
+  email: "alice@example.com",
+  phone: "+1-555-123-4567",
+  age: 28,
+  radius: 5
+}
+
+const processed = processUserData(user)
+print("Final result:", processed)
+```
+
+### 6. Debugging and Output
+
+```prism
+// Comprehensive debugging example
+function debugDataProcessing(rawData) {
+  console.debug("Starting data processing")
+  console.debug("Input data length:", rawData.length)
+  
+  // Data cleaning phase
+  print("=== Data Cleaning Phase ===")
+  const cleaned = rawData.filter(item => {
+    const isValid = item && item.value !== null && item.value !== undefined
+    if (!isValid) {
+      console.warn("Filtering out invalid item:", item)
+    }
+    return isValid
+  })
+  
+  print("Cleaned data count:", cleaned.length)
+  
+  // Transformation phase  
+  print("=== Transformation Phase ===")
+  const transformed = cleaned.map((item, index) => {
+    console.debug(`Processing item ${index + 1}/${cleaned.length}`)
+    
+    const confidence = item.confidence || 0.5
+    const processed = {
+      ...item,
+      transformed: true,
+      confidence
+    }
+    
+    if (confidence < 0.7) {
+      console.warn("Low confidence item:", processed.value, "confidence:", confidence)
+    }
+    
+    return processed
+  })
+  
+  // Aggregation phase
+  print("=== Aggregation Phase ===")
+  const stats = transformed.reduce((acc, item) => {
+    acc.totalValue += item.value
+    acc.count += 1
+    acc.avgConfidence += item.confidence
+    
+    if (item.confidence > acc.maxConfidence) {
+      acc.maxConfidence = item.confidence
+      acc.mostConfident = item
+    }
+    
+    return acc
+  }, {
+    totalValue: 0,
+    count: 0,
+    avgConfidence: 0,
+    maxConfidence: 0,
+    mostConfident: null
+  })
+  
+  stats.average = stats.totalValue / stats.count
+  stats.avgConfidence = stats.avgConfidence / stats.count
+  
+  console.log("Processing complete!")
+  console.log("Statistics:", stats)
+  
+  print("=== Final Results ===")
+  print("Average value:", stats.average)
+  print("Average confidence:", stats.avgConfidence.toFixed(3))
+  print("Most confident item:", stats.mostConfident.value)
+  
+  return {
+    data: transformed,
+    stats
+  }
+}
+
+// Usage with sample data
+const sampleData = [
+  {value: 10, confidence: 0.9},
+  {value: 20, confidence: 0.8},
+  {value: null},  // Will be filtered out
+  {value: 15, confidence: 0.6},  // Will trigger warning
+  {value: 25, confidence: 0.95}
+]
+
+const results = debugDataProcessing(sampleData)
+console.log("Final results:", results)
+```
+
 ## Advanced Use Cases
 
 ### 1. Multi-Stage Decision Pipeline

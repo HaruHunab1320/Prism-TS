@@ -47,7 +47,7 @@ async function analyzeData(data) {
 analysis = await analyzeData(input)
 ```
 
-### 3. Import/Export System
+### 3. Import/Export System ✅ **IMPLEMENTED**
 **Priority:** HIGH  
 **Complexity:** High  
 **Value:** Code organization and reusability
@@ -65,7 +65,9 @@ import * as math from "./math.prism"
 result = sum(10, 20) * PI
 ```
 
-### 4. Standard Named Functions
+*Note: Runtime module loading still pending implementation*
+
+### 4. Standard Named Functions ✅ **IMPLEMENTED**
 **Priority:** HIGH  
 **Complexity:** Medium  
 **Value:** Traditional function syntax alongside lambdas
@@ -88,7 +90,7 @@ function riskAssessment(input) ~> 0.8 {
 }
 ```
 
-### 5. Block-Statement Lambda Functions  
+### 5. Block-Statement Lambda Functions ✅ **IMPLEMENTED**
 **Priority:** HIGH  
 **Complexity:** Medium  
 **Value:** Complex logic in lambda expressions
@@ -97,7 +99,7 @@ function riskAssessment(input) ~> 0.8 {
 // Current: expression-only lambdas
 process = (data) => data.filter(x => x > 0).map(x => x * 2)
 
-// Proposed: block-statement lambdas
+// Now available: block-statement lambdas
 complexProcess = (data) => {
   filtered = data.filter(x => x > 0)
   transformed = filtered.map(x => x * 2)
@@ -118,7 +120,7 @@ riskProcessor = (items) => {
 }
 ```
 
-### 6. Variable Declaration Keywords
+### 6. Variable Declaration Keywords ✅ **IMPLEMENTED**
 **Priority:** HIGH  
 **Complexity:** Low  
 **Value:** Explicit mutability and scoping
@@ -542,10 +544,10 @@ When implementing new features, consider:
 ## 🗓️ Rough Roadmap
 
 ### Phase 1 (Next 3-6 months)
-- **Import/Export System** (📦 Starting implementation)
-- **Standard Named Functions** (function keyword support)
-- **Block-Statement Lambda Functions** ((){} syntax)
-- **Variable Declaration Keywords** (const/let support)
+- **Import/Export System** (✅ Parse/AST complete, runtime loading pending)
+- **Standard Named Functions** (✅ Complete with hoisting and closures)
+- **Variable Declaration Keywords** (✅ Complete with const/let and block scoping)
+- **Block-Statement Lambda Functions** (✅ Complete with return statements and full compatibility)
 - Pattern Matching
 - Basic Async/Await
 
