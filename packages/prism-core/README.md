@@ -197,6 +197,7 @@ See the [examples directory](https://github.com/uncertainty-lang/prism/tree/main
 
 - [`@prism-lang/llm`](https://www.npmjs.com/package/@prism-lang/llm) - LLM provider integrations
 - [`@prism-lang/confidence`](https://www.npmjs.com/package/@prism-lang/confidence) - Confidence extraction utilities
+- [`@prism-lang/validator`](https://www.npmjs.com/package/@prism-lang/validator) - Validation toolkit
 - [`@prism-lang/cli`](https://www.npmjs.com/package/@prism-lang/cli) - Command-line interface
 - [`@prism-lang/repl`](https://www.npmjs.com/package/@prism-lang/repl) - Interactive REPL
 

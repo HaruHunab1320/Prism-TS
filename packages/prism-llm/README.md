@@ -184,6 +184,14 @@ describe('My LLM feature', () => {
 });
 ```
 
+## Related Packages
+
+- [`@prism-lang/core`](https://www.npmjs.com/package/@prism-lang/core) - Core language implementation
+- [`@prism-lang/confidence`](https://www.npmjs.com/package/@prism-lang/confidence) - Confidence extraction utilities
+- [`@prism-lang/validator`](https://www.npmjs.com/package/@prism-lang/validator) - Validation toolkit
+- [`@prism-lang/cli`](https://www.npmjs.com/package/@prism-lang/cli) - Command-line interface
+- [`@prism-lang/repl`](https://www.npmjs.com/package/@prism-lang/repl) - Interactive REPL
+
 ## License
 
 MIT

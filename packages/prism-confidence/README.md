@@ -229,6 +229,14 @@ See the `/examples` directory for complete examples including:
 - Sensor fusion with temporal decay
 - API response validation
 
+## Related Packages
+
+- [`@prism-lang/core`](https://www.npmjs.com/package/@prism-lang/core) - Core language implementation
+- [`@prism-lang/llm`](https://www.npmjs.com/package/@prism-lang/llm) - LLM provider integrations
+- [`@prism-lang/validator`](https://www.npmjs.com/package/@prism-lang/validator) - Validation toolkit
+- [`@prism-lang/cli`](https://www.npmjs.com/package/@prism-lang/cli) - Command-line interface
+- [`@prism-lang/repl`](https://www.npmjs.com/package/@prism-lang/repl) - Interactive REPL
+
 ## Contributing
 
 See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.

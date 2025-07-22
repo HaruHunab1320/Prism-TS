@@ -72,7 +72,9 @@ prism eval "temp = 72 ~> 0.95; print('Temperature:', temp)"
 
 - [`@prism-lang/core`](https://www.npmjs.com/package/@prism-lang/core) - Core language implementation
 - [`@prism-lang/llm`](https://www.npmjs.com/package/@prism-lang/llm) - LLM provider integrations
-- [`@prism-lang/confidence`](https://www.npmjs.com/package/@prism-lang/confidence) - Confidence extraction library
+- [`@prism-lang/confidence`](https://www.npmjs.com/package/@prism-lang/confidence) - Confidence extraction utilities
+- [`@prism-lang/validator`](https://www.npmjs.com/package/@prism-lang/validator) - Validation toolkit
+- [`@prism-lang/repl`](https://www.npmjs.com/package/@prism-lang/repl) - Interactive REPL
 
 ## License
 

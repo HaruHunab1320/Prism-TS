@@ -269,6 +269,14 @@ const result = await repl.evaluate('x = 42 ~> 0.9');
 console.log(result.value); // 42 (~90.0%)
 ```
 
+## Related Packages
+
+- [`@prism-lang/core`](https://www.npmjs.com/package/@prism-lang/core) - Core language implementation
+- [`@prism-lang/llm`](https://www.npmjs.com/package/@prism-lang/llm) - LLM provider integrations
+- [`@prism-lang/confidence`](https://www.npmjs.com/package/@prism-lang/confidence) - Confidence extraction utilities
+- [`@prism-lang/validator`](https://www.npmjs.com/package/@prism-lang/validator) - Validation toolkit
+- [`@prism-lang/cli`](https://www.npmjs.com/package/@prism-lang/cli) - Command-line interface
+
 ## License
 
 MIT
