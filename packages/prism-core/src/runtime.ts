@@ -2461,7 +2461,7 @@ export class Interpreter {
     return value;
   }
   
-  private async destructureArray(pattern: ArrayPattern, value: Value, globalThreshold?: number): Promise<void> {
+  private async destructureArray(pattern: ArrayPattern, value: Value, globalThreshold?: number, isMutable: boolean = true, isDeclared: boolean = false): Promise<void> {
     if (!(value instanceof ArrayValue)) {
       throw new RuntimeError('Cannot destructure non-array value', pattern);
     }
@@ -2508,19 +2508,27 @@ export class Interpreter {
       if (!shouldAssign) {
         // Assign undefined if confidence is too low
         if (element instanceof IdentifierExpression) {
-          this.environment.set(element.name, new UndefinedValue());
+          if (isDeclared) {
+            this.environment.define(element.name, new UndefinedValue(), isMutable, true);
+          } else {
+            this.environment.set(element.name, new UndefinedValue());
+          }
         } else if (element instanceof ArrayPattern) {
-          await this.destructureArray(element, new ArrayValue([]), globalThreshold);
+          await this.destructureArray(element, new ArrayValue([]), globalThreshold, isMutable, isDeclared);
         } else if (element instanceof ObjectPattern) {
-          await this.destructureObject(element, new ObjectValue(new Map()), globalThreshold);
+          await this.destructureObject(element, new ObjectValue(new Map()), globalThreshold, isMutable, isDeclared);
         }
       } else {
         if (element instanceof IdentifierExpression) {
-          this.environment.set(element.name, arrayValue);
+          if (isDeclared) {
+            this.environment.define(element.name, arrayValue, isMutable, true);
+          } else {
+            this.environment.set(element.name, arrayValue);
+          }
         } else if (element instanceof ArrayPattern) {
-          await this.destructureArray(element, arrayValue, globalThreshold);
+          await this.destructureArray(element, arrayValue, globalThreshold, isMutable, isDeclared);
         } else if (element instanceof ObjectPattern) {
-          await this.destructureObject(element, arrayValue, globalThreshold);
+          await this.destructureObject(element, arrayValue, globalThreshold, isMutable, isDeclared);
         }
       }
     }
@@ -2542,7 +2550,11 @@ export class Interpreter {
         }
       }
       
-      this.environment.set(restElement.argument.name, new ArrayValue(restArray));
+      if (isDeclared) {
+        this.environment.define(restElement.argument.name, new ArrayValue(restArray), isMutable, true);
+      } else {
+        this.environment.set(restElement.argument.name, new ArrayValue(restArray));
+      }
     }
   }
   
@@ -2554,7 +2566,7 @@ export class Interpreter {
     return 1.0 >= threshold;
   }
   
-  private async destructureObject(pattern: ObjectPattern, value: Value, globalThreshold?: number): Promise<void> {
+  private async destructureObject(pattern: ObjectPattern, value: Value, globalThreshold?: number, isMutable: boolean = true, isDeclared: boolean = false): Promise<void> {
     if (!(value instanceof ObjectValue)) {
       throw new RuntimeError('Cannot destructure non-object value', pattern);
     }
@@ -2596,27 +2608,35 @@ export class Interpreter {
       if (!shouldAssign) {
         // Assign undefined if confidence is too low
         if (prop.value instanceof IdentifierExpression) {
-          this.environment.set(prop.value.name, new UndefinedValue());
+          if (isDeclared) {
+            this.environment.define(prop.value.name, new UndefinedValue(), isMutable, true);
+          } else {
+            this.environment.set(prop.value.name, new UndefinedValue());
+          }
         } else if (prop.value instanceof ArrayPattern) {
-          await this.destructureArray(prop.value, new ArrayValue([]), globalThreshold);
+          await this.destructureArray(prop.value, new ArrayValue([]), globalThreshold, isMutable, isDeclared);
         } else if (prop.value instanceof ObjectPattern) {
-          await this.destructureObject(prop.value, new ObjectValue(new Map()), globalThreshold);
+          await this.destructureObject(prop.value, new ObjectValue(new Map()), globalThreshold, isMutable, isDeclared);
         }
       } else {
         if (prop.value instanceof IdentifierExpression) {
-          this.environment.set(prop.value.name, assignValue);
+          if (isDeclared) {
+            this.environment.define(prop.value.name, assignValue, isMutable, true);
+          } else {
+            this.environment.set(prop.value.name, assignValue);
+          }
         } else if (prop.value instanceof ArrayPattern) {
           // If this property has a confidence threshold, use it as the global threshold for the nested pattern
           const nestedThreshold = prop.confidenceThreshold ? 
             (await this.interpret(prop.confidenceThreshold) as NumberValue).value : 
             globalThreshold;
-          await this.destructureArray(prop.value, assignValue, nestedThreshold);
+          await this.destructureArray(prop.value, assignValue, nestedThreshold, isMutable, isDeclared);
         } else if (prop.value instanceof ObjectPattern) {
           // If this property has a confidence threshold, use it as the global threshold for the nested pattern
           const nestedThreshold = prop.confidenceThreshold ? 
             (await this.interpret(prop.confidenceThreshold) as NumberValue).value : 
             globalThreshold;
-          await this.destructureObject(prop.value, assignValue, nestedThreshold);
+          await this.destructureObject(prop.value, assignValue, nestedThreshold, isMutable, isDeclared);
         }
       }
     }
@@ -2636,7 +2656,11 @@ export class Interpreter {
           }
         }
       }
-      this.environment.set(pattern.rest.argument.name, new ObjectValue(restObj));
+      if (isDeclared) {
+        this.environment.define(pattern.rest.argument.name, new ObjectValue(restObj), isMutable, true);
+      } else {
+        this.environment.set(pattern.rest.argument.name, new ObjectValue(restObj));
+      }
     }
   }
 
@@ -2815,23 +2839,14 @@ export class Interpreter {
         throw new RuntimeError(`${node.kind} destructuring declaration requires an initializer`);
       }
       
-      // For now, use the existing DestructuringAssignment logic by creating a temporary
-      // DestructuringAssignment and overriding the environment definition behavior
-      const tempDestructuring = new DestructuringAssignment(node.pattern, node.initializer);
+      // Evaluate the initializer
+      const value = await this.interpret(node.initializer);
       
-      // Store original define method
-      const originalDefine = this.environment.define.bind(this.environment);
-      
-      // Override define to use const/let semantics
-      this.environment.define = (name: string, value: Value) => {
-        originalDefine(name, value, isMutable, true);
-      };
-      
-      try {
-        await this.interpretDestructuringAssignment(tempDestructuring);
-      } finally {
-        // Restore original define method
-        this.environment.define = originalDefine;
+      // Call destructuring with proper const/let semantics
+      if (node.pattern instanceof ArrayPattern) {
+        await this.destructureArray(node.pattern, value, undefined, isMutable, true);
+      } else if (node.pattern instanceof ObjectPattern) {
+        await this.destructureObject(node.pattern, value, undefined, isMutable, true);
       }
     } else {
       // Regular declaration: const/let name = value

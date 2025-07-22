@@ -193,10 +193,19 @@ describe('Variable Declarations', () => {
     });
 
     // TODO: Fix destructuring assignment prevention for const
-    it.skip('should prevent reassignment to destructured const', async () => {
+    it('should prevent reassignment to destructured const', async () => {
       const program = parse(`
         const [a, b] = [1, 2]
         a = 10
+      `);
+      
+      await expect(runtime.execute(program)).rejects.toThrow('Cannot assign to const variable');
+    });
+
+    it('should prevent reassignment to object destructured const', async () => {
+      const program = parse(`
+        const {x, y} = {x: 10, y: 20}
+        x = 30
       `);
       
       await expect(runtime.execute(program)).rejects.toThrow('Cannot assign to const variable');
