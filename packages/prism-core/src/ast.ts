@@ -43,7 +43,9 @@ export type NodeType =
   | 'ImportStatement'
   | 'ExportStatement'
   | 'ImportSpecifier'
-  | 'ExportSpecifier';
+  | 'ExportSpecifier'
+  | 'FunctionDeclaration'
+  | 'ReturnStatement';
 
 export abstract class ASTNode {
   abstract type: NodeType;
@@ -550,6 +552,31 @@ export class ExportStatement extends Statement {
     public declaration?: Statement,         // Direct export declaration
     public isDefault?: boolean,             // export default
     public isNamespace?: boolean            // export *
+  ) {
+    super();
+  }
+}
+
+// Function Declaration and Return Statement
+export class FunctionDeclaration extends Statement {
+  type: NodeType = 'FunctionDeclaration';
+  
+  constructor(
+    public name: string,                           // Function name
+    public parameters: LambdaParameter[],          // Parameter list (reuse lambda parameter types)
+    public body: BlockStatement,                   // Function body (must be block)
+    public restParameter?: string | ArrayPattern | ObjectPattern,  // Rest parameter
+    public confidenceAnnotation?: Expression      // Optional confidence annotation: function name() ~> 0.8
+  ) {
+    super();
+  }
+}
+
+export class ReturnStatement extends Statement {
+  type: NodeType = 'ReturnStatement';
+  
+  constructor(
+    public value?: Expression  // Optional return value
   ) {
     super();
   }

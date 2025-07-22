@@ -35,7 +35,7 @@ uncertain if (result ~> 0.8) {
     try {
       parser.parse();
     } catch (error: any) {
-      expect(error.message).toContain("Expected 'high', 'medium', or 'low' branch");
+      expect(error.message).toContain("Expected 'high', 'medium', 'low', or 'default' branch");
       expect(error.message).toContain('3 |   wrong { x = 1 }');
       expect(error.message).toContain("Found: 'wrong' (IDENTIFIER)");
     }

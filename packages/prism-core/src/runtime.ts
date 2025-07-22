@@ -34,14 +34,14 @@ import {
   ForInLoop,
   WhileLoop,
   DoWhileLoop,
-  BreakStatement as _BreakStatement,
-  ContinueStatement as _ContinueStatement,
   UncertainForLoop,
   UncertainWhileLoop,
   ArrayPattern,
   ObjectPattern,
   RestElement,
   DestructuringAssignment,
+  FunctionDeclaration,
+  ReturnStatement,
 } from './ast';
 import { ConfidenceValue as ConfidenceLib, ConfidenceLevel } from './confidence';
 import { Context, ContextManager } from './context';
@@ -71,6 +71,13 @@ export class LoopControlError extends Error {
   constructor(public type: 'break' | 'continue') {
     super(type);
     this.name = 'LoopControlError';
+  }
+}
+
+export class ReturnException extends Error {
+  constructor(public value?: Value) {
+    super('return');
+    this.name = 'ReturnException';
   }
 }
 
@@ -337,7 +344,7 @@ export class Environment {
 }
 
 export class Interpreter {
-  private environment: Environment;
+  public environment: Environment;
   private contextManager: ContextManager;
   private llmProviders = new Map<string, LLMProvider>();
   private defaultLLMProvider?: string;
@@ -677,6 +684,10 @@ export class Interpreter {
         throw new LoopControlError('break');
       case 'ContinueStatement':
         throw new LoopControlError('continue');
+      case 'FunctionDeclaration':
+        return this.interpretFunctionDeclaration(node as FunctionDeclaration);
+      case 'ReturnStatement':
+        throw await this.interpretReturnStatement(node as ReturnStatement);
       default:
         throw new RuntimeError(`Unknown node type: ${(node as any).type}`, node);
     }
@@ -685,6 +696,14 @@ export class Interpreter {
   private async interpretProgram(program: Program): Promise<Value> {
     let result: Value = new NumberValue(0); // Default return value
 
+    // First pass: hoist function declarations
+    for (const statement of program.statements) {
+      if (statement instanceof FunctionDeclaration) {
+        await this.interpretFunctionDeclaration(statement);
+      }
+    }
+
+    // Second pass: execute all statements
     for (const statement of program.statements) {
       result = await this.interpret(statement);
     }
@@ -1400,7 +1419,13 @@ export class Interpreter {
   private async interpretCallExpression(node: CallExpression): Promise<Value> {
     const callee = await this.interpret(node.callee);
 
-    if (!(callee instanceof FunctionValue)) {
+    // Handle ConfidenceValue wrapping a function
+    let functionValue: FunctionValue;
+    if (callee instanceof ConfidenceValue && callee.value instanceof FunctionValue) {
+      functionValue = callee.value;
+    } else if (callee instanceof FunctionValue) {
+      functionValue = callee;
+    } else {
       throw new RuntimeError(`Cannot call non-function value: ${callee.type}`, node, node.location);
     }
 
@@ -1419,7 +1444,7 @@ export class Interpreter {
       }
     }
 
-    return await callee.value(args);
+    return await functionValue.value(args);
   }
 
   private async interpretTernaryExpression(node: TernaryExpression): Promise<Value> {
@@ -2329,6 +2354,124 @@ export class Interpreter {
     return await this.interpret(node.expression);
   }
 
+  private async interpretFunctionDeclaration(node: FunctionDeclaration): Promise<Value> {
+    // Create a function value that captures the current environment
+    const functionValue = new FunctionValue(
+      node.name,
+      async (args: Value[]): Promise<Value> => {
+        // Create new scope for function execution with captured environment
+        const functionEnv = new Environment(this.environment);
+        const previousEnv = this.environment;
+        this.environment = functionEnv;
+
+        try {
+          // Bind parameters to arguments
+          await this.bindParameters(node.parameters, args, node.restParameter);
+
+          // Execute function body and catch return statements
+          try {
+            let result: Value = new NumberValue(0); // Default return value
+            
+            // Execute all statements in the function body
+            for (const statement of node.body.statements) {
+              result = await this.interpret(statement);
+            }
+            
+            // If no explicit return, return the last expression result or 0
+            return result;
+          } catch (error) {
+            if (error instanceof ReturnException) {
+              // Handle return statement
+              return error.value || new NumberValue(0);
+            }
+            throw error; // Re-throw other errors
+          }
+        } finally {
+          // Restore previous environment
+          this.environment = previousEnv;
+        }
+      },
+      node.parameters.length
+    );
+
+    // Apply confidence annotation if present
+    let result: Value = functionValue;
+    if (node.confidenceAnnotation) {
+      const confidence = await this.interpret(node.confidenceAnnotation);
+      if (confidence instanceof NumberValue) {
+        result = new ConfidenceValue(functionValue, new ConfidenceLib(confidence.value));
+      }
+    }
+
+    // Define the function in the current environment
+    this.environment.define(node.name, result);
+
+    return result;
+  }
+
+  private async interpretReturnStatement(node: ReturnStatement): Promise<ReturnException> {
+    let value: Value = new NumberValue(0); // Default return value
+    
+    if (node.value) {
+      value = await this.interpret(node.value);
+    }
+    
+    return new ReturnException(value);
+  }
+
+  private async bindParameters(
+    parameters: any[], 
+    args: Value[], 
+    restParameter?: string | ArrayPattern | ObjectPattern
+  ): Promise<void> {
+    // Handle rest parameters
+    if (restParameter) {
+      // With rest parameter, we need at least as many args as regular params
+      if (args.length < parameters.length) {
+        throw new RuntimeError(`Function expects at least ${parameters.length} arguments, got ${args.length}`);
+      }
+    } else {
+      // Without rest parameter, exact match required
+      if (args.length !== parameters.length) {
+        throw new RuntimeError(`Function expects ${parameters.length} arguments, got ${args.length}`);
+      }
+    }
+    
+    // Bind regular parameters to arguments
+    for (let i = 0; i < parameters.length; i++) {
+      const param = parameters[i];
+      const arg = args[i];
+      
+      if (typeof param === 'string') {
+        // Simple parameter
+        this.environment.define(param, arg);
+      } else if (param instanceof ArrayPattern || param instanceof ObjectPattern) {
+        // Destructuring parameter
+        if (param instanceof ArrayPattern) {
+          await this.destructureArray(param, arg);
+        } else {
+          await this.destructureObject(param, arg);
+        }
+      }
+    }
+    
+    // Bind rest parameter if present
+    if (restParameter) {
+      const restArgs = args.slice(parameters.length);
+      if (typeof restParameter === 'string') {
+        this.environment.define(restParameter, new ArrayValue(restArgs));
+      } else {
+        // Rest parameter with destructuring pattern
+        const restArray = new ArrayValue(restArgs);
+        if (restParameter instanceof ArrayPattern) {
+          await this.destructureArray(restParameter, restArray);
+        } else {
+          await this.destructureObject(restParameter, restArray);
+        }
+      }
+    }
+  }
+
   private async interpretForLoop(node: ForLoop): Promise<Value> {
     // Create new scope for loop
     const loopEnv = new Environment(this.environment);
@@ -2693,6 +2836,14 @@ export class Runtime {
 
   getDefaultLLMProvider(): string | undefined {
     return this.interpreter.getDefaultLLMProviderName();
+  }
+
+  getVariable(name: string): Value {
+    return this.interpreter.environment.get(name);
+  }
+
+  getAllVariables(): Map<string, Value> {
+    return this.interpreter.environment.getAllVariables();
   }
 }
 

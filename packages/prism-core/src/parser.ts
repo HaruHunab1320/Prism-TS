@@ -52,6 +52,8 @@ import {
   ExportStatement,
   ImportSpecifier,
   ExportSpecifier,
+  FunctionDeclaration,
+  ReturnStatement,
 } from './ast';
 
 export class ParseError extends Error {
@@ -109,6 +111,14 @@ export class Parser {
 
   private statement(): Statement | null {
     try {
+      if (this.match(TokenType.FUNCTION)) {
+        return this.functionDeclaration();
+      }
+      
+      if (this.match(TokenType.RETURN)) {
+        return this.returnStatement();
+      }
+      
       if (this.match(TokenType.AGENTS)) {
         return this.agentsStatement();
       }
@@ -958,6 +968,91 @@ export class Parser {
     return new ExportStatement(undefined, undefined, declaration);
   }
 
+  private functionDeclaration(): FunctionDeclaration {
+    // Parse function name
+    const name = this.consume(TokenType.IDENTIFIER, "Expected function name").value;
+    
+    // Parse parameters
+    this.consume(TokenType.LEFT_PAREN, "Expected '(' after function name");
+    
+    const parameters: LambdaParameter[] = [];
+    let restParameter: string | ArrayPattern | ObjectPattern | undefined = undefined;
+    
+    if (!this.check(TokenType.RIGHT_PAREN)) {
+      do {
+        if (this.match(TokenType.SPREAD)) {
+          // Rest parameter
+          if (this.check(TokenType.IDENTIFIER)) {
+            restParameter = this.advance().value;
+          } else if (this.check(TokenType.LEFT_BRACKET) || this.check(TokenType.LEFT_BRACE)) {
+            // Rest with destructuring pattern
+            const pattern = this.tryParseDestructuringPattern();
+            if (!pattern) {
+              throw new ParseError("Expected parameter pattern after '...'", this.peek(), this.sourceCode);
+            }
+            restParameter = pattern;
+          } else {
+            throw new ParseError("Expected parameter name or pattern after '...'", this.peek(), this.sourceCode);
+          }
+          
+          // Rest parameter must be last
+          if (this.match(TokenType.COMMA)) {
+            throw new ParseError("Rest parameter must be last formal parameter", this.previous(), this.sourceCode);
+          }
+        } else if (this.match(TokenType.IDENTIFIER)) {
+          if (restParameter) {
+            throw new ParseError("Rest parameter must be last formal parameter", this.previous(), this.sourceCode);
+          }
+          parameters.push(this.previous().value);
+        } else if (this.check(TokenType.LEFT_BRACKET) || this.check(TokenType.LEFT_BRACE)) {
+          // Destructuring pattern parameter
+          if (restParameter) {
+            throw new ParseError("Rest parameter must be last formal parameter", this.previous(), this.sourceCode);
+          }
+          const pattern = this.tryParseDestructuringPattern();
+          if (!pattern) {
+            throw new ParseError("Expected parameter pattern", this.peek(), this.sourceCode);
+          }
+          parameters.push(pattern);
+        } else {
+          throw new ParseError("Expected parameter name or pattern", this.peek(), this.sourceCode);
+        }
+      } while (this.match(TokenType.COMMA));
+    }
+    
+    this.consume(TokenType.RIGHT_PAREN, "Expected ')' after parameters");
+    
+    // Parse optional confidence annotation
+    let confidenceAnnotation: Expression | undefined;
+    if (this.match(TokenType.CONFIDENCE_ARROW)) {
+      const confExpr = this.expression();
+      if (!confExpr) {
+        throw new ParseError("Expected confidence expression after '~>'", this.previous(), this.sourceCode);
+      }
+      confidenceAnnotation = confExpr;
+    }
+    
+    // Parse function body (must be a block)
+    this.consume(TokenType.LEFT_BRACE, "Expected '{' before function body");
+    const body = this.blockStatement();
+    
+    return new FunctionDeclaration(name, parameters, body, restParameter, confidenceAnnotation);
+  }
+
+  private returnStatement(): ReturnStatement {
+    let value: Expression | undefined;
+    
+    // Check if there's a return value (not followed by semicolon or EOF)
+    if (!this.check(TokenType.SEMICOLON) && !this.isAtEnd() && 
+        !this.check(TokenType.RIGHT_BRACE)) {
+      value = this.expression() || undefined;
+    }
+    
+    this.match(TokenType.SEMICOLON); // Optional semicolon
+    
+    return new ReturnStatement(value);
+  }
+
   private expression(): Expression | null {
     return this.pipeline();
   }
@@ -1002,7 +1097,7 @@ export class Parser {
   }
 
   private ternary(): Expression | null {
-    let expr = this.confidenceExpression();
+    const expr = this.confidenceExpression();
     
     if (this.match(TokenType.QUESTION)) {
       const trueBranch = this.expression();
@@ -1555,7 +1650,7 @@ export class Parser {
         // Find the end of interpolation
         current += 2; // Skip ${
         let braceCount = 1;
-        let exprStart = current;
+        const exprStart = current;
         
         let inString = false;
         let stringDelimiter = '';
