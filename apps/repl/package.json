@@ -1,6 +1,6 @@
 {
   "name": "@prism-lang/repl",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Interactive REPL for Prism language",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
