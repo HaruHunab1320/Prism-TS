@@ -12,12 +12,10 @@
     "typecheck": "turbo run typecheck",
     "dev": "turbo run dev --filter=@prism-lang/cli",
     "clean": "turbo run clean",
-    "changeset": "changeset",
-    "version": "changeset version",
     "release": "turbo run build && changeset publish",
     "release:check": "changeset status --verbose",
+    "version": "changeset version",
     "release:create": "changeset",
-    "release:version": "changeset version && git add . && git commit -m 'Version packages'",
     "release:publish": "pnpm build && changeset publish && git push --follow-tags"
   },
   "keywords": [

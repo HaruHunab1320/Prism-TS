@@ -1,5 +1,12 @@
 # @prism-lang/confidence
 
+## 1.2.3
+
+### Patch Changes
+
+- Updated dependencies [f113d24]
+  - @prism-lang/core@1.3.0
+
 ## 1.2.2
 
 ### Patch Changes
