@@ -247,6 +247,47 @@ pnpm test
 pnpm dev
 ```
 
+### 📦 Publishing Packages
+
+We use [changesets](https://github.com/changesets/changesets) to manage versioning and publishing. This ensures all packages stay in sync and peer dependencies are correctly managed.
+
+#### Release Workflow
+
+1. **Make your changes** and commit them
+2. **Create a changeset** to describe your changes:
+   ```bash
+   pnpm changeset
+   # or
+   pnpm release:create
+   ```
+   - Select which packages changed
+   - Choose the bump type (patch/minor/major)
+   - Write a description for the changelog
+
+3. **Check what will be released**:
+   ```bash
+   pnpm release:check
+   ```
+
+4. **Version the packages** (updates package.json files and changelogs):
+   ```bash
+   pnpm release:version
+   ```
+   This automatically commits the version changes.
+
+5. **Publish to npm**:
+   ```bash
+   pnpm release:publish
+   ```
+   This builds all packages, publishes them, and pushes git tags.
+
+#### Important Notes
+
+- **Never use** `pnpm publish` directly - it won't handle workspace protocols correctly
+- All @prism-lang/* packages use **fixed versioning** - they move together
+- Changesets automatically handles peer dependency version updates
+- The `workspace:*` protocol is used for local development and automatically replaced during publishing
+
 ### For Users vs Contributors
 
 **Users**: Install our packages with any package manager (npm, yarn, pnpm)
