@@ -178,6 +178,85 @@ option3 = calculateOption3() ~> confidence3
 bestOption = option1 ~||> option2 ~||> option3
 ```
 
+### Confident Ternary (`~?`)
+
+The confident ternary operator works like the regular ternary but propagates confidence from both the condition and the selected branch:
+
+```prism
+// Regular ternary - ignores confidence
+condition = true ~> 0.8
+regular = condition ? "yes" : "no"  // Result: "yes" (no confidence)
+
+// Confident ternary - propagates confidence
+confident = condition ~? "yes" : "no"  // Result: "yes" ~> 0.8
+
+// Combines confidences from condition and branch
+condition = true ~> 0.8
+yesOption = "YES" ~> 0.9
+noOption = "NO" ~> 0.7
+result = condition ~? yesOption : noOption  // Result: "YES" ~> 0.72 (0.8 * 0.9)
+
+// Nested confident ternary
+a = true ~> 0.9
+b = false ~> 0.8
+result = a ~? (b ~? "both" : "just a") : "neither"
+// Result: "just a" ~> 0.72
+```
+
+### Confident Assignment Operators
+
+Confident assignment operators provide syntactic sugar for updating variables while preserving confidence:
+
+#### Addition Assignment (~+=)
+```prism
+// Regular += with confident value
+balance = 1000 ~> 0.95
+balance += 100  // 1100 ~> 0.95 (keeps original confidence)
+
+// Confident += combines confidences
+balance = 1000 ~> 0.95
+deposit = 100 ~> 0.8
+balance ~+= deposit  // 1100 ~> 0.8 (min confidence)
+```
+
+#### Subtraction Assignment (~-=)
+```prism
+inventory = 500 ~> 0.9
+withdrawal = 50 ~> 0.85
+inventory ~-= withdrawal  // 450 ~> 0.85
+```
+
+#### Multiplication Assignment (~*=)
+```prism
+price = 100 ~> 0.9
+taxRate = 1.2 ~> 0.99
+price ~*= taxRate  // 120 ~> 0.9
+```
+
+#### Division Assignment (~/=)
+```prism
+total = 1000 ~> 0.9
+divisor = 4 ~> 0.95
+total ~/= divisor  // 250 ~> 0.9
+```
+
+These operators are equivalent to:
+- `x ~+= y` is the same as `x = x ~+ y`
+- `x ~-= y` is the same as `x = x ~- y`
+- `x ~*= y` is the same as `x = x ~* y`
+- `x ~/= y` is the same as `x = x ~/ y`
+
+They're particularly useful for accumulating values with confidence tracking:
+
+```prism
+// Running total with confidence tracking
+total = 0 ~> 1.0
+for measurement in measurements {
+  total ~+= measurement  // Confidence degrades with each addition
+}
+// Final total has confidence of the least confident measurement
+```
+
 ### Threshold Gate (`~@>`)
 
 The threshold gate operator passes values only if they meet a confidence threshold:

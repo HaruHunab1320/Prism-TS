@@ -473,6 +473,14 @@ export class Linter implements PrismLinter {
         // Literals don't need further processing
         break;
 
+      case 'TernaryExpression':
+      case 'ConfidentTernaryExpression':
+        // Lint all three branches
+        if (n.condition) this.lintNode(n.condition, context);
+        if (n.trueBranch) this.lintNode(n.trueBranch, context);
+        if (n.falseBranch) this.lintNode(n.falseBranch, context);
+        break;
+
       // Handle other node types gracefully
       default:
         // For unhandled node types, try to recursively lint any child nodes
@@ -760,6 +768,13 @@ export class Linter implements PrismLinter {
         return node.callee && node.callee.type === 'IdentifierExpression' && node.callee.name === 'llm';
       case 'IdentifierExpression':
         return context?.confidenceVars?.has(node.name) || false;
+      case 'ConfidentTernaryExpression':
+        return true; // Confident ternary always uses/propagates confidence
+      case 'TernaryExpression':
+        // Regular ternary uses confidence if any part has confidence
+        return this.nodeUsesConfidence(node.condition, context) ||
+               this.nodeUsesConfidence(node.trueBranch, context) ||
+               this.nodeUsesConfidence(node.falseBranch, context);
       default:
         return false;
     }
@@ -942,6 +957,13 @@ export class Linter implements PrismLinter {
       case 'BinaryExpression':
         return node.operator === '@' || node.operator.startsWith('~') || 
                this.valueHasConfidence(node.left) || this.valueHasConfidence(node.right);
+      case 'ConfidentTernaryExpression':
+        return true; // Confident ternary always propagates confidence
+      case 'TernaryExpression':
+        // Regular ternary can propagate confidence if condition or branches have confidence
+        return this.valueHasConfidence(node.condition) || 
+               this.valueHasConfidence(node.trueBranch) || 
+               this.valueHasConfidence(node.falseBranch);
       default:
         return false;
     }

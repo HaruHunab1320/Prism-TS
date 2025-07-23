@@ -202,8 +202,14 @@ export class Validator implements PrismValidator {
 
       case 'TernaryExpression':
         this.validateNode(n.condition, errors, warnings);
-        this.validateNode(n.thenExpression, errors, warnings);
-        this.validateNode(n.elseExpression, errors, warnings);
+        this.validateNode(n.trueBranch, errors, warnings);
+        this.validateNode(n.falseBranch, errors, warnings);
+        break;
+
+      case 'ConfidentTernaryExpression':
+        this.validateNode(n.condition, errors, warnings);
+        this.validateNode(n.trueBranch, errors, warnings);
+        this.validateNode(n.falseBranch, errors, warnings);
         break;
 
       case 'SpreadElement':

@@ -205,4 +205,103 @@ describe('Lambda Expressions', () => {
       expect((array.elements[2] as NumberValue).value).toBe(36);
     });
   });
+
+  describe('Multi-parameter lambda expressions', () => {
+    test('three parameter lambda', async () => {
+      const source = `
+        multiply3 = (a, b, c) => a * b * c
+        multiply3(2, 3, 4)
+      `;
+      const tokens = tokenize(source);
+      const parser = new Parser(tokens, source);
+      const ast = parser.parse();
+      const result = await runtime.execute(ast);
+      
+      expect(result).toBeInstanceOf(NumberValue);
+      expect((result as NumberValue).value).toBe(24);
+    });
+
+    test('lambda with string parameters', async () => {
+      const source = `
+        greet = (first, last, title) => title + " " + first + " " + last
+        greet("John", "Doe", "Dr.")
+      `;
+      const tokens = tokenize(source);
+      const parser = new Parser(tokens, source);
+      const ast = parser.parse();
+      const result = await runtime.execute(ast);
+      
+      expect(result.value).toBe("Dr. John Doe");
+    });
+
+    test('array.filter with multi-param predicate', async () => {
+      const source = `
+        pairs = [[1, 2], [3, 4], [5, 6]]
+        sumGreaterThan5 = filter(pairs, (pair) => {
+          sum = pair[0] + pair[1]
+          sum > 5
+        })
+        sumGreaterThan5
+      `;
+      const tokens = tokenize(source);
+      const parser = new Parser(tokens, source);
+      const ast = parser.parse();
+      const result = await runtime.execute(ast);
+      
+      expect(result).toBeInstanceOf(ArrayValue);
+      const array = result as ArrayValue;
+      expect(array.elements).toHaveLength(2);
+    });
+
+    test('reduce with accumulator and value', async () => {
+      const source = `
+        numbers = [1, 2, 3, 4, 5]
+        product = reduce(numbers, (acc, val) => acc * val, 1)
+        product
+      `;
+      const tokens = tokenize(source);
+      const parser = new Parser(tokens, source);
+      const ast = parser.parse();
+      const result = await runtime.execute(ast);
+      
+      expect(result).toBeInstanceOf(NumberValue);
+      expect((result as NumberValue).value).toBe(120);
+    });
+
+    test('nested multi-param lambdas', async () => {
+      const source = `
+        makeCalculator = (op) => (a, b) => op == "+" ? a + b : a * b
+        adder = makeCalculator("+")
+        result = adder(3, 4)
+        result
+      `;
+      const tokens = tokenize(source);
+      const parser = new Parser(tokens, source);
+      const ast = parser.parse();
+      const result = await runtime.execute(ast);
+      
+      expect(result).toBeInstanceOf(NumberValue);
+      expect((result as NumberValue).value).toBe(7);
+    });
+
+    test('multi-param lambda with confidence', async () => {
+      const source = `
+        confidenceAdd = (a, b) => (a ~+ b) ~> 0.95
+        result = confidenceAdd(10 ~> 0.8, 20 ~> 0.9)
+        result
+      `;
+      const tokens = tokenize(source);
+      const parser = new Parser(tokens, source);
+      const ast = parser.parse();
+      const result = await runtime.execute(ast);
+      
+      expect(result.type).toBe('confident');
+      const confResult = result as any;
+      // The result is a ConfidenceValue containing another ConfidenceValue
+      expect(confResult.value.type).toBe('confident');
+      expect(confResult.value.value.type).toBe('number');
+      expect(confResult.value.value.value).toBe(30);
+      expect(confResult.confidence._value).toBeCloseTo(0.95);
+    });
+  });
 });

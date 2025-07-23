@@ -17,6 +17,7 @@ export type NodeType =
   | 'UnaryExpression'
   | 'CallExpression'
   | 'TernaryExpression'
+  | 'ConfidentTernaryExpression'
   | 'LambdaExpression'
   | 'SpreadElement'
   | 'PlaceholderExpression'
@@ -176,6 +177,18 @@ export class CallExpression extends Expression {
 
 export class TernaryExpression extends Expression {
   type: NodeType = 'TernaryExpression';
+  
+  constructor(
+    public condition: Expression,
+    public trueBranch: Expression,
+    public falseBranch: Expression
+  ) {
+    super();
+  }
+}
+
+export class ConfidentTernaryExpression extends Expression {
+  type: NodeType = 'ConfidentTernaryExpression';
   
   constructor(
     public condition: Expression,

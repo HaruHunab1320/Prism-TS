@@ -13,6 +13,7 @@ import {
   UnaryExpression,
   CallExpression,
   TernaryExpression,
+  ConfidentTernaryExpression,
   ArrayLiteral,
   ObjectLiteral,
   PropertyAccess,
@@ -44,6 +45,8 @@ import {
   FunctionDeclaration,
   ReturnStatement,
   VariableDeclaration,
+  ImportStatement,
+  ExportStatement,
 } from './ast';
 import { ConfidenceValue as ConfidenceLib, ConfidenceLevel } from './confidence';
 import { Context, ContextManager } from './context';
@@ -1089,6 +1092,8 @@ export class Interpreter {
         return this.interpretCallExpression(node as CallExpression);
       case 'TernaryExpression':
         return this.interpretTernaryExpression(node as TernaryExpression);
+      case 'ConfidentTernaryExpression':
+        return this.interpretConfidentTernaryExpression(node as ConfidentTernaryExpression);
       case 'ArrayLiteral':
         return this.interpretArrayLiteral(node as ArrayLiteral);
       case 'ObjectLiteral':
@@ -1147,6 +1152,10 @@ export class Interpreter {
         throw await this.interpretReturnStatement(node as ReturnStatement);
       case 'VariableDeclaration':
         return this.interpretVariableDeclaration(node as VariableDeclaration);
+      case 'ImportStatement':
+        return this.interpretImportStatement(node as ImportStatement);
+      case 'ExportStatement':
+        return this.interpretExportStatement(node as ExportStatement);
       default:
         throw new RuntimeError(`Unknown node type: ${(node as any).type}`, node);
     }
@@ -1155,14 +1164,21 @@ export class Interpreter {
   private async interpretProgram(program: Program): Promise<Value> {
     let result: Value = new NumberValue(0); // Default return value
 
-    // First pass: hoist function declarations
+    // First pass: process imports (they need to be available before any code runs)
+    for (const statement of program.statements) {
+      if (statement.type === 'ImportStatement') {
+        await this.interpret(statement);
+      }
+    }
+
+    // Second pass: hoist function declarations
     for (const statement of program.statements) {
       if (statement instanceof FunctionDeclaration) {
         await this.interpretFunctionDeclaration(statement);
       }
     }
 
-    // Second pass: execute all statements
+    // Third pass: execute all statements
     for (const statement of program.statements) {
       result = await this.interpret(statement);
     }
@@ -1937,6 +1953,40 @@ export class Interpreter {
     } else {
       return await this.interpret(node.falseBranch);
     }
+  }
+
+  private async interpretConfidentTernaryExpression(node: ConfidentTernaryExpression): Promise<Value> {
+    const condition = await this.interpret(node.condition);
+    
+    // Extract confidence from condition
+    let conditionConfidence = new ConfidenceLib(1.0);
+    let conditionValue = condition;
+    
+    if (condition instanceof ConfidenceValue) {
+      conditionConfidence = condition.confidence;
+      conditionValue = condition.value;
+    }
+    
+    // Select branch based on condition
+    const selectedBranch = conditionValue.isTruthy() ? node.trueBranch : node.falseBranch;
+    const branchResult = await this.interpret(selectedBranch);
+    
+    // Extract confidence from branch result
+    let branchConfidence = new ConfidenceLib(1.0);
+    let branchValue = branchResult;
+    
+    if (branchResult instanceof ConfidenceValue) {
+      branchConfidence = branchResult.confidence;
+      branchValue = branchResult.value;
+    }
+    
+    // Combine confidences (multiply them)
+    const combinedConfidence = new ConfidenceLib(
+      conditionConfidence.value * branchConfidence.value
+    );
+    
+    // Return result with combined confidence
+    return new ConfidenceValue(branchValue, combinedConfidence);
   }
 
   private async interpretArrayLiteral(node: ArrayLiteral): Promise<Value> {
@@ -2994,6 +3044,35 @@ export class Interpreter {
     return new NumberValue(0); // Variable declarations return 0
   }
 
+  private async interpretImportStatement(node: ImportStatement): Promise<Value> {
+    // Check if module system is available
+    const moduleSystem = (this as any).__moduleSystem;
+    if (!moduleSystem) {
+      throw new RuntimeError('Import statements require a module system', node);
+    }
+    
+    // Delegate to module system, passing the interpreter (this)
+    await moduleSystem.executeImport(node, this);
+    
+    return new NumberValue(0); // Import statements return 0
+  }
+
+  private async interpretExportStatement(node: ExportStatement): Promise<Value> {
+    // Check if module system is available
+    const moduleSystem = (this as any).__moduleSystem;
+    if (!moduleSystem) {
+      throw new RuntimeError('Export statements require a module system', node);
+    }
+    
+    // Handle direct export assignments (export result = calculate())
+    // This is already handled by the module system, so we can remove this duplicate handling
+    
+    // Delegate to module system for other export types
+    await moduleSystem.executeExport(node, this);
+    
+    return new NumberValue(0); // Export statements return 0
+  }
+
 
   private async bindParameters(
     parameters: any[], 
@@ -3479,6 +3558,26 @@ export class Runtime {
 
   getAllVariables(): Map<string, Value> {
     return this.interpreter.environment.getAllVariables();
+  }
+
+  defineVariable(name: string, value: Value): void {
+    this.interpreter.environment.define(name, value);
+  }
+
+  createObjectValue(properties: any): Value {
+    const map = new Map<string, Value>();
+    for (const [key, val] of Object.entries(properties)) {
+      map.set(key, val as Value);
+    }
+    return new ObjectValue(map);
+  }
+
+  async interpret(node: ASTNode): Promise<Value> {
+    return await this.interpreter.interpret(node);
+  }
+
+  get environment(): Environment {
+    return this.interpreter.environment;
   }
 }
 

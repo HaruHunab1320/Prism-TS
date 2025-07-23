@@ -73,6 +73,13 @@ count -= 1    // count = count - 1
 count *= 2    // count = count * 2
 count /= 2    // count = count / 2
 count %= 3    // count = count % 3
+
+// Confident compound assignments (preserve confidence)
+balance = 1000 ~> 0.9
+balance ~+= 100 ~> 0.8   // balance = balance ~+ (100 ~> 0.8)
+balance ~-= 50 ~> 0.95   // balance = balance ~- (50 ~> 0.95)
+balance ~*= 1.1 ~> 0.85  // balance = balance ~* (1.1 ~> 0.85)
+balance ~/= 2 ~> 0.9     // balance = balance ~/ (2 ~> 0.9)
 ```
 
 ### Declaration Keywords (const/let)
@@ -206,6 +213,9 @@ if score >= 90 {
 
 // Ternary operator
 result = condition ? valueIfTrue : valueIfFalse
+
+// Confident ternary operator (propagates confidence)
+confident = condition ~? valueIfTrue : valueIfFalse
 ```
 
 ### Loops
@@ -308,9 +318,26 @@ double = x => x * 2
 
 // Multiple parameters
 add = (a, b) => a + b
+multiply = (x, y, z) => x * y * z
+greet = (first, last) => "Hello, " + first + " " + last + "!"
 
 // No parameters
 getRandom = () => Math.random()
+
+// Multi-parameter lambdas with array methods
+numbers = [1, 2, 3, 4, 5]
+summed = reduce(numbers, (acc, val) => acc + val, 0)
+product = reduce(numbers, (acc, val) => acc * val, 1)
+
+// Nested multi-parameter lambdas
+makeCalculator = (op) => (a, b) => {
+  if (op == "+") { return a + b }
+  if (op == "*") { return a * b }
+  if (op == "-") { return a - b }
+  return a / b
+}
+adder = makeCalculator("+")
+result = adder(10, 5)  // 15
 
 // Expression-only lambda (traditional)
 square = x => x * x

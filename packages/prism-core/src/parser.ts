@@ -14,6 +14,7 @@ import {
   UnaryExpression,
   CallExpression,
   TernaryExpression,
+  ConfidentTernaryExpression,
   ArrayLiteral,
   ObjectLiteral,
   PropertyAccess,
@@ -510,6 +511,30 @@ export class Parser {
         // x %= y becomes x = x % y
         const right = this.expression();
         const value = new BinaryExpression('%', expr, right!);
+        this.match(TokenType.SEMICOLON);
+        return new AssignmentStatement(expr.name, value);
+      } else if (this.match(TokenType.CONFIDENCE_PLUS_EQUAL)) {
+        // x ~+= y becomes x = x ~+ y
+        const right = this.expression();
+        const value = new BinaryExpression('~+', expr, right!);
+        this.match(TokenType.SEMICOLON);
+        return new AssignmentStatement(expr.name, value);
+      } else if (this.match(TokenType.CONFIDENCE_MINUS_EQUAL)) {
+        // x ~-= y becomes x = x ~- y
+        const right = this.expression();
+        const value = new BinaryExpression('~-', expr, right!);
+        this.match(TokenType.SEMICOLON);
+        return new AssignmentStatement(expr.name, value);
+      } else if (this.match(TokenType.CONFIDENCE_STAR_EQUAL)) {
+        // x ~*= y becomes x = x ~* y
+        const right = this.expression();
+        const value = new BinaryExpression('~*', expr, right!);
+        this.match(TokenType.SEMICOLON);
+        return new AssignmentStatement(expr.name, value);
+      } else if (this.match(TokenType.CONFIDENCE_SLASH_EQUAL)) {
+        // x ~/= y becomes x = x ~/ y
+        const right = this.expression();
+        const value = new BinaryExpression('~/', expr, right!);
         this.match(TokenType.SEMICOLON);
         return new AssignmentStatement(expr.name, value);
       }
@@ -1148,6 +1173,24 @@ export class Parser {
 
   private ternary(): Expression | null {
     const expr = this.confidenceExpression();
+    
+    if (this.match(TokenType.CONFIDENCE_QUESTION)) {
+      const trueBranch = this.expression();
+      if (!trueBranch) {
+        throw new ParseError("Expected expression after '~?'", this.previous(), this.sourceCode);
+      }
+      
+      if (!this.match(TokenType.COLON)) {
+        throw new ParseError("Expected ':' after true branch of confident ternary operator", this.peek(), this.sourceCode);
+      }
+      
+      const falseBranch = this.expression();
+      if (!falseBranch) {
+        throw new ParseError("Expected expression after ':'", this.previous(), this.sourceCode);
+      }
+      
+      return new ConfidentTernaryExpression(expr!, trueBranch, falseBranch);
+    }
     
     if (this.match(TokenType.QUESTION)) {
       const trueBranch = this.expression();

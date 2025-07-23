@@ -36,3 +36,6 @@ export * from './helpers';
 
 // LLM types (to avoid hard dependency on @prism-lang/llm)
 export * from './llm-types';
+
+// Module system exports
+export { ModuleSystem, Module, ModuleExports } from './module-system';

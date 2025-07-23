@@ -24,8 +24,8 @@ describe('New Features Validation Infrastructure', () => {
     });
 
     it('should have methods for validating import/export statements', () => {
-      expect(typeof (validator as any).validateImportDeclaration).toBe('function');
-      expect(typeof (validator as any).validateExportDeclaration).toBe('function');
+      expect(typeof (validator as any).validateImportStatement).toBe('function');
+      expect(typeof (validator as any).validateExportStatement).toBe('function');
     });
   });
 

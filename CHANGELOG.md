@@ -2,7 +2,63 @@
 
 All notable changes to @prism-lang/core will be documented in this file.
 
-## [1.2.1] - 2025-07-23
+## [Unreleased]
+
+### Added
+- **Module System Runtime Support** - Complete runtime implementation for the module system introduced in v1.0.26
+  - Import statements: default, named, namespace, and renamed imports
+  - Export statements: default, named, re-exports, and direct exports
+  - Module loading infrastructure with caching and circular dependency detection
+  - Path resolution for relative imports
+  - Import hoisting for proper execution order
+  - Module isolation with separate environments
+  - Full confidence preservation through module boundaries
+  - Partial circular dependency support (functions can reference each other)
+  - Comprehensive test coverage for all import/export patterns
+
+- **Confident Ternary Operator (`~?`)** - Propagates confidence through conditional expressions
+  - Syntax: `condition ~? trueBranch : falseBranch`
+  - Combines confidence from both condition and selected branch
+  - Multiplies confidences for full propagation
+  - Example: `(true ~> 0.8) ~? ("yes" ~> 0.9) : "no"` returns `"yes" ~> 0.72`
+  - Differentiates from regular ternary which ignores confidence
+
+- **Confident Assignment Operators** - Syntactic sugar for confident arithmetic with assignment
+  - `~+=` - Confident addition assignment: `x ~+= y` same as `x = x ~+ y`
+  - `~-=` - Confident subtraction assignment: `x ~-= y` same as `x = x ~- y`
+  - `~*=` - Confident multiplication assignment: `x ~*= y` same as `x = x ~* y`
+  - `~/=` - Confident division assignment: `x ~/= y` same as `x = x ~/ y`
+  - Preserves and combines confidence values during assignment
+  - Useful for accumulating values with confidence tracking
+
+- **Multi-Parameter Arrow Functions** - Already supported, now with comprehensive tests
+  - Support for 0 to N parameters: `(a, b, c) => a + b + c`
+  - Works with array methods: `reduce((acc, val) => acc + val, 0)`
+  - Nested multi-param lambdas: `op => (a, b) => op == "+" ? a + b : a * b`
+  - Full documentation and test coverage
+
+### Improved
+- **Documentation** - Added comprehensive examples for lambda functions and confident operators
+- **Test Coverage** - Added extensive tests for multi-parameter lambdas, confident ternary, and confident assignment operators
+- **Validator Updates** - Added support for confident ternary expression in linter
+
+### Example
+```prism
+// Module system
+import {sum, PI} from "./math.prism"
+export result = sum(10, 20) * PI
+
+// Confident ternary operator
+message = condition ~? "Welcome!" : "Please verify"
+
+// Confident assignment operators
+total ~+= reading  // Accumulate with confidence
+
+// Multi-parameter lambdas
+sum = reduce(numbers, (acc, val) => acc + val, 0)
+```
+
+## [1.2.1] - 2025-01-07
 
 ### Added
 - **Async/Await Support** - Full asynchronous programming capabilities

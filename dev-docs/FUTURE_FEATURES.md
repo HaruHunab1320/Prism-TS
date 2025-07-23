@@ -26,7 +26,7 @@ Benefits:
 - Exhaustiveness checking potential
 - Natural fit with confidence values
 
-### 2. Async/Await Support
+### 2. Async/Await Support ✅ **IMPLEMENTED**
 **Priority:** HIGH  
 **Complexity:** Very High  
 **Value:** Modern async handling for LLM operations
@@ -47,6 +47,8 @@ async function analyzeData(data) {
 analysis = await analyzeData(input)
 ```
 
+*Implemented in v1.2.1 - Full async/await support with Promise built-ins*
+
 ### 3. Import/Export System ✅ **IMPLEMENTED**
 **Priority:** HIGH  
 **Complexity:** High  
@@ -65,7 +67,7 @@ import * as math from "./math.prism"
 result = sum(10, 20) * PI
 ```
 
-*Note: Runtime module loading still pending implementation*
+*Implemented in v1.4.0 - Full ES module-style imports/exports with runtime support and partial circular dependency handling*
 
 ### 4. Standard Named Functions ✅ **IMPLEMENTED**
 **Priority:** HIGH  
@@ -120,7 +122,53 @@ riskProcessor = (items) => {
 }
 ```
 
-### 6. Variable Declaration Keywords ✅ **IMPLEMENTED**
+### 6. Multi-Parameter Arrow Functions ✅ **IMPLEMENTED**
+**Priority:** HIGH  
+**Complexity:** Low  
+**Value:** Essential for functional programming patterns
+
+```prism
+// Basic multi-parameter arrows
+add = (a, b) => a + b
+multiply = (x, y, z) => x * y * z
+
+// With destructuring
+processUser = ({name, age}, options) => {
+  // Process user with options
+}
+
+// With confidence
+confidenceSum = (a, b) => (a ~+ b) ~> 0.95
+
+// In higher-order functions
+data.reduce((acc, val) => acc + val, 0)
+items.sort((a, b) => a.score - b.score)
+
+// With block statements
+complexCalc = (x, y, threshold) => {
+  result = x * y
+  uncertain if (result > threshold) {
+    high { return result }
+    low { return threshold }
+  }
+}
+
+// Arrow functions in map/filter/reduce
+pairs
+  .map((x, y) => x + y)
+  .filter((sum, index) => index % 2 === 0)
+  .reduce((acc, val, idx) => acc + val * idx, 0)
+```
+
+Benefits:
+- Enables standard functional programming patterns
+- Consistent with JavaScript/TypeScript syntax
+- Required for reduce, sort, and other multi-param callbacks
+- Natural extension of existing single-param arrows
+
+*Implemented in v1.3.0 - Full support for 0 to N parameters in arrow functions*
+
+### 7. Variable Declaration Keywords ✅ **IMPLEMENTED**
 **Priority:** HIGH  
 **Complexity:** Low  
 **Value:** Explicit mutability and scoping
@@ -151,7 +199,7 @@ const analysis = llm("Analyze data") ~> 0.9
 
 ## 🔧 Medium Priority Features
 
-### 7. Built-in Print/Console Functions
+### 8. Built-in Print/Console Functions
 **Priority:** MEDIUM  
 **Complexity:** Low  
 **Value:** Debugging and output capabilities
@@ -175,7 +223,7 @@ uncertain if (success) {
 }
 ```
 
-### 8. Parameterized Primitives
+### 9. Parameterized Primitives
 **Priority:** MEDIUM  
 **Complexity:** Medium  
 **Value:** Flexible built-in operations
@@ -201,7 +249,7 @@ isEqual = fuzzyEquals(threshold: 0.9)
 ascending = sortBy(key: "score", direction: "asc")
 ```
 
-### 9. Array Pipeline Operations
+### 10. Array Pipeline Operations
 **Priority:** MEDIUM  
 **Complexity:** Medium  
 **Value:** Functional array processing with confidence
@@ -231,7 +279,7 @@ total = values
   |> confidenceReduce((acc, val) => acc ~+ val, 0 ~> 1.0)
 ```
 
-### 10. Custom Operators
+### 11. Custom Operators
 **Priority:** MEDIUM  
 **Complexity:** Medium  
 **Value:** Domain-specific abstractions
@@ -251,7 +299,7 @@ comparison = 10 <=> 20  // -1
 result = data ~=> processHighConfidence
 ```
 
-### 5. Decorators/Attributes
+### 12. Decorators/Attributes
 **Priority:** MEDIUM  
 **Complexity:** Medium  
 **Value:** Metadata and behavior modification
@@ -267,7 +315,51 @@ function expensiveComputation(input) {
 criticalDecision = analyzeRisk(data)
 ```
 
-### 6. Range Operator
+### 13. Confident Operators for Standard Operations
+**Priority:** MEDIUM  
+**Complexity:** Medium  
+**Value:** Consistent confidence propagation across all operations
+
+#### ✅ Implemented Confident Operators (v1.3.0)
+
+```prism
+// Confident ternary operator
+result = condition ~? valueA : valueB
+// Propagates confidence from condition AND selected value
+
+// Confident assignment operators
+total ~+= uncertainValue  // Equivalent to: total = total ~+ uncertainValue
+count ~-= adjustment     // Equivalent to: count = count ~- adjustment
+product ~*= factor       // Equivalent to: product = product ~* factor
+average ~/= divisor      // Equivalent to: average = average ~/ divisor
+```
+
+#### 🚧 Not Yet Implemented
+
+```prism
+// Confident membership operators
+if ("key" ~in uncertainObject) { 
+  // Confidence based on object's confidence
+}
+if (value ~instanceof MyClass) {
+  // Confidence check for type membership
+}
+
+// Confident spread operator
+merged = [~...uncertainArray, 4, 5]  // Explicitly propagates confidence
+combined = {~...uncertainObject, newKey: value}
+
+// Enhanced typeof with confidence
+type = ~typeof uncertainValue  // Returns type with value's confidence
+```
+
+Benefits:
+- Complete confidence propagation story
+- Consistent `~` prefix pattern
+- Intuitive for existing Prism users
+- Enables confidence-aware algorithms
+
+### 14. Range Operator
 **Priority:** MEDIUM  
 **Complexity:** Low  
 **Value:** Sequence generation and iteration
@@ -285,7 +377,7 @@ for i in 1..100 {
 confidences = (0.1..1.0 step 0.1).map(c => value ~> c)
 ```
 
-### 7. Generators and Iterators
+### 15. Generators and Iterators
 **Priority:** MEDIUM  
 **Complexity:** High  
 **Value:** Memory-efficient sequences
@@ -303,7 +395,7 @@ function* fibonacci() {
 fibs = fibonacci().take(10).toArray()
 ```
 
-### 8. Syntax Highlighting Theme Support
+### 16. Syntax Highlighting Theme Support
 **Priority:** MEDIUM  
 **Complexity:** Medium-High  
 **Value:** Enhanced code readability and developer experience
@@ -343,7 +435,7 @@ Implementation approach:
 - Use distinct color families for confidence operators
 - Provide semantic token support for LSP integration
 
-### 9. Code Formatter (Prettier-style)
+### 17. Code Formatter (Prettier-style)
 **Priority:** MEDIUM  
 **Complexity:** High  
 **Value:** Consistent code style across projects
@@ -400,7 +492,7 @@ Implementation timeline: 4-6 weeks for production-ready formatter
 
 ## 🎨 Low Priority Features
 
-### 10. Set and Map Data Types
+### 18. Set and Map Data Types
 **Priority:** LOW  
 **Complexity:** Medium  
 **Value:** Additional data structures
@@ -420,7 +512,7 @@ userScores = Map([
 score = userScores.get("alice")  // 95 ~> 0.9
 ```
 
-### 11. Tagged Template Literals
+### 19. Tagged Template Literals
 **Priority:** LOW  
 **Complexity:** Medium  
 **Value:** Domain-specific string processing
@@ -440,7 +532,7 @@ report = confident`
 `
 ```
 
-### 12. Algebraic Effects
+### 20. Algebraic Effects
 **Priority:** LOW  
 **Complexity:** Very High  
 **Value:** Advanced control flow
@@ -472,7 +564,7 @@ handle process(myData) {
 }
 ```
 
-### 13. Partial Application and Currying
+### 21. Partial Application and Currying
 **Priority:** LOW  
 **Complexity:** Medium  
 **Value:** Functional programming patterns
@@ -544,12 +636,15 @@ When implementing new features, consider:
 ## 🗓️ Rough Roadmap
 
 ### Phase 1 (Next 3-6 months)
-- **Import/Export System** (✅ Parse/AST complete, runtime loading pending)
+- **Import/Export System** (✅ Complete with runtime support and circular dependency handling)
 - **Standard Named Functions** (✅ Complete with hoisting and closures)
 - **Variable Declaration Keywords** (✅ Complete with const/let and block scoping)
 - **Block-Statement Lambda Functions** (✅ Complete with return statements and full compatibility)
+- **Async/Await** (✅ Complete with Promise built-ins and confidence propagation)
+- **Multi-Parameter Arrow Functions** (✅ Complete with 0 to N parameters)
+- **Confident Ternary Operator** (✅ Complete with confidence propagation)
+- **Confident Assignment Operators** (✅ Complete with ~+=, ~-=, ~*=, ~/=)
 - Pattern Matching
-- Basic Async/Await
 
 ### Phase 2 (6-12 months)
 - Custom Operators
