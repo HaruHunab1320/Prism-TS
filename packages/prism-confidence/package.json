@@ -1,6 +1,6 @@
 {
   "name": "@prism-lang/confidence",
-  "version": "1.1.0",
+  "version": "1.2.1",
   "description": "Confidence extraction library for Prism - standardized patterns for extracting confidence values from LLMs and other sources",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

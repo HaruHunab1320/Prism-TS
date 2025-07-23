@@ -2,7 +2,7 @@
 
 All notable changes to @prism-lang/core will be documented in this file.
 
-## [1.2.0] - 2025-07-23
+## [1.2.1] - 2025-07-23
 
 ### Added
 - **Async/Await Support** - Full asynchronous programming capabilities
