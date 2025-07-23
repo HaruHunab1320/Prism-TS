@@ -2,6 +2,67 @@
 
 All notable changes to @prism-lang/core will be documented in this file.
 
+## [1.2.0] - 2025-07-23
+
+### Added
+- **Async/Await Support** - Full asynchronous programming capabilities
+  - `async` function declarations: `async function fetchData() { ... }`
+  - `await` expressions for handling promises: `result = await somePromise`
+  - Promise built-in functions:
+    - `Promise.resolve(value)` - Creates a resolved promise
+    - `Promise.reject(reason)` - Creates a rejected promise  
+    - `Promise.all(promises)` - Waits for all promises to resolve
+  - `delay(ms)` and `sleep(ms)` functions for async delays
+  - Confidence propagation through async operations
+  - Comprehensive test coverage with 18 async/await tests
+
+- **Strict Equality Operators** - JavaScript-style comparison operators
+  - `===` strict equality (no type coercion)
+  - `!==` strict inequality (no type coercion)
+  - Enhanced `==` and `!=` with proper type coercion:
+    - `null == undefined` returns true
+    - Number/string/boolean coercion
+    - Empty string equals false
+  - Note: Arrays and objects compare by value in Prism, not reference
+  - Full test suite for equality operators
+
+### Improved
+- **Validator Enhancements**
+  - Fixed unknown node type warnings for ExportStatement, ImportStatement, VariableDeclaration
+  - Added async/await validation with proper error messages
+  - Fixed duplicate FunctionExpression case in validator
+  - Improved import/export validation to match AST structure
+
+### Example
+```prism
+// Async/await example
+async function analyzeData(input) ~> 0.9 {
+  // Fetch data asynchronously
+  data = await fetchFromAPI(input)
+  
+  // Process with LLM
+  analysis = await llm("Analyze: " + data)
+  
+  // Wait for multiple operations
+  results = await Promise.all([
+    processA(data),
+    processB(data),
+    processC(data)
+  ])
+  
+  return results
+}
+
+// Strict equality examples
+"5" == 5    // true (type coercion)
+"5" === 5   // false (no type coercion)
+null == undefined   // true
+null === undefined  // false
+
+// Arrays compare by value
+[1, 2, 3] === [1, 2, 3]  // true in Prism!
+```
+
 ## [1.0.26] - 2025-07-22
 
 ### Added

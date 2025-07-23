@@ -13,6 +13,7 @@ export interface PrismValidator {
 }
 
 export class Validator implements PrismValidator {
+  private asyncFunctionContext: boolean = false;
   validate(code: string): ValidationResult {
     const errors: SyntaxError[] = [];
     const warnings: Warning[] = [];
@@ -151,6 +152,10 @@ export class Validator implements PrismValidator {
         this.validateUnaryExpression(n, errors, warnings);
         break;
 
+      case 'AwaitExpression':
+        this.validateAwaitExpression(n, errors, warnings);
+        break;
+
       case 'CallExpression':
         this.validateCallExpression(n, errors, warnings);
         break;
@@ -187,6 +192,10 @@ export class Validator implements PrismValidator {
         }
         break;
 
+      case 'VariableDeclaration':
+        this.validateVariableDeclaration(n, errors, warnings);
+        break;
+
       case 'ExpressionStatement':
         this.validateNode(n.expression, errors, warnings);
         break;
@@ -213,12 +222,12 @@ export class Validator implements PrismValidator {
         // No body to validate
         break;
 
-      case 'ImportDeclaration':
-        this.validateImportDeclaration(n, errors, warnings);
+      case 'ImportStatement':
+        this.validateImportStatement(n, errors, warnings);
         break;
 
-      case 'ExportDeclaration':
-        this.validateExportDeclaration(n, errors, warnings);
+      case 'ExportStatement':
+        this.validateExportStatement(n, errors, warnings);
         break;
 
       case 'ReturnStatement':
@@ -496,7 +505,14 @@ export class Validator implements PrismValidator {
 
     // Validate function body
     if (node.body) {
+      // If it's an async function, validate await usage inside
+      if (node.isAsync) {
+        this.asyncFunctionContext = true;
+      }
       this.validateNode(node.body, errors, warnings);
+      if (node.isAsync) {
+        this.asyncFunctionContext = false;
+      }
     } else {
       errors.push({
         ...this.getLocation(node),
@@ -522,7 +538,7 @@ export class Validator implements PrismValidator {
     }
   }
 
-  private validateImportDeclaration(node: any, errors: SyntaxError[], warnings: Warning[]): void {
+  private validateImportStatement(node: any, errors: SyntaxError[], warnings: Warning[]): void {
     // Import must have a source
     if (!node.source) {
       errors.push({
@@ -535,17 +551,21 @@ export class Validator implements PrismValidator {
     }
 
     // Validate source is a string
-    if (node.source.type !== 'StringLiteral') {
+    if (typeof node.source !== 'string') {
       errors.push({
         ...this.getLocation(node),
-        message: 'Import source must be a string literal',
+        message: 'Import source must be a string',
         code: 'INVALID_IMPORT_SOURCE',
         severity: 'error'
       });
     }
 
-    // Validate specifiers
-    if (node.specifiers && node.specifiers.length === 0) {
+    // Validate specifiers - check if there's at least one way to import
+    const hasSpecifiers = (node.specifiers && node.specifiers.length > 0) || 
+                         node.defaultImport || 
+                         node.namespaceImport;
+    
+    if (!hasSpecifiers) {
       warnings.push({
         ...this.getLocation(node),
         message: 'Import declaration has no specifiers',
@@ -577,7 +597,7 @@ export class Validator implements PrismValidator {
     }
   }
 
-  private validateExportDeclaration(node: any, errors: SyntaxError[], warnings: Warning[]): void {
+  private validateExportStatement(node: any, errors: SyntaxError[], warnings: Warning[]): void {
     // Export must have either declaration or specifiers
     if (!node.declaration && (!node.specifiers || node.specifiers.length === 0)) {
       errors.push({
@@ -609,13 +629,45 @@ export class Validator implements PrismValidator {
     }
 
     // Validate source for re-exports
-    if (node.source && node.source.type !== 'StringLiteral') {
+    if (node.source && typeof node.source !== 'string') {
       errors.push({
         ...this.getLocation(node),
-        message: 'Export source must be a string literal',
+        message: 'Export source must be a string',
         code: 'INVALID_EXPORT_SOURCE',
         severity: 'error'
       });
+    }
+  }
+
+  private validateVariableDeclaration(node: any, errors: SyntaxError[], warnings: Warning[]): void {
+    // Check if identifier is provided
+    if (!node.identifier) {
+      errors.push({
+        ...this.getLocation(node),
+        message: `${node.kind} declaration missing identifier`,
+        code: 'MISSING_IDENTIFIER',
+        severity: 'error'
+      });
+    }
+
+    // const must have an initializer
+    if (node.kind === 'const' && !node.initializer) {
+      errors.push({
+        ...this.getLocation(node),
+        message: 'const declarations must have an initializer',
+        code: 'CONST_WITHOUT_INITIALIZER',
+        severity: 'error'
+      });
+    }
+
+    // Validate initializer if present
+    if (node.initializer) {
+      this.validateNode(node.initializer, errors, warnings);
+    }
+
+    // Validate pattern if present (for destructuring)
+    if (node.pattern) {
+      this.validateNode(node.pattern, errors, warnings);
     }
   }
 
@@ -643,6 +695,21 @@ export class Validator implements PrismValidator {
         message: 'Unreachable code after return statement',
         code: 'UNREACHABLE_CODE',
         severity: 'warning'
+      });
+    }
+  }
+
+  private validateAwaitExpression(node: any, errors: SyntaxError[], warnings: Warning[]): void {
+    // Validate the expression being awaited
+    this.validateNode(node.expression, errors, warnings);
+
+    // Check if await is used outside of async function
+    if (!this.asyncFunctionContext) {
+      errors.push({
+        ...this.getLocation(node),
+        message: 'await can only be used inside async functions',
+        code: 'AWAIT_OUTSIDE_ASYNC',
+        severity: 'error'
       });
     }
   }

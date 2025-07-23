@@ -130,12 +130,34 @@ a ** b   // Exponentiation
 ### Comparison Operators
 
 ```prism
-a == b   // Equality
-a != b   // Inequality
+// Loose equality (with type coercion)
+a == b   // Equality with type coercion
+a != b   // Inequality with type coercion
+
+// Strict equality (no type coercion)
+a === b  // Strict equality
+a !== b  // Strict inequality
+
+// Relational operators
 a < b    // Less than
 a > b    // Greater than
 a <= b   // Less than or equal
 a >= b   // Greater than or equal
+```
+
+#### Type Coercion in Comparisons
+
+Loose equality (`==`) performs type coercion:
+```prism
+5 == "5"          // true - number to string coercion
+0 == false        // true - number to boolean coercion
+null == undefined // true - null equals undefined
+"" == false       // true - empty string is falsy
+
+// Strict equality does not coerce
+5 === "5"         // false - different types
+0 === false       // false - different types
+null === undefined // false - different types
 ```
 
 ### Logical Operators
@@ -359,6 +381,84 @@ result = 5 |> addOne |> double |> square  // ((5 + 1) * 2)² = 144
 // Placeholder in pipelines
 add = (a, b) => a + b
 result = 10 |> add(5, _)  // 15 (placeholder represents piped value)
+```
+
+### Asynchronous Functions
+
+Prism supports asynchronous programming with async/await for handling promises and asynchronous operations:
+
+```prism
+// Async function declaration
+async function fetchData(url) {
+  response = await httpGet(url)
+  data = await response.json()
+  return data
+}
+
+// Async function with confidence
+async function analyzeData(input) ~> 0.9 {
+  result = await llm("Analyze: " + input)
+  processed = await processResult(result)
+  return processed
+}
+
+// Calling async functions
+data = await fetchData("https://api.example.com/data")
+analysis = await analyzeData(data)
+
+// Await with Promise values
+promise = Promise.resolve(42)
+value = await promise  // 42
+
+// Await passes through non-promise values
+direct = await 100  // 100 (no waiting needed)
+
+// Promise built-in functions
+p1 = Promise.resolve("success")
+p2 = Promise.reject("error")  // Creates rejected promise
+
+// Promise.all - wait for multiple promises
+results = await Promise.all([
+  fetchData("/api/users"),
+  fetchData("/api/posts"),
+  fetchData("/api/comments")
+])
+
+// Mixing promises and values in Promise.all
+mixed = await Promise.all([
+  Promise.resolve(1),
+  2,  // Non-promise values are wrapped
+  Promise.resolve(3)
+])  // [1, 2, 3]
+
+// Delay/sleep functions
+async function delayedOperation() {
+  console.log("Starting...")
+  await delay(1000)  // Wait 1 second
+  console.log("...continued after delay")
+  
+  await sleep(500)   // sleep is an alias for delay
+  return "completed"
+}
+
+// Async in loops
+async function processItems(items) {
+  for item in items {
+    result = await processItem(item)
+    console.log("Processed:", result)
+  }
+}
+
+// Error handling (when try/catch is available)
+// async function safeOperation() {
+//   try {
+//     result = await riskyOperation()
+//     return result
+//   } catch (error) {
+//     console.error("Operation failed:", error)
+//     return null
+//   }
+// }
 ```
 
 ## Data Structures
@@ -758,7 +858,38 @@ agent Expert {
    analysis = llm("Analyze sentiment: " + text) ~> 0.85
    ```
 
-10. **Organize code with imports/exports**: Structure larger projects with modules
+10. **Handle asynchronous operations properly**: Use async/await for clean asynchronous code
+    ```prism
+    // Good - clear async flow
+    async function fetchUserData(userId) {
+      user = await getUserById(userId)
+      profile = await getProfile(user.profileId)
+      preferences = await getPreferences(user.id)
+      return {user, profile, preferences}
+    }
+    
+    // Good - parallel operations with Promise.all
+    async function fetchAllData(userId) {
+      [user, posts, comments] = await Promise.all([
+        getUserById(userId),
+        getUserPosts(userId),
+        getUserComments(userId)
+      ])
+      return {user, posts, comments}
+    }
+    
+    // Good - async with confidence
+    async function analyzeWithRetry(data) ~> 0.95 {
+      result = await llm("Analyze: " + data)
+      if (!result.success) {
+        await delay(1000)
+        result = await llm("Retry analysis: " + data)
+      }
+      return result
+    }
+    ```
+
+11. **Organize code with imports/exports**: Structure larger projects with modules
     ```prism
     // utils.prism - utility functions
     export const formatCurrency = amount => "$" + amount.toFixed(2)

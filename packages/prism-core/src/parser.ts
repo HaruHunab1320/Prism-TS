@@ -22,6 +22,7 @@ import {
   ConfidenceExpression,
   AssignmentStatement,
   AssignmentExpression,
+  AwaitExpression,
   IfStatement,
   UncertainIfStatement,
   ContextStatement,
@@ -112,8 +113,14 @@ export class Parser {
 
   private statement(): Statement | null {
     try {
+      if (this.match(TokenType.ASYNC)) {
+        // async can only be followed by function for now
+        this.consume(TokenType.FUNCTION, "Expected 'function' after 'async'");
+        return this.functionDeclaration(true);
+      }
+      
       if (this.match(TokenType.FUNCTION)) {
-        return this.functionDeclaration();
+        return this.functionDeclaration(false);
       }
       
       if (this.match(TokenType.RETURN)) {
@@ -973,7 +980,7 @@ export class Parser {
     return new ExportStatement(undefined, undefined, declaration);
   }
 
-  private functionDeclaration(): FunctionDeclaration {
+  private functionDeclaration(isAsync: boolean = false): FunctionDeclaration {
     // Parse function name
     const name = this.consume(TokenType.IDENTIFIER, "Expected function name").value;
     
@@ -1041,7 +1048,7 @@ export class Parser {
     this.consume(TokenType.LEFT_BRACE, "Expected '{' before function body");
     const body = this.blockStatement();
     
-    return new FunctionDeclaration(name, parameters, body, restParameter, confidenceAnnotation);
+    return new FunctionDeclaration(name, parameters, body, restParameter, confidenceAnnotation, isAsync);
   }
 
   private returnStatement(): ReturnStatement {
@@ -1236,7 +1243,7 @@ export class Parser {
   private equality(): Expression | null {
     let expr = this.comparison();
     
-    while (this.match(TokenType.NOT_EQUAL, TokenType.EQUAL_EQUAL, TokenType.CONFIDENCE_EQUAL, TokenType.CONFIDENCE_NOT_EQUAL)) {
+    while (this.match(TokenType.NOT_EQUAL, TokenType.EQUAL_EQUAL, TokenType.NOT_EQUAL_EQUAL, TokenType.EQUAL_EQUAL_EQUAL, TokenType.CONFIDENCE_EQUAL, TokenType.CONFIDENCE_NOT_EQUAL)) {
       const operator = this.previous().value as BinaryOperator;
       const right = this.comparison();
       expr = new BinaryExpression(operator, expr!, right!);
@@ -1301,6 +1308,14 @@ export class Parser {
       const operator = this.previous().value as UnaryOperator;
       const right = this.unary();
       return new UnaryExpression(operator, right!);
+    }
+    
+    if (this.match(TokenType.AWAIT)) {
+      const expr = this.unary();
+      if (!expr) {
+        throw new ParseError("Expected expression after 'await'", this.previous(), this.sourceCode);
+      }
+      return new AwaitExpression(expr);
     }
     
     return this.call();

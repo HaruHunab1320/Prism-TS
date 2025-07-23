@@ -39,6 +39,8 @@ export enum TokenType {
   EXPORT = 'EXPORT',
   FROM = 'FROM',
   AS = 'AS',
+  ASYNC = 'ASYNC',
+  AWAIT = 'AWAIT',
 
   // Operators
   PLUS = 'PLUS',
@@ -49,7 +51,9 @@ export enum TokenType {
   PERCENT = 'PERCENT',
   EQUAL = 'EQUAL',
   EQUAL_EQUAL = 'EQUAL_EQUAL',
+  EQUAL_EQUAL_EQUAL = 'EQUAL_EQUAL_EQUAL',
   NOT_EQUAL = 'NOT_EQUAL',
+  NOT_EQUAL_EQUAL = 'NOT_EQUAL_EQUAL',
   PLUS_EQUAL = 'PLUS_EQUAL',
   MINUS_EQUAL = 'MINUS_EQUAL',
   STAR_EQUAL = 'STAR_EQUAL',
@@ -149,6 +153,8 @@ const keywords: { [key: string]: TokenType } = {
   'export': TokenType.EXPORT,
   'from': TokenType.FROM,
   'as': TokenType.AS,
+  'async': TokenType.ASYNC,
+  'await': TokenType.AWAIT,
 };
 
 export class Tokenizer {
@@ -256,6 +262,10 @@ export class Tokenizer {
     if (char === '=') {
       if (this.peek() === '=') {
         this.advance();
+        if (this.peek() === '=') {
+          this.advance();
+          return this.makeToken(TokenType.EQUAL_EQUAL_EQUAL, '===', startColumn);
+        }
         return this.makeToken(TokenType.EQUAL_EQUAL, '==', startColumn);
       }
       if (this.peek() === '>') {
@@ -268,6 +278,10 @@ export class Tokenizer {
     if (char === '!') {
       if (this.peek() === '=') {
         this.advance();
+        if (this.peek() === '=') {
+          this.advance();
+          return this.makeToken(TokenType.NOT_EQUAL_EQUAL, '!==', startColumn);
+        }
         return this.makeToken(TokenType.NOT_EQUAL, '!=', startColumn);
       }
       return this.makeToken(TokenType.NOT, '!', startColumn);

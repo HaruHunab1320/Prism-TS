@@ -46,7 +46,8 @@ export type NodeType =
   | 'ExportSpecifier'
   | 'FunctionDeclaration'
   | 'ReturnStatement'
-  | 'VariableDeclaration';
+  | 'VariableDeclaration'
+  | 'AwaitExpression';
 
 export abstract class ASTNode {
   abstract type: NodeType;
@@ -131,7 +132,7 @@ export class ConfidenceExpression extends Expression {
   }
 }
 
-export type BinaryOperator = '+' | '-' | '*' | '/' | '%' | '**' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '&&' | '||' | '??' | '|>' | '~>' | '~~' | '~??' | '~&&' | '~||' | '~||>' | '~@>' | '~|>' | '~?>' | '~+' | '~-' | '~*' | '~/' | '~==' | '~!=' | '~<' | '~>=' | '~<=' | '~.' | '.' | 'instanceof';
+export type BinaryOperator = '+' | '-' | '*' | '/' | '%' | '**' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '===' | '!==' | '&&' | '||' | '??' | '|>' | '~>' | '~~' | '~??' | '~&&' | '~||' | '~||>' | '~@>' | '~|>' | '~?>' | '~+' | '~-' | '~*' | '~/' | '~==' | '~!=' | '~<' | '~>=' | '~<=' | '~.' | '.' | 'instanceof';
 
 export class BinaryExpression extends Expression {
   type: NodeType = 'BinaryExpression';
@@ -237,6 +238,16 @@ export class AssignmentExpression extends Expression {
   constructor(
     public identifier: string,
     public value: Expression
+  ) {
+    super();
+  }
+}
+
+export class AwaitExpression extends Expression {
+  type: NodeType = 'AwaitExpression';
+  
+  constructor(
+    public expression: Expression
   ) {
     super();
   }
@@ -567,7 +578,8 @@ export class FunctionDeclaration extends Statement {
     public parameters: LambdaParameter[],          // Parameter list (reuse lambda parameter types)
     public body: BlockStatement,                   // Function body (must be block)
     public restParameter?: string | ArrayPattern | ObjectPattern,  // Rest parameter
-    public confidenceAnnotation?: Expression      // Optional confidence annotation: function name() ~> 0.8
+    public confidenceAnnotation?: Expression,      // Optional confidence annotation: function name() ~> 0.8
+    public isAsync: boolean = false               // Whether the function is async
   ) {
     super();
   }

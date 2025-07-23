@@ -21,6 +21,7 @@ import {
   ConfidenceExpression,
   AssignmentStatement,
   AssignmentExpression,
+  AwaitExpression,
   IfStatement,
   UncertainIfStatement,
   ContextStatement,
@@ -295,6 +296,26 @@ export class FunctionValue extends Value {
 
   toString(): string {
     return `[Function: ${this.name}]`;
+  }
+}
+
+export class PromiseValue extends Value {
+  type = 'promise';
+  
+  constructor(public value: Promise<Value>) {
+    super();
+  }
+  
+  equals(_other: Value): boolean {
+    return false; // Promises are never equal
+  }
+  
+  isTruthy(): boolean {
+    return true; // Promises are always truthy
+  }
+  
+  toString(): string {
+    return '[Promise]';
   }
 }
 
@@ -944,6 +965,80 @@ export class Interpreter {
         });
       });
     }));
+
+    // Promise built-in functions
+    
+    // Promise.resolve() - Creates a resolved promise
+    const promiseObj = new ObjectValue(new Map<string, Value>());
+    
+    promiseObj.value.set('resolve', new FunctionValue('Promise.resolve', async (args) => {
+      if (args.length !== 1) {
+        throw new RuntimeError('Promise.resolve() requires exactly one argument');
+      }
+      
+      // Create a promise that immediately resolves to the value
+      return new PromiseValue(Promise.resolve(args[0]));
+    }));
+    
+    // Promise.reject() - Creates a rejected promise
+    promiseObj.value.set('reject', new FunctionValue('Promise.reject', async (args) => {
+      if (args.length !== 1) {
+        throw new RuntimeError('Promise.reject() requires exactly one argument');
+      }
+      
+      // Create a promise that immediately rejects (wrapped in StringValue for error message)
+      const errorMsg = args[0] instanceof StringValue ? args[0].value : args[0].toString();
+      return new PromiseValue(Promise.reject(new StringValue(errorMsg)));
+    }));
+    
+    // Promise.all() - Waits for all promises to resolve
+    promiseObj.value.set('all', new FunctionValue('Promise.all', async (args) => {
+      if (args.length !== 1 || !(args[0] instanceof ArrayValue)) {
+        throw new RuntimeError('Promise.all() requires an array of promises');
+      }
+      
+      const promises = args[0].value;
+      const results: Value[] = [];
+      
+      for (const promise of promises) {
+        if (promise instanceof PromiseValue) {
+          results.push(await promise.value);
+        } else {
+          // Non-promise values are treated as already resolved
+          results.push(promise);
+        }
+      }
+      
+      return new ArrayValue(results);
+    }));
+    
+    this.environment.define('Promise', promiseObj);
+    
+    // delay() / sleep() - Utility function to create a delay
+    this.environment.define('delay', new FunctionValue('delay', async (args) => {
+      if (args.length !== 1) {
+        throw new RuntimeError('delay() requires exactly one argument: milliseconds');
+      }
+      
+      const msArg = args[0];
+      const ms = msArg instanceof ConfidenceValue ? msArg.value : msArg;
+      
+      if (!(ms instanceof NumberValue)) {
+        throw new RuntimeError('delay() requires a number of milliseconds');
+      }
+      
+      const delayMs = Math.floor(ms.value);
+      
+      // Return a promise that resolves after the delay
+      return new PromiseValue(
+        new Promise(resolve => {
+          setTimeout(() => resolve(new UndefinedValue()), delayMs);
+        })
+      );
+    }));
+    
+    // Alias sleep to delay
+    this.environment.define('sleep', this.environment.get('delay'));
   }
 
   registerLLMProvider(name: string, provider: LLMProvider): void {
@@ -1016,6 +1111,8 @@ export class Interpreter {
         return this.interpretDestructuringAssignment(node as DestructuringAssignment);
       case 'AssignmentExpression':
         return this.interpretAssignmentExpression(node as AssignmentExpression);
+      case 'AwaitExpression':
+        return this.interpretAwaitExpression(node as AwaitExpression);
       case 'IfStatement':
         return this.interpretIfStatement(node as IfStatement);
       case 'UncertainIfStatement':
@@ -1253,9 +1350,15 @@ export class Interpreter {
         throw new RuntimeError(`Cannot compare ${left.type} and ${right.type}`, node);
 
       case '==':
-        return new BooleanValue(left.equals(right));
+        return new BooleanValue(this.looseEquals(left, right));
 
       case '!=':
+        return new BooleanValue(!this.looseEquals(left, right));
+
+      case '===':
+        return new BooleanValue(left.equals(right));
+
+      case '!==':
         return new BooleanValue(!left.equals(right));
 
       case '&&':
@@ -1783,8 +1886,11 @@ export class Interpreter {
 
     // Handle ConfidenceValue wrapping a function
     let functionValue: FunctionValue;
+    let functionConfidence: ConfidenceLib | undefined;
+    
     if (callee instanceof ConfidenceValue && callee.value instanceof FunctionValue) {
       functionValue = callee.value;
+      functionConfidence = callee.confidence;
     } else if (callee instanceof FunctionValue) {
       functionValue = callee;
     } else {
@@ -1806,7 +1912,20 @@ export class Interpreter {
       }
     }
 
-    return await functionValue.value(args);
+    const result = await functionValue.value(args);
+    
+    // If the function had confidence, apply it to the result
+    if (functionConfidence) {
+      // If result already has confidence, combine them
+      if (result instanceof ConfidenceValue) {
+        const combinedConfidence = result.confidence.value * functionConfidence.value;
+        return new ConfidenceValue(result.value, new ConfidenceLib(combinedConfidence));
+      } else {
+        return new ConfidenceValue(result, functionConfidence);
+      }
+    }
+    
+    return result;
   }
 
   private async interpretTernaryExpression(node: TernaryExpression): Promise<Value> {
@@ -2437,6 +2556,18 @@ export class Interpreter {
     const value = await this.interpret(node.value);
     this.environment.set(node.identifier, value);
     return value;
+  }
+  
+  private async interpretAwaitExpression(node: AwaitExpression): Promise<Value> {
+    const expr = await this.interpret(node.expression);
+    
+    // If the expression evaluates to a PromiseValue, wait for it
+    if (expr instanceof PromiseValue) {
+      return await expr.value;
+    }
+    
+    // Non-promise values are returned as-is (matching JavaScript behavior)
+    return expr;
   }
   
   private async interpretDestructuringAssignment(node: DestructuringAssignment): Promise<Value> {
@@ -3257,6 +3388,65 @@ export class Interpreter {
     }
 
     return result;
+  }
+
+  private looseEquals(left: Value, right: Value): boolean {
+    // Strict type match - use normal equals
+    if (left.type === right.type) {
+      return left.equals(right);
+    }
+
+    // null == undefined
+    if ((left instanceof NullValue && right instanceof UndefinedValue) ||
+        (left instanceof UndefinedValue && right instanceof NullValue)) {
+      return true;
+    }
+
+    // Number comparisons with type coercion
+    if (left instanceof NumberValue || right instanceof NumberValue) {
+      const leftNum = this.toNumber(left);
+      const rightNum = this.toNumber(right);
+      if (leftNum !== null && rightNum !== null) {
+        return leftNum === rightNum;
+      }
+    }
+
+    // String comparisons with type coercion
+    if (left instanceof StringValue || right instanceof StringValue) {
+      // Special case: empty string == false
+      if ((left instanceof StringValue && left.value === "" && right instanceof BooleanValue && !right.value) ||
+          (right instanceof StringValue && right.value === "" && left instanceof BooleanValue && !left.value)) {
+        return true;
+      }
+      return left.toString() === right.toString();
+    }
+
+    // Boolean comparisons
+    if (left instanceof BooleanValue || right instanceof BooleanValue) {
+      return left.isTruthy() === right.isTruthy();
+    }
+
+    return false;
+  }
+
+  private toNumber(value: Value): number | null {
+    if (value instanceof NumberValue) {
+      return value.value;
+    }
+    if (value instanceof StringValue) {
+      const num = parseFloat(value.value);
+      return isNaN(num) ? null : num;
+    }
+    if (value instanceof BooleanValue) {
+      return value.value ? 1 : 0;
+    }
+    if (value instanceof NullValue) {
+      return 0;
+    }
+    if (value instanceof UndefinedValue) {
+      return null;
+    }
+    return null;
   }
 }
 
