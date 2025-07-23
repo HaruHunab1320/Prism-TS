@@ -1,6 +1,6 @@
 {
   "name": "@prism-lang/llm",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "LLM provider integrations for Prism",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.0.7",
-    "@ai-sdk/google": "^1.0.7", 
+    "@ai-sdk/google": "^1.0.7",
     "@types/node-fetch": "^2.6.12",
     "ai": "^4.0.32",
     "dotenv": "^16.5.0",
