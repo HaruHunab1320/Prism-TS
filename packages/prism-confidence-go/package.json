@@ -1,0 +1,18 @@
+{
+  "name": "@prism-lang/confidence-go",
+  "version": "0.1.0",
+  "description": "Go implementation of the Prism confidence extraction library",
+  "private": true,
+  "scripts": {
+    "build": "go build ./...",
+    "test": "go test ./...",
+    "clean": "go clean",
+    "fmt": "go fmt ./..."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HaruHunab1320/Prism-TS.git",
+    "directory": "packages/prism-confidence-go"
+  },
+  "license": "MIT"
+}

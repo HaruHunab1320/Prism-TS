@@ -1,0 +1,336 @@
+// filename: 01-objects.prism
+// description: Object creation, manipulation, and advanced features
+// tags: #objects #properties #methods #destructuring
+// expected: Comprehensive demonstration of object features
+
+// === CODE STARTS HERE ===
+
+console.log("=== Object Creation ===");
+
+// Object literal
+const person = {
+    name: "Alice",
+    age: 30,
+    city: "New York"
+};
+console.log("Person:", person);
+
+// Object with methods
+const calculator = {
+    value: 0,
+    add(n) {
+        this.value += n;
+        return this;
+    },
+    multiply(n) {
+        this.value *= n;
+        return this;
+    },
+    getValue() {
+        return this.value;
+    }
+};
+
+console.log("Calculator result:", 
+    calculator.add(5).multiply(3).add(10).getValue()
+);
+
+// Computed property names
+const propName = "dynamic";
+const obj = {
+    [propName]: "value",
+    ["prop" + 2]: "second",
+    [`template${1 + 2}`]: "third"
+};
+console.log("Dynamic properties:", obj);
+
+console.log("\n=== Property Access ===");
+
+// Dot notation vs bracket notation
+const user = {
+    name: "Bob",
+    "full name": "Bob Smith",
+    age: 25,
+    123: "numeric key"
+};
+
+console.log("Dot notation:", user.name);
+console.log("Bracket notation:", user["full name"]);
+console.log("Dynamic access:", user["a" + "ge"]);
+console.log("Numeric key:", user[123]);
+
+// Optional chaining
+const data = {
+    user: {
+        profile: {
+            email: "user@example.com"
+        }
+    }
+};
+
+console.log("Existing path:", data.user?.profile?.email);
+console.log("Non-existing path:", data.user?.settings?.theme);
+console.log("Method call:", data.user?.getInfo?.());
+
+console.log("\n=== Object Manipulation ===");
+
+// Adding and modifying properties
+const product = { name: "Laptop" };
+product.price = 999;
+product.name = "Gaming Laptop";
+product["in stock"] = true;
+
+console.log("Modified product:", product);
+
+// Deleting properties
+delete product["in stock"];
+console.log("After deletion:", product);
+
+// Object.assign() - shallow copy
+const defaults = { theme: "dark", fontSize: 14 };
+const userPrefs = { fontSize: 16, language: "en" };
+const settings = Object.assign({}, defaults, userPrefs);
+console.log("Merged settings:", settings);
+
+// Spread operator
+const base = { a: 1, b: 2 };
+const extended = { ...base, c: 3, a: 10 };
+console.log("Spread result:", extended);
+
+console.log("\n=== Property Descriptors ===");
+
+// Object.defineProperty
+const secureObj = {};
+Object.defineProperty(secureObj, "id", {
+    value: 12345,
+    writable: false,
+    enumerable: true,
+    configurable: false
+});
+
+console.log("Secure object:", secureObj);
+secureObj.id = 99999; // This won't work
+console.log("After assignment attempt:", secureObj);
+
+// Object.defineProperties
+const config = {};
+Object.defineProperties(config, {
+    mode: {
+        value: "production",
+        writable: true,
+        enumerable: true
+    },
+    _secret: {
+        value: "hidden",
+        enumerable: false
+    }
+});
+
+console.log("Config keys:", Object.keys(config));
+console.log("Config with hidden:", { ...config, _secret: config._secret });
+
+console.log("\n=== Object Methods ===");
+
+// Object.keys(), values(), entries()
+const inventory = {
+    apples: 10,
+    bananas: 5,
+    oranges: 8
+};
+
+console.log("Keys:", Object.keys(inventory));
+console.log("Values:", Object.values(inventory));
+console.log("Entries:", Object.entries(inventory));
+
+// Object.entries() with destructuring
+console.log("Inventory list:");
+for (const [fruit, count] of Object.entries(inventory)) {
+    console.log(`  ${fruit}: ${count}`);
+}
+
+// Object.fromEntries()
+const entries = [["x", 1], ["y", 2], ["z", 3]];
+const coordinates = Object.fromEntries(entries);
+console.log("From entries:", coordinates);
+
+console.log("\n=== Destructuring ===");
+
+// Basic destructuring
+const book = {
+    title: "Prism Guide",
+    author: "Jane Doe",
+    year: 2024,
+    pages: 300
+};
+
+const { title, author } = book;
+console.log(`"${title}" by ${author}`);
+
+// Destructuring with rename
+const { year: publicationYear } = book;
+console.log("Published:", publicationYear);
+
+// Destructuring with defaults
+const { isbn = "N/A", pages = 0 } = book;
+console.log(`ISBN: ${isbn}, Pages: ${pages}`);
+
+// Nested destructuring
+const company = {
+    name: "Tech Corp",
+    address: {
+        street: "123 Main St",
+        city: "San Francisco",
+        country: "USA"
+    }
+};
+
+const { address: { city: companyCity } } = company;
+console.log("Company city:", companyCity);
+
+// Rest in destructuring
+const { name: companyName, ...companyDetails } = company;
+console.log("Company name:", companyName);
+console.log("Other details:", companyDetails);
+
+console.log("\n=== Object Freezing and Sealing ===");
+
+// Object.freeze() - no modifications
+const frozen = Object.freeze({
+    constant: "immutable",
+    value: 42
+});
+
+frozen.constant = "changed"; // Won't work
+frozen.newProp = "added"; // Won't work
+console.log("Frozen object:", frozen);
+console.log("Is frozen?", Object.isFrozen(frozen));
+
+// Object.seal() - no new properties, but can modify existing
+const sealed = Object.seal({
+    mutable: "can change",
+    fixed: 100
+});
+
+sealed.mutable = "changed!"; // This works
+sealed.newProp = "added"; // This won't work
+console.log("Sealed object:", sealed);
+console.log("Is sealed?", Object.isSealed(sealed));
+
+console.log("\n=== Getters and Setters ===");
+
+const temperature = {
+    _celsius: 0,
+    
+    get celsius() {
+        return this._celsius;
+    },
+    
+    set celsius(value) {
+        this._celsius = value;
+    },
+    
+    get fahrenheit() {
+        return (this._celsius * 9/5) + 32;
+    },
+    
+    set fahrenheit(value) {
+        this._celsius = (value - 32) * 5/9;
+    }
+};
+
+temperature.celsius = 25;
+console.log(`${temperature.celsius}°C = ${temperature.fahrenheit}°F`);
+
+temperature.fahrenheit = 86;
+console.log(`${temperature.fahrenheit}°F = ${temperature.celsius}°C`);
+
+console.log("\n=== Object Comparison ===");
+
+// Reference vs value comparison
+const obj1 = { a: 1 };
+const obj2 = { a: 1 };
+const obj3 = obj1;
+
+console.log("obj1 === obj2:", obj1 === obj2); // false
+console.log("obj1 === obj3:", obj1 === obj3); // true
+
+// Deep comparison function
+function deepEqual(a, b) {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    if (typeof a !== 'object' || typeof b !== 'object') return false;
+    
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    
+    if (keysA.length !== keysB.length) return false;
+    
+    for (const key of keysA) {
+        if (!keysB.includes(key)) return false;
+        if (!deepEqual(a[key], b[key])) return false;
+    }
+    
+    return true;
+}
+
+console.log("Deep comparison:", deepEqual(obj1, obj2)); // true
+
+// === EXPECTED OUTPUT ===
+// === Object Creation ===
+// Person: { name: 'Alice', age: 30, city: 'New York' }
+// Calculator result: 25
+// Dynamic properties: { dynamic: 'value', prop2: 'second', template3: 'third' }
+// 
+// === Property Access ===
+// Dot notation: Bob
+// Bracket notation: Bob Smith
+// Dynamic access: 25
+// Numeric key: numeric key
+// Existing path: user@example.com
+// Non-existing path: undefined
+// Method call: undefined
+// 
+// === Object Manipulation ===
+// Modified product: { name: 'Gaming Laptop', price: 999, 'in stock': true }
+// After deletion: { name: 'Gaming Laptop', price: 999 }
+// Merged settings: { theme: 'dark', fontSize: 16, language: 'en' }
+// Spread result: { a: 10, b: 2, c: 3 }
+// 
+// === Property Descriptors ===
+// Secure object: { id: 12345 }
+// After assignment attempt: { id: 12345 }
+// Config keys: [ 'mode' ]
+// Config with hidden: { mode: 'production', _secret: 'hidden' }
+// 
+// === Object Methods ===
+// Keys: [ 'apples', 'bananas', 'oranges' ]
+// Values: [ 10, 5, 8 ]
+// Entries: [ [ 'apples', 10 ], [ 'bananas', 5 ], [ 'oranges', 8 ] ]
+// Inventory list:
+//   apples: 10
+//   bananas: 5
+//   oranges: 8
+// From entries: { x: 1, y: 2, z: 3 }
+// 
+// === Destructuring ===
+// "Prism Guide" by Jane Doe
+// Published: 2024
+// ISBN: N/A, Pages: 300
+// Company city: San Francisco
+// Company name: Tech Corp
+// Other details: { address: { street: '123 Main St', city: 'San Francisco', country: 'USA' } }
+// 
+// === Object Freezing and Sealing ===
+// Frozen object: { constant: 'immutable', value: 42 }
+// Is frozen? true
+// Sealed object: { mutable: 'changed!', fixed: 100 }
+// Is sealed? true
+// 
+// === Getters and Setters ===
+// 25°C = 77°F
+// 86°F = 30°C
+// 
+// === Object Comparison ===
+// obj1 === obj2: false
+// obj1 === obj3: true
+// Deep comparison: true

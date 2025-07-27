@@ -6,7 +6,7 @@ temperatures = [68.5, 72.1, 69.8, 75.3, 71.2] ~> 0.95
 
 // Note: Since Prism doesn't have lambda expressions yet,
 // we need to use the LLM to create transformation functions
-// or pre-define them using agents
+// or pre-define them as named functions
 
 // Example using array methods with LLM-based transformations:
 // This would require the LLM to understand the transformation intent

@@ -1,0 +1,315 @@
+// filename: 02-uncertain-loops.prism
+// description: Uncertain for and while loops - iterate based on confidence levels
+// tags: #uncertain #for #while #loops #confidence #prism-specific
+// expected: Demonstrates uncertain loops with confidence-based execution
+
+// === CODE STARTS HERE ===
+
+console.log("=== Uncertain For Loops ===");
+
+// Basic uncertain for loop - always high confidence
+let processedCount = 0;
+let skippedCount = 0;
+
+uncertain for let i = 0; i < 5; i++ {
+    high {
+        console.log(`  Processing item ${i} with high confidence`);
+        processedCount++;
+    }
+    medium {
+        console.log(`  Reviewing item ${i} with medium confidence`);
+        processedCount++;
+    }
+    low {
+        console.log(`  Skipping item ${i} due to low confidence`);
+        skippedCount++;
+    }
+}
+
+console.log(`Processed: ${processedCount}, Skipped: ${skippedCount}`);
+
+console.log("\n=== Uncertain For with Varying Confidence ===");
+
+// Simulating data quality that varies
+let dataQuality = [0.9, 0.4, 0.8, 0.2, 0.7];
+let results = [];
+
+uncertain for let i = 0; i < dataQuality.length; i++ {
+    let quality = dataQuality[i];
+    let data = `Data-${i}` ~> quality;
+    
+    uncertain if data {
+        high {
+            results.push(`✅ ${data} - processed`);
+        }
+        medium {
+            results.push(`⚠️ ${data} - needs review`);
+        }
+        low {
+            results.push(`❌ ${data} - rejected`);
+        }
+    }
+}
+
+console.log("Data processing results:");
+results.forEach(r => console.log(`  ${r}`));
+
+console.log("\n=== Uncertain While Loops ===");
+
+// Confidence-based retry mechanism
+let attempts = 0;
+let success = false;
+let confidence = 0.3;  // Start with low confidence
+
+uncertain while attempts < 5 && !success ~> confidence {
+    high {
+        console.log(`  Attempt ${attempts + 1}: High confidence - executing`);
+        success = true;
+    }
+    medium {
+        console.log(`  Attempt ${attempts + 1}: Medium confidence - retrying with adjustments`);
+        confidence += 0.2;  // Improve confidence
+    }
+    low {
+        console.log(`  Attempt ${attempts + 1}: Low confidence - gathering more data`);
+        confidence += 0.25;  // Significant improvement needed
+    }
+    default {
+        console.log(`  Attempt ${attempts + 1}: Default - recalibrating`);
+        confidence += 0.15;
+    }
+    
+    attempts++;
+}
+
+console.log(`Final result: ${success ? "Success" : "Failed"} after ${attempts} attempts`);
+
+console.log("\n=== Sensor Data Processing ===");
+
+// Processing sensor readings with varying confidence
+let sensorReadings = [];
+let readingCount = 0;
+
+// Simulate sensor confidence that degrades over time
+let sensorConfidence = 0.95;
+
+uncertain while readingCount < 8 ~> sensorConfidence {
+    high {
+        let reading = (20 + Math.random() * 5) ~> sensorConfidence;
+        sensorReadings.push({ 
+            id: readingCount, 
+            value: reading, 
+            status: "accurate" 
+        });
+        sensorConfidence -= 0.05;  // Sensor degrades slowly
+    }
+    medium {
+        let reading = (20 + Math.random() * 10) ~> sensorConfidence;
+        sensorReadings.push({ 
+            id: readingCount, 
+            value: reading, 
+            status: "approximate" 
+        });
+        sensorConfidence -= 0.1;  // Faster degradation
+    }
+    low {
+        sensorReadings.push({ 
+            id: readingCount, 
+            value: null, 
+            status: "unreliable" 
+        });
+        sensorConfidence -= 0.15;  // Significant degradation
+    }
+    default {
+        // Recalibrate sensor
+        console.log(`  Recalibrating sensor at reading ${readingCount}`);
+        sensorConfidence = 0.8;  // Reset to high
+    }
+    
+    readingCount++;
+}
+
+console.log("Sensor readings:");
+sensorReadings.forEach(r => {
+    if (r.value) {
+        console.log(`  Reading ${r.id}: ${r.value} (${r.status})`);
+    } else {
+        console.log(`  Reading ${r.id}: No data (${r.status})`);
+    }
+});
+
+console.log("\n=== Machine Learning Training Loop ===");
+
+// Training loop that adjusts based on model confidence
+let modelAccuracy = 0.5;
+let epoch = 0;
+let trainingHistory = [];
+
+uncertain while epoch < 10 && modelAccuracy < 0.95 ~> modelAccuracy {
+    high {
+        // Model is performing well
+        let improvement = 0.02;
+        modelAccuracy += improvement;
+        trainingHistory.push({
+            epoch: epoch,
+            accuracy: modelAccuracy,
+            action: "Fine-tuning parameters",
+            learningRate: 0.001
+        });
+    }
+    medium {
+        // Model needs adjustment
+        let improvement = 0.05;
+        modelAccuracy += improvement;
+        trainingHistory.push({
+            epoch: epoch,
+            accuracy: modelAccuracy,
+            action: "Adjusting learning rate",
+            learningRate: 0.01
+        });
+    }
+    low {
+        // Model struggling - major changes needed
+        let improvement = 0.08;
+        modelAccuracy += improvement;
+        trainingHistory.push({
+            epoch: epoch,
+            accuracy: modelAccuracy,
+            action: "Changing architecture",
+            learningRate: 0.1
+        });
+    }
+    
+    epoch++;
+}
+
+console.log("Training progression:");
+trainingHistory.forEach(h => {
+    console.log(`  Epoch ${h.epoch}: ${(h.accuracy * 100).toFixed(1)}% - ${h.action}`);
+});
+
+console.log("\n=== Network Request Retry Logic ===");
+
+// Adaptive retry with confidence-based backoff
+let requestAttempt = 0;
+let networkReliability = 0.4;  // Poor network
+let requestSuccess = false;
+let backoffMs = 100;
+
+uncertain while requestAttempt < 5 && !requestSuccess ~> networkReliability {
+    high {
+        console.log(`  Request ${requestAttempt + 1}: Network stable - sending`);
+        requestSuccess = true;
+    }
+    medium {
+        console.log(`  Request ${requestAttempt + 1}: Network unstable - retry in ${backoffMs}ms`);
+        backoffMs *= 2;  // Exponential backoff
+        networkReliability += 0.1;
+    }
+    low {
+        console.log(`  Request ${requestAttempt + 1}: Network poor - waiting ${backoffMs * 2}ms`);
+        backoffMs *= 3;
+        networkReliability += 0.15;
+    }
+    default {
+        console.log(`  Request ${requestAttempt + 1}: Checking alternative route`);
+        networkReliability = 0.7;  // Try different approach
+    }
+    
+    requestAttempt++;
+}
+
+console.log(`Network request: ${requestSuccess ? "Succeeded" : "Failed"}`);
+
+console.log("\n=== Game AI Decision Loop ===");
+
+// Game AI that becomes more aggressive based on confidence
+let aiConfidence = 0.6;
+let gameRound = 0;
+let aiActions = [];
+
+uncertain for let round = 0; round < 5; round++ {
+    let decision = true ~> aiConfidence;
+    
+    uncertain if decision {
+        high {
+            aiActions.push("🔥 Aggressive attack!");
+            aiConfidence = Math.min(0.95, aiConfidence + 0.05);
+        }
+        medium {
+            aiActions.push("⚔️ Balanced strategy");
+            aiConfidence += 0.1;
+        }
+        low {
+            aiActions.push("🛡️ Defensive position");
+            aiConfidence += 0.15;
+        }
+    }
+}
+
+console.log("AI battle sequence:");
+aiActions.forEach((action, i) => {
+    console.log(`  Round ${i + 1}: ${action}`);
+});
+
+// === EXPECTED OUTPUT ===
+// === Uncertain For Loops ===
+//   Processing item 0 with high confidence
+//   Processing item 1 with high confidence
+//   Processing item 2 with high confidence
+//   Processing item 3 with high confidence
+//   Processing item 4 with high confidence
+// Processed: 5, Skipped: 0
+// 
+// === Uncertain For with Varying Confidence ===
+// Data processing results:
+//   ✅ Data-0 ~> 90.0% - processed
+//   ❌ Data-1 ~> 40.0% - rejected
+//   ✅ Data-2 ~> 80.0% - processed
+//   ❌ Data-3 ~> 20.0% - rejected
+//   ⚠️ Data-4 ~> 70.0% - needs review
+// 
+// === Uncertain While Loops ===
+//   Attempt 1: Low confidence - gathering more data
+//   Attempt 2: Medium confidence - retrying with adjustments
+//   Attempt 3: High confidence - executing
+// Final result: Success after 3 attempts
+// 
+// === Sensor Data Processing ===
+//   Recalibrating sensor at reading 1
+// Sensor readings:
+//   Reading 0: 23.45 ~> 95.0% (accurate)
+//   Reading 1: 24.12 ~> 80.0% (accurate)
+//   Reading 2: 22.89 ~> 75.0% (accurate)
+//   Reading 3: 21.56 ~> 70.0% (approximate)
+//   Reading 4: 23.78 ~> 60.0% (approximate)
+//   Reading 5: No data (unreliable)
+//   Reading 6: No data (unreliable)
+//   Reading 7: 22.34 ~> 80.0% (accurate)
+// 
+// === Machine Learning Training Loop ===
+// Training progression:
+//   Epoch 0: 58.0% - Changing architecture
+//   Epoch 1: 66.0% - Changing architecture
+//   Epoch 2: 71.0% - Adjusting learning rate
+//   Epoch 3: 76.0% - Adjusting learning rate
+//   Epoch 4: 81.0% - Adjusting learning rate
+//   Epoch 5: 86.0% - Adjusting learning rate
+//   Epoch 6: 91.0% - Adjusting learning rate
+//   Epoch 7: 93.0% - Fine-tuning parameters
+//   Epoch 8: 95.0% - Fine-tuning parameters
+// 
+// === Network Request Retry Logic ===
+//   Request 1: Network poor - waiting 200ms
+//   Request 2: Network unstable - retry in 300ms
+//   Request 3: Network unstable - retry in 600ms
+//   Request 4: High confidence - sending
+// Network request: Succeeded
+// 
+// === Game AI Decision Loop ===
+// AI battle sequence:
+//   Round 1: ⚔️ Balanced strategy
+//   Round 2: ⚔️ Balanced strategy
+//   Round 3: ✅ Aggressive attack!
+//   Round 4: ✅ Aggressive attack!
+//   Round 5: ✅ Aggressive attack!

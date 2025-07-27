@@ -270,32 +270,6 @@ describe('Runtime System', () => {
     });
   });
 
-  describe('Context Operations', () => {
-    let runtime: Runtime;
-
-    beforeEach(() => {
-      runtime = createRuntime();
-    });
-
-    it('should execute context blocks', async () => {
-      const program = parse(`
-        x = 0
-        in context Test {
-          x = 42
-        }
-        x
-      `);
-      const result = await runtime.execute(program);
-      
-      expect(result.value).toBe(42);
-    });
-
-    it('should maintain context isolation when needed', async () => {
-      // This would require more sophisticated context handling
-      // For now, we'll test basic context switching
-      expect(runtime).toBeDefined();
-    });
-  });
 
   describe('LLM Integration', () => {
     let runtime: Runtime;
@@ -375,25 +349,6 @@ describe('Runtime System', () => {
     });
   });
 
-  describe('Agent Operations', () => {
-    let runtime: Runtime;
-
-    beforeEach(() => {
-      runtime = createRuntime();
-    });
-
-    it('should handle agent declarations', async () => {
-      const program = parse(`
-        agents {
-          researcher: Agent { confidence: 0.9 }
-        }
-      `);
-      
-      // For now, just ensure it doesn't crash
-      const result = await runtime.execute(program);
-      expect(result).toBeDefined();
-    });
-  });
 
   describe('Uncertain If Statements', () => {
     let runtime: Runtime;

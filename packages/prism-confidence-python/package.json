@@ -1,0 +1,20 @@
+{
+  "name": "@prism-lang/confidence-python",
+  "version": "0.1.0",
+  "description": "Python implementation of the Prism confidence extraction library",
+  "private": true,
+  "scripts": {
+    "build": "python -m build",
+    "test": "pytest",
+    "lint": "flake8 src tests",
+    "format": "black src tests",
+    "typecheck": "mypy src",
+    "clean": "rm -rf build dist *.egg-info"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HaruHunab1320/Prism-TS.git",
+    "directory": "packages/prism-confidence-python"
+  },
+  "license": "MIT"
+}

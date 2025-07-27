@@ -124,45 +124,6 @@ describe('Integration: Core Language Features', () => {
     });
   });
 
-  describe('context isolation and scoping', () => {
-    it('should properly isolate context variables', async () => {
-      const program = parse(`
-        global_var = 100
-        
-        in context TestScope {
-          local_var = 200
-          // Can access global
-          combined = global_var + local_var
-        }
-        
-        // Should still have access to global
-        global_var
-      `);
-      
-      const result = await runtime.execute(program);
-      expect(result).toBeInstanceOf(NumberValue);
-      expect(result.value).toBe(100);
-    });
-
-    it('should handle multiple contexts without interference', async () => {
-      const program = parse(`
-        in context ContextA {
-          varA = "A"
-        }
-        
-        in context ContextB {
-          varB = "B"
-        }
-        
-        // Combine variables from both contexts
-        combined = varA + varB
-      `);
-      
-      const result = await runtime.execute(program);
-      expect(result).toBeInstanceOf(StringValue);
-      expect(result.value).toBe("AB");
-    });
-  });
 
   describe('error recovery', () => {
     it('should continue after runtime errors', async () => {

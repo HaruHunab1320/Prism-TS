@@ -2,6 +2,64 @@
 
 This document outlines potential improvements and new features for the Prism language. For completed features and development guide, see [DEVELOPMENT.md](../DEVELOPMENT.md).
 
+## 🎯 Next Highest Priority (Architectural Improvements)
+
+This section details critical architectural improvements and features needed to mature the language.
+
+### 1. Implement `try/catch/finally` for Error Handling
+**Priority:** CRITICAL  
+**Complexity:** High  
+**Value:** Enables robust, production-ready scripting by allowing recovery from runtime errors.
+
+```prism
+try {
+  // Code that might fail
+  result = 10 / 0
+} catch (e) {
+  console.error("An error occurred:", e)
+} finally {
+  console.log("Execution finished.")
+}
+```
+
+### 2. Refactor `ModuleSystem` to be Non-Singleton
+**Priority:** CRITICAL  
+**Complexity:** Medium  
+**Value:** Improves testability, enables isolated runtime instances, and prevents state contamination.
+**Plan:** The `ModuleSystem` should be an instantiable class passed to the `Runtime` on creation.
+
+### 3. Fully Implement `~.` (Confident Property Access)
+**Priority:** HIGH  
+**Complexity:** Medium  
+**Value:** Fixes a major feature gap where the operator is currently a non-functional placeholder.
+**Plan:** The runtime logic must be updated to perform actual property access on `ObjectValue`, handle `null`/`undefined`, and propagate confidence correctly.
+
+### 4. Unify `null` and `undefined`
+**Priority:** HIGH  
+**Complexity:** Medium  
+**Value:** Simplifies the language and eliminates a common source of bugs by having a single `null` type for the absence of a value.
+**Plan:** Remove `UndefinedLiteral` and `UndefinedValue` from the language, and update all relevant logic to use `NullValue`.
+
+### 5. Enforce Consistent Keyword Casing
+**Priority:** MEDIUM  
+**Complexity:** Low  
+**Value:** Improves language consistency and clarity.
+**Plan:** Remove alternate casings like `Agent` from the tokenizer, enforcing lowercase for all keywords.
+
+### 6. Remove Incomplete `shifting to` Syntax
+**Priority:** MEDIUM  
+**Complexity:** Low  
+**Value:** Removes a confusing and non-functional piece of syntax from the language.
+**Plan:** Update the parser to remove the logic for `shifting to`.
+
+### 7. Implement a Standard Library
+**Priority:** MEDIUM  
+**Complexity:** High (ongoing)  
+**Value:** Increases the language's utility for general-purpose scripting.
+**Plan:** Begin planning a standard library for tasks like File I/O and Date/Time manipulation, likely implemented as built-in modules.
+
+---
+
 ## 🎯 High Priority Features
 
 ### 1. Pattern Matching

@@ -308,5 +308,3 @@ export class ModuleSystem {
   }
 }
 
-// Create a singleton instance
-export const moduleSystem = new ModuleSystem();

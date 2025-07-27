@@ -1,0 +1,247 @@
+// filename: 03-confident-assignments.prism
+// description: Confident compound assignment operators (~+=, ~-=, ~*=, ~/=)
+// tags: #confidence #assignment #operators #compound #prism-specific
+// expected: Demonstrates all confident compound assignment operators
+
+// === CODE STARTS HERE ===
+
+console.log("=== Confident Compound Assignments ===");
+
+// Starting values with confidence
+let total = 100 ~> 0.9;
+console.log("Initial total:", total, "confidence:", <~ total);
+
+// Confident addition assignment (~+=)
+let increment = 50 ~> 0.8;
+total ~+= increment;
+console.log("After ~+= 50(0.8):", total, "confidence:", <~ total);
+
+total ~+= 25 ~> 0.85;
+console.log("After ~+= 25(0.85):", total, "confidence:", <~ total);
+
+console.log("\n=== Confident Subtraction Assignment (~-=) ===");
+
+let balance = 1000 ~> 0.95;
+console.log("Initial balance:", balance, "confidence:", <~ balance);
+
+let withdrawal = 150 ~> 0.9;
+balance ~-= withdrawal;
+console.log("After ~-= 150(0.9):", balance, "confidence:", <~ balance);
+
+balance ~-= 50 ~> 0.99;
+console.log("After ~-= 50(0.99):", balance, "confidence:", <~ balance);
+
+console.log("\n=== Confident Multiplication Assignment (~*=) ===");
+
+let price = 100 ~> 0.9;
+console.log("Initial price:", price, "confidence:", <~ price);
+
+let taxRate = 1.2 ~> 0.99;
+price ~*= taxRate;
+console.log("After ~*= 1.2(0.99):", price, "confidence:", <~ price);
+
+price ~*= 0.9 ~> 0.95;  // 10% discount
+console.log("After ~*= 0.9(0.95) discount:", price, "confidence:", <~ price);
+
+console.log("\n=== Confident Division Assignment (~/=) ===");
+
+let amount = 1000 ~> 0.85;
+console.log("Initial amount:", amount, "confidence:", <~ amount);
+
+let divisor = 4 ~> 0.9;
+amount ~/= divisor;
+console.log("After ~/= 4(0.9):", amount, "confidence:", <~ amount);
+
+amount ~/= 5 ~> 0.95;
+console.log("After ~/= 5(0.95):", amount, "confidence:", <~ amount);
+
+console.log("\n=== Confidence Propagation Rules ===");
+
+// Confidence propagates as minimum
+let highConf = 100 ~> 0.95;
+let lowConf = 10 ~> 0.6;
+
+console.log("Before: high =", highConf, "low =", lowConf);
+
+highConf ~+= lowConf;  // Result has lower confidence
+console.log("After highConf ~+= lowConf:", highConf);
+console.log("Resulting confidence (takes minimum):", <~ highConf);
+
+console.log("\n=== Accumulating with Confidence ===");
+
+// Running total with decreasing confidence
+let sum = 0 ~> 1.0;
+console.log("Starting sum:", sum);
+
+sum ~+= 10 ~> 0.9;
+console.log("Added 10(0.9):", sum, "confidence:", <~ sum);
+
+sum ~+= 20 ~> 0.8;
+console.log("Added 20(0.8):", sum, "confidence:", <~ sum);
+
+sum ~+= 30 ~> 0.7;
+console.log("Added 30(0.7):", sum, "confidence:", <~ sum);
+
+console.log("\n=== Compound Interest Example ===");
+
+// Compound interest with confidence
+let principal = 1000 ~> 1.0;
+let rate = 1.05 ~> 0.95;  // 5% interest with 95% confidence
+
+console.log("Initial principal:", principal);
+console.log("Interest rate:", rate);
+
+// Year 1
+principal ~*= rate;
+console.log("After year 1:", principal, "confidence:", <~ principal);
+
+// Year 2
+principal ~*= rate;
+console.log("After year 2:", principal, "confidence:", <~ principal);
+
+// Year 3
+principal ~*= rate;
+console.log("After year 3:", principal, "confidence:", <~ principal);
+
+console.log("\n=== Game Score Example ===");
+
+// Game scoring with confidence tracking
+let score = 0 ~> 1.0;
+let combo = 1 ~> 1.0;
+
+console.log("=== Starting Game ===");
+console.log("Score:", score, "Combo:", combo);
+
+// Hit 1
+let points1 = 100 ~> 0.9;
+score ~+= points1 * combo;
+combo ~*= 1.1 ~> 0.95;
+console.log("\nHit 1: +", points1);
+console.log("Score:", score, "Combo:", combo);
+
+// Hit 2
+let points2 = 150 ~> 0.85;
+score ~+= points2 * combo;
+combo ~*= 1.1 ~> 0.95;
+console.log("\nHit 2: +", points2);
+console.log("Score:", score, "Combo:", combo);
+
+// Hit 3 (bonus)
+let bonusPoints = 500 ~> 0.7;
+score ~+= bonusPoints;
+console.log("\nBonus: +", bonusPoints);
+console.log("Final Score:", score);
+console.log("Score confidence:", <~ score);
+
+console.log("\n=== Budget Management Example ===");
+
+// Department budgets with confidence
+let marketing = 50000 ~> 0.9;
+let development = 80000 ~> 0.95;
+let operations = 40000 ~> 0.85;
+
+console.log("Initial budgets:");
+console.log("Marketing:", marketing);
+console.log("Development:", development);
+console.log("Operations:", operations);
+
+// Q1 adjustments
+marketing ~*= 1.1 ~> 0.8;     // 10% increase
+development ~+= 10000 ~> 0.9; // Fixed increase
+operations ~-= 5000 ~> 0.95;  // Cost reduction
+
+console.log("\nAfter Q1 adjustments:");
+console.log("Marketing:", marketing);
+console.log("Development:", development);
+console.log("Operations:", operations);
+
+// Total budget
+let totalBudget = marketing ~+ development ~+ operations;
+console.log("\nTotal budget:", totalBudget);
+console.log("Budget confidence:", <~ totalBudget);
+
+console.log("\n=== Error Prevention ===");
+
+// Division by zero protection
+let numerator = 100 ~> 0.9;
+let safeDivisor = 0 ~> 0.99;
+
+console.log("Attempting division by zero:");
+if (safeDivisor !== 0) {
+    numerator ~/= safeDivisor;
+    console.log("Result:", numerator);
+} else {
+    console.log("Division by zero prevented!");
+    console.log("Numerator unchanged:", numerator);
+}
+
+// === EXPECTED OUTPUT ===
+// === Confident Compound Assignments ===
+// Initial total: 100 ~> 90.0% confidence: 0.9
+// After ~+= 50(0.8): 150 ~> 80.0% confidence: 0.8
+// After ~+= 25(0.85): 175 ~> 80.0% confidence: 0.8
+// 
+// === Confident Subtraction Assignment (~-=) ===
+// Initial balance: 1000 ~> 95.0% confidence: 0.95
+// After ~-= 150(0.9): 850 ~> 90.0% confidence: 0.9
+// After ~-= 50(0.99): 800 ~> 90.0% confidence: 0.9
+// 
+// === Confident Multiplication Assignment (~*=) ===
+// Initial price: 100 ~> 90.0% confidence: 0.9
+// After ~*= 1.2(0.99): 120 ~> 90.0% confidence: 0.9
+// After ~*= 0.9(0.95) discount: 108 ~> 90.0% confidence: 0.9
+// 
+// === Confident Division Assignment (~/=) ===
+// Initial amount: 1000 ~> 85.0% confidence: 0.85
+// After ~/= 4(0.9): 250 ~> 85.0% confidence: 0.85
+// After ~/= 5(0.95): 50 ~> 85.0% confidence: 0.85
+// 
+// === Confidence Propagation Rules ===
+// Before: high = 100 ~> 95.0% low = 10 ~> 60.0%
+// After highConf ~+= lowConf: 110 ~> 60.0%
+// Resulting confidence (takes minimum): 0.6
+// 
+// === Accumulating with Confidence ===
+// Starting sum: 0 ~> 100.0%
+// Added 10(0.9): 10 ~> 90.0% confidence: 0.9
+// Added 20(0.8): 30 ~> 80.0% confidence: 0.8
+// Added 30(0.7): 60 ~> 70.0% confidence: 0.7
+// 
+// === Compound Interest Example ===
+// Initial principal: 1000 ~> 100.0%
+// Interest rate: 1.05 ~> 95.0%
+// After year 1: 1050 ~> 95.0% confidence: 0.95
+// After year 2: 1102.5 ~> 95.0% confidence: 0.95
+// After year 3: 1157.625 ~> 95.0% confidence: 0.95
+// 
+// === Starting Game ===
+// Score: 0 ~> 100.0% Combo: 1 ~> 100.0%
+// 
+// Hit 1: + 100 ~> 90.0%
+// Score: 100 ~> 90.0% Combo: 1.1 ~> 95.0%
+// 
+// Hit 2: + 150 ~> 85.0%
+// Score: 265 ~> 85.0% Combo: 1.21 ~> 95.0%
+// 
+// Bonus: + 500 ~> 70.0%
+// Final Score: 765 ~> 70.0%
+// Score confidence: 0.7
+// 
+// === Budget Management Example ===
+// Initial budgets:
+// Marketing: 50000 ~> 90.0%
+// Development: 80000 ~> 95.0%
+// Operations: 40000 ~> 85.0%
+// 
+// After Q1 adjustments:
+// Marketing: 55000 ~> 80.0%
+// Development: 90000 ~> 90.0%
+// Operations: 35000 ~> 85.0%
+// 
+// Total budget: 180000 ~> 80.0%
+// Budget confidence: 0.8
+// 
+// === Error Prevention ===
+// Attempting division by zero:
+// Division by zero prevented!
+// Numerator unchanged: 100 ~> 90.0%

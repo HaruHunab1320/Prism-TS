@@ -1,0 +1,110 @@
+// filename: 03-comments.prism
+// description: Different types of comments in Prism
+// tags: #comments #documentation #syntax
+// expected: Shows various comment styles and their usage
+
+// === CODE STARTS HERE ===
+
+// This is a single-line comment
+// It explains the code on the next line
+const singleLineExample = "Comments help explain code";
+
+/* This is a multi-line comment
+   It can span multiple lines
+   and is useful for longer explanations */
+const multiLineExample = "Multi-line comments for detailed docs";
+
+/* Comments can also be inline */ const inlineComment = "Like this";
+
+/**
+ * This is a JSDoc-style documentation comment
+ * It's commonly used for functions and classes
+ * @param {string} name - The name parameter
+ * @returns {string} A greeting message
+ */
+function greet(name) {
+    // Comments inside functions explain implementation
+    const greeting = `Hello, ${name}!`;
+    return greeting; // Inline comment at end of line
+}
+
+/**
+ * Comments are ignored by the interpreter
+ * so they don't affect program execution
+ */
+// const commentedOut = "This line won't execute";
+
+/*
+You can use multi-line comments to temporarily
+disable blocks of code:
+
+const debugCode = "This is commented out";
+console.log(debugCode);
+
+*/
+
+// Nested comments require care
+/* This is a comment /* with nested */ content */
+
+// Comments can contain special characters: @#$%^&*()
+// And Unicode: 你好 🌍 λ
+
+// TODO: This is a common comment pattern for tasks
+// FIXME: This indicates something needs fixing
+// NOTE: This highlights important information
+// HACK: This indicates a temporary workaround
+// XXX: This marks a warning or problem area
+
+console.log("=== Comment Examples ===");
+console.log("Single line value:", singleLineExample);
+console.log("Multi line value:", multiLineExample);
+console.log("Inline comment value:", inlineComment);
+console.log("Greeting:", greet("Prism"));
+
+// Best practices for comments:
+// 1. Explain WHY, not WHAT
+// 2. Keep comments up-to-date with code
+// 3. Use clear, concise language
+// 4. Avoid obvious comments like: i++; // increment i
+
+/**
+ * Example of a well-documented function
+ * 
+ * This function calculates the factorial of a number
+ * using recursion. It includes input validation.
+ * 
+ * @param {number} n - The number to calculate factorial for
+ * @returns {number} The factorial of n
+ * @throws {Error} If n is negative or not an integer
+ * 
+ * @example
+ * factorial(5); // Returns 120
+ * factorial(0); // Returns 1
+ */
+function factorial(n) {
+    // Validate input
+    if (!Number.isInteger(n) || n < 0) {
+        throw new Error("Input must be a non-negative integer");
+    }
+    
+    // Base case: 0! = 1
+    if (n === 0) return 1;
+    
+    // Recursive case: n! = n * (n-1)!
+    return n * factorial(n - 1);
+}
+
+console.log("\n=== Factorial Examples ===");
+console.log("factorial(5):", factorial(5));
+console.log("factorial(0):", factorial(0));
+
+// === EXPECTED OUTPUT ===
+// === Comment Examples ===
+// Single line value: Comments help explain code
+// Multi line value: Multi-line comments for detailed docs
+// Inline comment value: Like this
+// Greeting: Hello, Prism!
+// 
+// === Factorial Examples ===
+// factorial(5): 120
+// factorial(0): 1

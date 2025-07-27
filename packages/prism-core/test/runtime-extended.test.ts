@@ -326,36 +326,6 @@ describe('Runtime Extended Tests', () => {
     });
   });
 
-  describe('Context and Agent Operations Extended', () => {
-    let runtime: Runtime;
-
-    beforeEach(() => {
-      runtime = createRuntime();
-    });
-
-    it('should handle context with shifting', async () => {
-      const program = parse(`
-        x = 0
-        in context First {
-          x = 10
-        }
-        x
-      `);
-      const result = await runtime.execute(program);
-      expect(result.value).toBe(10);
-    });
-
-    it('should handle agent property access', async () => {
-      const program = parse(`
-        agents {
-          analyst: Agent { confidence: 0.9, role: "analysis" }
-        }
-      `);
-      // For now, just ensure it doesn't crash
-      const result = await runtime.execute(program);
-      expect(result).toBeDefined();
-    });
-  });
 
   describe('Error Recovery', () => {
     let runtime: Runtime;

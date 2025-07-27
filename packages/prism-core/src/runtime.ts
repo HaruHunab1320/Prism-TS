@@ -1,3 +1,4 @@
+import { ModuleSystem } from './module-system';
 import {
   ASTNode,
   Program,
@@ -25,8 +26,6 @@ import {
   AwaitExpression,
   IfStatement,
   UncertainIfStatement,
-  ContextStatement,
-  AgentDeclaration,
   BlockStatement,
   ExpressionStatement,
   BinaryOperator,
@@ -35,7 +34,6 @@ import {
   ForLoop,
   ForInLoop,
   WhileLoop,
-  DoWhileLoop,
   UncertainForLoop,
   UncertainWhileLoop,
   ArrayPattern,
@@ -47,9 +45,9 @@ import {
   VariableDeclaration,
   ImportStatement,
   ExportStatement,
+  TryStatement,
 } from './ast';
 import { ConfidenceValue as ConfidenceLib, ConfidenceLevel } from './confidence';
-import { Context, ContextManager } from './context';
 import { LLMProvider, LLMRequest, MockLLMProvider } from './llm-types';
 
 export class RuntimeError extends Error {
@@ -389,13 +387,13 @@ export class Environment {
 
 export class Interpreter {
   public environment: Environment;
-  private contextManager: ContextManager;
   private llmProviders = new Map<string, LLMProvider>();
   private defaultLLMProvider?: string;
+  private moduleSystem: ModuleSystem;
 
-  constructor() {
+  constructor(moduleSystem: ModuleSystem) {
     this.environment = new Environment();
-    this.contextManager = new ContextManager();
+    this.moduleSystem = moduleSystem;
     this.setupBuiltins();
   }
 
@@ -1122,10 +1120,6 @@ export class Interpreter {
         return this.interpretIfStatement(node as IfStatement);
       case 'UncertainIfStatement':
         return this.interpretUncertainIfStatement(node as UncertainIfStatement);
-      case 'ContextStatement':
-        return this.interpretContextStatement(node as ContextStatement);
-      case 'AgentDeclaration':
-        return this.interpretAgentDeclaration(node as AgentDeclaration);
       case 'BlockStatement':
         return this.interpretBlockStatement(node as BlockStatement);
       case 'ExpressionStatement':
@@ -1136,8 +1130,6 @@ export class Interpreter {
         return this.interpretForInLoop(node as ForInLoop);
       case 'WhileLoop':
         return this.interpretWhileLoop(node as WhileLoop);
-      case 'DoWhileLoop':
-        return this.interpretDoWhileLoop(node as DoWhileLoop);
       case 'UncertainForLoop':
         return this.interpretUncertainForLoop(node as UncertainForLoop);
       case 'UncertainWhileLoop':
@@ -1156,6 +1148,8 @@ export class Interpreter {
         return this.interpretImportStatement(node as ImportStatement);
       case 'ExportStatement':
         return this.interpretExportStatement(node as ExportStatement);
+      case 'TryStatement':
+        return this.interpretTryStatement(node as TryStatement);
       default:
         throw new RuntimeError(`Unknown node type: ${(node as any).type}`, node);
     }
@@ -1457,6 +1451,35 @@ export class Interpreter {
         // Confidence threshold gate - handle non-confident values
         return this.applyConfidenceThresholdGate(left, right, node);
 
+      case '~.':
+        // Confident property access - access property with confidence propagation
+        if (!(right instanceof IdentifierExpression)) {
+          throw new RuntimeError('Right side of ~. must be a property name', node);
+        }
+        
+        // Handle null/undefined gracefully
+        if (left instanceof NullValue || left instanceof UndefinedValue) {
+          return new NullValue();
+        }
+        
+        // For objects, access the property
+        if (left instanceof ObjectValue) {
+          const propName = (right as IdentifierExpression).name;
+          const value = left.value.get(propName);
+          return value || new UndefinedValue();
+        }
+        
+        // For arrays, handle special properties
+        if (left instanceof ArrayValue) {
+          return this.interpretPropertyAccess({
+            type: 'PropertyAccess',
+            object: node.left,
+            property: (right as IdentifierExpression).name
+          } as PropertyAccess);
+        }
+        
+        throw new RuntimeError(`Cannot access property of ${left.type}`, node);
+
       case 'instanceof':
         // Check if left is an instance of the constructor/type specified by right
         // For now, we'll check against built-in types
@@ -1549,6 +1572,47 @@ export class Interpreter {
       }
       const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
       return new ConfidenceValue(right, leftConf);
+    }
+
+    // Special handling for confident property access (~.)
+    if (operator === '~.') {
+      // Extract actual values
+      const [leftValue, leftConf] = left instanceof ConfidenceValue 
+        ? [left.value, left.confidence]
+        : [left, new ConfidenceLib(1.0)];
+        
+      // Right must be an identifier
+      if (!(right instanceof IdentifierExpression)) {
+        throw new RuntimeError('Right side of ~. must be a property name', node);
+      }
+      
+      // Handle null/undefined gracefully
+      if (leftValue instanceof NullValue || leftValue instanceof UndefinedValue) {
+        return new ConfidenceValue(new NullValue(), leftConf);
+      }
+      
+      // For objects, access the property
+      if (leftValue instanceof ObjectValue) {
+        const propName = (right as IdentifierExpression).name;
+        const value = leftValue.value.get(propName) || new UndefinedValue();
+        return new ConfidenceValue(value, leftConf);
+      }
+      
+      // For arrays, handle special properties
+      if (leftValue instanceof ArrayValue) {
+        const propName = (right as IdentifierExpression).name;
+        
+        // Handle array properties directly
+        if (propName === 'length') {
+          return new ConfidenceValue(new NumberValue(leftValue.elements.length), leftConf);
+        }
+        
+        // For methods, we would need to create confident versions
+        // For now, throw an error
+        throw new RuntimeError(`Confident property access for array methods not yet implemented`, node);
+      }
+      
+      throw new RuntimeError(`Cannot access property of ${leftValue.type}`, node);
     }
     
     // Special handling for confidence threshold gate operator (~?>)
@@ -1732,27 +1796,48 @@ export class Interpreter {
     return new ConfidenceValue(new BooleanValue(result), resultConfidence);
   }
 
-  private applyConfidentPropertyAccess(left: Value, right: IdentifierExpression, _node: BinaryExpression): Value {
+  private applyConfidentPropertyAccess(left: Value, right: IdentifierExpression, node: BinaryExpression): Value {
     // For confident property access (~.), we implement safe navigation with confidence propagation
-    // Since we don't have full object support yet, this is a simplified implementation
     
     const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
-    
-    // For now, since we don't have object types, we'll implement this as a pass-through
-    // that propagates confidence. In a full implementation, this would:
-    // 1. Check if the property exists
-    // 2. Return undefined/null if it doesn't (with reduced confidence)
-    // 3. Return the property value with combined confidence if it does
+    const leftValue = left instanceof ConfidenceValue ? left.value : left;
     
     // Extract the property name from the identifier
     const propertyName = right.name;
-    const placeholderValue = new StringValue(`${left.toString()}.${propertyName}`);
     
-    // Reduce confidence slightly for property access uncertainty
-    const PROPERTY_ACCESS_CONFIDENCE_FACTOR = 0.9;
-    const reducedConfidence = new ConfidenceLib(leftConf.value * PROPERTY_ACCESS_CONFIDENCE_FACTOR);
+    // Handle null/undefined gracefully
+    if (leftValue instanceof NullValue || leftValue instanceof UndefinedValue) {
+      return new ConfidenceValue(new NullValue(), leftConf);
+    }
     
-    return new ConfidenceValue(placeholderValue, reducedConfidence);
+    // For objects, access the property
+    if (leftValue instanceof ObjectValue) {
+      const value = leftValue.value.get(propertyName);
+      const result = value || new UndefinedValue();
+      
+      // Propagate confidence from the object
+      if (result instanceof ConfidenceValue) {
+        // If the property itself has confidence, combine it with object's confidence
+        const combinedConf = new ConfidenceLib(leftConf.value * result.confidence.value);
+        return new ConfidenceValue(result.value, combinedConf);
+      } else {
+        return new ConfidenceValue(result, leftConf);
+      }
+    }
+    
+    // For arrays, handle special properties
+    if (leftValue instanceof ArrayValue) {
+      if (propertyName === 'length') {
+        return new ConfidenceValue(new NumberValue(leftValue.elements.length), leftConf);
+      }
+      
+      // For array methods, we need to wrap them with confidence
+      // This is a simplified approach - in a full implementation, 
+      // we'd handle all array methods with confidence propagation
+      throw new RuntimeError(`Confident property access for array method '${propertyName}' not yet implemented`, node);
+    }
+    
+    throw new RuntimeError(`Cannot access property of ${leftValue.type}`, node);
   }
 
   private applyParallelConfidence(left: Value, right: Value, _node: BinaryExpression): Value {
@@ -2883,45 +2968,54 @@ export class Interpreter {
     return new NumberValue(0); // Default return
   }
 
-  private async interpretContextStatement(node: ContextStatement): Promise<Value> {
-    // Create and enter context
-    const context = new Context(node.contextName);
-    this.contextManager.registerContext(context);
-    this.contextManager.enterContext(node.contextName);
+  private async interpretTryStatement(node: TryStatement): Promise<Value> {
+    let result: Value = new UndefinedValue();
+    let errorValue: Value | null = null;
 
     try {
-      let result: Value;
-      
-      // Special handling for context: if body is a BlockStatement, 
-      // execute its statements directly without creating a new scope
-      if (node.body.type === 'BlockStatement') {
-        const blockBody = node.body as BlockStatement;
-        result = new NumberValue(0); // default
-        
-        for (const statement of blockBody.statements) {
-          result = await this.interpret(statement);
+      // Execute try block
+      result = await this.interpretBlockStatement(node.tryBlock);
+    } catch (error) {
+      // Capture the error
+      if (error instanceof RuntimeError) {
+        errorValue = new StringValue(error.message);
+      } else if (error instanceof Error) {
+        errorValue = new StringValue(error.message);
+      } else {
+        errorValue = new StringValue(String(error));
+      }
+
+      // Execute catch block if present
+      if (node.catchBlock) {
+        // Create new environment for catch block with error variable
+        const catchEnv = new Environment(this.environment);
+        const previousEnv = this.environment;
+        this.environment = catchEnv;
+
+        try {
+          // Bind error variable if specified
+          if (node.errorVariable) {
+            this.environment.define(node.errorVariable, errorValue);
+          }
+
+          result = await this.interpretBlockStatement(node.catchBlock);
+        } finally {
+          this.environment = previousEnv;
         }
       } else {
-        result = await this.interpret(node.body);
+        // Re-throw if no catch block
+        throw error;
       }
-      
-      // Handle context shifting
-      if (node.shiftTo) {
-        this.contextManager.switchContext(node.shiftTo);
-      }
-      
-      return result;
     } finally {
-      this.contextManager.exitContext();
+      // Execute finally block if present
+      if (node.finallyBlock) {
+        await this.interpretBlockStatement(node.finallyBlock);
+      }
     }
+
+    return result;
   }
 
-
-  private async interpretAgentDeclaration(node: AgentDeclaration): Promise<Value> {
-    // For now, just return a placeholder value
-    // In a full implementation, this would register the agent
-    return new StringValue(`Agent: ${node.name}`);
-  }
 
   private async interpretBlockStatement(node: BlockStatement): Promise<Value> {
     // Create new scope
@@ -3261,39 +3355,6 @@ export class Interpreter {
     return result;
   }
 
-  private async interpretDoWhileLoop(node: DoWhileLoop): Promise<Value> {
-    let result: Value = new UndefinedValue();
-
-    do {
-      // Execute body
-      try {
-        result = await this.interpret(node.body);
-      } catch (error) {
-        if (error instanceof LoopControlError) {
-          if (error.type === 'break') {
-            break;
-          } else if (error.type === 'continue') {
-            // Check condition before continuing
-            const conditionValue = await this.interpret(node.condition);
-            if (!conditionValue.isTruthy()) {
-              break;
-            }
-            continue;
-          }
-        } else {
-          throw error;
-        }
-      }
-
-      // Check condition
-      const conditionValue = await this.interpret(node.condition);
-      if (!conditionValue.isTruthy()) {
-        break;
-      }
-    } while (true);
-
-    return result;
-  }
   
   private async interpretUncertainForLoop(node: UncertainForLoop): Promise<Value> {
     // Create scope for loop variable if needed
@@ -3533,7 +3594,8 @@ export class Runtime {
   private interpreter: Interpreter;
 
   constructor() {
-    this.interpreter = new Interpreter();
+    const moduleSystem = new ModuleSystem();
+    this.interpreter = new Interpreter(moduleSystem);
   }
 
   async execute(program: Program): Promise<Value> {
@@ -3582,11 +3644,5 @@ export class Runtime {
 }
 
 export function createRuntime(): Runtime {
-  const runtime = new Runtime();
-  
-  // Set up default mock provider for testing
-  const mockProvider = new MockLLMProvider();
-  runtime.registerLLMProvider('mock', mockProvider);
-  
-  return runtime;
+  return new Runtime();
 }

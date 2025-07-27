@@ -1,0 +1,391 @@
+// filename: 02-loops.prism
+// description: Loop types in Prism - for, while, for-in (arrays), uncertain loops
+// tags: #loops #iteration #for #while #control-flow #uncertain
+// expected: Demonstrates all loop constructs available in Prism
+
+// === CODE STARTS HERE ===
+
+console.log("=== For Loop ===");
+
+// Basic for loop
+for (let i = 0; i < 5; i++) {
+    console.log(`Iteration ${i}`);
+}
+
+// For loop with multiple variables
+console.log("\nMultiple variables:");
+for (let i = 0, j = 10; i < 5; i++, j -= 2) {
+    console.log(`i: ${i}, j: ${j}`);
+}
+
+// Nested for loops
+console.log("\nMultiplication table (3x3):");
+for (let i = 1; i <= 3; i++) {
+    let row = "";
+    for (let j = 1; j <= 3; j++) {
+        row += `${i * j}\t`;
+    }
+    console.log(row);
+}
+
+console.log("\n=== While Loop ===");
+
+// Basic while loop
+let count = 0;
+while (count < 5) {
+    console.log(`Count: ${count}`);
+    count++;
+}
+
+// While loop with break
+console.log("\nWith break:");
+let n = 0;
+while (true) {
+    if (n >= 3) break;
+    console.log(`n: ${n}`);
+    n++;
+}
+
+// While loop for user input simulation
+console.log("\nSimulated input processing:");
+let attempts = 0;
+let success = false;
+while (!success && attempts < 3) {
+    attempts++;
+    // Simulate random success
+    success = Math.random() > 0.5;
+    console.log(`Attempt ${attempts}: ${success ? "Success!" : "Failed"}`);
+}
+
+console.log("\n=== For-In Loop (Arrays) ===");
+
+// Basic for-in loop
+const numbers = [10, 20, 30, 40, 50];
+console.log("Array elements:");
+for (let num in numbers) {
+    console.log(`Element: ${num}`);
+}
+
+// For-in with index
+console.log("\nWith index:");
+for (let value, index in numbers) {
+    console.log(`Index ${index}: ${value}`);
+}
+
+// For-in with array of objects
+const users = [
+    { name: "Alice", age: 30 },
+    { name: "Bob", age: 25 },
+    { name: "Charlie", age: 35 }
+];
+
+console.log("\nArray of objects:");
+for (let user in users) {
+    console.log(`User: ${user.name}, Age: ${user.age}`);
+}
+
+console.log("\n=== Loop Control Statements ===");
+
+// Continue statement
+console.log("Continue (skip even numbers):");
+for (let i = 0; i < 10; i++) {
+    if (i % 2 === 0) continue;
+    console.log(`Odd: ${i}`);
+}
+
+// Break statement
+console.log("\nBreak (stop at 5):");
+for (let i = 0; i < 10; i++) {
+    if (i === 5) break;
+    console.log(`Number: ${i}`);
+}
+
+// Nested loop with break
+console.log("\nNested loop break:");
+for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+        if (i === 1 && j === 1) {
+            console.log("Breaking inner loop");
+            break;
+        }
+        console.log(`i: ${i}, j: ${j}`);
+    }
+}
+
+console.log("\n=== Array Methods with Loops ===");
+
+// Using Prism's array methods
+const data = [1, 2, 3, 4, 5];
+
+console.log("Using map:");
+const doubled = map(data, x => x * 2);
+console.log("Doubled:", doubled);
+
+console.log("\nUsing filter:");
+const evens = filter(data, x => x % 2 === 0);
+console.log("Even numbers:", evens);
+
+console.log("\nUsing reduce:");
+const sum = reduce(data, (acc, x) => acc + x, 0);
+console.log("Sum:", sum);
+
+console.log("\n=== Confident Loops ===");
+
+// Loops with confident values
+let measurements = [
+    23.5 ~> 0.9,
+    24.1 ~> 0.85,
+    22.8 ~> 0.7,
+    25.2 ~> 0.95
+];
+
+console.log("Processing confident measurements:");
+for (let measurement in measurements) {
+    console.log(`Value: ${measurement}, Confidence: ${<~ measurement}`);
+}
+
+// Filtering by confidence
+console.log("\nHigh confidence only:");
+for (let m in measurements) {
+    if ((<~ m) >= 0.85) {
+        console.log(`High confidence: ${m}`);
+    }
+}
+
+console.log("\n=== Uncertain Loops ===");
+
+// Uncertain for loop
+console.log("Uncertain for loop:");
+let processCount = 0;
+uncertain for (let i = 0; i < 5; i++) {
+    high {
+        console.log(`  [HIGH] Processing item ${i}`);
+        processCount++;
+    }
+    medium {
+        console.log(`  [MEDIUM] Reviewing item ${i}`);
+        processCount++;
+    }
+    low {
+        console.log(`  [LOW] Skipping item ${i}`);
+    }
+}
+console.log(`Processed ${processCount} items`);
+
+// Uncertain while loop with confidence evolution
+console.log("\nUncertain while loop:");
+let confidence = 0.4 ~> 1.0;
+let iteration = 0;
+
+uncertain while (iteration < 5) ~> confidence {
+    high {
+        console.log(`  Iteration ${iteration}: High confidence action`);
+        iteration = 5; // Exit loop
+    }
+    medium {
+        console.log(`  Iteration ${iteration}: Medium confidence - improving`);
+        confidence ~+= 0.2 ~> 1.0;
+        iteration++;
+    }
+    low {
+        console.log(`  Iteration ${iteration}: Low confidence - learning`);
+        confidence ~+= 0.3 ~> 1.0;
+        iteration++;
+    }
+}
+
+console.log("\n=== Practical Examples ===");
+
+// Finding first match
+console.log("Finding first match:");
+const items = ["apple", "banana", "cherry", "date"];
+let found = null;
+
+for (let item in items) {
+    if (item.startsWith("c")) {
+        found = item;
+        break;
+    }
+}
+console.log("First item starting with 'c':", found);
+
+// Accumulating with confidence
+console.log("\nAccumulating measurements:");
+let readings = [
+    10 ~> 0.9,
+    12 ~> 0.8,
+    11 ~> 0.95,
+    13 ~> 0.7
+];
+
+let total = 0 ~> 1.0;
+let validCount = 0;
+
+for (let reading in readings) {
+    if ((<~ reading) >= 0.8) {
+        total ~+= reading;
+        validCount++;
+    }
+}
+
+console.log(`Average of high-confidence readings: ${total ~/ (validCount ~> 1.0)}`);
+console.log(`Confidence in average: ${<~ total}`);
+
+// Loop performance comparison
+console.log("\n=== Performance Patterns ===");
+
+const largeArray = [];
+for (let i = 0; i < 100; i++) {
+    largeArray.push(i);
+}
+
+// Traditional loop
+let start = Date.now();
+let sum1 = 0;
+for (let i = 0; i < largeArray.length; i++) {
+    sum1 += largeArray[i];
+}
+console.log(`Traditional for loop: ${Date.now() - start}ms`);
+
+// For-in loop
+start = Date.now();
+let sum2 = 0;
+for (let val in largeArray) {
+    sum2 += val;
+}
+console.log(`For-in loop: ${Date.now() - start}ms`);
+
+// Reduce method
+start = Date.now();
+let sum3 = reduce(largeArray, (a, b) => a + b, 0);
+console.log(`Reduce method: ${Date.now() - start}ms`);
+
+// === EXPECTED OUTPUT ===
+// === For Loop ===
+// Iteration 0
+// Iteration 1
+// Iteration 2
+// Iteration 3
+// Iteration 4
+// 
+// Multiple variables:
+// i: 0, j: 10
+// i: 1, j: 8
+// i: 2, j: 6
+// i: 3, j: 4
+// i: 4, j: 2
+// 
+// Multiplication table (3x3):
+// 1	2	3	
+// 2	4	6	
+// 3	6	9	
+// 
+// === While Loop ===
+// Count: 0
+// Count: 1
+// Count: 2
+// Count: 3
+// Count: 4
+// 
+// With break:
+// n: 0
+// n: 1
+// n: 2
+// 
+// Simulated input processing:
+// Attempt 1: Failed
+// Attempt 2: Success!
+// 
+// === For-In Loop (Arrays) ===
+// Array elements:
+// Element: 10
+// Element: 20
+// Element: 30
+// Element: 40
+// Element: 50
+// 
+// With index:
+// Index 0: 10
+// Index 1: 20
+// Index 2: 30
+// Index 3: 40
+// Index 4: 50
+// 
+// Array of objects:
+// User: Alice, Age: 30
+// User: Bob, Age: 25
+// User: Charlie, Age: 35
+// 
+// === Loop Control Statements ===
+// Continue (skip even numbers):
+// Odd: 1
+// Odd: 3
+// Odd: 5
+// Odd: 7
+// Odd: 9
+// 
+// Break (stop at 5):
+// Number: 0
+// Number: 1
+// Number: 2
+// Number: 3
+// Number: 4
+// 
+// Nested loop break:
+// i: 0, j: 0
+// i: 0, j: 1
+// i: 0, j: 2
+// i: 1, j: 0
+// Breaking inner loop
+// i: 2, j: 0
+// i: 2, j: 1
+// i: 2, j: 2
+// 
+// === Array Methods with Loops ===
+// Using map:
+// Doubled: [2, 4, 6, 8, 10]
+// 
+// Using filter:
+// Even numbers: [2, 4]
+// 
+// Using reduce:
+// Sum: 15
+// 
+// === Confident Loops ===
+// Processing confident measurements:
+// Value: 23.5 ~> 90.0%, Confidence: 0.9
+// Value: 24.1 ~> 85.0%, Confidence: 0.85
+// Value: 22.8 ~> 70.0%, Confidence: 0.7
+// Value: 25.2 ~> 95.0%, Confidence: 0.95
+// 
+// High confidence only:
+// High confidence: 23.5 ~> 90.0%
+// High confidence: 24.1 ~> 85.0%
+// High confidence: 25.2 ~> 95.0%
+// 
+// === Uncertain Loops ===
+// Uncertain for loop:
+//   [HIGH] Processing item 0
+//   [HIGH] Processing item 1
+//   [HIGH] Processing item 2
+//   [HIGH] Processing item 3
+//   [HIGH] Processing item 4
+// Processed 5 items
+// 
+// Uncertain while loop:
+//   Iteration 0: Low confidence - learning
+//   Iteration 1: Medium confidence - improving
+//   Iteration 2: High confidence action
+// 
+// === Practical Examples ===
+// Finding first match:
+// First item starting with 'c': cherry
+// 
+// Accumulating measurements:
+// Average of high-confidence readings: 11.5 ~> 80.0%
+// Confidence in average: 0.8
+// 
+// === Performance Patterns ===
+// Traditional for loop: 0ms
+// For-in loop: 0ms
+// Reduce method: 0ms

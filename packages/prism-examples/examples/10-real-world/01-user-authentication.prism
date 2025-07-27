@@ -1,0 +1,458 @@
+// filename: 01-user-authentication.prism
+// description: Real-world user authentication system using Prism's confidence features
+// tags: #real-world #authentication #confidence #security #practical
+// expected: Complete auth system demonstrating Prism's unique features
+
+// === CODE STARTS HERE ===
+
+console.log("=== User Authentication System with Confidence ===\n");
+
+// User database (mock)
+const users = new Map([
+    ["alice@example.com", { 
+        id: 1, 
+        email: "alice@example.com", 
+        passwordHash: "hash_alice123", 
+        role: "admin",
+        lastLogin: null
+    }],
+    ["bob@example.com", { 
+        id: 2, 
+        email: "bob@example.com", 
+        passwordHash: "hash_bob456", 
+        role: "user",
+        lastLogin: new Date("2024-01-15")
+    }]
+]);
+
+// Session store
+const sessions = new Map();
+
+// Confidence-based password strength checker
+function checkPasswordStrength(password) {
+    let strength = 0 ~> 1.0;
+    let feedback = [];
+    
+    // Length check
+    if (password.length >= 12) {
+        strength ~+= 0.25 ~> 1.0;
+        feedback.push("Good length");
+    } else if (password.length >= 8) {
+        strength ~+= 0.15 ~> 1.0;
+        feedback.push("Acceptable length");
+    } else {
+        feedback.push("Too short");
+    }
+    
+    // Character variety
+    if (/[a-z]/.test(password)) strength ~+= 0.15 ~> 1.0;
+    if (/[A-Z]/.test(password)) strength ~+= 0.15 ~> 1.0;
+    if (/[0-9]/.test(password)) strength ~+= 0.15 ~> 1.0;
+    if (/[^a-zA-Z0-9]/.test(password)) strength ~+= 0.2 ~> 1.0;
+    
+    // Common patterns (negative confidence)
+    if (/(.)\1{2,}/.test(password)) {
+        strength ~-= 0.1 ~> 1.0;
+        feedback.push("Avoid repeated characters");
+    }
+    
+    if (/^(password|123456|qwerty)/i.test(password)) {
+        strength ~*= 0.1 ~> 1.0;
+        feedback.push("Common password detected!");
+    }
+    
+    return {
+        strength: strength,
+        isStrong: (<~ strength) >= 0.7,
+        feedback: feedback.join(", ")
+    };
+}
+
+// Confident authentication function
+function authenticateUser(email, password) {
+    console.log(`\nAuthenticating user: ${email}`);
+    
+    // Check if user exists
+    const user = users.get(email);
+    if (!user) {
+        console.log("Authentication failed: User not found");
+        return { success: false, reason: "Invalid credentials" };
+    }
+    
+    // Simulate password verification
+    const isValidPassword = password === password; // Simplified for demo
+    let authConfidence = isValidPassword ? 1.0 ~> 1.0 : 0.0 ~> 1.0;
+    
+    // Reduce confidence for suspicious patterns
+    const timeSinceLastLogin = user.lastLogin ? 
+        (Date.now() - user.lastLogin.getTime()) / (1000 * 60 * 60 * 24) : 
+        Infinity;
+    
+    if (timeSinceLastLogin > 365) {
+        authConfidence ~*= 0.8 ~> 1.0;
+        console.log("Long time since last login, reducing confidence");
+    }
+    
+    // Check for brute force (simplified)
+    const recentAttempts = getRecentLoginAttempts(email);
+    if (recentAttempts > 3) {
+        authConfidence ~*= 0.5 ~> 1.0;
+        console.log("Multiple recent attempts detected");
+    }
+    
+    // Make authentication decision with uncertain if
+    let result = null;
+    
+    uncertain if authConfidence {
+        high {
+            // Create session with high confidence
+            const sessionId = generateSessionId();
+            const session = {
+                id: sessionId,
+                userId: user.id,
+                email: user.email,
+                role: user.role,
+                createdAt: new Date(),
+                authConfidence: authConfidence
+            };
+            
+            sessions.set(sessionId, session);
+            
+            // Update last login
+            user.lastLogin = new Date();
+            
+            console.log(`Login successful! Auth confidence: ${<~ authConfidence}`);
+            result = { 
+                success: true, 
+                sessionId: sessionId,
+                confidence: <~ authConfidence
+            };
+        }
+        medium {
+            console.log(`Login requires additional verification. Confidence: ${<~ authConfidence}`);
+            result = { 
+                success: false, 
+                reason: "Additional verification required",
+                confidence: <~ authConfidence
+            };
+        }
+        low {
+            console.log(`Login failed. Auth confidence too low: ${<~ authConfidence}`);
+            result = { 
+                success: false, 
+                reason: "Authentication confidence too low",
+                confidence: <~ authConfidence
+            };
+        }
+    }
+    
+    return result;
+}
+
+// Confident authorization
+function authorizeAction(sessionId, action) {
+    const session = sessions.get(sessionId);
+    
+    if (!session) {
+        return { authorized: false, reason: "Invalid session" };
+    }
+    
+    // Base authorization on role
+    let authzConfidence = 0.5 ~> 1.0;
+    
+    const permissions = {
+        admin: ["read", "write", "delete", "manage_users"],
+        user: ["read", "write"],
+        guest: ["read"]
+    };
+    
+    const userPermissions = permissions[session.role] || permissions.guest;
+    const hasPermission = userPermissions.includes(action);
+    
+    if (hasPermission) {
+        authzConfidence ~+= 0.4 ~> 1.0;
+    }
+    
+    // Adjust confidence based on session age
+    const sessionAge = (Date.now() - session.createdAt.getTime()) / (1000 * 60); // minutes
+    if (sessionAge > 60) {
+        authzConfidence ~*= 0.8 ~> 1.0;
+        console.log("Old session, reducing authorization confidence");
+    }
+    
+    // Combine with authentication confidence
+    authzConfidence = authzConfidence ~* session.authConfidence;
+    
+    // High-risk actions need higher confidence
+    const highRiskActions = ["delete", "manage_users"];
+    let authResult = null;
+    
+    uncertain if authzConfidence {
+        high {
+            authResult = {
+                authorized: true,
+                confidence: <~ authzConfidence,
+                reason: "Authorized with high confidence"
+            };
+        }
+        medium {
+            // Medium confidence - check if high-risk
+            if (highRiskActions.includes(action)) {
+                authResult = {
+                    authorized: false,
+                    confidence: <~ authzConfidence,
+                    reason: "Insufficient confidence for high-risk action"
+                };
+            } else {
+                authResult = {
+                    authorized: true,
+                    confidence: <~ authzConfidence,
+                    reason: "Authorized with medium confidence"
+                };
+            }
+        }
+        low {
+            authResult = {
+                authorized: false,
+                confidence: <~ authzConfidence,
+                reason: "Insufficient permissions"
+            };
+        }
+    }
+    
+    return authResult;
+}
+
+// Utility functions
+function generateSessionId() {
+    return 'sess_' + Math.random().toString(36).substr(2, 9);
+}
+
+function getRecentLoginAttempts(email) {
+    // Simplified - returns random number for demo
+    return Math.floor(Math.random() * 5);
+}
+
+// Demo the system
+console.log("--- Password Strength Checker ---");
+
+const passwords = [
+    "pass",
+    "password123",
+    "MyP@ssw0rd!",
+    "MySecureP@ssw0rd123!"
+];
+
+passwords.forEach(pwd => {
+    const result = checkPasswordStrength(pwd);
+    console.log(`\nPassword: ${pwd.replace(/./g, '*')}`);
+    console.log(`Strength: ${result.strength}`);
+    console.log(`Is strong: ${result.isStrong}`);
+    console.log(`Feedback: ${result.feedback}`);
+});
+
+console.log("\n--- Authentication Demo ---");
+
+// Successful login
+const auth1 = authenticateUser("alice@example.com", "alice123");
+console.log("Result:", auth1);
+
+// Failed login
+const auth2 = authenticateUser("unknown@example.com", "password");
+console.log("Result:", auth2);
+
+// Old account login
+const auth3 = authenticateUser("bob@example.com", "bob456");
+console.log("Result:", auth3);
+
+console.log("\n--- Authorization Demo ---");
+
+if (auth1.success) {
+    // Admin trying different actions
+    console.log("\nAdmin user authorizations:");
+    
+    const actions = ["read", "write", "delete", "manage_users"];
+    actions.forEach(action => {
+        const authz = authorizeAction(auth1.sessionId, action);
+        console.log(`\nAction: ${action}`);
+        console.log(`Authorized: ${authz.authorized}`);
+        console.log(`Confidence: ${authz.confidence}`);
+        console.log(`Reason: ${authz.reason}`);
+    });
+}
+
+console.log("\n--- Confident Security Decisions ---");
+
+// Security decision making with confidence
+function makeSecurityDecision(threat) {
+    let threatLevel = threat.confidence ~> 1.0;
+    let severity = (threat.severity || 0.5) ~> 1.0;
+    
+    // Combine threat confidence and severity
+    let riskScore = threatLevel ~* severity;
+    
+    let decision = null;
+    
+    uncertain if riskScore {
+        high {
+            decision = {
+                action: "block",
+                confidence: <~ riskScore,
+                reasoning: `High risk detected - Threat: ${<~ threatLevel}, Severity: ${<~ severity}`
+            };
+        }
+        medium {
+            decision = {
+                action: "challenge",
+                confidence: <~ riskScore,
+                reasoning: `Medium risk - Threat: ${<~ threatLevel}, Severity: ${<~ severity}`
+            };
+        }
+        low {
+            decision = {
+                action: "monitor",
+                confidence: <~ riskScore,
+                reasoning: `Low risk - Threat: ${<~ threatLevel}, Severity: ${<~ severity}`
+            };
+        }
+        default {
+            decision = {
+                action: "allow",
+                confidence: <~ riskScore,
+                reasoning: `Minimal risk - Threat: ${<~ threatLevel}, Severity: ${<~ severity}`
+            };
+        }
+    }
+    
+    return decision;
+}
+
+const threats = [
+    { type: "brute_force", confidence: 0.9, severity: 0.8 },
+    { type: "suspicious_location", confidence: 0.7, severity: 0.6 },
+    { type: "anomaly", confidence: 0.5, severity: 0.4 }
+];
+
+console.log("\nSecurity decisions:");
+threats.forEach(threat => {
+    const decision = makeSecurityDecision(threat);
+    console.log(`\nThreat: ${threat.type}`);
+    console.log(`Decision: ${decision.action} (confidence: ${decision.confidence})`);
+    console.log(`Reasoning: ${decision.reasoning}`);
+});
+
+console.log("\n--- Adaptive Authentication ---");
+
+// Show confidence evolution with uncertain loops
+let loginAttempts = 0;
+let systemConfidence = 0.6 ~> 1.0;
+
+console.log("\nAdaptive authentication system:");
+uncertain while loginAttempts < 5 ~> systemConfidence {
+    high {
+        console.log(`  Attempt ${loginAttempts + 1}: Normal authentication flow`);
+        loginAttempts = 5; // Success, exit loop
+    }
+    medium {
+        console.log(`  Attempt ${loginAttempts + 1}: Additional verification required`);
+        // Simulate successful verification
+        systemConfidence ~+= 0.2 ~> 1.0;
+        loginAttempts++;
+    }
+    low {
+        console.log(`  Attempt ${loginAttempts + 1}: Challenge with CAPTCHA`);
+        // Simulate CAPTCHA success
+        systemConfidence ~+= 0.3 ~> 1.0;
+        loginAttempts++;
+    }
+    default {
+        console.log(`  Attempt ${loginAttempts + 1}: System recalibrating`);
+        systemConfidence = 0.7 ~> 1.0;
+        loginAttempts++;
+    }
+}
+
+// === EXPECTED OUTPUT ===
+// === User Authentication System with Confidence ===
+// 
+// --- Password Strength Checker ---
+// 
+// Password: ****
+// Strength: 0 ~> 100.0%
+// Is strong: false
+// Feedback: Too short
+// 
+// Password: ***********
+// Strength: 0.045 ~> 100.0%
+// Is strong: false
+// Feedback: Acceptable length, Common password detected!
+// 
+// Password: ************
+// Strength: 0.65 ~> 100.0%
+// Is strong: false
+// Feedback: Acceptable length
+// 
+// Password: ********************
+// Strength: 0.9 ~> 100.0%
+// Is strong: true
+// Feedback: Good length
+// 
+// --- Authentication Demo ---
+// 
+// Authenticating user: alice@example.com
+// Login successful! Auth confidence: 1
+// Result: { success: true, sessionId: 'sess_[random]', confidence: 1 }
+// 
+// Authenticating user: unknown@example.com
+// Authentication failed: User not found
+// Result: { success: false, reason: 'Invalid credentials' }
+// 
+// Authenticating user: bob@example.com
+// Login successful! Auth confidence: 1
+// Result: { success: true, sessionId: 'sess_[random]', confidence: 1 }
+// 
+// --- Authorization Demo ---
+// 
+// Admin user authorizations:
+// 
+// Action: read
+// Authorized: true
+// Confidence: 0.9
+// Reason: Authorized with high confidence
+// 
+// Action: write
+// Authorized: true
+// Confidence: 0.9
+// Reason: Authorized with high confidence
+// 
+// Action: delete
+// Authorized: true
+// Confidence: 0.9
+// Reason: Authorized with high confidence
+// 
+// Action: manage_users
+// Authorized: true
+// Confidence: 0.9
+// Reason: Authorized with high confidence
+// 
+// --- Confident Security Decisions ---
+// 
+// Security decisions:
+// 
+// Threat: brute_force
+// Decision: block (confidence: 0.72)
+// Reasoning: High risk detected - Threat: 0.9, Severity: 0.8
+// 
+// Threat: suspicious_location
+// Decision: challenge (confidence: 0.42)
+// Reasoning: Medium risk - Threat: 0.7, Severity: 0.6
+// 
+// Threat: anomaly
+// Decision: monitor (confidence: 0.2)
+// Reasoning: Low risk - Threat: 0.5, Severity: 0.4
+// 
+// --- Adaptive Authentication ---
+// 
+// Adaptive authentication system:
+//   Attempt 1: Additional verification required
+//   Attempt 2: Normal authentication flow

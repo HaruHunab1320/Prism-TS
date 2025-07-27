@@ -10,8 +10,6 @@ import {
   AssignmentStatement,
   IfStatement,
   UncertainIfStatement,
-  ContextStatement,
-  AgentDeclaration,
   BlockStatement,
   ExpressionStatement,
   PropertyAccess,
@@ -145,36 +143,7 @@ describe('Parser', () => {
       expect(uncertainIf.branches.low).toBeInstanceOf(BlockStatement);
     });
 
-    it('should parse context statements', () => {
-      const program = parse(`
-        in context Medical {
-          analyze_symptoms()
-        } shifting to Treatment {
-          recommend_therapy()
-        }
-      `);
-      expect(program.statements).toHaveLength(1);
-      expect(program.statements[0]).toBeInstanceOf(ContextStatement);
-      const context = program.statements[0] as ContextStatement;
-      expect(context.contextName).toBe('Medical');
-      expect(context.body).toBeInstanceOf(BlockStatement);
-      expect(context.shiftTo).toBe('Treatment');
-    });
 
-    it('should parse agent declarations', () => {
-      const program = parse(`
-        agents {
-          researcher: Agent { confidence: 0.9, role: "research" }
-          writer: Agent { confidence: 0.8 }
-        }
-      `);
-      expect(program.statements).toHaveLength(1);
-      expect(program.statements[0]).toBeInstanceOf(BlockStatement);
-      const block = program.statements[0] as BlockStatement;
-      expect(block.statements).toHaveLength(2);
-      expect(block.statements[0]).toBeInstanceOf(AgentDeclaration);
-      expect(block.statements[1]).toBeInstanceOf(AgentDeclaration);
-    });
   });
 
   describe('Complex expressions', () => {

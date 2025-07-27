@@ -37,10 +37,8 @@ describe('Confident Property Access (~.)', () => {
       result
     `);
     const result = await runtime.execute(program);
-    // Confident property access on null returns a confident undefined-like result
-    expect(result.toString()).toContain('null');
-    expect(result.toString()).toContain('90.0%');
-    expect(result.toString()).toContain('property');
+    // Confident property access on null returns a confident null
+    expect(result.toString()).toBe('null (~90.0%)');
   });
 
   it('should work with arrays', async () => {

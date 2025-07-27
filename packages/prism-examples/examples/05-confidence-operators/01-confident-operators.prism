@@ -1,0 +1,239 @@
+// filename: 01-confident-operators.prism
+// description: Confidence operators (~>, <~, ~~, ~??) - the core feature of Prism
+// tags: #confidence #operators #confident #prism-specific
+// expected: Demonstrates all confidence operators and their behavior
+
+// === CODE STARTS HERE ===
+
+console.log("=== Confidence Assignment Operator (~>) ===");
+
+// Basic confidence assignment
+let value = 42 ~> 0.9;  // 42 with 90% confidence
+console.log("Value:", value);
+console.log("Type:", typeof value);
+
+// Different confidence levels
+let highConf = "certain" ~> 0.95;
+let mediumConf = "probable" ~> 0.7;
+let lowConf = "uncertain" ~> 0.3;
+
+console.log("High confidence:", highConf);
+console.log("Medium confidence:", mediumConf);
+console.log("Low confidence:", lowConf);
+
+// Confidence with different types
+let confNumber = 3.14159 ~> 0.99;
+let confString = "Prism" ~> 0.85;
+let confBool = true ~> 0.9;
+let confArray = [1, 2, 3] ~> 0.8;
+let confObject = { x: 10, y: 20 } ~> 0.75;
+
+console.log("\n=== Confidence Extraction Operator (<~) ===");
+
+// Extract confidence from values
+console.log("Confidence of highConf:", <~ highConf);
+console.log("Confidence of mediumConf:", <~ mediumConf);
+console.log("Confidence of lowConf:", <~ lowConf);
+
+// Regular values have full confidence
+let regularValue = 100;
+console.log("Confidence of regular value:", <~ regularValue); // 1.0
+
+console.log("\n=== Confidence Chaining Operator (~~) ===");
+
+// Chain confident values
+let step1 = 10 ~> 0.9;
+let step2 = 20 ~> 0.8;
+let step3 = 30 ~> 0.7;
+
+let chained = step1 ~~ step2;
+console.log("Chained step1 ~~ step2:", chained);
+
+// Multiple chaining
+let multiChain = step1 ~~ step2 ~~ step3;
+console.log("Multi-chain result:", multiChain);
+
+console.log("\n=== Confidence Coalesce Operator (~??) ===");
+
+// Use fallback if confidence too low
+let uncertain = "maybe" ~> 0.3;
+let fallback = "default" ~> 0.9;
+
+let coalesced = uncertain ~?? fallback;
+console.log("Low conf ~?? fallback:", coalesced);
+
+// High confidence doesn't coalesce
+let certain = "definitely" ~> 0.95;
+let notUsed = "backup" ~> 0.8;
+
+let kept = certain ~?? notUsed;
+console.log("High conf ~?? backup:", kept);
+
+// Chained coalescing
+let veryLow = "unlikely" ~> 0.1;
+let alsoLow = "doubtful" ~> 0.2;
+let reliable = "trustworthy" ~> 0.9;
+
+let cascaded = veryLow ~?? alsoLow ~?? reliable;
+console.log("Cascaded coalesce:", cascaded);
+
+console.log("\n=== Confident Logical Operators (~&&, ~||) ===");
+
+// Confident AND
+let cond1 = true ~> 0.9;
+let cond2 = true ~> 0.8;
+let confAnd = cond1 ~&& cond2;
+console.log("true(0.9) ~&& true(0.8):", confAnd);
+
+// Confident OR
+let option1 = false ~> 0.7;
+let option2 = true ~> 0.6;
+let confOr = option1 ~|| option2;
+console.log("false(0.7) ~|| true(0.6):", confOr);
+
+console.log("\n=== Confident Arithmetic (~+, ~-, ~*, ~/) ===");
+
+// Confident arithmetic operations
+let a = 100 ~> 0.9;
+let b = 50 ~> 0.8;
+
+let sum = a ~+ b;
+let diff = a ~- b;
+let prod = a ~* b;
+let quot = a ~/ b;
+
+console.log("100(0.9) ~+ 50(0.8):", sum);
+console.log("100(0.9) ~- 50(0.8):", diff);
+console.log("100(0.9) ~* 50(0.8):", prod);
+console.log("100(0.9) ~/ 50(0.8):", quot);
+
+console.log("\n=== Confident Comparison (~==, ~!=, ~<, ~>) ===");
+
+// Confident equality
+let x = 42 ~> 0.85;
+let y = 42 ~> 0.9;
+let z = 43 ~> 0.95;
+
+console.log("42(0.85) ~== 42(0.9):", x ~== y);
+console.log("42(0.85) ~!= 43(0.95):", x ~!= z);
+
+// Confident comparison
+let score1 = 85 ~> 0.8;
+let score2 = 90 ~> 0.9;
+
+console.log("85(0.8) ~< 90(0.9):", score1 ~< score2);
+console.log("85(0.8) ~> 90(0.9):", score1 ~> score2);
+
+console.log("\n=== Confidence Propagation ===");
+
+// Confidence flows through operations
+let measurement = 100 ~> 0.95;
+let factor = 1.5 ~> 0.9;
+let adjusted = measurement ~* factor;
+
+console.log("Measurement:", measurement, "confidence:", <~ measurement);
+console.log("Factor:", factor, "confidence:", <~ factor);
+console.log("Adjusted:", adjusted, "confidence:", <~ adjusted);
+
+// Complex expression
+let base = 50 ~> 0.9;
+let increment = 10 ~> 0.85;
+let multiplier = 2 ~> 0.95;
+
+let result = (base ~+ increment) ~* multiplier;
+console.log("Complex result:", result);
+console.log("Result confidence:", <~ result);
+
+console.log("\n=== Threshold Gate (~@>) ===");
+
+// Execute only if confidence >= 0.7
+let input = 100 ~> 0.8;
+let processed = input ~@> {
+    console.log("High confidence - processing!");
+    input * 2
+};
+console.log("Threshold gate result:", processed);
+
+// Low confidence blocked
+let unsure = 50 ~> 0.4;
+let blocked = unsure ~@> {
+    console.log("This won't execute");
+    unsure * 2
+};
+console.log("Low confidence blocked:", blocked);
+
+console.log("\n=== Parallel Confidence (~||>) ===");
+
+// Select highest confidence result
+let source1 = "result A" ~> 0.7;
+let source2 = "result B" ~> 0.9;
+let source3 = "result C" ~> 0.8;
+
+let best = source1 ~||> source2 ~||> source3;
+console.log("Parallel confidence selected:", best);
+
+console.log("\n=== Confidence Pipeline (~|>) ===");
+
+// Pipeline with confidence
+let data = 10 ~> 0.9;
+let piped = data ~|> (x => x * 2) ~|> (x => x + 5);
+console.log("Pipeline result:", piped);
+console.log("Pipeline confidence:", <~ piped);
+
+// === EXPECTED OUTPUT ===
+// === Confidence Assignment Operator (~>) ===
+// Value: 42 ~> 90.0%
+// Type: confident
+// High confidence: certain ~> 95.0%
+// Medium confidence: probable ~> 70.0%
+// Low confidence: uncertain ~> 30.0%
+// 
+// === Confidence Extraction Operator (<~) ===
+// Confidence of highConf: 0.95
+// Confidence of mediumConf: 0.7
+// Confidence of lowConf: 0.3
+// Confidence of regular value: 1
+// 
+// === Confidence Chaining Operator (~~) ===
+// Chained step1 ~~ step2: 20 ~> 80.0%
+// Multi-chain result: 30 ~> 70.0%
+// 
+// === Confidence Coalesce Operator (~??) ===
+// Low conf ~?? fallback: default ~> 90.0%
+// High conf ~?? backup: definitely ~> 95.0%
+// Cascaded coalesce: trustworthy ~> 90.0%
+// 
+// === Confident Logical Operators (~&&, ~||) ===
+// true(0.9) ~&& true(0.8): true ~> 80.0%
+// false(0.7) ~|| true(0.6): true ~> 70.0%
+// 
+// === Confident Arithmetic (~+, ~-, ~*, ~/) ===
+// 100(0.9) ~+ 50(0.8): 150 ~> 80.0%
+// 100(0.9) ~- 50(0.8): 50 ~> 80.0%
+// 100(0.9) ~* 50(0.8): 5000 ~> 80.0%
+// 100(0.9) ~/ 50(0.8): 2 ~> 80.0%
+// 
+// === Confident Comparison (~==, ~!=, ~<, ~>) ===
+// 42(0.85) ~== 42(0.9): true ~> 85.0%
+// 42(0.85) ~!= 43(0.95): true ~> 85.0%
+// 85(0.8) ~< 90(0.9): true ~> 80.0%
+// 85(0.8) ~> 90(0.9): false ~> 80.0%
+// 
+// === Confidence Propagation ===
+// Measurement: 100 ~> 95.0% confidence: 0.95
+// Factor: 1.5 ~> 90.0% confidence: 0.9
+// Adjusted: 150 ~> 90.0% confidence: 0.9
+// Complex result: 120 ~> 85.0%
+// Result confidence: 0.85
+// 
+// === Threshold Gate (~@>) ===
+// High confidence - processing!
+// Threshold gate result: 200 ~> 80.0%
+// Low confidence blocked: undefined
+// 
+// === Parallel Confidence (~||>) ===
+// Parallel confidence selected: result B ~> 90.0%
+// 
+// === Confidence Pipeline (~|>) ===
+// Pipeline result: 25 ~> 90.0%
+// Pipeline confidence: 0.9

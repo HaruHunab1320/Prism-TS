@@ -19,5 +19,5 @@ numbers = [1, 2, 3, 4, 5] ~> 0.9
 // In JavaScript: numbers.reduce((a, b) => a + b, 0)
 // In Prism: reduce(numbers, sum, 0) where sum is defined elsewhere
 
-// For now, you need to pre-define functions or use agents for transformations
+// For now, you need to pre-define functions for transformations
 // Future versions will support inline lambda expressions

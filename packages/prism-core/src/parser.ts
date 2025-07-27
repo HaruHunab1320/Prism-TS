@@ -26,12 +26,9 @@ import {
   AwaitExpression,
   IfStatement,
   UncertainIfStatement,
-  ContextStatement,
-  AgentDeclaration,
   BlockStatement,
   ExpressionStatement,
   UncertainBranches,
-  AgentConfig,
   BinaryOperator,
   UnaryOperator,
   LambdaExpression,
@@ -41,7 +38,6 @@ import {
   ForLoop,
   ForInLoop,
   WhileLoop,
-  DoWhileLoop,
   BreakStatement,
   ContinueStatement,
   UncertainForLoop,
@@ -57,6 +53,7 @@ import {
   FunctionDeclaration,
   ReturnStatement,
   VariableDeclaration,
+  TryStatement,
 } from './ast';
 
 export class ParseError extends Error {
@@ -132,9 +129,6 @@ export class Parser {
         return this.variableDeclaration();
       }
       
-      if (this.match(TokenType.AGENTS)) {
-        return this.agentsStatement();
-      }
       
       if (this.match(TokenType.UNCERTAIN)) {
         // Check what follows 'uncertain'
@@ -173,9 +167,6 @@ export class Parser {
         return this.continueStatement();
       }
       
-      if (this.match(TokenType.IN)) {
-        return this.contextStatement();
-      }
       
       if (this.match(TokenType.IMPORT)) {
         return this.importStatement();
@@ -183,6 +174,10 @@ export class Parser {
       
       if (this.match(TokenType.EXPORT)) {
         return this.exportStatement();
+      }
+      
+      if (this.match(TokenType.TRY)) {
+        return this.tryStatement();
       }
       
       // Check for potential destructuring patterns
@@ -273,51 +268,6 @@ export class Parser {
     }
   }
 
-  private agentsStatement(): Statement {
-    this.consume(TokenType.LEFT_BRACE, "Expected '{' after 'agents'");
-    
-    const statements: Statement[] = [];
-    
-    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
-      const agentDecl = this.agentDeclaration();
-      statements.push(agentDecl);
-    }
-    
-    this.consume(TokenType.RIGHT_BRACE, "Expected '}' after agents block");
-    
-    return new BlockStatement(statements);
-  }
-
-  private agentDeclaration(): AgentDeclaration {
-    const name = this.consume(TokenType.IDENTIFIER, "Expected agent name").value;
-    this.consume(TokenType.COLON, "Expected ':' after agent name");
-    this.consume(TokenType.AGENT, "Expected 'Agent' keyword");
-    
-    const config: AgentConfig = {};
-    
-    if (this.match(TokenType.LEFT_BRACE)) {
-      while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
-        const key = this.consume(TokenType.IDENTIFIER, "Expected config key").value;
-        this.consume(TokenType.COLON, "Expected ':' after config key");
-        
-        if (key === 'confidence') {
-          const value = this.consume(TokenType.NUMBER, "Expected number for confidence").value;
-          config.confidence = parseFloat(value);
-        } else if (key === 'role') {
-          const value = this.consume(TokenType.STRING, "Expected string for role").value;
-          config.role = value;
-        }
-        
-        if (this.check(TokenType.COMMA)) {
-          this.advance();
-        }
-      }
-      
-      this.consume(TokenType.RIGHT_BRACE, "Expected '}' after agent config");
-    }
-    
-    return new AgentDeclaration(name, config);
-  }
 
   private uncertainIfStatement(): UncertainIfStatement {
     this.consume(TokenType.IF, "Expected 'if' after 'uncertain'");
@@ -392,37 +342,6 @@ export class Parser {
     return new IfStatement(condition!, thenStatement!, elseStatement);
   }
 
-  private contextStatement(): ContextStatement {
-    this.consume(TokenType.CONTEXT, "Expected 'context' after 'in'");
-    const contextName = this.consume(TokenType.IDENTIFIER, "Expected context name").value;
-    
-    // For context statements, handle blocks directly
-    let body: Statement;
-    if (this.check(TokenType.LEFT_BRACE)) {
-      this.advance(); // consume {
-      body = this.blockStatement();
-    } else {
-      const stmt = this.statement();
-      if (!stmt) throw new ParseError("Expected statement", this.peek(), this.sourceCode);
-      body = stmt;
-    }
-    
-    let shiftTo: string | undefined = undefined;
-    
-    if (this.match(TokenType.SHIFTING)) {
-      this.consume(TokenType.TO, "Expected 'to' after 'shifting'");
-      shiftTo = this.consume(TokenType.IDENTIFIER, "Expected context name after 'to'").value;
-      // Parse the shifting target block
-      if (this.check(TokenType.LEFT_BRACE)) {
-        this.advance(); // consume {
-        this.blockStatement(); // consume the shifting target block
-      } else {
-        this.statement(); // consume the shifting target statement
-      }
-    }
-    
-    return new ContextStatement(contextName, body!, shiftTo);
-  }
 
   private blockStatement(): BlockStatement {
     const statements = this.blockContents();
@@ -1128,6 +1047,34 @@ export class Parser {
     return new VariableDeclaration(kind, identifier, initializer);
   }
 
+  private tryStatement(): TryStatement {
+    this.consume(TokenType.LEFT_BRACE, "Expected '{' after 'try'");
+    const tryBlock = this.blockStatement();
+    let catchBlock: BlockStatement | undefined;
+    let finallyBlock: BlockStatement | undefined;
+    let errorVariable: string | undefined;
+
+    if (this.match(TokenType.CATCH)) {
+      if (this.match(TokenType.LEFT_PAREN)) {
+        errorVariable = this.consume(TokenType.IDENTIFIER, "Expected error variable name in catch").value;
+        this.consume(TokenType.RIGHT_PAREN, "Expected ')' after error variable");
+      }
+      this.consume(TokenType.LEFT_BRACE, "Expected '{' after 'catch'");
+      catchBlock = this.blockStatement();
+    }
+
+    if (this.match(TokenType.FINALLY)) {
+      this.consume(TokenType.LEFT_BRACE, "Expected '{' after 'finally'");
+      finallyBlock = this.blockStatement();
+    }
+
+    if (!catchBlock && !finallyBlock) {
+      throw new ParseError("Expected 'catch' or 'finally' after 'try'", this.peek(), this.sourceCode);
+    }
+
+    return new TryStatement(tryBlock, catchBlock, finallyBlock, errorVariable);
+  }
+
   private expression(): Expression | null {
     return this.pipeline();
   }
@@ -1742,7 +1689,6 @@ export class Parser {
         case TokenType.IF:
         case TokenType.UNCERTAIN:
         case TokenType.IN:
-        case TokenType.AGENTS:
           return;
       }
       

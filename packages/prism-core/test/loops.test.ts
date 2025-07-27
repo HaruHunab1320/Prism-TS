@@ -322,7 +322,7 @@ describe('Loop Statements', () => {
     });
   });
 
-  describe('Do-While Loops', () => {
+  describe.skip('Do-While Loops (removed from language)', () => {
     it('should execute at least once', async () => {
       const code = `
         count = 0

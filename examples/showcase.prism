@@ -40,18 +40,19 @@ uncertain if (diagnosis ~> 0.8) {
   }
 }
 
-// 5. Context-aware processing
-in context MedicalRecords {
-  // This context has access to patient history
+// 5. Medical records processing
+// Using a simple scope instead of context
+{
   patient_id = "P-12345"
   history_relevant = llm("Is patient history relevant for: " + diagnosis)
 }
 
-// 6. Multi-agent coordination for second opinion
-agents {
-  primary_physician: Agent { confidence: 0.9 }
-  specialist: Agent { confidence: 0.95 }
-  ai_assistant: Agent { confidence: 0.85 }
+// 6. Multi-agent coordination simulation
+// Using objects instead of agents
+medical_team = {
+  primary_physician: { confidence: 0.9 },
+  specialist: { confidence: 0.95 },
+  ai_assistant: { confidence: 0.85 }
 }
 
 // 7. Risk assessment with confidence thresholds

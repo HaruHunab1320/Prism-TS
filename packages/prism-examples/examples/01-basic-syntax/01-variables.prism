@@ -1,0 +1,96 @@
+// filename: 01-variables.prism
+// description: Variable declarations and basic types in Prism
+// tags: #variables #types #const #let #var
+// expected: Demonstrates all variable declaration forms and basic types
+
+// === CODE STARTS HERE ===
+
+// Variable declarations with different keywords
+const immutableValue = 42;
+let mutableValue = "Hello, Prism!";
+var functionScoped = true;
+
+// Basic data types
+const numberValue = 3.14159;
+const stringValue = "Prism Language";
+const booleanValue = false;
+const nullValue = null;
+const undefinedValue = undefined;
+
+// Type inference
+let inferredNumber = 100;  // inferred as number
+let inferredString = "inferred";  // inferred as string
+let inferredBool = true;  // inferred as boolean
+
+// Variable reassignment (only for let and var)
+mutableValue = "Updated value";
+functionScoped = false;
+
+// Multiple declarations
+let a = 1, b = 2, c = 3;
+const x = "x", y = "y", z = "z";
+
+// Special number values
+const infinity = Infinity;
+const negInfinity = -Infinity;
+const notANumber = NaN;
+
+// String templates
+const name = "Prism";
+const greeting = `Welcome to ${name}!`;
+const multiline = `This is a
+multiline
+string in ${name}`;
+
+// Unicode and escape sequences
+const unicode = "\u2764\uFE0F"; // ❤️
+const escaped = "Line 1\nLine 2\tTabbed";
+
+// Display all values
+console.log("=== Basic Types ===");
+console.log("Number:", numberValue);
+console.log("String:", stringValue);
+console.log("Boolean:", booleanValue);
+console.log("Null:", nullValue);
+console.log("Undefined:", undefinedValue);
+
+console.log("\n=== Variable Updates ===");
+console.log("Updated mutable:", mutableValue);
+console.log("Updated var:", functionScoped);
+
+console.log("\n=== Special Values ===");
+console.log("Infinity:", infinity);
+console.log("NaN:", notANumber);
+console.log("Is NaN?", Number.isNaN(notANumber));
+
+console.log("\n=== String Features ===");
+console.log("Template:", greeting);
+console.log("Multiline:", multiline);
+console.log("Unicode:", unicode);
+console.log("Escaped:", escaped);
+
+// === EXPECTED OUTPUT ===
+// === Basic Types ===
+// Number: 3.14159
+// String: Prism Language
+// Boolean: false
+// Null: null
+// Undefined: undefined
+// 
+// === Variable Updates ===
+// Updated mutable: Updated value
+// Updated var: false
+// 
+// === Special Values ===
+// Infinity: Infinity
+// NaN: NaN
+// Is NaN? true
+// 
+// === String Features ===
+// Template: Welcome to Prism!
+// Multiline: This is a
+// multiline
+// string in Prism
+// Unicode: ❤️
+// Escaped: Line 1
+// Line 2	Tabbed

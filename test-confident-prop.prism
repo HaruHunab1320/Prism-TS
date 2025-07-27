@@ -1,0 +1,7 @@
+// Test confident property access
+let obj = { x: 42 }
+console.log("obj:", obj)
+
+// Try confident property access
+let val = obj~.x
+console.log("val:", val)

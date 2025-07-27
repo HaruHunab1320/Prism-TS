@@ -25,14 +25,11 @@ export type NodeType =
   | 'BlockStatement'
   | 'IfStatement'
   | 'UncertainIfStatement'
-  | 'ContextStatement'
-  | 'AgentDeclaration'
   | 'AssignmentStatement'
   | 'ExpressionStatement'
   | 'ForLoop'
   | 'ForInLoop'
   | 'WhileLoop'
-  | 'DoWhileLoop'
   | 'BreakStatement'
   | 'ContinueStatement'
   | 'UncertainForLoop'
@@ -48,7 +45,8 @@ export type NodeType =
   | 'FunctionDeclaration'
   | 'ReturnStatement'
   | 'VariableDeclaration'
-  | 'AwaitExpression';
+  | 'AwaitExpression'
+  | 'TryStatement';
 
 export abstract class ASTNode {
   abstract type: NodeType;
@@ -338,34 +336,6 @@ export class UncertainIfStatement extends Statement {
   }
 }
 
-export class ContextStatement extends Statement {
-  type: NodeType = 'ContextStatement';
-  
-  constructor(
-    public contextName: string,
-    public body: Statement,
-    public shiftTo?: string
-  ) {
-    super();
-  }
-}
-
-export interface AgentConfig {
-  confidence?: number;
-  role?: string;
-  capabilities?: string[];
-}
-
-export class AgentDeclaration extends Statement {
-  type: NodeType = 'AgentDeclaration';
-  
-  constructor(
-    public name: string,
-    public config: AgentConfig
-  ) {
-    super();
-  }
-}
 
 export class AssignmentStatement extends Statement {
   type: NodeType = 'AssignmentStatement';
@@ -423,16 +393,6 @@ export class WhileLoop extends Statement {
   }
 }
 
-export class DoWhileLoop extends Statement {
-  type: NodeType = 'DoWhileLoop';
-  
-  constructor(
-    public body: Statement,
-    public condition: Expression
-  ) {
-    super();
-  }
-}
 
 export class BreakStatement extends Statement {
   type: NodeType = 'BreakStatement';
@@ -617,6 +577,19 @@ export class VariableDeclaration extends Statement {
     public identifier: string,              // Variable name
     public initializer?: Expression,        // Optional initial value
     public pattern?: ArrayPattern | ObjectPattern  // Optional destructuring pattern
+  ) {
+    super();
+  }
+}
+
+export class TryStatement extends Statement {
+  type: NodeType = 'TryStatement';
+
+  constructor(
+    public tryBlock: BlockStatement,
+    public catchBlock?: BlockStatement,
+    public finallyBlock?: BlockStatement,
+    public errorVariable?: string
   ) {
     super();
   }

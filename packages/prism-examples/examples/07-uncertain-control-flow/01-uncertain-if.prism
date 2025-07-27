@@ -1,0 +1,264 @@
+// filename: 01-uncertain-if.prism
+// description: Uncertain if statements - execute branches based on confidence levels
+// tags: #uncertain #if #confidence #control-flow #prism-specific
+// expected: Demonstrates uncertain if with high/medium/low/default branches
+
+// === CODE STARTS HERE ===
+
+console.log("=== Uncertain If Statements ===");
+
+// Basic uncertain if - high confidence
+let prediction = true ~> 0.9;
+let result = "";
+
+uncertain if prediction {
+    high {
+        result = "High confidence - proceeding with action";
+    }
+    medium {
+        result = "Medium confidence - needs review";
+    }
+    low {
+        result = "Low confidence - aborting";
+    }
+}
+
+console.log("Prediction confidence:", <~ prediction);
+console.log("Result:", result);
+
+console.log("\n=== Different Confidence Levels ===");
+
+// Testing different confidence thresholds
+let scenarios = [
+    { name: "Very confident", value: true ~> 0.95 },
+    { name: "Somewhat confident", value: true ~> 0.6 },
+    { name: "Not confident", value: true ~> 0.2 }
+];
+
+scenarios.forEach(scenario => {
+    let message = "";
+    
+    uncertain if scenario.value {
+        high {
+            message = "✅ Approved automatically";
+        }
+        medium {
+            message = "⚠️ Requires human review";
+        }
+        low {
+            message = "❌ Rejected";
+        }
+    }
+    
+    console.log(`${scenario.name}: ${message}`);
+});
+
+console.log("\n=== Uncertain If with Default Branch ===");
+
+// When confidence doesn't match any threshold
+let ambiguousData = true ~> 0.5;
+let action = "";
+
+uncertain if ambiguousData {
+    high {
+        action = "Process immediately";
+    }
+    low {
+        action = "Discard data";
+    }
+    default {
+        // Confidence is 0.5 - between high and low
+        action = "Queue for manual inspection";
+    }
+}
+
+console.log("Ambiguous data action:", action);
+
+console.log("\n=== Complex Conditions with Confidence ===");
+
+// AI model predictions with confidence
+let weatherModel = "rain" ~> 0.85;
+let temperatureModel = 15 ~> 0.7;
+let eventPlanning = "";
+
+uncertain if weatherModel ~== "rain" {
+    high {
+        eventPlanning = "Cancel outdoor event - high rain confidence";
+    }
+    medium {
+        eventPlanning = "Prepare indoor backup option";
+    }
+    low {
+        eventPlanning = "Proceed with outdoor event";
+    }
+}
+
+console.log("Weather prediction:", weatherModel);
+console.log("Event planning:", eventPlanning);
+
+console.log("\n=== Nested Uncertain If ===");
+
+// Security system with layered confidence checks
+let faceRecognition = true ~> 0.8;
+let voiceMatch = true ~> 0.75;
+let accessLevel = "";
+
+uncertain if faceRecognition {
+    high {
+        // Face recognized with high confidence
+        uncertain if voiceMatch {
+            high {
+                accessLevel = "Full access granted";
+            }
+            medium {
+                accessLevel = "Limited access - voice uncertain";
+            }
+            low {
+                accessLevel = "Visual access only";
+            }
+        }
+    }
+    medium {
+        accessLevel = "Additional verification required";
+    }
+    low {
+        accessLevel = "Access denied - unrecognized";
+    }
+}
+
+console.log("Face confidence:", <~ faceRecognition);
+console.log("Voice confidence:", <~ voiceMatch);
+console.log("Access level:", accessLevel);
+
+console.log("\n=== Medical Diagnosis Example ===");
+
+// Medical AI with confidence-based recommendations
+let symptomMatch = 0.82;  // 82% match with condition
+let diagnosis = symptomMatch ~> 0.7;  // 70% confidence in symptom analysis
+let recommendation = "";
+
+uncertain if diagnosis > 0.8 {
+    high {
+        recommendation = "High probability - start treatment protocol";
+    }
+    medium {
+        recommendation = "Moderate probability - order additional tests";
+    }
+    low {
+        recommendation = "Low probability - monitor symptoms";
+    }
+    default {
+        recommendation = "Inconclusive - consult specialist";
+    }
+}
+
+console.log("Symptom match:", symptomMatch);
+console.log("Diagnosis confidence:", <~ diagnosis);
+console.log("Recommendation:", recommendation);
+
+console.log("\n=== Trading System Example ===");
+
+// Automated trading with confidence thresholds
+let marketSignal = "buy" ~> 0.73;
+let tradeAmount = 10000;
+let action = "";
+let actualAmount = 0;
+
+uncertain if marketSignal ~== "buy" {
+    high {
+        action = "Execute full trade";
+        actualAmount = tradeAmount;
+    }
+    medium {
+        action = "Execute partial trade";
+        actualAmount = tradeAmount * 0.5;
+    }
+    low {
+        action = "Hold position";
+        actualAmount = 0;
+    }
+}
+
+console.log("Market signal:", marketSignal);
+console.log("Trade action:", action);
+console.log("Trade amount: $", actualAmount);
+
+console.log("\n=== Confidence Evolution ===");
+
+// Showing how confidence affects execution over time
+let learningModel = 0.4;  // Starting confidence
+let iterations = 0;
+let history = [];
+
+while (iterations < 5) {
+    let outcome = "";
+    let modelPrediction = true ~> learningModel;
+    
+    uncertain if modelPrediction {
+        high {
+            outcome = "Model confident - applying decision";
+            learningModel += 0.05;  // Positive feedback
+        }
+        medium {
+            outcome = "Model learning - gathering more data";
+            learningModel += 0.15;  // Significant learning
+        }
+        low {
+            outcome = "Model uncertain - using defaults";
+            learningModel += 0.1;   // Gradual improvement
+        }
+    }
+    
+    history.push({
+        iteration: iterations + 1,
+        confidence: learningModel,
+        outcome: outcome
+    });
+    
+    iterations++;
+}
+
+console.log("Learning progression:");
+history.forEach(h => {
+    console.log(`  Iteration ${h.iteration}: ${(h.confidence * 100).toFixed(0)}% - ${h.outcome}`);
+});
+
+// === EXPECTED OUTPUT ===
+// === Uncertain If Statements ===
+// Prediction confidence: 0.9
+// Result: High confidence - proceeding with action
+// 
+// === Different Confidence Levels ===
+// Very confident: ✅ Approved automatically
+// Somewhat confident: ⚠️ Requires human review
+// Not confident: ❌ Rejected
+// 
+// === Uncertain If with Default Branch ===
+// Ambiguous data action: Queue for manual inspection
+// 
+// === Complex Conditions with Confidence ===
+// Weather prediction: rain ~> 85.0%
+// Event planning: Cancel outdoor event - high rain confidence
+// 
+// === Nested Uncertain If ===
+// Face confidence: 0.8
+// Voice confidence: 0.75
+// Access level: Full access granted
+// 
+// === Medical Diagnosis Example ===
+// Symptom match: 0.82
+// Diagnosis confidence: 0.7
+// Recommendation: Moderate probability - order additional tests
+// 
+// === Trading System Example ===
+// Market signal: buy ~> 73.0%
+// Trade action: Execute partial trade
+// Trade amount: $ 5000
+// 
+// === Confidence Evolution ===
+// Learning progression:
+//   Iteration 1: 40% - Model uncertain - using defaults
+//   Iteration 2: 50% - Model learning - gathering more data
+//   Iteration 3: 65% - Model learning - gathering more data
+//   Iteration 4: 80% - Model confident - applying decision
+//   Iteration 5: 85% - Model confident - applying decision

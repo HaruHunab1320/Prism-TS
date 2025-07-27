@@ -87,25 +87,6 @@ describe('Tokenizer', () => {
       ]);
     });
 
-    it('should tokenize context keywords', () => {
-      const tokens = tokenize('in context shifting to');
-      expect(tokens).toEqual([
-        { type: TokenType.IN, value: 'in', line: 1, column: 0 },
-        { type: TokenType.CONTEXT, value: 'context', line: 1, column: 3 },
-        { type: TokenType.SHIFTING, value: 'shifting', line: 1, column: 11 },
-        { type: TokenType.TO, value: 'to', line: 1, column: 20 },
-        { type: TokenType.EOF, value: '', line: 1, column: 22 },
-      ]);
-    });
-
-    it('should tokenize agent keywords', () => {
-      const tokens = tokenize('agents agent');
-      expect(tokens).toEqual([
-        { type: TokenType.AGENTS, value: 'agents', line: 1, column: 0 },
-        { type: TokenType.AGENT, value: 'agent', line: 1, column: 7 },
-        { type: TokenType.EOF, value: '', line: 1, column: 12 },
-      ]);
-    });
   });
 
   describe('Delimiters', () => {

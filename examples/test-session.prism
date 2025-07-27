@@ -63,16 +63,18 @@ analysis = llm("Analyze the number: " + x)
 complex = ((x + y) * 2 - 10) / 3
 chained = x + y * 2 + product / sum
 
-// 9. Context Usage
-in context DataAnalysis {
+// 9. Data Analysis Scope
+// Using a simple scope instead of context
+{
   data_result = 123
   analysis_complete = true
 }
 
-// 10. Agent Declaration
-agents {
-  analyzer: Agent { confidence: 0.95 }
-  reporter: Agent { confidence: 0.85 }
+// 10. Analysis Team Configuration
+// Using objects instead of agents
+analysis_team = {
+  analyzer: { confidence: 0.95 },
+  reporter: { confidence: 0.85 }
 }
 
 // Final comprehensive test

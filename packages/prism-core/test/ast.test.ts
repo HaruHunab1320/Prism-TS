@@ -9,8 +9,6 @@ import {
   BlockStatement,
   IfStatement,
   UncertainIfStatement,
-  ContextStatement,
-  AgentDeclaration,
   AssignmentStatement,
   Program,
 } from '../src/ast';
@@ -114,27 +112,6 @@ describe('AST Nodes', () => {
       expect(uncertainIf.type).toBe('UncertainIfStatement');
     });
 
-    it('should create context statements', () => {
-      const contextName = 'Medical';
-      const body = new BlockStatement([]);
-      const shiftTo = 'Treatment';
-      const context = new ContextStatement(contextName, body, shiftTo);
-      expect(context.contextName).toBe(contextName);
-      expect(context.body).toBe(body);
-      expect(context.shiftTo).toBe(shiftTo);
-      expect(context.type).toBe('ContextStatement');
-    });
-
-    it('should create agent declarations', () => {
-      const agent = new AgentDeclaration('researcher', {
-        confidence: 0.9,
-        role: 'research',
-      });
-      expect(agent.name).toBe('researcher');
-      expect(agent.config.confidence).toBe(0.9);
-      expect(agent.config.role).toBe('research');
-      expect(agent.type).toBe('AgentDeclaration');
-    });
 
     it('should create assignment statements', () => {
       const assignment = new AssignmentStatement(

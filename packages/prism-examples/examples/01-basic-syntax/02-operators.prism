@@ -1,0 +1,204 @@
+// filename: 02-operators.prism
+// description: All operators in Prism including arithmetic, comparison, logical, and bitwise
+// tags: #operators #arithmetic #comparison #logical #bitwise
+// expected: Demonstrates all operator types with their results
+
+// === CODE STARTS HERE ===
+
+console.log("=== Arithmetic Operators ===");
+const a = 10;
+const b = 3;
+
+console.log(`${a} + ${b} =`, a + b);      // Addition
+console.log(`${a} - ${b} =`, a - b);      // Subtraction
+console.log(`${a} * ${b} =`, a * b);      // Multiplication
+console.log(`${a} / ${b} =`, a / b);      // Division
+console.log(`${a} % ${b} =`, a % b);      // Modulo
+console.log(`${a} ** ${b} =`, a ** b);    // Exponentiation
+
+// Unary operators
+let counter = 5;
+console.log("\n=== Unary Operators ===");
+console.log("Original:", counter);
+console.log("++counter:", ++counter);     // Pre-increment
+console.log("counter++:", counter++);     // Post-increment
+console.log("After post:", counter);
+console.log("--counter:", --counter);     // Pre-decrement
+console.log("counter--:", counter--);     // Post-decrement
+console.log("After post:", counter);
+console.log("+counter:", +counter);       // Unary plus
+console.log("-counter:", -counter);       // Unary minus
+
+console.log("\n=== Comparison Operators ===");
+const x = 5;
+const y = "5";
+const z = 5;
+
+console.log(`${x} == ${y}:`, x == y);     // Loose equality
+console.log(`${x} === ${y}:`, x === y);   // Strict equality
+console.log(`${x} != ${y}:`, x != y);     // Loose inequality
+console.log(`${x} !== ${y}:`, x !== y);   // Strict inequality
+console.log(`${x} < 10:`, x < 10);        // Less than
+console.log(`${x} > 3:`, x > 3);          // Greater than
+console.log(`${x} <= ${z}:`, x <= z);     // Less than or equal
+console.log(`${x} >= ${z}:`, x >= z);     // Greater than or equal
+
+console.log("\n=== Logical Operators ===");
+const t = true;
+const f = false;
+
+console.log(`${t} && ${f}:`, t && f);     // AND
+console.log(`${t} || ${f}:`, t || f);     // OR
+console.log(`!${t}:`, !t);                // NOT
+console.log(`!${f}:`, !f);                // NOT
+
+// Short-circuit evaluation
+console.log("\n=== Short-circuit Evaluation ===");
+console.log("null || 'default':", null || 'default');
+console.log("'value' || 'default':", 'value' || 'default');
+console.log("null && 'value':", null && 'value');
+console.log("'first' && 'second':", 'first' && 'second');
+
+// Nullish coalescing
+console.log("\n=== Nullish Coalescing ===");
+console.log("null ?? 'default':", null ?? 'default');
+console.log("undefined ?? 'default':", undefined ?? 'default');
+console.log("0 ?? 'default':", 0 ?? 'default');
+console.log("'' ?? 'default':", '' ?? 'default');
+
+console.log("\n=== String Operators ===");
+const firstName = "Prism";
+const lastName = "Language";
+
+// String concatenation
+console.log("Concatenation:", firstName + " " + lastName);
+
+// Template literals
+console.log("Template:", `${firstName} ${lastName}`);
+
+// String comparison
+console.log("'abc' < 'abd':", 'abc' < 'abd');
+console.log("'10' < '2':", '10' < '2'); // Lexicographic comparison
+
+console.log("\n=== Assignment Operators ===");
+let num = 10;
+console.log("Initial:", num);
+
+num += 5;
+console.log("After +=5:", num);
+
+num -= 3;
+console.log("After -=3:", num);
+
+num *= 2;
+console.log("After *=2:", num);
+
+num /= 4;
+console.log("After /=4:", num);
+
+num %= 5;
+console.log("After %=5:", num);
+
+num **= 2;
+console.log("After **=2:", num);
+
+// Compound logical assignments
+let value = null;
+value ||= "default";
+console.log("\n=== Logical Assignments ===");
+console.log("After ||=:", value);
+
+value &&= "updated";
+console.log("After &&=:", value);
+
+let nothing;
+nothing ??= "fallback";
+console.log("After ??=:", nothing);
+
+console.log("\n=== Type Operators ===");
+console.log("typeof 42:", typeof 42);
+console.log("typeof 'string':", typeof 'string');
+console.log("typeof true:", typeof true);
+console.log("typeof undefined:", typeof undefined);
+console.log("typeof null:", typeof null);
+console.log("typeof {}:", typeof {});
+console.log("typeof []:", typeof []);
+console.log("typeof function(){}:", typeof function(){});
+
+// === EXPECTED OUTPUT ===
+// === Arithmetic Operators ===
+// 10 + 3 = 13
+// 10 - 3 = 7
+// 10 * 3 = 30
+// 10 / 3 = 3.3333333333333335
+// 10 % 3 = 1
+// 10 ** 3 = 1000
+// 
+// === Unary Operators ===
+// Original: 5
+// ++counter: 6
+// counter++: 6
+// After post: 7
+// --counter: 6
+// counter--: 6
+// After post: 5
+// +counter: 5
+// -counter: -5
+// 
+// === Comparison Operators ===
+// 5 == 5: true
+// 5 === 5: false
+// 5 != 5: false
+// 5 !== 5: true
+// 5 < 10: true
+// 5 > 3: true
+// 5 <= 5: true
+// 5 >= 5: true
+// 
+// === Logical Operators ===
+// true && false: false
+// true || false: true
+// !true: false
+// !false: true
+// 
+// === Short-circuit Evaluation ===
+// null || 'default': default
+// 'value' || 'default': value
+// null && 'value': null
+// 'first' && 'second': second
+// 
+// === Nullish Coalescing ===
+// null ?? 'default': default
+// undefined ?? 'default': default
+// 0 ?? 'default': 0
+// '' ?? 'default': 
+// 
+// === String Operators ===
+// Concatenation: Prism Language
+// Template: Prism Language
+// 'abc' < 'abd': true
+// '10' < '2': true
+// 
+// === Assignment Operators ===
+// Initial: 10
+// After +=5: 15
+// After -=3: 12
+// After *=2: 24
+// After /=4: 6
+// After %=5: 1
+// After **=2: 1
+// 
+// === Logical Assignments ===
+// After ||=: default
+// After &&=: updated
+// After ??=: fallback
+// 
+// === Type Operators ===
+// typeof 42: number
+// typeof 'string': string
+// typeof true: boolean
+// typeof undefined: undefined
+// typeof null: object
+// typeof {}: object
+// typeof []: object
+// typeof function(){}: function

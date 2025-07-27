@@ -1,0 +1,223 @@
+// filename: 01-if-else.prism
+// description: If-else statements and conditional logic in Prism
+// tags: #if #else #conditional #control-flow
+// expected: Demonstrates all forms of conditional statements
+
+// === CODE STARTS HERE ===
+
+console.log("=== Basic If Statements ===");
+
+// Simple if statement
+const age = 18;
+if (age >= 18) {
+    console.log("You are an adult");
+}
+
+// If-else statement
+const temperature = 25;
+if (temperature > 30) {
+    console.log("It's hot outside");
+} else {
+    console.log("The weather is nice");
+}
+
+// If-else if-else chain
+const score = 85;
+if (score >= 90) {
+    console.log("Grade: A");
+} else if (score >= 80) {
+    console.log("Grade: B");
+} else if (score >= 70) {
+    console.log("Grade: C");
+} else if (score >= 60) {
+    console.log("Grade: D");
+} else {
+    console.log("Grade: F");
+}
+
+console.log("\n=== Nested If Statements ===");
+
+const hasLicense = true;
+const carAvailable = true;
+
+if (age >= 18) {
+    if (hasLicense) {
+        if (carAvailable) {
+            console.log("You can drive!");
+        } else {
+            console.log("You need a car");
+        }
+    } else {
+        console.log("You need a license");
+    }
+} else {
+    console.log("You're too young to drive");
+}
+
+console.log("\n=== Complex Conditions ===");
+
+const username = "admin";
+const password = "secret123";
+const isAdmin = true;
+
+// Multiple conditions with logical operators
+if (username === "admin" && password === "secret123") {
+    console.log("Login successful");
+}
+
+// OR conditions
+const dayOfWeek = "Saturday";
+if (dayOfWeek === "Saturday" || dayOfWeek === "Sunday") {
+    console.log("It's the weekend!");
+}
+
+// Combining AND and OR
+const hour = 14;
+if ((hour >= 9 && hour <= 17) || isAdmin) {
+    console.log("Access granted");
+}
+
+console.log("\n=== Ternary Operator ===");
+
+// Simple ternary
+const status = age >= 18 ? "adult" : "minor";
+console.log("Status:", status);
+
+// Nested ternary (use sparingly)
+const time = 14;
+const greeting = time < 12 ? "Good morning" : 
+                 time < 18 ? "Good afternoon" : 
+                 "Good evening";
+console.log("Greeting:", greeting);
+
+// Ternary with function calls
+const discount = isAdmin ? 0.5 : 0.1;
+console.log(`Discount: ${discount * 100}%`);
+
+console.log("\n=== Truthy and Falsy Values ===");
+
+// Testing falsy values
+const falsyValues = [false, 0, "", null, undefined, NaN];
+falsyValues.forEach(value => {
+    if (!value) {
+        console.log(`${value} is falsy`);
+    }
+});
+
+// Testing truthy values
+const truthyValues = [true, 1, "text", {}, [], -1, "0"];
+truthyValues.forEach(value => {
+    if (value) {
+        console.log(`${JSON.stringify(value)} is truthy`);
+    }
+});
+
+console.log("\n=== Guard Clauses ===");
+
+function processUser(user) {
+    // Early return pattern
+    if (!user) {
+        console.log("No user provided");
+        return;
+    }
+    
+    if (!user.name) {
+        console.log("User has no name");
+        return;
+    }
+    
+    if (user.age < 0) {
+        console.log("Invalid age");
+        return;
+    }
+    
+    console.log(`Processing user: ${user.name}, age ${user.age}`);
+}
+
+processUser(null);
+processUser({ age: 25 });
+processUser({ name: "Alice", age: -5 });
+processUser({ name: "Bob", age: 30 });
+
+console.log("\n=== Switch-like If-Else ===");
+
+// When you have many equality checks
+const fruit = "apple";
+
+if (fruit === "apple") {
+    console.log("🍎 Red and crunchy");
+} else if (fruit === "banana") {
+    console.log("🍌 Yellow and sweet");
+} else if (fruit === "orange") {
+    console.log("🍊 Orange and juicy");
+} else {
+    console.log("Unknown fruit");
+}
+
+console.log("\n=== Conditional Assignment ===");
+
+// Using if-else for assignment
+let message;
+if (hour < 12) {
+    message = "Good morning";
+} else {
+    message = "Good day";
+}
+console.log("Message:", message);
+
+// Using ternary for assignment
+const userType = isAdmin ? "administrator" : "regular user";
+console.log("User type:", userType);
+
+// Using logical operators for defaults
+const config = null;
+const setting = config || { theme: "dark" };
+console.log("Setting:", setting);
+
+// === EXPECTED OUTPUT ===
+// === Basic If Statements ===
+// You are an adult
+// The weather is nice
+// Grade: B
+// 
+// === Nested If Statements ===
+// You can drive!
+// 
+// === Complex Conditions ===
+// Login successful
+// It's the weekend!
+// Access granted
+// 
+// === Ternary Operator ===
+// Status: adult
+// Greeting: Good afternoon
+// Discount: 50%
+// 
+// === Truthy and Falsy Values ===
+// false is falsy
+// 0 is falsy
+//  is falsy
+// null is falsy
+// undefined is falsy
+// NaN is falsy
+// true is truthy
+// 1 is truthy
+// "text" is truthy
+// {} is truthy
+// [] is truthy
+// -1 is truthy
+// "0" is truthy
+// 
+// === Guard Clauses ===
+// No user provided
+// User has no name
+// Invalid age
+// Processing user: Bob, age 30
+// 
+// === Switch-like If-Else ===
+// 🍎 Red and crunchy
+// 
+// === Conditional Assignment ===
+// Message: Good day
+// User type: administrator
+// Setting: { theme: 'dark' }

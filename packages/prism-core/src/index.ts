@@ -25,8 +25,6 @@ export * from './confidence';
 // Re-export the base ConfidenceValue as BaseConfidenceValue to avoid confusion
 export { ConfidenceValue as BaseConfidenceValue } from './confidence/types';
 
-// Context system exports  
-export * from './context';
 
 // Main entry points for convenience
 export { parse } from './parser';

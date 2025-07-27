@@ -1,0 +1,303 @@
+// filename: 01-imports-exports.prism
+// description: Module system with imports and exports - ES6 style modules in Prism
+// tags: #modules #import #export #esm #module-system
+// expected: Demonstrates the module system features
+
+// === CODE STARTS HERE ===
+
+// Note: In a real Prism environment, these would be in separate files
+// This example shows the syntax and patterns
+
+console.log("=== Module Exports ===");
+
+// Named exports
+export const VERSION = "1.0.0";
+export const API_URL = "https://api.example.com";
+
+export function greet(name) {
+    return `Hello, ${name}!`;
+}
+
+export class User {
+    constructor(name, email) {
+        this.name = name;
+        this.email = email;
+    }
+    
+    display() {
+        return `${this.name} <${this.email}>`;
+    }
+}
+
+// Export list
+const helper1 = () => "Helper 1";
+const helper2 = () => "Helper 2";
+const helper3 = () => "Helper 3";
+
+export { helper1, helper2, helper3 };
+
+// Renamed exports
+const internalName = "Internal";
+export { internalName as externalName };
+
+// Default export
+export default {
+    name: "Main Module",
+    version: VERSION,
+    init() {
+        console.log("Module initialized");
+    }
+};
+
+console.log("\n=== Module Imports ===");
+
+// Named imports (showing syntax)
+// import { VERSION, API_URL } from './module';
+console.log("Named import syntax: import { VERSION, API_URL } from './module';");
+
+// Import all as namespace
+// import * as MyModule from './module';
+console.log("Namespace import: import * as MyModule from './module';");
+
+// Import with rename
+// import { internalName as publicName } from './module';
+console.log("Renamed import: import { internalName as publicName } from './module';");
+
+// Default import
+// import MainModule from './module';
+console.log("Default import: import MainModule from './module';");
+
+// Mixed imports
+// import MainModule, { VERSION, greet } from './module';
+console.log("Mixed import: import MainModule, { VERSION, greet } from './module';");
+
+console.log("\n=== Confident Module Exports ===");
+
+// Exporting confident values
+export const config ~= {
+    timeout: 5000,
+    retries: 3,
+    debug: true
+};
+
+export function calculateWithConfidence(a, b) ~> {
+    let result ~= a * b + 10;
+    return result;
+}
+
+export class ConfidentService {
+    constructor() {
+        this.data ~= [];
+    }
+    
+    addItem(item) ~> {
+        this.data.push(item);
+        return this.data.length;
+    }
+}
+
+console.log("\n=== Dynamic Imports ===");
+
+// Dynamic import syntax (async)
+async function loadModule() {
+    // const module = await import('./dynamic-module');
+    console.log("Dynamic import: const module = await import('./dynamic-module');");
+    
+    // Simulating dynamic import
+    const dynamicModule = {
+        feature: "Dynamic Feature",
+        load: () => console.log("Module loaded dynamically")
+    };
+    
+    return dynamicModule;
+}
+
+// Using dynamic imports
+loadModule().then(module => {
+    console.log("Loaded module:", module.feature);
+    module.load();
+});
+
+console.log("\n=== Re-exports ===");
+
+// Re-export syntax examples
+console.log("Re-export all: export * from './other-module';");
+console.log("Re-export specific: export { feature1, feature2 } from './other-module';");
+console.log("Re-export with rename: export { old as new } from './other-module';");
+console.log("Re-export default: export { default } from './other-module';");
+
+console.log("\n=== Module Patterns ===");
+
+// Barrel exports pattern
+// index.prism in a folder
+export * from './userService';
+export * from './authService';
+export * from './dataService';
+
+// Singleton module pattern
+const SingletonModule = (() => {
+    let instance;
+    
+    function createInstance() {
+        return {
+            id: Math.random(),
+            getData: () => "Singleton data"
+        };
+    }
+    
+    return {
+        getInstance() {
+            if (!instance) {
+                instance = createInstance();
+            }
+            return instance;
+        }
+    };
+})();
+
+export { SingletonModule };
+
+// Factory module pattern
+export function createService(type) {
+    switch (type) {
+        case 'api':
+            return {
+                fetch: () => console.log("Fetching from API")
+            };
+        case 'mock':
+            return {
+                fetch: () => console.log("Returning mock data")
+            };
+        default:
+            throw new Error("Unknown service type");
+    }
+}
+
+console.log("\n=== Circular Dependencies ===");
+
+// Prism handles circular dependencies gracefully
+// moduleA.prism
+export { functionB } from './moduleB';
+export function functionA() {
+    return "Function A";
+}
+
+// moduleB.prism
+export { functionA } from './moduleA';
+export function functionB() {
+    return "Function B calling " + functionA();
+}
+
+console.log("Circular dependencies are resolved automatically");
+
+console.log("\n=== Module Metadata ===");
+
+// import.meta provides module metadata
+console.log("Module URL: import.meta.url");
+console.log("Module dir: import.meta.dir");
+
+// Conditional exports based on environment
+export const api = (() => {
+    // if (import.meta.env === 'production') {
+    //     return 'https://api.production.com';
+    // }
+    return 'http://localhost:3000';
+})();
+
+console.log("\n=== Best Practices ===");
+
+// 1. Prefer named exports for better IDE support
+export const utilFunction = () => {};
+
+// 2. Use default exports for main module functionality
+export default class MainClass {}
+
+// 3. Group related exports
+export const mathUtils = {
+    add: (a, b) => a + b,
+    subtract: (a, b) => a - b,
+    multiply: (a, b) => a * b
+};
+
+// 4. Use barrel exports for clean API
+// utils/index.prism
+export * from './string-utils';
+export * from './array-utils';
+export * from './date-utils';
+
+console.log("\n=== Module Loading Demo ===");
+
+// Simulating module system
+const moduleSystem = {
+    modules: new Map(),
+    
+    define(name, exports) {
+        this.modules.set(name, exports);
+        console.log(`Module '${name}' defined`);
+    },
+    
+    require(name) {
+        if (!this.modules.has(name)) {
+            throw new Error(`Module '${name}' not found`);
+        }
+        return this.modules.get(name);
+    }
+};
+
+// Define modules
+moduleSystem.define('math', {
+    add: (a, b) => a + b,
+    PI: 3.14159
+});
+
+moduleSystem.define('utils', {
+    formatDate: () => new Date().toISOString(),
+    generateId: () => Math.random().toString(36).substr(2, 9)
+});
+
+// Use modules
+const math = moduleSystem.require('math');
+const utils = moduleSystem.require('utils');
+
+console.log("Math.add(5, 3):", math.add(5, 3));
+console.log("Utils.generateId():", utils.generateId());
+
+// === EXPECTED OUTPUT ===
+// === Module Exports ===
+// 
+// === Module Imports ===
+// Named import syntax: import { VERSION, API_URL } from './module';
+// Namespace import: import * as MyModule from './module';
+// Renamed import: import { internalName as publicName } from './module';
+// Default import: import MainModule from './module';
+// Mixed import: import MainModule, { VERSION, greet } from './module';
+// 
+// === Confident Module Exports ===
+// 
+// === Dynamic Imports ===
+// Dynamic import: const module = await import('./dynamic-module');
+// 
+// === Re-exports ===
+// Re-export all: export * from './other-module';
+// Re-export specific: export { feature1, feature2 } from './other-module';
+// Re-export with rename: export { old as new } from './other-module';
+// Re-export default: export { default } from './other-module';
+// 
+// === Module Patterns ===
+// 
+// === Circular Dependencies ===
+// Circular dependencies are resolved automatically
+// 
+// === Module Metadata ===
+// Module URL: import.meta.url
+// Module dir: import.meta.dir
+// 
+// === Best Practices ===
+// 
+// === Module Loading Demo ===
+// Module 'math' defined
+// Module 'utils' defined
+// Math.add(5, 3): 8
+// Utils.generateId(): [random id]
+// Loaded module: Dynamic Feature
+// Module loaded dynamically

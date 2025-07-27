@@ -1,0 +1,293 @@
+// filename: 01-pipeline-operators.prism
+// description: Pipeline operators (|> and ~|>) for functional data transformation
+// tags: #pipeline #functional #operators #transformation #prism-specific
+// expected: Demonstrates both regular and confident pipeline operators
+
+// === CODE STARTS HERE ===
+
+console.log("=== Basic Pipeline Operator (|>) ===");
+
+// Simple function pipeline
+function double(x) { return x * 2; }
+function addTen(x) { return x + 10; }
+function toString(x) { return `Result: ${x}`; }
+
+let value = 5;
+let result = value 
+    |> double(_)
+    |> addTen(_)
+    |> toString(_);
+
+console.log("Starting value:", value);
+console.log(result);
+
+console.log("\n=== Array Processing with Pipelines ===");
+
+// Array transformation pipeline
+let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+let processed = numbers
+    |> filter(_, x => x % 2 === 0)      // Keep even numbers
+    |> map(_, x => x * x)                // Square them
+    |> filter(_, x => x > 10)            // Keep only > 10
+    |> reduce(_, (a, b) => a + b, 0);    // Sum them
+
+console.log("Original:", numbers);
+console.log("Processed (even, squared, >10, summed):", processed);
+
+console.log("\n=== String Processing Pipeline ===");
+
+// Text transformation pipeline
+function trim(s) { return s.trim(); }
+function lowercase(s) { return s.toLowerCase(); }
+function removeSpaces(s) { return s.replace(/\s+/g, '-'); }
+function addPrefix(prefix) { 
+    return function(s) { return prefix + s; };
+}
+
+let userInput = "  Hello World  ";
+let slug = userInput
+    |> trim(_)
+    |> lowercase(_)
+    |> removeSpaces(_)
+    |> addPrefix('slug-')(_);
+
+console.log("Input:", JSON.stringify(userInput));
+console.log("Slug:", slug);
+
+console.log("\n=== Object Transformation Pipeline ===");
+
+// Working with objects
+let user = {
+    name: "John Doe",
+    email: "JOHN@EXAMPLE.COM",
+    age: 25,
+    score: 85
+};
+
+function normalizeEmail(obj) {
+    return { ...obj, email: obj.email.toLowerCase() };
+}
+
+function addGrade(obj) {
+    let grade = obj.score >= 90 ? 'A' : 
+                obj.score >= 80 ? 'B' : 
+                obj.score >= 70 ? 'C' : 'D';
+    return { ...obj, grade };
+}
+
+function selectFields(fields) {
+    return function(obj) {
+        let result = {};
+        fields.forEach(f => result[f] = obj[f]);
+        return result;
+    };
+}
+
+let processedUser = user
+    |> normalizeEmail(_)
+    |> addGrade(_)
+    |> selectFields(['name', 'email', 'grade'])(_);
+
+console.log("Original user:", user);
+console.log("Processed user:", processedUser);
+
+console.log("\n=== Confidence Pipeline Operator (~|>) ===");
+
+// Pipeline that preserves confidence
+let measurement = 100 ~> 0.9;
+
+let confidentResult = measurement
+    ~|> double(_)
+    ~|> addTen(_);
+
+console.log("Confident measurement:", measurement);
+console.log("After pipeline:", confidentResult);
+console.log("Confidence preserved:", <~ confidentResult);
+
+console.log("\n=== Mixed Pipeline Operations ===");
+
+// Combining confident and regular operations
+function validate(x) {
+    if (x > 0 && x < 1000) {
+        return x ~> 0.95;  // High confidence if valid
+    }
+    return x ~> 0.3;       // Low confidence if out of range
+}
+
+let sensorData = [150, 2000, 300, -50, 450];
+let validatedData = sensorData
+    |> map(_, x => validate(x))
+    |> filter(_, x => (<~ x) > 0.5);  // Keep only high confidence
+
+console.log("Sensor data:", sensorData);
+console.log("Validated (confidence > 0.5):", validatedData);
+
+console.log("\n=== Complex Data Pipeline ===");
+
+// Real-world example: Processing transaction data
+let transactions = [
+    { id: 1, amount: 100, type: "credit", status: "pending" },
+    { id: 2, amount: 50, type: "debit", status: "completed" },
+    { id: 3, amount: 200, type: "credit", status: "completed" },
+    { id: 4, amount: 75, type: "debit", status: "failed" },
+    { id: 5, amount: 150, type: "credit", status: "completed" }
+];
+
+function completedOnly(txs) {
+    return filter(txs, t => t.status === "completed");
+}
+
+function addConfidence(txs) {
+    return map(txs, t => ({
+        ...t,
+        amount: t.amount ~> (t.type === "credit" ? 0.95 : 0.9)
+    }));
+}
+
+function calculateBalance(txs) {
+    return reduce(txs, (balance, t) => {
+        if (t.type === "credit") {
+            return balance ~+ t.amount;
+        } else {
+            return balance ~- t.amount;
+        }
+    }, 0 ~> 1.0);
+}
+
+let balance = transactions
+    |> completedOnly(_)
+    |> addConfidence(_)
+    |> calculateBalance(_);
+
+console.log("Transactions:", transactions.length);
+console.log("Final balance:", balance);
+console.log("Balance confidence:", <~ balance);
+
+console.log("\n=== Function Composition with Pipelines ===");
+
+// Building reusable processing pipelines
+function createProcessor(steps) {
+    return function(input) {
+        return steps.reduce((acc, step) => {
+            return acc |> step(_);
+        }, input);
+    };
+}
+
+let numberProcessor = createProcessor([
+    x => x + 1,
+    x => x * 2,
+    x => x - 3
+]);
+
+let textProcessor = createProcessor([
+    s => s.toUpperCase(),
+    s => s.replace(/[AEIOU]/g, '*'),
+    s => `[${s}]`
+]);
+
+console.log("Number processing:");
+console.log("  10 →", numberProcessor(10));
+console.log("  5 →", numberProcessor(5));
+
+console.log("Text processing:");
+console.log("  'hello' →", textProcessor("hello"));
+console.log("  'world' →", textProcessor("world"));
+
+console.log("\n=== Error Handling in Pipelines ===");
+
+// Safe pipeline operations
+function safeDivide(divisor) {
+    return function(x) {
+        if (divisor === 0) {
+            return null ~> 0.0;  // No confidence in error
+        }
+        return (x / divisor) ~> 0.99;
+    };
+}
+
+function filterNull(arr) {
+    return filter(arr, x => x !== null);
+}
+
+let values = [100, 200, 300];
+let divisor = 0;  // This would cause error
+
+let safeResults = values
+    |> map(_, x => x ~> 0.9)
+    ~|> map(_, safeDivide(divisor))
+    |> filterNull(_);
+
+console.log("Values:", values);
+console.log("Divisor:", divisor);
+console.log("Safe results:", safeResults);
+
+console.log("\n=== Pipeline with Side Effects ===");
+
+// Logging pipeline for debugging
+function logStep(label) {
+    return function(x) {
+        console.log(`  [${label}]:`, x);
+        return x;
+    };
+}
+
+let debugResult = 42
+    |> logStep("initial")(_)
+    |> double(_)
+    |> logStep("after double")(_)
+    |> addTen(_)
+    |> logStep("after add")(_);
+
+console.log("Final result:", debugResult);
+
+// === EXPECTED OUTPUT ===
+// === Basic Pipeline Operator (|>) ===
+// Starting value: 5
+// Result: 20
+// 
+// === Array Processing with Pipelines ===
+// Original: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+// Processed (even, squared, >10, summed): 220
+// 
+// === String Processing Pipeline ===
+// Input: "  Hello World  "
+// Slug: slug-hello-world
+// 
+// === Object Transformation Pipeline ===
+// Original user: { name: 'John Doe', email: 'JOHN@EXAMPLE.COM', age: 25, score: 85 }
+// Processed user: { name: 'John Doe', email: 'john@example.com', grade: 'B' }
+// 
+// === Confidence Pipeline Operator (~|>) ===
+// Confident measurement: 100 ~> 90.0%
+// After pipeline: 210 ~> 90.0%
+// Confidence preserved: 0.9
+// 
+// === Mixed Pipeline Operations ===
+// Sensor data: [150, 2000, 300, -50, 450]
+// Validated (confidence > 0.5): [150 ~> 95.0%, 300 ~> 95.0%, 450 ~> 95.0%]
+// 
+// === Complex Data Pipeline ===
+// Transactions: 5
+// Final balance: 300 ~> 90.0%
+// Balance confidence: 0.9
+// 
+// === Function Composition with Pipelines ===
+// Number processing:
+//   10 → 19
+//   5 → 9
+// Text processing:
+//   'hello' → [H*LL*]
+//   'world' → [W*RLD]
+// 
+// === Error Handling in Pipelines ===
+// Values: [100, 200, 300]
+// Divisor: 0
+// Safe results: []
+// 
+// === Pipeline with Side Effects ===
+//   [initial]: 42
+//   [after double]: 84
+//   [after add]: 94
+// Final result: 94

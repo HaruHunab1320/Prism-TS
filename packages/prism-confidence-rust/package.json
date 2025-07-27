@@ -1,0 +1,21 @@
+{
+  "name": "@prism-lang/confidence-rust",
+  "version": "0.1.0",
+  "description": "Rust implementation of the Prism confidence extraction library",
+  "private": true,
+  "scripts": {
+    "build": "cargo build --release",
+    "test": "cargo test",
+    "bench": "cargo bench",
+    "clean": "cargo clean",
+    "fmt": "cargo fmt",
+    "lint": "cargo clippy -- -D warnings",
+    "doc": "cargo doc --no-deps"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HaruHunab1320/Prism-TS.git",
+    "directory": "packages/prism-confidence-rust"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,281 @@
+// filename: 01-function-basics.prism
+// description: Function declarations, expressions, and arrow functions
+// tags: #functions #parameters #return #arrow-functions
+// expected: Demonstrates all ways to define and use functions
+
+// === CODE STARTS HERE ===
+
+console.log("=== Function Declaration ===");
+
+// Basic function declaration
+function greet(name) {
+    return `Hello, ${name}!`;
+}
+
+console.log(greet("World"));
+
+// Function with multiple parameters
+function add(a, b) {
+    return a + b;
+}
+
+console.log(`5 + 3 = ${add(5, 3)}`);
+
+// Function with no parameters
+function getCurrentTime() {
+    return new Date().toLocaleTimeString();
+}
+
+console.log(`Current time: ${getCurrentTime()}`);
+
+// Function with no return (returns undefined)
+function logMessage(message) {
+    console.log(`[LOG] ${message}`);
+}
+
+logMessage("This function has no explicit return");
+
+console.log("\n=== Function Expressions ===");
+
+// Anonymous function expression
+const multiply = function(x, y) {
+    return x * y;
+};
+
+console.log(`4 × 6 = ${multiply(4, 6)}`);
+
+// Named function expression
+const factorial = function fact(n) {
+    if (n <= 1) return 1;
+    return n * fact(n - 1); // Can use the name for recursion
+};
+
+console.log(`5! = ${factorial(5)}`);
+
+// Function expression with immediate invocation (IIFE)
+const result = (function(x) {
+    return x * x;
+})(7);
+
+console.log(`7² = ${result}`);
+
+console.log("\n=== Arrow Functions ===");
+
+// Basic arrow function
+const square = x => x * x;
+console.log(`10² = ${square(10)}`);
+
+// Arrow function with multiple parameters
+const subtract = (a, b) => a - b;
+console.log(`20 - 8 = ${subtract(20, 8)}`);
+
+// Arrow function with no parameters
+const random = () => Math.random();
+console.log(`Random: ${random()}`);
+
+// Arrow function with block body
+const divide = (a, b) => {
+    if (b === 0) {
+        return "Error: Division by zero";
+    }
+    return a / b;
+};
+
+console.log(`15 ÷ 3 = ${divide(15, 3)}`);
+console.log(`15 ÷ 0 = ${divide(15, 0)}`);
+
+// Arrow function returning object literal
+const createPerson = (name, age) => ({ name, age });
+console.log("Person:", createPerson("Alice", 30));
+
+console.log("\n=== Default Parameters ===");
+
+// Function with default values
+function greetWithTitle(name, title = "Friend") {
+    return `Hello, ${title} ${name}!`;
+}
+
+console.log(greetWithTitle("Bob"));
+console.log(greetWithTitle("Alice", "Dr."));
+
+// Arrow function with defaults
+const power = (base, exponent = 2) => base ** exponent;
+console.log(`3² = ${power(3)}`);
+console.log(`2³ = ${power(2, 3)}`);
+
+// Default with expression
+function createArray(size = 5, fillValue = 0) {
+    return new Array(size).fill(fillValue);
+}
+
+console.log("Default array:", createArray());
+console.log("Custom array:", createArray(3, "x"));
+
+console.log("\n=== Rest Parameters ===");
+
+// Function with rest parameters
+function sum(...numbers) {
+    return numbers.reduce((acc, n) => acc + n, 0);
+}
+
+console.log(`sum(1, 2, 3) = ${sum(1, 2, 3)}`);
+console.log(`sum(1, 2, 3, 4, 5) = ${sum(1, 2, 3, 4, 5)}`);
+
+// Combining regular and rest parameters
+function introduce(greeting, ...names) {
+    return `${greeting} ${names.join(" and ")}!`;
+}
+
+console.log(introduce("Hello", "Alice", "Bob", "Charlie"));
+
+console.log("\n=== Destructuring Parameters ===");
+
+// Object destructuring in parameters
+function displayUser({ name, age, city = "Unknown" }) {
+    console.log(`${name} is ${age} years old from ${city}`);
+}
+
+displayUser({ name: "John", age: 25, city: "NYC" });
+displayUser({ name: "Jane", age: 28 });
+
+// Array destructuring in parameters
+function getCoordinates([x, y, z = 0]) {
+    return { x, y, z };
+}
+
+console.log("3D point:", getCoordinates([10, 20, 30]));
+console.log("2D point:", getCoordinates([5, 15]));
+
+console.log("\n=== Higher-Order Functions ===");
+
+// Function that returns a function
+function createMultiplier(factor) {
+    return function(number) {
+        return number * factor;
+    };
+}
+
+const double = createMultiplier(2);
+const triple = createMultiplier(3);
+
+console.log(`double(5) = ${double(5)}`);
+console.log(`triple(5) = ${triple(5)}`);
+
+// Function that takes a function as parameter
+function applyOperation(arr, operation) {
+    return arr.map(operation);
+}
+
+const numbers = [1, 2, 3, 4, 5];
+console.log("Squared:", applyOperation(numbers, x => x * x));
+console.log("Doubled:", applyOperation(numbers, x => x * 2));
+
+console.log("\n=== Function Properties ===");
+
+// Functions are objects with properties
+function myFunction() {
+    return "Hello";
+}
+
+myFunction.description = "A simple greeting function";
+myFunction.author = "Prism Developer";
+
+console.log("Function name:", myFunction.name);
+console.log("Function description:", myFunction.description);
+console.log("Function length (params):", myFunction.length);
+
+// Using function as a namespace
+function MathUtils() {}
+MathUtils.PI = 3.14159;
+MathUtils.circleArea = r => MathUtils.PI * r * r;
+
+console.log(`Circle area (r=5): ${MathUtils.circleArea(5)}`);
+
+console.log("\n=== Function Context (this) ===");
+
+// Regular function vs arrow function context
+const obj = {
+    name: "MyObject",
+    
+    regularMethod: function() {
+        return `Regular: ${this.name}`;
+    },
+    
+    arrowMethod: () => {
+        return `Arrow: ${this.name}`; // 'this' is lexically bound
+    },
+    
+    delayedRegular: function() {
+        setTimeout(function() {
+            console.log(`Delayed regular: ${this.name || "undefined"}`);
+        }, 100);
+    },
+    
+    delayedArrow: function() {
+        setTimeout(() => {
+            console.log(`Delayed arrow: ${this.name}`);
+        }, 100);
+    }
+};
+
+console.log(obj.regularMethod());
+console.log(obj.arrowMethod());
+obj.delayedRegular();
+obj.delayedArrow();
+
+// === EXPECTED OUTPUT ===
+// === Function Declaration ===
+// Hello, World!
+// 5 + 3 = 8
+// Current time: [current time]
+// [LOG] This function has no explicit return
+// 
+// === Function Expressions ===
+// 4 × 6 = 24
+// 5! = 120
+// 7² = 49
+// 
+// === Arrow Functions ===
+// 10² = 100
+// 20 - 8 = 12
+// Random: [random number]
+// 15 ÷ 3 = 5
+// 15 ÷ 0 = Error: Division by zero
+// Person: { name: 'Alice', age: 30 }
+// 
+// === Default Parameters ===
+// Hello, Friend Bob!
+// Hello, Dr. Alice!
+// 3² = 9
+// 2³ = 8
+// Default array: [ 0, 0, 0, 0, 0 ]
+// Custom array: [ 'x', 'x', 'x' ]
+// 
+// === Rest Parameters ===
+// sum(1, 2, 3) = 6
+// sum(1, 2, 3, 4, 5) = 15
+// Hello Alice and Bob and Charlie!
+// 
+// === Destructuring Parameters ===
+// John is 25 years old from NYC
+// Jane is 28 years old from Unknown
+// 3D point: { x: 10, y: 20, z: 30 }
+// 2D point: { x: 5, y: 15, z: 0 }
+// 
+// === Higher-Order Functions ===
+// double(5) = 10
+// triple(5) = 15
+// Squared: [ 1, 4, 9, 16, 25 ]
+// Doubled: [ 2, 4, 6, 8, 10 ]
+// 
+// === Function Properties ===
+// Function name: myFunction
+// Function description: A simple greeting function
+// Function length (params): 0
+// Circle area (r=5): 78.53975
+// 
+// === Function Context (this) ===
+// Regular: MyObject
+// Arrow: undefined
+// Delayed regular: undefined
+// Delayed arrow: MyObject

@@ -1,0 +1,211 @@
+// filename: 02-confident-ternary.prism
+// description: The confident ternary operator (~?) - unique to Prism
+// tags: #confidence #ternary #conditional #operators #prism-specific
+// expected: Shows how confident ternary differs from regular ternary
+
+// === CODE STARTS HERE ===
+
+console.log("=== Confident Ternary Operator (~?) ===");
+
+// Basic confident ternary
+let score = 85 ~> 0.9;
+let passed = score > 80;
+let result = passed ~? "Pass" : "Fail";
+
+console.log("Score:", score);
+console.log("Passed:", passed);
+console.log("Result:", result);
+
+// Confident condition propagates confidence
+let confidentCondition = true ~> 0.8;
+let message = confidentCondition ~? "High confidence" : "Low confidence";
+console.log("\nConfident condition result:", message);
+console.log("Message confidence:", <~ message);
+
+// Compare with regular ternary
+let regularResult = passed ? "Pass" : "Fail";
+console.log("\nRegular ternary result:", regularResult);
+console.log("Regular confidence:", <~ regularResult); // 1.0
+
+console.log("\n=== Confidence Propagation in Branches ===");
+
+// Confident values in branches
+let weather = "sunny";
+let temp = 28 ~> 0.85;
+let activity = weather == "sunny" ~? "Go to beach" ~> 0.9 : "Stay home" ~> 0.7;
+
+console.log("Temperature:", temp);
+console.log("Activity:", activity);
+console.log("Activity confidence:", <~ activity);
+
+// Multiple confident values
+let a = 10 ~> 0.9;
+let b = 20 ~> 0.8;
+let max = a > b ~? a : b;
+
+console.log("\na:", a, "confidence:", <~ a);
+console.log("b:", b, "confidence:", <~ b);
+console.log("max:", max, "confidence:", <~ max);
+
+console.log("\n=== Nested Confident Ternary ===");
+
+// Nested confident ternary operations
+let grade = 75 ~> 0.95;
+let classification = 
+    grade >= 90 ~? "Excellent" ~> 0.99 :
+    grade >= 80 ~? "Good" ~> 0.9 :
+    grade >= 70 ~? "Average" ~> 0.8 :
+    "Needs Improvement" ~> 0.7;
+
+console.log("Grade:", grade);
+console.log("Classification:", classification);
+console.log("Classification confidence:", <~ classification);
+
+console.log("\n=== Confident Ternary with Functions ===");
+
+// Functions returning confident values
+function getDiscount(isVIP) {
+    return isVIP ~? 0.20 ~> 0.95 : 0.05 ~> 0.99;
+}
+
+let vipStatus = true ~> 0.85;
+let discount = getDiscount(vipStatus);
+console.log("VIP Status:", vipStatus);
+console.log("Discount:", discount);
+console.log("Discount confidence:", <~ discount);
+
+console.log("\n=== Combining Conditions ===");
+
+// Complex conditions with confidence
+let age = 25 ~> 0.9;
+let hasLicense = true ~> 0.95;
+let canDrive = (age >= 18 && hasLicense) ~? "Can drive" : "Cannot drive";
+
+console.log("Age:", age);
+console.log("Has license:", hasLicense);
+console.log("Result:", canDrive);
+
+console.log("\n=== Confident Ternary in Expressions ===");
+
+// Mathematical expressions
+let base = 100 ~> 0.9;
+let hasBonus = true ~> 0.8;
+let bonusAmount = 20 ~> 0.85;
+
+let total = base + (hasBonus ~? bonusAmount : 0);
+console.log("Base:", base);
+console.log("Has bonus:", hasBonus);
+console.log("Total:", total);
+console.log("Total confidence:", <~ total);
+
+console.log("\n=== Error Handling with Confident Ternary ===");
+
+// Safe operations with confidence
+function safeDivide(a, b) {
+    let safeB = b ~> 0.99;  // High confidence in divisor
+    return b !== 0 ~? a / safeB : "Error: Division by zero" ~> 1.0;
+}
+
+let num1 = 10 ~> 0.9;
+let num2 = 2 ~> 0.95;
+let divResult = safeDivide(num1, num2);
+
+console.log("Division result:", divResult);
+console.log("Result confidence:", <~ divResult);
+
+// Test with zero
+let zeroDivisor = 0;
+let errorResult = safeDivide(num1, zeroDivisor);
+console.log("Error case:", errorResult);
+
+console.log("\n=== Confidence-Based Decision Making ===");
+
+// Make decisions based on confidence levels
+let prediction = "rain" ~> 0.3;  // Low confidence prediction
+let recommendation = (<~ prediction) > 0.7 ~? 
+    "Cancel outdoor event" : 
+    "Proceed with caution";
+
+console.log("Weather prediction:", prediction);
+console.log("Recommendation:", recommendation);
+
+// High confidence scenario
+let certainPrediction = "storm" ~> 0.95;
+let urgentAction = (<~ certainPrediction) > 0.9 ~?
+    "EVACUATE IMMEDIATELY" ~> 1.0 :
+    "Monitor situation" ~> 0.8;
+
+console.log("\nStorm prediction:", certainPrediction);
+console.log("Action required:", urgentAction);
+
+console.log("\n=== Confident Ternary vs Confidence Coalesce ===");
+
+// Ternary: condition-based selection
+let useBackup = false ~> 0.9;
+let primary = "Primary data" ~> 0.4;
+let backup = "Backup data" ~> 0.95;
+
+let ternaryChoice = useBackup ~? backup : primary;
+console.log("Ternary choice:", ternaryChoice);
+
+// Coalesce: confidence-based fallback
+let coalesceChoice = primary ~?? backup;
+console.log("Coalesce choice:", coalesceChoice);
+
+// === EXPECTED OUTPUT ===
+// === Confident Ternary Operator (~?) ===
+// Score: 85 ~> 90.0%
+// Passed: true
+// Result: Pass
+// 
+// Confident condition result: High confidence ~> 80.0%
+// Message confidence: 0.8
+// 
+// Regular ternary result: Pass
+// Regular confidence: 1
+// 
+// === Confidence Propagation in Branches ===
+// Temperature: 28 ~> 85.0%
+// Activity: Go to beach ~> 90.0%
+// Activity confidence: 0.9
+// 
+// a: 10 ~> 90.0% confidence: 0.9
+// b: 20 ~> 80.0% confidence: 0.8
+// max: 20 ~> 80.0% confidence: 0.8
+// 
+// === Nested Confident Ternary ===
+// Grade: 75 ~> 95.0%
+// Classification: Average ~> 80.0%
+// Classification confidence: 0.8
+// 
+// === Confident Ternary with Functions ===
+// VIP Status: true ~> 85.0%
+// Discount: 0.2 ~> 95.0%
+// Discount confidence: 0.95
+// 
+// === Combining Conditions ===
+// Age: 25 ~> 90.0%
+// Has license: true ~> 95.0%
+// Result: Can drive
+// 
+// === Confident Ternary in Expressions ===
+// Base: 100 ~> 90.0%
+// Has bonus: true ~> 80.0%
+// Total: 120 ~> 85.0%
+// Total confidence: 0.85
+// 
+// === Error Handling with Confident Ternary ===
+// Division result: 5 ~> 90.0%
+// Result confidence: 0.9
+// Error case: Error: Division by zero ~> 100.0%
+// 
+// === Confidence-Based Decision Making ===
+// Weather prediction: rain ~> 30.0%
+// Recommendation: Proceed with caution
+// 
+// Storm prediction: storm ~> 95.0%
+// Action required: EVACUATE IMMEDIATELY ~> 100.0%
+// 
+// === Confident Ternary vs Confidence Coalesce ===
+// Ternary choice: Primary data ~> 40.0%
+// Coalesce choice: Backup data ~> 95.0%
