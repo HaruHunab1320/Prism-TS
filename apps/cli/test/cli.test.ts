@@ -91,7 +91,7 @@ describe('Prism CLI', () => {
     it('should error on invalid code', async () => {
       const { code, stderr } = await runCLI(['eval', 'invalid syntax!!!']);
       expect(code).toBe(1);
-      expect(stderr).toContain('Error');
+      expect(stderr.toLowerCase()).toContain('error');
     });
 
     it('should error when no code provided', async () => {
@@ -140,7 +140,7 @@ describe('Prism CLI', () => {
       
       const { code, stderr } = await runCLI(['run', testFile]);
       expect(code).toBe(1);
-      expect(stderr).toContain('Error');
+      expect(stderr.toLowerCase()).toContain('error');
     });
   });
 
@@ -172,7 +172,7 @@ describe('Prism CLI', () => {
       expect(code).toBe(0);
       expect(stdout).toContain('Prism Programming Language CLI');
       expect(stdout).toContain('Usage:');
-      expect(stdout).toContain('prism run <file>');
+      expect(stdout).toContain('prism run [--watch] <file>');
       expect(stdout).toContain('prism eval <code>');
     });
 

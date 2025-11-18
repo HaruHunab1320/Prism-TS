@@ -24,13 +24,16 @@ pnpm add -g @prism-lang/cli
 
 ## Commands
 
-### `prism run <file>`
+### `prism run [--watch] <file>`
 
 Execute a Prism program from a file.
 
 ```bash
 # Run a Prism file
 prism run script.prism
+
+# Enable hot reload (invalidates the changed module + dependents)
+prism run --watch script.prism
 
 # Example output
 🚀 Running script.prism...
@@ -40,6 +43,7 @@ Result: Hello from Prism! (~0.85)
 
 **Features:**
 - Executes `.prism` files
+- Optional `--watch` flag for hot reload (uses the runtime module reloader so imports are refreshed in-place)
 - Shows confidence values in output
 - Supports all Prism language features
 - Configures LLM providers from environment
@@ -65,6 +69,28 @@ prism eval "x = 10; x * 2"
 prism eval 'llm("Hello AI!")'
 # Output: Hello! How can I help you today? (~0.85)
 ```
+
+### `prism llm [options] <prompt>`
+
+Send a one-off LLM prompt directly from the terminal. Add `--stream` to see tokens as they arrive.
+
+```bash
+# Simple completion
+prism llm "Generate three product names"
+
+# Stream output with provider override
+prism llm --provider claude --stream "Summarize today's status update"
+```
+
+**Useful flags:**
+- `--provider, -p <name>` – choose a configured provider (default environment selection)
+- `--stream` / `--no-stream` – toggle live streaming (Ctrl+C to cancel)
+- `--temperature <value>` – adjust sampling temperature
+- `--maxTokens <value>` / `--topP <value>` – advanced sampling controls
+- `--model <id>` – override the model for this invocation
+- `--timeout <ms>` – abort the request after the given time budget
+- `--include-reasoning` / `--no-include-reasoning` – ask providers to attach reasoning traces
+- `--structured-output` / `--no-structured-output` – force JSON-style output or plain text (streaming requires `--no-structured-output`)
 
 ### `prism` or `prism repl`
 
@@ -245,3 +271,6 @@ npm install -g @prism-lang/cli
 ### File Encoding Issues
 
 Ensure `.prism` files are saved with UTF-8 encoding for proper string handling.
+#### Watch Mode
+
+Use `--watch` (or `-w`) to keep the same runtime alive while editing files. When a watched file changes, Prism invalidates that module, re-runs it (plus any dependents), and logs the results without restarting the CLI. This is ideal for multi-module projects or long-lived runtimes that keep LLM providers in memory.

@@ -1,4 +1,5 @@
-import { ClaudeProvider, GeminiProvider, MockLLMProvider, LLMProvider, LLMError } from './provider-ai-sdk';
+import { LLMProvider } from '@prism-lang/core';
+import { ClaudeProvider, GeminiProvider, MockLLMProvider, LLMError } from './provider-ai-sdk';
 
 // Load environment variables from .env file
 try {

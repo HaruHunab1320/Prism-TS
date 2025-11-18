@@ -1,10 +1,75 @@
-import { StreamingValidator } from '../src/streaming';
+import { StreamingValidator, validateStream } from '../src/streaming';
+import { StreamingValidationResult } from '../src/types';
 
 describe('StreamingValidator', () => {
   let validator: StreamingValidator;
 
   beforeEach(() => {
     validator = new StreamingValidator();
+  });
+
+  describe('validateStream helper', () => {
+    it('validates an async iterable of strings', async () => {
+      async function* chunks() {
+        yield 'const total = ';
+        yield '40 + 2';
+      }
+
+      const results = await validateStream(chunks());
+      const final = results[results.length - 1];
+      expect(final.valid).toBe(true);
+      expect(final.errors).toHaveLength(0);
+    });
+
+    it('supports chunk objects using default extractor', async () => {
+      async function* chunks() {
+        yield { type: 'text', content: 'result = ' };
+        yield { type: 'text', text: 'llm("hi")' };
+      }
+
+      const results = await validateStream(chunks());
+      const final = results[results.length - 1];
+      expect(final.valid).toBe(true);
+    });
+
+    it('invokes onUpdate for each chunk', async () => {
+      const updates: StreamingValidationResult[] = [];
+      async function* chunks() {
+        yield 'let x = ';
+        yield 'llm("hi")';
+      }
+
+      await validateStream(chunks(), {
+        onUpdate: (result) => updates.push(result),
+      });
+
+      expect(updates).toHaveLength(2);
+    });
+
+    it('continues after errors when stopOnError is false', async () => {
+      async function* chunks() {
+        yield 'x = ';
+        yield '= 42';
+        yield ';';
+      }
+
+      const results = await validateStream(chunks(), { stopOnError: false });
+      expect(results.some(r => !r.valid)).toBe(true);
+      expect(results).toHaveLength(3);
+    });
+
+    it('aborts when signal is triggered', async () => {
+      async function* chunks() {
+        yield 'a = ';
+        await new Promise(resolve => setTimeout(resolve, 5));
+        yield 'b';
+      }
+
+      const controller = new AbortController();
+      const promise = validateStream(chunks(), { signal: controller.signal });
+      controller.abort();
+      await expect(promise).rejects.toThrow('Streaming validation aborted');
+    });
   });
 
   describe('validatePartial()', () => {

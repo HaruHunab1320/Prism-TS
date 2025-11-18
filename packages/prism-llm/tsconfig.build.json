@@ -6,10 +6,10 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@prism-lang/core": ["../prism-core/src"],
-      "@prism-lang/core/*": ["../prism-core/src/*"],
-      "@prism-lang/confidence": ["../prism-confidence/src"],
-      "@prism-lang/confidence/*": ["../prism-confidence/src/*"]
+      "@prism-lang/core": ["../prism-core/dist"],
+      "@prism-lang/core/*": ["../prism-core/dist/*"],
+      "@prism-lang/confidence": ["../prism-confidence/dist"],
+      "@prism-lang/confidence/*": ["../prism-confidence/dist/*"]
     }
   },
   "include": ["src/**/*"],

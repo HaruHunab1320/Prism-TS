@@ -7,10 +7,96 @@ import {
   ConfidenceValue as ConfidentRuntimeValue,
   RuntimeError,
   createRuntime,
+  ObjectValue,
 } from '../src/runtime';
 import { parse } from '../src/parser';
 import { ConfidenceValue as ConfidenceLib } from '../src/confidence';
 import { MockLLMProvider } from '@prism-lang/llm';
+import { LLMProvider, LLMRequest, LLMResponse, LLMStreamChunk, LLMStreamingSession } from '../src/llm-types';
+
+class RecordingProvider implements LLMProvider {
+  name = 'recording';
+  public lastRequest?: LLMRequest;
+
+  constructor(private responseText: string, private confidence: number = 0.7) {}
+
+  async complete(request: LLMRequest): Promise<LLMResponse> {
+    this.lastRequest = request;
+    return new LLMResponse(
+      this.responseText,
+      this.confidence,
+      10,
+      request.options.model ?? 'recording-model'
+    );
+  }
+
+}
+
+class StreamingProvider implements LLMProvider {
+  name = 'streaming';
+
+  constructor(private responseText: string, private confidence: number = 0.7, private delayMs: number = 0) {}
+
+  async complete(request: LLMRequest): Promise<LLMResponse> {
+    return new LLMResponse(
+      `${this.responseText}:${request.prompt}`,
+      this.confidence,
+      5,
+      'streaming-model'
+    );
+  }
+
+  stream(request: LLMRequest): LLMStreamingSession {
+    const tokens = request.prompt.split(/\s+/).filter(Boolean);
+    let cancelled = false;
+    let resolveResponse: (value: LLMResponse) => void = () => {};
+    let rejectResponse: (reason?: unknown) => void = () => {};
+
+    const responsePromise = new Promise<LLMResponse>((resolve, reject) => {
+      resolveResponse = resolve;
+      rejectResponse = reject;
+    });
+
+    const iterator = (async function* (provider: StreamingProvider): AsyncGenerator<LLMStreamChunk> {
+      try {
+        for (const token of tokens) {
+          if (cancelled) {
+            rejectResponse(new RuntimeError('stream cancelled'));
+            return;
+          }
+          yield { type: 'text', content: `${token} ` };
+          if (provider.delayMs > 0) {
+            await new Promise(resolve => setTimeout(resolve, provider.delayMs));
+          } else {
+            await Promise.resolve();
+          }
+        }
+        if (!cancelled) {
+          resolveResponse(new LLMResponse(
+            `${provider.responseText}:${request.prompt}`,
+            provider.confidence,
+            5,
+            'streaming-model'
+          ));
+        }
+      } catch (error) {
+        rejectResponse(error);
+        throw error;
+      }
+    })(this);
+
+    return {
+      response: responsePromise,
+      [Symbol.asyncIterator]() {
+        return iterator;
+      },
+      cancel: () => {
+        cancelled = true;
+        rejectResponse(new RuntimeError('stream cancelled'));
+      },
+    };
+  }
+}
 
 describe('Runtime System', () => {
   describe('Values', () => {
@@ -161,7 +247,7 @@ describe('Runtime System', () => {
 
     it('should handle variable assignment and access', async () => {
       const program = parse(`
-        x = 42
+        let x = 42
         x
       `);
       const result = await runtime.execute(program);
@@ -171,7 +257,7 @@ describe('Runtime System', () => {
 
     it('should support variable updates', async () => {
       const program = parse(`
-        x = 10
+        let x = 10
         x = x + 5
         x
       `);
@@ -190,7 +276,7 @@ describe('Runtime System', () => {
 
     it('should execute if statements', async () => {
       const program = parse(`
-        x = 0
+        let x = 0
         if (true) {
           x = 42
         }
@@ -203,7 +289,7 @@ describe('Runtime System', () => {
 
     it('should execute if-else statements', async () => {
       const program = parse(`
-        x = 0
+        let x = 0
         if (false) {
           x = 10
         } else {
@@ -235,8 +321,8 @@ describe('Runtime System', () => {
 
     it('should propagate confidence in arithmetic', async () => {
       const program = parse(`
-        x = 10 ~> 0.9
-        y = 20 ~> 0.8
+        const x = 10 ~> 0.9
+        const y = 20 ~> 0.8
         x + y
       `);
       const result = await runtime.execute(program);
@@ -249,7 +335,7 @@ describe('Runtime System', () => {
 
     it('should extract confidence with <~ operator', async () => {
       const program = parse(`
-        measurement = 100 ~> 0.85
+        const measurement = 100 ~> 0.85
         <~ measurement
       `);
       const result = await runtime.execute(program);
@@ -260,7 +346,7 @@ describe('Runtime System', () => {
 
     it('should return 1.0 confidence for non-confident values', async () => {
       const program = parse(`
-        regularValue = 42
+        const regularValue = 42
         <~ regularValue
       `);
       const result = await runtime.execute(program);
@@ -290,6 +376,58 @@ describe('Runtime System', () => {
       expect(result.type).toBe('confident');
       expect((result as ConfidentRuntimeValue).value.type).toBe('string');
       expect((result as ConfidentRuntimeValue).value.value).toContain('Mock LLM response');
+    });
+
+    it('allows per-call provider overrides', async () => {
+      const altProvider = new RecordingProvider('Alt provider response', 0.65);
+      runtime.registerLLMProvider('alt', altProvider);
+
+      const program = parse('llm("Use alt provider", { provider: "alt" })');
+      const result = await runtime.execute(program);
+
+      expect((result as ConfidentRuntimeValue).value.value).toBe('Alt provider response');
+      expect(altProvider.lastRequest).toBeDefined();
+    });
+
+    it('forwards request options to the provider', async () => {
+      const capturingProvider = new RecordingProvider('Captured response', 0.5);
+      runtime.registerLLMProvider('captured', capturingProvider);
+
+      const program = parse(`
+        llm("Check options", {
+          provider: "captured",
+          model: "custom-model",
+          temperature: 0.2,
+          maxTokens: 256,
+          topP: 0.9,
+          timeout: 12000,
+          structuredOutput: true,
+          includeReasoning: true
+        })
+      `);
+
+      await runtime.execute(program);
+
+      expect(capturingProvider.lastRequest).toBeDefined();
+      const options = capturingProvider.lastRequest!.options;
+      expect(options.model).toBe('custom-model');
+      expect(options.temperature).toBe(0.2);
+      expect(options.maxTokens).toBe(256);
+      expect(options.topP).toBe(0.9);
+      expect(options.timeout).toBe(12000);
+      expect(options.structuredOutput).toBe(true);
+      expect(options.includeReasoning).toBe(true);
+    });
+
+    it('supports extractor functions to derive confidence', async () => {
+      const program = parse(`
+        extractor = response => response.confidence / 2
+        llm("Derive confidence", { extractor })
+      `);
+      const result = await runtime.execute(program);
+
+      expect(result.type).toBe('confident');
+      expect((result as ConfidentRuntimeValue).confidence.value).toBeCloseTo(0.425);
     });
   });
 
@@ -349,6 +487,127 @@ describe('Runtime System', () => {
     });
   });
 
+  describe('LLM streaming API', () => {
+    let runtime: Runtime;
+
+    beforeEach(() => {
+      runtime = createRuntime();
+    });
+
+    it('streams chunks when provider supports streaming', async () => {
+      const streamingProvider = new StreamingProvider('streamed response', 0.5);
+      runtime.registerLLMProvider('stream', streamingProvider);
+      runtime.setDefaultLLMProvider('stream');
+
+      const session = runtime.streamLLM('hello world', { provider: 'stream' });
+      const chunks: string[] = [];
+      for await (const chunk of session.chunks) {
+        if (chunk.type === 'text' && chunk.content) {
+          chunks.push(chunk.content);
+        }
+      }
+      const response = await session.response;
+      expect(chunks.join('').trim()).toContain('hello world');
+      expect(response.content).toBe('streamed response:hello world');
+    });
+
+    it('allows cancellation of streaming sessions', async () => {
+      const streamingProvider = new StreamingProvider('streamed response', 0.5);
+      runtime.registerLLMProvider('stream', streamingProvider);
+      runtime.setDefaultLLMProvider('stream');
+
+      const session = runtime.streamLLM('cancel soon', { provider: 'stream' });
+      const iterator = session.chunks[Symbol.asyncIterator]();
+      await iterator.next();
+      session.cancel();
+      await expect(session.response).rejects.toThrow('stream cancelled');
+    });
+
+    it('falls back to single chunk when provider lacks streaming', async () => {
+      const provider = new RecordingProvider('Captured response', 0.6);
+      runtime.registerLLMProvider('recording', provider);
+      runtime.setDefaultLLMProvider('recording');
+
+      const session = runtime.streamLLM('plain prompt');
+      const chunks: string[] = [];
+      for await (const chunk of session.chunks) {
+        if (chunk.type === 'text' && chunk.content) {
+          chunks.push(chunk.content);
+        }
+      }
+      const response = await session.response;
+      expect(chunks).toEqual(['Captured response']);
+      expect(response.content).toBe('Captured response');
+    });
+  });
+
+  describe('stream_llm builtin', () => {
+    let runtime: Runtime;
+
+    beforeEach(() => {
+      runtime = createRuntime();
+    });
+
+    it('exposes chunks and final result to Prism code', async () => {
+      const provider = new StreamingProvider('streamed response', 0.6);
+      runtime.registerLLMProvider('stream', provider);
+      runtime.setDefaultLLMProvider('stream');
+
+      const program = parse(`
+        handle = stream_llm("hello world")
+        first = await handle.next()
+        second = await handle.next()
+        finalValue = await handle.result()
+        finalValue
+      `);
+
+      const result = await runtime.execute(program);
+      expect(result.type).toBe('confident');
+      expect((result as ConfidentRuntimeValue).value.value).toBe('streamed response:hello world');
+
+      const first = runtime.getVariable('first') as ObjectValue;
+      const second = runtime.getVariable('second') as ObjectValue;
+      expect((first.properties.get('text') as StringValue).value.trim()).toBe('hello');
+      expect((second.properties.get('text') as StringValue).value.trim()).toBe('world');
+    });
+
+    it('propagates cancellation errors to Await', async () => {
+      const provider = new StreamingProvider('response', 0.5, 50);
+      runtime.registerLLMProvider('stream', provider);
+      runtime.setDefaultLLMProvider('stream');
+
+      const program = parse(`
+        handle = stream_llm("cancel stream")
+        await handle.next()
+        handle.cancel()
+        await handle.result()
+      `);
+
+      await expect(runtime.execute(program)).rejects.toThrow('stream cancelled');
+    });
+  });
+
+  describe('Do-while loops', () => {
+    let runtime: Runtime;
+
+    beforeEach(() => {
+      runtime = createRuntime();
+    });
+
+    it('executes the body at least once even if condition is false', async () => {
+      const program = parse(`
+        counter = 0
+        do {
+          counter = counter + 1
+        } while (false)
+        counter
+      `);
+
+      const result = await runtime.execute(program);
+      expect((result as NumberValue).value).toBe(1);
+    });
+  });
+
 
   describe('Uncertain If Statements', () => {
     let runtime: Runtime;
@@ -359,7 +618,7 @@ describe('Runtime System', () => {
 
     it('should execute uncertain if with high confidence', async () => {
       const program = parse(`
-        result = 0
+        let result = 0
         uncertain if (42 ~> 0.9) {
           high { result = 1 }
           low { result = 2 }
@@ -373,7 +632,7 @@ describe('Runtime System', () => {
 
     it('should execute uncertain if with low confidence', async () => {
       const program = parse(`
-        result = 0
+        let result = 0
         uncertain if (42 ~> 0.3) {
           high { result = 1 }
           low { result = 2 }

@@ -18,6 +18,7 @@ prism run my-script.prism
 
 **Features:**
 - Execute `.prism` files
+- Hot reload via `prism run --watch`
 - Evaluate expressions directly
 - Launch interactive REPL
 - Configure LLM providers
@@ -77,6 +78,7 @@ code --install-extension prism-lang.vsix
 4. **Run it**
    ```bash
    prism run hello.prism
+   prism run --watch hello.prism  # hot reload
    ```
 
 ## 🔧 Configuration

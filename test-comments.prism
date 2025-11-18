@@ -1,0 +1,21 @@
+// Single line comment
+x = 5
+
+/* Multiline comment
+   spanning multiple lines */
+y = 10
+
+/**
+ * JSDoc style comment
+ * @param {number} value
+ * @returns {number}
+ */
+function double(value) {
+  return value * 2
+}
+
+// Test inline comments
+result = double(x) /* inline multiline */ + y // inline single line
+
+// Final result should be 20
+result

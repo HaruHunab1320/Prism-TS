@@ -1,6 +1,31 @@
 import { Token, TokenType, tokenize } from '@prism-lang/core';
 import { StreamingValidationResult, SyntaxError, Warning } from './types';
 
+const fallbackKeywords: Record<string, TokenType> = {
+  'uncertain': TokenType.UNCERTAIN,
+  'if': TokenType.IF,
+  'high': TokenType.HIGH,
+  'medium': TokenType.MEDIUM,
+  'low': TokenType.LOW,
+  'default': TokenType.DEFAULT,
+  'import': TokenType.IMPORT,
+  'export': TokenType.EXPORT,
+  'from': TokenType.FROM,
+  'async': TokenType.ASYNC,
+  'await': TokenType.AWAIT,
+  'function': TokenType.FUNCTION,
+  'return': TokenType.RETURN,
+  'const': TokenType.CONST,
+  'let': TokenType.LET,
+  'for': TokenType.FOR,
+  'while': TokenType.WHILE,
+  'do': TokenType.DO,
+  'true': TokenType.TRUE,
+  'false': TokenType.FALSE,
+  'null': TokenType.NULL,
+  'undefined': TokenType.UNDEFINED,
+};
+
 export class StreamingValidator {
   private buffer: string = '';
   private tokens: Token[] = [];
@@ -12,6 +37,17 @@ export class StreamingValidator {
   private inString: boolean = false;
   private stringDelimiter: string = '';
   private expectingNext: string[] = [];
+  private parenStack: Token[] = [];
+  private braceStack: Token[] = [];
+  private bracketStack: Token[] = [];
+  private findLastToken(type: TokenType): Token | undefined {
+    for (let i = this.tokens.length - 1; i >= 0; i--) {
+      if (this.tokens[i].type === type) {
+        return this.tokens[i];
+      }
+    }
+    return undefined;
+  }
 
   validatePartial(chunk: string): StreamingValidationResult {
     this.buffer += chunk;
@@ -55,6 +91,9 @@ export class StreamingValidator {
     this.inString = false;
     this.stringDelimiter = '';
     this.expectingNext = [];
+    this.parenStack = [];
+    this.braceStack = [];
+    this.bracketStack = [];
   }
 
   private tokenizePartial(): void {
@@ -67,27 +106,42 @@ export class StreamingValidator {
       this.braceDepth = 0;
       this.bracketDepth = 0;
       this.inString = false;
+      this.parenStack = [];
+      this.braceStack = [];
+      this.bracketStack = [];
       
       
       for (const token of this.tokens) {
         switch (token.type) {
           case TokenType.LEFT_PAREN:
             this.parenDepth++;
+            this.parenStack.push(token);
             break;
           case TokenType.RIGHT_PAREN:
             this.parenDepth--;
+             if (this.parenStack.length > 0) {
+               this.parenStack.pop();
+             }
             break;
           case TokenType.LEFT_BRACE:
             this.braceDepth++;
+            this.braceStack.push(token);
             break;
           case TokenType.RIGHT_BRACE:
             this.braceDepth--;
+            if (this.braceStack.length > 0) {
+              this.braceStack.pop();
+            }
             break;
           case TokenType.LEFT_BRACKET:
             this.bracketDepth++;
+            this.bracketStack.push(token);
             break;
           case TokenType.RIGHT_BRACKET:
             this.bracketDepth--;
+            if (this.bracketStack.length > 0) {
+              this.bracketStack.pop();
+            }
             break;
           case TokenType.STRING:
             // The prism-core tokenizer provides complete string tokens
@@ -159,24 +213,12 @@ export class StreamingValidator {
   private extractSimpleToken(line: string, start: number, lineNum: number): Token | null {
     const remaining = line.substring(start);
 
-    // Keywords
-    if (remaining.startsWith('uncertain')) {
-      return { type: TokenType.UNCERTAIN, value: 'uncertain', line: lineNum, column: start + 1 };
-    }
-    if (remaining.startsWith('if')) {
-      return { type: TokenType.IF, value: 'if', line: lineNum, column: start + 1 };
-    }
-    if (remaining.startsWith('high')) {
-      return { type: TokenType.HIGH, value: 'high', line: lineNum, column: start + 1 };
-    }
-    if (remaining.startsWith('medium')) {
-      return { type: TokenType.MEDIUM, value: 'medium', line: lineNum, column: start + 1 };
-    }
-    if (remaining.startsWith('low')) {
-      return { type: TokenType.LOW, value: 'low', line: lineNum, column: start + 1 };
-    }
-    if (remaining.startsWith('default')) {
-      return { type: TokenType.DEFAULT, value: 'default', line: lineNum, column: start + 1 };
+    const keywordMatch = remaining.match(/^[a-zA-Z_]\w*/);
+    if (keywordMatch) {
+      const word = keywordMatch[0];
+      if (word in fallbackKeywords) {
+        return { type: fallbackKeywords[word], value: word, line: lineNum, column: start + 1 };
+      }
     }
 
     // Operators
@@ -196,30 +238,42 @@ export class StreamingValidator {
     // Delimiters
     if (remaining[0] === '(') {
       this.parenDepth++;
+      this.parenStack.push({ type: TokenType.LEFT_PAREN, value: '(', line: lineNum, column: start + 1 });
       return { type: TokenType.LEFT_PAREN, value: '(', line: lineNum, column: start + 1 };
     }
     if (remaining[0] === ')') {
       this.parenDepth--;
+      if (this.parenStack.length > 0) {
+        this.parenStack.pop();
+      }
       return { type: TokenType.RIGHT_PAREN, value: ')', line: lineNum, column: start + 1 };
     }
     if (remaining[0] === '{') {
       this.braceDepth++;
+      this.braceStack.push({ type: TokenType.LEFT_BRACE, value: '{', line: lineNum, column: start + 1 });
       return { type: TokenType.LEFT_BRACE, value: '{', line: lineNum, column: start + 1 };
     }
     if (remaining[0] === '}') {
       this.braceDepth--;
+      if (this.braceStack.length > 0) {
+        this.braceStack.pop();
+      }
       return { type: TokenType.RIGHT_BRACE, value: '}', line: lineNum, column: start + 1 };
     }
     if (remaining[0] === '[') {
       this.bracketDepth++;
+      this.bracketStack.push({ type: TokenType.LEFT_BRACKET, value: '[', line: lineNum, column: start + 1 });
       return { type: TokenType.LEFT_BRACKET, value: '[', line: lineNum, column: start + 1 };
     }
     if (remaining[0] === ']') {
       this.bracketDepth--;
+      if (this.bracketStack.length > 0) {
+        this.bracketStack.pop();
+      }
       return { type: TokenType.RIGHT_BRACKET, value: ']', line: lineNum, column: start + 1 };
     }
 
-    // Identifiers and literals
+    // Identifiers
     if (/^[a-zA-Z_]\w*/.test(remaining)) {
       const match = remaining.match(/^[a-zA-Z_]\w*/);
       if (match) {
@@ -241,8 +295,8 @@ export class StreamingValidator {
     // Check for bracket mismatches
     if (this.parenDepth < 0) {
       this.errors.push({
-        line: 1,
-        column: 1,
+        line: this.findLastToken(TokenType.RIGHT_PAREN)?.line ?? 1,
+        column: this.findLastToken(TokenType.RIGHT_PAREN)?.column ?? 1,
         message: 'Unmatched closing parenthesis',
         code: 'UNMATCHED_PAREN',
         severity: 'error'
@@ -251,8 +305,8 @@ export class StreamingValidator {
 
     if (this.braceDepth < 0) {
       this.errors.push({
-        line: 1,
-        column: 1,
+        line: this.findLastToken(TokenType.RIGHT_BRACE)?.line ?? 1,
+        column: this.findLastToken(TokenType.RIGHT_BRACE)?.column ?? 1,
         message: 'Unmatched closing brace',
         code: 'UNMATCHED_BRACE',
         severity: 'error'
@@ -261,8 +315,8 @@ export class StreamingValidator {
 
     if (this.bracketDepth < 0) {
       this.errors.push({
-        line: 1,
-        column: 1,
+        line: this.findLastToken(TokenType.RIGHT_BRACKET)?.line ?? 1,
+        column: this.findLastToken(TokenType.RIGHT_BRACKET)?.column ?? 1,
         message: 'Unmatched closing bracket',
         code: 'UNMATCHED_BRACKET',
         severity: 'error'
@@ -333,12 +387,42 @@ export class StreamingValidator {
     // Add completion expectations based on current state
     if (this.parenDepth > 0) {
       this.expectingNext.push(')');
+      const lastOpen = this.parenStack[this.parenStack.length - 1];
+      if (lastOpen) {
+        this.warnings.push({
+          line: lastOpen.line,
+          column: lastOpen.column,
+          message: 'Unclosed parenthesis',
+          code: 'UNCLOSED_PAREN',
+          severity: 'warning'
+        });
+      }
     }
     if (this.braceDepth > 0) {
       this.expectingNext.push('}');
+      const lastOpen = this.braceStack[this.braceStack.length - 1];
+      if (lastOpen) {
+        this.warnings.push({
+          line: lastOpen.line,
+          column: lastOpen.column,
+          message: 'Unclosed brace',
+          code: 'UNCLOSED_BRACE',
+          severity: 'warning'
+        });
+      }
     }
     if (this.bracketDepth > 0) {
       this.expectingNext.push(']');
+      const lastOpen = this.bracketStack[this.bracketStack.length - 1];
+      if (lastOpen) {
+        this.warnings.push({
+          line: lastOpen.line,
+          column: lastOpen.column,
+          message: 'Unclosed bracket',
+          code: 'UNCLOSED_BRACKET',
+          severity: 'warning'
+        });
+      }
     }
     if (this.inString) {
       this.expectingNext.push(this.stringDelimiter);
@@ -461,4 +545,60 @@ export class StreamingValidator {
       lastToken.type === TokenType.STRING
     );
   }
+}
+
+export interface ValidateStreamOptions<T> {
+  validator?: StreamingValidator;
+  extractText?: (chunk: T) => string | null | undefined;
+  stopOnError?: boolean;
+  signal?: AbortSignal;
+  onUpdate?: (result: StreamingValidationResult) => void;
+}
+
+export async function validateStream<T>(
+  source: AsyncIterable<T>,
+  options: ValidateStreamOptions<T> = {}
+): Promise<StreamingValidationResult[]> {
+  const validator = options.validator ?? new StreamingValidator();
+  const extract = options.extractText ?? defaultChunkExtractor;
+  const stopOnError = options.stopOnError ?? true;
+  const results: StreamingValidationResult[] = [];
+
+  for await (const chunk of source) {
+    if (options.signal?.aborted) {
+      throw new Error('Streaming validation aborted');
+    }
+
+    const text = extract(chunk);
+    if (typeof text !== 'string' || text.length === 0) {
+      continue;
+    }
+
+    const result = validator.validatePartial(text);
+    results.push(result);
+    options.onUpdate?.(result);
+
+    if (!result.valid && stopOnError) {
+      break;
+    }
+  }
+
+  return results;
+}
+
+function defaultChunkExtractor(chunk: any): string | undefined {
+  if (typeof chunk === 'string') {
+    return chunk;
+  }
+
+  if (chunk && typeof chunk === 'object') {
+    if (typeof chunk.text === 'string') {
+      return chunk.text;
+    }
+    if (typeof chunk.content === 'string') {
+      return chunk.content;
+    }
+  }
+
+  return undefined;
 }

@@ -19,6 +19,9 @@ npx @prism-lang/cli
 ### Run a Prism file
 ```bash
 prism run myfile.prism
+
+# Hot reload on changes
+prism run --watch myfile.prism
 ```
 
 ### Start the REPL
@@ -31,6 +34,15 @@ prism repl
 prism eval "x = 5 ~> 0.9; print(x)"
 ```
 
+### Send an LLM prompt
+```bash
+# Stream tokens from a specific provider/model
+prism llm --provider claude --model claude-3-haiku --stream "Draft a haiku about autumn rain"
+
+# Request reasoning metadata and disable structured output
+prism llm --include-reasoning --no-structured-output "Explain why the sky is blue"
+```
+
 ### Check version
 ```bash
 prism --version
@@ -38,10 +50,10 @@ prism --version
 
 ## Features
 
-- **Run Prism files**: Execute `.prism` files from the command line
+- **Run Prism files**: Execute `.prism` files from the command line (with optional `--watch` hot reload)
 - **Interactive REPL**: Explore Prism interactively with confidence tracking
 - **Inline evaluation**: Quick one-liners for testing
-- **LLM Integration**: Built-in support for AI providers when configured
+- **LLM Integration**: Built-in support for AI providers with per-command overrides (provider, model, temperature, tokens, reasoning, structured output)
 
 ## Configuration
 
@@ -60,6 +72,9 @@ export GEMINI_API_KEY=your-key
 ```bash
 # Run a file with AI safety checks
 prism run safety-check.prism
+
+# Enable hot reload for local development
+prism run --watch app.prism
 
 # Start REPL with confidence tracking
 prism repl

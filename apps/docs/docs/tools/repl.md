@@ -181,6 +181,20 @@ Available models:
   - mock: Mock Provider (for testing)
 ```
 
+### `:stream <prompt>`
+
+Stream an LLM response without writing Prism code. Streaming can be cancelled with `Ctrl+C`.
+
+```
+prism> :stream Draft a haiku about autumn rain
+Drafting a gentle haiku about the autumn rain...
+Soft rain threads the dusk
+Amber leaves whisper on stone
+Evening sips the mist
+
+Confidence: 0.86
+```
+
 ### `:exit`
 
 Exit the REPL:

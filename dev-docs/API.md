@@ -741,6 +741,15 @@ class MockLLMProvider implements LLMProvider {
   name: string = "mock"
   
   async complete(request: LLMRequest): Promise<LLMResponse>
+  stream(request: LLMRequest): LLMStreamingSession
+  embed(text: string): Promise<number[]>
+  
+  setMockResponse(response: string, confidence: number, reasoning?: string): void
+  queueResponse(response: { content: string; confidence: number; reasoning?: string }): void
+  clearQueue(): void
+  setFailureRate(rate: number): void
+  setLatency(ms: number): void
+  setRandomGenerator(fn: () => number): void
 }
 ```
 

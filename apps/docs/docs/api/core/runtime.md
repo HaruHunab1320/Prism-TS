@@ -88,6 +88,109 @@ interpreter.registerLLMProvider('mock', mockProvider);
 interpreter.setDefaultLLMProvider('mock');
 ```
 
+## Runtime Class
+
+While the `Interpreter` gives you low-level control, most applications use the higher-level `Runtime`, which wires an interpreter together with the module system, built-ins, and helpers for cache management.
+
+### createRuntime
+
+```typescript
+function createRuntime(options?: RuntimeOptions): Runtime
+```
+
+Creates a fully configured runtime.
+
+- `options.moduleSystem` (optional): Provide a preconfigured `ModuleSystem` (custom file readers, virtual files, etc.). When omitted, a new one is created automatically.
+
+```typescript
+interface RuntimeOptions {
+  moduleSystem?: ModuleSystem;
+}
+```
+
+### Runtime Methods
+
+#### execute()
+
+```typescript
+await runtime.execute(ast: Program): Promise<Value>
+```
+
+Runs a parsed program.
+
+#### registerLLMProvider() / setDefaultLLMProvider()
+
+Proxy to the interpreter helpers; register or select an LLM provider shared across all modules.
+
+#### getModuleSystem()
+
+```typescript
+const moduleSystem = runtime.getModuleSystem();
+```
+
+Returns the `ModuleSystem` instance backing the runtime. Useful if you need direct access for advanced tooling.
+
+#### invalidateModule()
+
+```typescript
+runtime.invalidateModule('/path/to/module.prism', {
+  invalidateDependents: true // default
+});
+```
+
+Drops a module (and, by default, all modules that depend on it) from the cache. The next `import` will re-execute it.
+
+#### reloadModule()
+
+```typescript
+const module = await runtime.reloadModule('/shared/state.prism');
+```
+
+Convenience helper that invalidates and immediately reloads a module, returning the updated `Module` descriptor (exports, dependency graph, etc.). Dependents are automatically invalidated so subsequent imports see the new exports.
+
+**Example: hot reload loop**
+
+```typescript
+import { createRuntime } from '@prism-lang/core';
+
+const runtime = createRuntime();
+await runtime.getModuleSystem().loadModule('/app/main.prism', runtime);
+
+// when a file changes:
+await runtime.reloadModule('/app/theme.prism');
+```
+
+This reuses the same interpreter, so existing globals, registered LLM providers, and environments remain intact between reloads.
+
+> The `prism run --watch` command uses this helper internally to refresh the edited module and all dependents without restarting the CLI.
+
+#### streamLLM()
+
+```typescript
+const stream = runtime.streamLLM("Draft today's update", {
+  provider: 'claude',
+  structuredOutput: false,
+  temperature: 0.3,
+});
+
+for await (const chunk of stream.chunks) {
+  if (chunk.type === 'text' && chunk.content) {
+    process.stdout.write(chunk.content);
+  }
+}
+
+const final = await stream.response;
+console.log(`\nConfidence: ${(final.confidence * 100).toFixed(1)}%`);
+```
+
+Returns a `RuntimeLLMStream` with:
+
+- `chunks`: `AsyncIterable<LLMStreamChunk>` of text/metadata events
+- `response`: Promise resolving to the final `LLMResponse`
+- `cancel(reason?)`: stop streaming (best-effort for providers without native streaming)
+
+If a provider does not implement streaming, Prism falls back to a single chunk once the request finishes. Providers that rely on structured responses should set `structuredOutput: false` when streaming plain text.
+
 ## Value Types
 
 All runtime values extend the abstract `Value` class:
@@ -347,21 +450,76 @@ The interpreter provides several built-in functions:
 ### llm()
 
 ```typescript
-llm(prompt: string): Promise<ConfidenceValue<string>>
+llm(prompt: string, options?: LLMCallOptions): Promise<ConfidenceValue<string>>
 ```
 
-Calls the configured LLM provider.
+Calls an LLM provider using the current runtime configuration.
 
 **Parameters:**
 - `prompt`: The prompt string
+- `options`: Optional object to override provider behavior
 
-**Returns:** Confident string response
+```typescript
+interface LLMCallOptions {
+  provider?: string;
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+  timeout?: number;
+  structuredOutput?: boolean;
+  includeReasoning?: boolean;
+  confidenceExtractor?: (responseText: string) => Promise<{ value: number }>;
+  extractor?: (response: {
+    content: string;
+    confidence: number;
+    model: string;
+    tokensUsed: number;
+    provider: string;
+    prompt: string;
+    options: Record<string, unknown>;
+    metadata?: Record<string, unknown>;
+  }) => number | ConfidenceValue<any>;
+}
+```
+
+`confidenceExtractor` is forwarded to the provider implementation (e.g. `@prism-lang/llm`) so it can derive a confidence score when structured output isn't available. `extractor` receives an object with `{ content, confidence, model, tokensUsed, provider, prompt, options, metadata }` and lets you override the returned confidence by returning a number or confident value.
+
+**Returns:** Confident string response using either the provider-reported confidence or the extractor override.
 
 **Example:**
 ```prism
 response = llm("What is 2+2?");
-// Returns: "4" ~> 0.95
+// => "4" (~95%)
+
+custom = llm("Summarize this doc", {
+  provider: "claude",
+  model: "claude-3-sonnet",
+  temperature: 0.2,
+  extractor: info => info.confidence * 0.8
+});
 ```
+
+### stream_llm()
+
+```prism
+handle = stream_llm("Draft a summary", { structuredOutput: false })
+
+chunk = await handle.next()
+while (chunk) {
+  console.log(chunk.text)
+  chunk = await handle.next()
+}
+
+final = await handle.result()
+```
+
+Returns a stream handle containing:
+- `next(): Promise<Chunk | null>` – resolves to the next `LLMStreamChunk` with fields such as `type`, `text`, `reasoning`, `error`.
+- `result(): Promise<ConfidenceValue<string>>` – resolves to the final confident string (extractor rules apply).
+- `cancel(): void` – aborts the stream.
+
+If the provider doesn’t support streaming, Prism buffers the response and returns it as a single chunk once complete.
 
 ### Array Functions
 

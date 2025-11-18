@@ -15,6 +15,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@prism-lang/core": "workspace:*",
     "@ai-sdk/anthropic": "^1.0.7",
     "@ai-sdk/google": "^1.0.7",
     "@types/node-fetch": "^2.6.12",

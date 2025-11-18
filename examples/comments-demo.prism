@@ -1,0 +1,46 @@
+// Comments in Prism
+// =================
+
+// Single-line comments start with //
+x = 10 // They can also appear at the end of a line
+
+/* 
+   Multiline comments are enclosed in /* and */
+   They can span multiple lines and are useful for
+   longer explanations or temporarily disabling code
+*/
+
+y = 20
+
+/**
+ * JSDoc-style comments start with /** and are perfect
+ * for documenting functions, modules, and complex code
+ * 
+ * @param {number} a - First number
+ * @param {number} b - Second number  
+ * @returns {number} The sum of a and b
+ */
+function add(a, b) {
+  return a + b /* inline comment */ 
+}
+
+/* You can mix different comment styles
+   throughout your code */
+
+// Calculate the result
+result = add(x, y) // Should be 30
+
+/**
+ * Comments are completely ignored by the parser,
+ * so they don't affect program execution
+ */
+console.log("Result:", result)
+
+// Nested comment example (note: nested /* */ not supported)
+/*
+ * This is a multiline comment
+ * with // single line markers inside
+ * which is perfectly fine
+ */
+
+// Comments help make code more readable and maintainable!

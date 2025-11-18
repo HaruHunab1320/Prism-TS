@@ -199,6 +199,21 @@ cd prism-ts
 # Install dependencies
 npm install
 
+## Versioning Packages
+
+Use the repo-native script to bump individual package versions and update any internal dependents in one go:
+
+```bash
+# Bump @prism-lang/core by one minor version and add a changelog note
+pnpm bump-version --package @prism-lang/core --type minor --notes "Expose runtime.reloadModule API"
+
+# Or set an explicit version and preview the changes
+pnpm bump-version --package @prism-lang/validator --version 1.4.2 --dry-run
+```
+
+The script updates `package.json` inside the target package plus any workspace packages that depend on it (dependencies, devDependencies, peerDependencies, etc.). Commit the resulting changes and push tags as usual.
+If `CHANGELOG.md` exists alongside the package, the script inserts a dated entry automatically (or prints it when using `--dry-run`).
+
 # Build the project
 npm run build
 

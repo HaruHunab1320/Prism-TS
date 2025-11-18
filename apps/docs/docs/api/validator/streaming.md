@@ -15,12 +15,12 @@ import { StreamingValidator } from '@prism-lang/validator';
 const validator = new StreamingValidator();
 
 // Reset state for new session
-validator.resetStreaming();
+validator.reset();
 
 // Validate code chunks as they arrive
-const result1 = validator.validateStreaming("const x = ");
-const result2 = validator.validateStreaming("llm(");
-const result3 = validator.validateStreaming("\"What is");
+const result1 = validator.validatePartial("const x = ");
+const result2 = validator.validatePartial("llm(");
+const result3 = validator.validatePartial("\"What is");
 ```
 
 ## Core Features
@@ -29,28 +29,28 @@ const result3 = validator.validateStreaming("\"What is");
 The validator maintains parsing state across chunks:
 
 ```typescript
-validator.resetStreaming();
+validator.reset();
 
 // Chunk 1: Incomplete but valid so far
-let result = validator.validateStreaming("const result = ");
-console.log(result.isValid);  // true
-console.log(result.isComplete); // false
+let result = validator.validatePartial("const result = ");
+console.log(result.valid);  // true
+console.log(validator.isComplete()); // false
 
 // Chunk 2: Complete statement
-result = validator.validateStreaming("42");
-console.log(result.isValid);  // true
-console.log(result.isComplete); // true
+result = validator.validatePartial("42");
+console.log(result.valid);  // true
+console.log(validator.isComplete()); // true
 ```
 
 ### 2. Intelligent Completions
 Get context-aware completions for partial code:
 
 ```typescript
-validator.resetStreaming();
-validator.validateStreaming("uncertain if (x) {");
-validator.validateStreaming("  high { }");
+validator.reset();
+validator.validatePartial("uncertain if (x) {");
+validator.validatePartial("  high { }");
 
-const completions = validator.getStreamingCompletions();
+const completions = validator.getCompletions();
 // Returns: ["medium {", "low {", "default {"]
 ```
 
@@ -59,57 +59,74 @@ The validator can recover from errors and continue:
 
 ```typescript
 // Even with an error, it continues tracking
-validator.validateStreaming("const x = ");
-validator.validateStreaming("@#!");  // Invalid
-validator.validateStreaming(" // Fixed: const x = 42");
+validator.validatePartial("const x = ");
+const errored = validator.validatePartial("@#!");  // Invalid
+validator.validatePartial(" // Fixed: const x = 42");
 
-const state = validator.getStreamingState();
-console.log(state.hasErrors); // true
-console.log(state.canRecover); // true
+console.log(errored.valid); // false
+console.log(errored.errors[0].message);
 ```
 
 ## LLM Integration
 
+:::tip
+Use `runtime.streamLLM(prompt, { structuredOutput: false })` (or `prism llm --stream "prompt"`) to get a cancellable async stream of tokens that you can feed directly into `StreamingValidator` or the higher-level `validateStream` helper.
+:::
+
 ### Code Generation Validation
 ```typescript
 async function generatePrismCode(prompt: string) {
+  const runtime = createRuntime();
+  const session = runtime.streamLLM(prompt, { structuredOutput: false });
   const validator = new StreamingValidator();
-  validator.resetStreaming();
-  
-  const stream = await llm.streamCompletion(prompt);
-  let fullCode = "";
-  
-  for await (const chunk of stream) {
-    fullCode += chunk;
-    const validation = validator.validateStreaming(chunk);
-    
-    if (!validation.isValid) {
-      // Provide feedback to LLM
-      const error = validation.errors[0];
-      const correction = await llm.complete(
-        `Fix this Prism syntax error: ${error.message}\nCode: ${fullCode}`
-      );
-      fullCode += correction;
-      validator.validateStreaming(correction);
+  let fullCode = '';
+
+await validateStream(session.chunks, {
+  validator,
+  extractText: chunk => {
+    if (chunk.type === 'text' && chunk.content) {
+      fullCode += chunk.content;
+      return chunk.content;
+    }
+    return '';
+  },
+  onUpdate(validation) {
+    if (!validation.valid && validation.errors.length > 0) {
+      console.warn('Syntax issue detected:', validation.errors[0].message);
     }
   }
-  
+});
+
+  await session.response;
   return fullCode;
 }
+```
+
+Prefer direct notifications? `validateStream` accepts an `onUpdate` callback that receives each `StreamingValidationResult`:
+
+```typescript
+import { validateStream } from '@prism-lang/validator';
+
+await validateStream(session.chunks, {
+  extractText: chunk => (chunk.type === 'text' ? chunk.content : ''),
+  onUpdate(validation) {
+    console.log('Expected next tokens:', validation.expectedNext);
+  }
+});
 ```
 
 ### Guided Generation
 ```typescript
 // Use completions to guide LLM
 const validator = new StreamingValidator();
-validator.resetStreaming();
+validator.reset();
 
 async function guidedGeneration() {
   let code = "";
   
   // Start with a partial statement
   code += "uncertain if (";
-  validator.validateStreaming(code);
+  validator.validatePartial(code);
   
   // Get valid completions
   const completions = validator.getStreamingCompletions();
@@ -130,21 +147,20 @@ async function guidedGeneration() {
 ```typescript
 class PrismEditor {
   private validator = new StreamingValidator();
-  private lastValidCode = "";
+  private lastSnapshot = '';
   
   onTextChange(newText: string) {
-    // Find the change
-    const diff = this.findDiff(this.lastValidCode, newText);
+    const diff = this.findDiff(this.lastSnapshot, newText);
     
     if (diff.isAppend) {
-      // Validate only the new chunk
-      const result = this.validator.validateStreaming(diff.added);
+      const result = this.validator.validatePartial(diff.added);
       this.updateErrorMarkers(result.errors);
     } else {
-      // Reset for non-append changes
-      this.validator.resetStreaming();
-      this.validator.validateStreaming(newText);
+      this.validator.reset();
+      this.validator.validatePartial(newText);
     }
+    
+    this.lastSnapshot = newText;
   }
 }
 ```
@@ -158,15 +174,14 @@ class PrismAutocomplete {
     document: TextDocument,
     position: Position
   ) {
-    // Get code up to cursor
     const textUntilPosition = document.getText(
       new Range(0, 0, position.line, position.character)
     );
     
-    this.validator.resetStreaming();
-    this.validator.validateStreaming(textUntilPosition);
+    this.validator.reset();
+    this.validator.validatePartial(textUntilPosition);
     
-    const completions = this.validator.getStreamingCompletions();
+    const completions = this.validator.getCompletions();
     
     return completions.map(text => ({
       label: text,

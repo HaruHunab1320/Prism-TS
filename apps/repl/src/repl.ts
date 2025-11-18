@@ -1,4 +1,4 @@
-import { parse, Runtime, Value, NumberValue, StringValue, BooleanValue, ConfidenceValue as RuntimeConfidenceValue } from '@prism-lang/core';
+import { parse, Runtime, Value, NumberValue, StringValue, BooleanValue, ConfidenceValue as RuntimeConfidenceValue, RuntimeLLMStream, DiagnosticError, formatDiagnostic } from '@prism-lang/core';
 import { LLMProvider, LLMConfigManager } from '@prism-lang/llm';
 
 export interface REPLSuccessResult {
@@ -40,6 +40,7 @@ export class PrismREPL {
   private history: HistoryEntry[] = [];
   private startTime: Date;
   private variables = new Map<string, Value>();
+  private currentStream?: RuntimeLLMStream;
 
   constructor() {
     this.runtime = new Runtime();
@@ -57,6 +58,15 @@ export class PrismREPL {
   async evaluate(input: string): Promise<REPLResult> {
     const trimmedInput = input.trim();
     
+    if (trimmedInput.startsWith(':stream')) {
+      const prompt = trimmedInput.slice(':stream'.length).trim();
+      if (!prompt) {
+        return { success: false, error: 'Usage: :stream <prompt>' };
+      }
+      await this.streamPrompt(prompt);
+      return { success: true, value: '', type: 'stream' };
+    }
+
     // Handle REPL commands
     if (trimmedInput.startsWith(':')) {
       return this.handleCommand(trimmedInput);
@@ -91,7 +101,7 @@ export class PrismREPL {
       return replResult;
       
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage = this.formatError(error, trimmedInput);
       
       const replResult: REPLErrorResult = {
         success: false,
@@ -202,6 +212,35 @@ export class PrismREPL {
     }
   }
 
+  private async streamPrompt(prompt: string): Promise<void> {
+    const stream = this.runtime.streamLLM(prompt, { structuredOutput: false });
+    this.currentStream = stream;
+    console.log('🔊 Streaming response:\n');
+    try {
+      for await (const chunk of stream.chunks) {
+        if (chunk.type === 'text' && chunk.content) {
+          process.stdout.write(chunk.content);
+        }
+      }
+      const response = await stream.response;
+      console.log(`\n\n(~${(response.confidence * 100).toFixed(1)}%)`);
+    } catch (error) {
+      console.error(`\n❌ ${this.formatError(error, prompt)}`);
+    } finally {
+      this.currentStream = undefined;
+      console.log();
+    }
+  }
+
+  cancelActiveStream(): boolean {
+    if (this.currentStream) {
+      this.currentStream.cancel();
+      this.currentStream = undefined;
+      return true;
+    }
+    return false;
+  }
+
   private addToHistory(input: string, result: REPLResult): void {
     this.history.push({
       input,
@@ -241,6 +280,7 @@ Commands:
   :history  - Show evaluation history
   :stats    - Show session statistics
   :llm      - Show LLM provider information
+  :stream <prompt> - Stream output from the default LLM provider
   :exit     - Exit the REPL
 
 Language Features:
@@ -252,7 +292,7 @@ Language Features:
   • Control flow: if/else, uncertain if
   • Contexts: in context Name { ... }
 
-Examples:
+Examples: 
   result = llm("What is AI?")
   
   uncertain if (result ~> 0.8) {
@@ -266,6 +306,16 @@ Examples:
 
 Happy coding with Prism! 🚀
     `.trim();
+  }
+
+  private formatError(error: unknown, source?: string): string {
+    if (error instanceof DiagnosticError) {
+      return formatDiagnostic(error.diagnostic, source);
+    }
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return String(error);
   }
 
   private getVariablesText(): string {

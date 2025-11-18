@@ -12,6 +12,7 @@
     "typecheck": "turbo run typecheck",
     "dev": "turbo run dev --filter=@prism-lang/cli",
     "clean": "turbo run clean",
+    "bump-version": "node ./scripts/bump-version.mjs",
     "release": "turbo run build && changeset publish",
     "release:check": "changeset status --verbose",
     "version": "changeset version",

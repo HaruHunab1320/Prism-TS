@@ -79,6 +79,36 @@ describe('LLM Providers', () => {
       
       expect(embeddings1).toEqual(embeddings2);
     });
+
+    it('should stream full responses when not cancelled', async () => {
+      const request = new LLMRequest('Stream this text completely');
+      const session = provider.stream(request);
+      const chunks: string[] = [];
+      for await (const chunk of session) {
+        if (chunk.type === 'text' && chunk.content) {
+          chunks.push(chunk.content);
+        }
+      }
+      const response = await session.response;
+      expect(chunks.join('').trim()).toContain('Mock response');
+      expect(response.content).toContain('Mock response');
+    });
+
+    it('should stream responses chunk by chunk', async () => {
+      const request = new LLMRequest('Stream this text');
+      const session = provider.stream(request);
+      const chunks: string[] = [];
+      for await (const chunk of session) {
+        if (chunk.type === 'text' && chunk.content) {
+          chunks.push(chunk.content);
+        }
+        if (chunks.length === 3) {
+          break;
+        }
+      }
+      session.cancel();
+      await expect(session.response).rejects.toThrow('cancelled');
+    });
   });
 
   describe('ClaudeProvider', () => {
@@ -166,6 +196,18 @@ describe('LLM Providers', () => {
       
       expect(Array.isArray(embeddings)).toBe(true);
       expect(embeddings).toHaveLength(384);
+    });
+
+    it('should stream using specified provider when available', async () => {
+      registry.register('mock', mockProvider);
+      registry.setDefault('mock');
+
+      const request = new LLMRequest('Stream via registry');
+      const session = registry.stream(request);
+      const iterator = session[Symbol.asyncIterator]();
+      await iterator.next();
+      session.cancel();
+      await expect(session.response).rejects.toThrow();
     });
   });
 

@@ -95,17 +95,22 @@ Testing provider with configurable behavior.
 class MockLLMProvider implements LLMProvider {
   readonly name = 'Mock';
   
-  setMockResponse(response: string, confidence: number): void
+  setMockResponse(response: string, confidence: number, reasoning?: string): void
+  queueResponse(response: { content: string; confidence: number; reasoning?: string }): void
+  clearQueue(): void
   setFailureRate(rate: number): void
   setLatency(ms: number): void
+  setRandomGenerator(fn: () => number): void
 }
 ```
 
 **Features:**
 - Configurable responses
+- Queue deterministic responses for sequential tests
 - Simulated failures
 - Artificial latency
 - Deterministic embeddings
+- Streaming with cancellation support
 
 **Example:**
 ```typescript
@@ -114,6 +119,9 @@ import { MockLLMProvider } from '@prism-lang/llm';
 const mock = new MockLLMProvider();
 mock.setMockResponse("Test response", 0.9);
 mock.setLatency(100); // 100ms delay
+
+// Queue deterministic responses for sequential tests
+mock.queueResponse({ content: "Next response", confidence: 0.8 });
 
 const response = await mock.complete(
   new LLMRequest("Hello world")

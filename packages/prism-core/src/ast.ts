@@ -27,9 +27,12 @@ export type NodeType =
   | 'UncertainIfStatement'
   | 'AssignmentStatement'
   | 'ExpressionStatement'
+  | 'ContextStatement'
+  | 'AgentDeclaration'
   | 'ForLoop'
   | 'ForInLoop'
   | 'WhileLoop'
+  | 'DoWhileLoop'
   | 'BreakStatement'
   | 'ContinueStatement'
   | 'UncertainForLoop'
@@ -300,7 +303,30 @@ export class IndexAccess extends Expression {
 export class BlockStatement extends Statement {
   type: NodeType = 'BlockStatement';
   
-  constructor(public statements: Statement[]) {
+  constructor(public statements: Statement[], public createScope: boolean = true) {
+    super();
+  }
+}
+
+export class ContextStatement extends Statement {
+  type: NodeType = 'ContextStatement';
+
+  constructor(
+    public contextName: string,
+    public body: BlockStatement,
+    public shiftTo?: string
+  ) {
+    super();
+  }
+}
+
+export class AgentDeclaration extends Statement {
+  type: NodeType = 'AgentDeclaration';
+
+  constructor(
+    public name: string,
+    public config: Map<string, Expression>
+  ) {
     super();
   }
 }
@@ -388,6 +414,17 @@ export class WhileLoop extends Statement {
   constructor(
     public condition: Expression,
     public body: Statement
+  ) {
+    super();
+  }
+}
+
+export class DoWhileLoop extends Statement {
+  type: NodeType = 'DoWhileLoop';
+
+  constructor(
+    public body: Statement,
+    public condition: Expression
   ) {
     super();
   }

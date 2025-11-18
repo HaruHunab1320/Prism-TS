@@ -3,8 +3,7 @@ import * as path from 'path';
 import { tokenize } from './tokenizer';
 import { Parser } from './parser';
 import { ImportStatement, ExportStatement } from './ast';
-import { Runtime, Value, UndefinedValue, ObjectValue } from './runtime';
-import { createRuntime } from './runtime';
+import { Runtime, Value, UndefinedValue, ObjectValue, Environment } from './runtime';
 
 export interface ModuleExports {
   default?: Value;
@@ -17,50 +16,81 @@ export interface Module {
   environment: any; // Runtime environment
   isExecuted: boolean;
   isExecuting: boolean; // Track if module is currently executing
+  dependents: Set<string>;
+  dependencies: Set<string>;
 }
 
 export class ModuleSystem {
   private modules: Map<string, Module> = new Map();
   private currentModulePath: string | null = null;
   private fileReader: (path: string) => string;
+  private fileExists: (path: string) => boolean;
   
-  constructor(fileReader?: (path: string) => string) {
+  constructor(fileReader?: (path: string) => string, fileExists?: (path: string) => boolean) {
     // Allow custom file reader for testing/different environments
     this.fileReader = fileReader || ((p: string) => fs.readFileSync(p, 'utf-8'));
+    this.fileExists = fileExists || ((p: string) => fs.existsSync(p));
   }
   
   /**
    * Resolve a module path relative to the current module
    */
   private resolvePath(importPath: string, fromPath: string): string {
-    // Handle relative paths
-    if (importPath.startsWith('./') || importPath.startsWith('../')) {
-      const dir = path.dirname(fromPath);
-      let resolved = path.resolve(dir, importPath);
-      
-      // Add .prism extension if not present
-      if (!resolved.endsWith('.prism')) {
-        resolved += '.prism';
+    const attempts = this.buildCandidatePaths(importPath, fromPath);
+    for (const candidate of attempts) {
+      if (this.fileExists(candidate)) {
+        return candidate;
       }
-      
-      return resolved;
     }
-    
-    // Handle absolute paths or node_modules (simplified for now)
-    // In a real implementation, we'd search node_modules directories
-    if (!importPath.endsWith('.prism')) {
-      importPath += '.prism';
+    const attemptsList = attempts.map(candidate => `  - ${candidate}`).join('\n');
+    throw new Error(
+      `Cannot resolve module '${importPath}' from '${fromPath}'. Tried:\n${attemptsList}`
+    );
+  }
+
+  private buildCandidatePaths(importPath: string, fromPath: string): string[] {
+    const attempts: string[] = [];
+    const addCandidate = (candidate: string) => {
+      if (!attempts.includes(candidate)) {
+        attempts.push(candidate);
+      }
+    };
+
+    const addWithExtensions = (base: string) => {
+      addCandidate(base.endsWith('.prism') ? base : `${base}.prism`);
+      addCandidate(path.join(base, 'index.prism'));
+    };
+
+    if (importPath.startsWith('./') || importPath.startsWith('../')) {
+      const abs = path.resolve(path.dirname(fromPath), importPath);
+      addWithExtensions(abs);
+      return attempts;
     }
-    
-    return importPath;
+
+    if (path.isAbsolute(importPath)) {
+      addWithExtensions(path.resolve(importPath));
+      return attempts;
+    }
+
+    let currentDir = path.dirname(fromPath);
+    while (true) {
+      const moduleDir = path.join(currentDir, 'node_modules', importPath);
+      addWithExtensions(moduleDir);
+      const parent = path.dirname(currentDir);
+      if (parent === currentDir) break;
+      currentDir = parent;
+    }
+
+    return attempts;
   }
   
   /**
    * Load and execute a module
    */
-  async loadModule(modulePath: string, runtime: Runtime): Promise<Module> {
+  async loadModule(modulePath: string, runtime: Runtime | any): Promise<Module> {
+    const normalizedPath = path.resolve(modulePath);
     // Check cache
-    const existingModule = this.modules.get(modulePath);
+    const existingModule = this.modules.get(normalizedPath);
     if (existingModule) {
       if (existingModule.isExecuting) {
         // Module is currently executing - this is a circular dependency
@@ -75,28 +105,40 @@ export class ModuleSystem {
     
     // Create new module
     const module: Module = {
-      path: modulePath,
+      path: normalizedPath,
       exports: {
         named: new Map()
       },
       environment: null,
       isExecuted: false,
-      isExecuting: false
+      isExecuting: false,
+      dependents: new Set(),
+      dependencies: new Set()
     };
     
     // Add to cache before execution to handle circular deps
-    this.modules.set(modulePath, module);
-    
+    this.modules.set(normalizedPath, module);
+
     // Execute module
     await this.executeModule(module, runtime);
-    
+
     return module;
   }
   
   /**
    * Execute a module's code
    */
-  private async executeModule(module: Module, _parentRuntime: Runtime): Promise<void> {
+  private resolveRuntime(runtimeOrInterpreter: Runtime | any): { runtime: Runtime; interpreter: any } {
+    const runtime = (runtimeOrInterpreter as any).__runtime ?? runtimeOrInterpreter;
+    const interpreter = (runtime as any).interpreter ?? (runtimeOrInterpreter.interpreter ? runtimeOrInterpreter.interpreter : undefined);
+    if (!runtime || !interpreter) {
+      throw new Error('Runtime interpreter not accessible');
+    }
+    return { runtime, interpreter };
+  }
+
+  private async executeModule(module: Module, runtime: Runtime | any): Promise<void> {
+    const { runtime: runtimeWrapper, interpreter } = this.resolveRuntime(runtime);
     module.isExecuting = true;
     
     try {
@@ -108,29 +150,28 @@ export class ModuleSystem {
       const parser = new Parser(tokens, source);
       const ast = parser.parse();
       
-      // Create module-specific runtime with its own environment
-      const moduleRuntime = createRuntime();
-      
-      // Store current module path for import resolution
       const previousModulePath = this.currentModulePath;
+      const previousModule = (interpreter as any).__currentModule;
+      const previousEnvironment = interpreter.environment;
+
+      // Create module-specific environment that inherits from current scope
+      const moduleEnvironment = new Environment(previousEnvironment);
+      interpreter.environment = moduleEnvironment;
+
       this.currentModulePath = module.path;
-      
-      // Inject module system into runtime (need to access interpreter)
-      const interpreter = (moduleRuntime as any).interpreter;
       (interpreter as any).__moduleSystem = this;
       (interpreter as any).__currentModule = module;
-      
-      // Execute module
-      await moduleRuntime.execute(ast);
-      
-      // Store module environment
-      module.environment = interpreter.environment;
-      
-      // Restore previous module path
-      this.currentModulePath = previousModulePath;
-      
+
+      await runtimeWrapper.execute(ast);
+
+      module.environment = moduleEnvironment;
       module.isExecuted = true;
       module.isExecuting = false;
+
+      // Restore previous state
+      interpreter.environment = previousEnvironment;
+      (interpreter as any).__currentModule = previousModule;
+      this.currentModulePath = previousModulePath;
       
     } catch (error) {
       module.isExecuting = false;
@@ -150,12 +191,17 @@ export class ModuleSystem {
     // Resolve module path
     const resolvedPath = this.resolvePath(importStmt.source, currentModule.path);
     
-    // Load module - create a new runtime for it
-    const importRuntime = createRuntime();
-    const importedModule = await this.loadModule(resolvedPath, importRuntime);
+    // Load module using same runtime so providers/globals are shared
+    const importedModule = await this.loadModule(resolvedPath, runtime);
     
     // Special handling for circular dependencies
     const isCircular = importedModule.isExecuting && !importedModule.isExecuted;
+
+    // Track dependency relationship for invalidation
+    if (!isCircular) {
+      currentModule.dependencies.add(resolvedPath);
+      importedModule.dependents.add(currentModule.path);
+    }
     
     // Process import specifiers
     if (importStmt.defaultImport) {
@@ -273,9 +319,7 @@ export class ModuleSystem {
     // Handle re-exports (export { x } from './other')
     if (exportStmt.source) {
       const resolvedPath = this.resolvePath(exportStmt.source, currentModule.path);
-      // Create a new runtime for the imported module
-      const importRuntime = createRuntime();
-      const sourceModule = await this.loadModule(resolvedPath, importRuntime);
+      const sourceModule = await this.loadModule(resolvedPath, runtime);
       
       if (!exportStmt.specifiers || exportStmt.specifiers.length === 0) {
         // export * from './other'
@@ -306,5 +350,20 @@ export class ModuleSystem {
   clearCache(): void {
     this.modules.clear();
   }
-}
 
+  invalidateModule(modulePath: string, invalidateDependents: boolean = true): void {
+    const normalizedPath = path.resolve(modulePath);
+    const module = this.modules.get(normalizedPath);
+    if (!module) {
+      return;
+    }
+
+    this.modules.delete(normalizedPath);
+
+    if (invalidateDependents) {
+      for (const dependentPath of module.dependents) {
+        this.invalidateModule(dependentPath, true);
+      }
+    }
+  }
+}

@@ -69,13 +69,13 @@ Create a file `hello.prism`:
 
 ```prism
 // hello.prism
-name = "World"
-greeting = llm("Create a friendly greeting for ${name}")
+const name = "World"
+const greeting = llm("Create a friendly greeting for ${name}")
 
 console.log(greeting)
 
 // Make decisions based on confidence
-response = llm("Should we proceed?") ~> 0.75
+let response = llm("Should we proceed?") ~> 0.75
 uncertain if (response) {
   high { console.log("✅ Proceeding with confidence!") }
   medium { console.log("⚠️ Proceeding with caution...") }
@@ -88,13 +88,25 @@ Run it:
 ```bash
 # Execute a Prism file
 prism run hello.prism
+prism run --watch hello.prism  # hot reload while editing
+
+# Stream a one-off LLM prompt (Ctrl+C to cancel)
+prism llm --provider claude --model claude-3-haiku --temperature 0.2 --stream "Summarize today's status update"
 
 # Or use the REPL for interactive development
 prism
 
 # Evaluate expressions directly
 prism eval "2 + 2 ~> 0.99"
+
+# Advanced CLI flags:
+#   --model <id>               Override the provider model
+#   --timeout <ms>             Abort long-running prompts
+#   --include-reasoning        Request reasoning metadata when the provider supports it
+#   --no-structured-output     Force plain text responses (required for streaming)
 ```
+
+Inside the REPL, use `:stream <prompt>` to watch tokens arrive in real time (press `Ctrl+C` to cancel).
 
 #### Using as a TypeScript Library
 
@@ -103,7 +115,7 @@ import { parse, createRuntime } from '@prism-lang/core';
 
 const code = `
   // AI responses with confidence
-  analysis = llm("Is this secure?") ~> 0.85
+  const analysis = llm("Is this secure?") ~> 0.85
   
   // Confidence-aware decisions
   uncertain if (analysis) {
@@ -154,9 +166,9 @@ uncertain if (result) {
 
 ```prism
 // Ensemble multiple models with confidence
-claude_says = llm("Analyze risk", model: "claude") ~> 0.9
-gpt_says = llm("Analyze risk", model: "gpt4") ~> 0.8
-gemini_says = llm("Analyze risk", model: "gemini") ~> 0.7
+const claude_says = llm("Analyze risk", { provider: "claude" }) ~> 0.9
+const gpt_says = llm("Analyze risk", { provider: "gpt4" }) ~> 0.8
+const gemini_says = llm("Analyze risk", { provider: "gemini" }) ~> 0.7
 
 // Automatically use highest confidence result
 best_analysis = claude_says ~||> gpt_says ~||> gemini_says
@@ -164,6 +176,44 @@ best_analysis = claude_says ~||> gpt_says ~||> gemini_says
 // Confidence-aware null coalescing
 decision = best_analysis ~?? fallback_analysis ~?? "manual_review"
 ```
+
+### ⚙️ Configurable LLM Calls
+
+Need a different provider, model, or temperature for a specific prompt? Pass an options object to `llm()`:
+
+```prism
+const structured = llm("Summarize the findings", {
+  provider: "claude",
+  model: "claude-3-sonnet",
+  temperature: 0.2,
+  maxTokens: 400
+})
+
+const recalibrated = llm("Explain this reasoning chain", {
+  extractor: response => response.confidence * 0.8
+})
+```
+
+Supported fields: `provider`, `model`, `temperature`, `maxTokens`, `topP`, `timeout`, `structuredOutput`, `includeReasoning`, `confidenceExtractor` (used by providers like `@prism-lang/llm`), and an `extractor` function that can override the returned confidence by inspecting the raw response object.
+
+### 🔊 Streaming Inside Prism
+
+Use `stream_llm()` to process tokens as they arrive:
+
+```prism
+handle = stream_llm("Draft a haiku about autumn rain", { provider: "claude", structuredOutput: false })
+
+chunk = await handle.next()
+while (chunk != null) {
+  console.log(chunk.text)
+  chunk = await handle.next()
+}
+
+final = await handle.result()
+console.log("Final confidence:", <~ final)
+```
+
+Call `handle.cancel()` to abort mid-stream (e.g., when a human takes over).
 
 ### 📊 Confidence Extraction Made Easy
 
@@ -213,6 +263,12 @@ uncertain while (condition) {
   attempt { /* 30-70% */ }
   abort { /* <30% */ }
 }
+
+// Deterministic do/while
+count = 0
+do {
+  count = count + 1
+} while (count < 3)
 ```
 
 ### Modern Language Features
@@ -354,8 +410,8 @@ question = "Will it rain tomorrow?"
 
 // Get predictions from multiple sources
 weather_api = fetch_weather_api() ~> 0.8
-model1 = llm(question, model: "claude") ~> 0.9  
-model2 = llm(question, model: "gemini") ~> 0.85
+model1 = llm(question, { provider: "claude" }) ~> 0.9  
+model2 = llm(question, { provider: "gemini" }) ~> 0.85
 local_sensors = analyze_pressure() ~> 0.7
 
 // Combine predictions with confidence weighting

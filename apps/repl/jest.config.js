@@ -7,7 +7,10 @@ module.exports = {
     '^.+\\.ts$': 'ts-jest',
   },
   moduleNameMapper: {
-    '^@prism/core$': '<rootDir>/../../packages/prism-core/src',
+    '^@prism-lang/core$': '<rootDir>/../../packages/prism-core/src',
+    '^@prism-lang/core/(.*)$': '<rootDir>/../../packages/prism-core/src/$1',
+    '^@prism-lang/llm$': '<rootDir>/../../packages/prism-llm/src',
+    '^@prism-lang/llm/(.*)$': '<rootDir>/../../packages/prism-llm/src/$1',
   },
   collectCoverageFrom: [
     'src/**/*.ts',

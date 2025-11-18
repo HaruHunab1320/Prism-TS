@@ -148,6 +148,27 @@ import {data} from "./data.prism"
 import {data} from "./data"
 ```
 
+### Absolute Paths
+
+When an import path starts with `/`, Prism resolves it from the filesystem root (or the virtual root used by your host environment):
+
+```prism
+import settings from "/config/app-settings"
+```
+
+This is helpful for tooling that presents a virtual filesystem or for server-side projects with a known root directory.
+
+### Package-style Imports
+
+Bare specifiers (no `./`, `../`, or `/`) are resolved like Node.js: Prism looks for a `node_modules/<package>` directory starting from the importing file's folder and walking up parent directories. You can omit `.prism`; the runtime tries both `<package>.prism` and `<package>/index.prism`.
+
+```prism
+import logger from "shared-logger"
+import { formatNumber } from "@acme/prism-utils"
+```
+
+This allows sharing utilities between Prism projects without manual relative paths.
+
 ## Module Execution
 
 ### Import Hoisting
@@ -195,6 +216,25 @@ increment()
 console.log(getCount())        // 1
 console.log(counter.getCount()) // 1 (same instance)
 ```
+
+### Hot Reloading and Cache Invalidation
+
+During development you may want to reload a module after editing it. The runtime exposes helpers for this:
+
+```ts
+import { createRuntime } from '@prism-lang/core';
+
+const runtime = createRuntime();
+// execute your entry module once
+await runtime.getModuleSystem().loadModule('/app/main.prism', runtime);
+
+// Later, when /shared/state.prism changes:
+await runtime.reloadModule('/shared/state.prism');
+```
+
+`runtime.reloadModule(path)` internally invalidates the cached module (and all dependents by default) before re-running it with the existing interpreter, so globals/LLM providers remain intact. If you only want to evict a single file without touching dependents, call `runtime.invalidateModule(path, { invalidateDependents: false })` and then re-import it manually.
+
+> Tip: `prism run --watch app.prism` uses the same APIs under the hood—when a file changes, the CLI invalidates the module, reloads it, and re-runs your entry module without tearing down the interpreter or LLM providers.
 
 ## Confidence in Modules
 

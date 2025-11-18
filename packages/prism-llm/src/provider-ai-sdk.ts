@@ -1,8 +1,15 @@
-import { generateObject, generateText } from 'ai';
+import { generateObject, generateText, streamText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
 import { z } from 'zod';
-import type { ConfidenceExtractor } from '@prism-lang/confidence';
+import {
+  LLMRequest,
+  LLMResponse,
+  LLMProvider,
+  LLMStreamingSession,
+  LLMStreamChunk,
+  MockLLMProvider as CoreMockLLMProvider
+} from '@prism-lang/core';
 
 // Schema for structured responses with confidence
 const ConfidentResponseSchema = z.object({
@@ -13,34 +20,6 @@ const ConfidentResponseSchema = z.object({
 
 // type ConfidentResponse = z.infer<typeof ConfidentResponseSchema>;
 
-export interface LLMOptions {
-  maxTokens?: number;
-  temperature?: number;
-  topP?: number;
-  timeout?: number;
-  model?: string;
-  structuredOutput?: boolean;
-  includeReasoning?: boolean;
-  confidenceExtractor?: ConfidenceExtractor;
-}
-
-export class LLMRequest {
-  constructor(
-    public readonly prompt: string,
-    public readonly options: LLMOptions = {}
-  ) {}
-}
-
-export class LLMResponse {
-  constructor(
-    public readonly content: string,
-    public readonly confidence: number,
-    public readonly tokensUsed: number = 0,
-    public readonly model: string = 'unknown',
-    public readonly metadata?: Record<string, unknown>
-  ) {}
-}
-
 export class LLMError extends Error {
   constructor(
     message: string,
@@ -50,12 +29,6 @@ export class LLMError extends Error {
     super(message);
     this.name = 'LLMError';
   }
-}
-
-export interface LLMProvider {
-  readonly name: string;
-  complete(request: LLMRequest): Promise<LLMResponse>;
-  embed?(text: string): Promise<number[]>;
 }
 
 export class ClaudeProvider implements LLMProvider {
@@ -143,6 +116,75 @@ export class ClaudeProvider implements LLMProvider {
         { originalError: error }
       );
     }
+  }
+
+  stream(request: LLMRequest): LLMStreamingSession {
+    if (request.options.structuredOutput !== false) {
+      throw new LLMError('Streaming requires structuredOutput set to false', 'STREAM_NOT_SUPPORTED');
+    }
+
+    const controller = new AbortController();
+    const model = request.options.model
+      ? anthropic(request.options.model)
+      : this.model;
+
+    const result = streamText({
+      model,
+      prompt: request.prompt,
+      maxTokens: request.options.maxTokens || 1000,
+      temperature: request.options.temperature ?? 0.7,
+      topP: request.options.topP,
+      abortSignal: controller.signal,
+    });
+
+    const iterator = (async function* (): AsyncGenerator<LLMStreamChunk> {
+      try {
+        for await (const delta of result.textStream) {
+          yield { type: 'text', content: delta };
+        }
+      } catch (error) {
+        throw mapStreamError('Claude', error);
+      }
+    })();
+
+    const responsePromise = (async () => {
+      try {
+        const [text, usage, responseMeta, finishReason] = await Promise.all([
+          result.text,
+          result.usage,
+          result.response,
+          result.finishReason,
+        ]);
+        let confidence = 0.85;
+        if (request.options.confidenceExtractor) {
+          const extracted = await request.options.confidenceExtractor.fromResponseAnalysis(text);
+          confidence = extracted.value;
+        }
+        const reasoning = request.options.includeReasoning ? await result.reasoning : undefined;
+        return new LLMResponse(
+          text,
+          confidence,
+          usage?.totalTokens ?? 0,
+          responseMeta.modelId,
+          {
+            reasoning,
+            usage,
+            finishReason,
+            provider: this.name,
+          }
+        );
+      } catch (error) {
+        throw mapStreamError('Claude', error);
+      }
+    })();
+
+    return {
+      response: responsePromise,
+      [Symbol.asyncIterator]() {
+        return iterator;
+      },
+      cancel: () => controller.abort(),
+    };
   }
 }
 
@@ -252,102 +294,93 @@ export class GeminiProvider implements LLMProvider {
       );
     }
   }
+
+  stream(request: LLMRequest): LLMStreamingSession {
+    if (request.options.structuredOutput !== false) {
+      throw new LLMError('Streaming requires structuredOutput set to false', 'STREAM_NOT_SUPPORTED');
+    }
+
+    const controller = new AbortController();
+    const model = request.options.model
+      ? google(request.options.model)
+      : this.model;
+
+    const result = streamText({
+      model,
+      prompt: request.prompt,
+      maxTokens: request.options.maxTokens || 1000,
+      temperature: request.options.temperature ?? 0.7,
+      topP: request.options.topP,
+      abortSignal: controller.signal,
+    });
+
+    const iterator = (async function* (): AsyncGenerator<LLMStreamChunk> {
+      try {
+        for await (const delta of result.textStream) {
+          yield { type: 'text', content: delta };
+        }
+      } catch (error) {
+        throw mapStreamError('Gemini', error);
+      }
+    })();
+
+    const responsePromise = (async () => {
+      try {
+        const [text, usage, responseMeta, finishReason] = await Promise.all([
+          result.text,
+          result.usage,
+          result.response,
+          result.finishReason,
+        ]);
+        let confidence = 0.85;
+        if (request.options.confidenceExtractor) {
+          const extracted = await request.options.confidenceExtractor.fromResponseAnalysis(text);
+          confidence = extracted.value;
+        }
+        const reasoning = request.options.includeReasoning ? await result.reasoning : undefined;
+        return new LLMResponse(
+          text,
+          confidence,
+          usage?.totalTokens ?? 0,
+          responseMeta.modelId,
+          {
+            reasoning,
+            usage,
+            finishReason,
+            provider: this.name,
+          }
+        );
+      } catch (error) {
+        throw mapStreamError('Gemini', error);
+      }
+    })();
+
+    return {
+      response: responsePromise,
+      [Symbol.asyncIterator]() {
+        return iterator;
+      },
+      cancel: () => controller.abort(),
+    };
+  }
 }
 
-export class MockLLMProvider implements LLMProvider {
-  readonly name = 'Mock';
-  private mockResponse = 'Mock response for testing purposes.';
-  private mockConfidence = 0.75;
-  private mockReasoning = 'This is a mock response with default confidence.';
-  private failureRate = 0.0;
-  private latency = 0;
-
-  async complete(request: LLMRequest): Promise<LLMResponse> {
-    // Simulate latency
-    if (this.latency > 0) {
-      await this.delay(this.latency);
-    }
-
-    // Check for timeout
-    if (request.options.timeout && this.latency > request.options.timeout) {
-      throw new LLMError('Request timeout', 'TIMEOUT');
-    }
-
-    // Simulate failures
-    if (Math.random() < this.failureRate) {
-      throw new LLMError('Mock provider failure', 'MOCK_FAILURE');
-    }
-
-    const tokensUsed = Math.floor(this.mockResponse.length / 4) + Math.floor(Math.random() * 10);
-    
-    return new LLMResponse(
-      this.mockResponse,
-      this.mockConfidence,
-      tokensUsed,
-      'mock-model',
-      {
-        reasoning: request.options.includeReasoning ? this.mockReasoning : undefined,
-        processingTime: this.latency,
-        prompt: request.prompt,
-        requestId: this.generateId(),
-      }
-    );
+export class MockLLMProvider extends CoreMockLLMProvider {
+  protected override createError(message: string, code: string, context?: Record<string, unknown>): Error {
+    return new LLMError(message, code, context);
   }
+}
 
-  async embed(text: string): Promise<number[]> {
-    // Simulate latency
-    if (this.latency > 0) {
-      await this.delay(this.latency);
-    }
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && (error.name === 'AbortError' || error.message.includes('aborted'));
+}
 
-    // Generate mock embeddings (384 dimensions, typical for smaller models)
-    const dimensions = 384;
-    const embeddings: number[] = [];
-    
-    // Use text hash as seed for deterministic but varied embeddings
-    let seed = this.hashCode(text);
-    
-    for (let i = 0; i < dimensions; i++) {
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff; // Linear congruential generator
-      embeddings.push((seed / 0x7fffffff - 0.5) * 2); // Normalize to [-1, 1]
-    }
-    
-    return embeddings;
+function mapStreamError(provider: string, error: unknown): LLMError {
+  if (isAbortError(error)) {
+    return new LLMError(`${provider} streaming cancelled`, 'STREAM_CANCELLED');
   }
-
-  setMockResponse(response: string, confidence: number, reasoning?: string): void {
-    this.mockResponse = response;
-    this.mockConfidence = confidence;
-    if (reasoning) {
-      this.mockReasoning = reasoning;
-    }
-  }
-
-  setFailureRate(rate: number): void {
-    this.failureRate = Math.max(0, Math.min(1, rate));
-  }
-
-  setLatency(ms: number): void {
-    this.latency = Math.max(0, ms);
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  private generateId(): string {
-    return Math.random().toString(36).substring(2, 15);
-  }
-
-  private hashCode(str: string): number {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return Math.abs(hash);
-  }
+  const message = error instanceof Error ? error.message : String(error);
+  return new LLMError(`${provider} streaming failed: ${message}`, 'STREAM_ERROR', { originalError: error });
 }
 
 export class LLMProviderRegistry {
@@ -392,6 +425,25 @@ export class LLMProviderRegistry {
     }
     
     return provider.complete(request);
+  }
+
+  stream(request: LLMRequest, providerName?: string): LLMStreamingSession {
+    const provider = providerName ? this.get(providerName) : this.getDefault();
+    if (!provider) {
+      throw new LLMError(
+        providerName 
+          ? `Provider '${providerName}' not found`
+          : 'No default provider set',
+        'PROVIDER_NOT_FOUND'
+      );
+    }
+    if (!provider.stream) {
+      throw new LLMError(
+        `Provider '${provider.name}' does not support streaming`,
+        'STREAM_NOT_SUPPORTED'
+      );
+    }
+    return provider.stream(request);
   }
 
   async embed(text: string, providerName?: string): Promise<number[]> {

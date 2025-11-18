@@ -6,6 +6,8 @@ export {
   createRuntime,
   Runtime,
   RuntimeError,
+  RuntimeLLMCallOptions,
+  RuntimeLLMStream,
   Value,
   NumberValue,
   StringValue,
@@ -34,6 +36,9 @@ export * from './helpers';
 
 // LLM types (to avoid hard dependency on @prism-lang/llm)
 export * from './llm-types';
+
+// Diagnostics
+export * from './diagnostics';
 
 // Module system exports
 export { ModuleSystem, Module, ModuleExports } from './module-system';

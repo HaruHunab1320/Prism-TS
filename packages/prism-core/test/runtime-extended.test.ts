@@ -205,6 +205,40 @@ describe('Runtime Extended Tests', () => {
     });
   });
 
+  describe('Context and Agent Declarations', () => {
+    let runtime: Runtime;
+
+    beforeEach(() => {
+      runtime = createRuntime();
+    });
+
+    it('should execute context blocks without losing scope', async () => {
+      const program = parse(`
+        shared = "outside"
+        in context Analysis {
+          result = "contextual " + shared
+        }
+        result
+      `);
+      const result = await runtime.execute(program);
+      expect(result.toString()).toBe('contextual outside');
+    });
+
+    it('should register agents as objects', async () => {
+      const program = parse(`
+        agents {
+          Researcher: Agent {
+            confidence: 0.9,
+            role: "analysis"
+          }
+        }
+        Researcher.role
+      `);
+      const result = await runtime.execute(program);
+      expect(result.toString()).toBe('analysis');
+    });
+  });
+
   describe('Ternary Expressions', () => {
     let runtime: Runtime;
 

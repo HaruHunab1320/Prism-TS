@@ -20,7 +20,7 @@ The easiest way to run Prism code is using the `runPrism` helper function, which
 import { runPrism } from '@prism-lang/core';
 
 // Run Prism code directly
-const result = await runPrism('x = 5 ~> 0.9; x * 2');
+const result = await runPrism('const x = 5 ~> 0.9; x * 2');
 console.log(result); // ConfidenceValue { value: 10, confidence: 0.9 }
 
 // Access the actual value
@@ -28,7 +28,7 @@ console.log(result.value); // 10
 console.log(result.confidence); // 0.9
 
 // With custom globals
-const result2 = await runPrism('PI * radius * radius', {
+const result2 = await runPrism('const area = PI * radius * radius; area', {
   globals: { PI: 3.14159, radius: 5 }
 });
 console.log(result2); // 78.53975
@@ -39,7 +39,7 @@ import { MockLLMProvider } from '@prism-lang/llm';
 const provider = new MockLLMProvider();
 provider.setMockResponse('Hello! How can I help?', 0.85);
 
-const result3 = await runPrism('response = llm("Hello"); response', {
+const result3 = await runPrism('const response = llm("Hello"); response', {
   llmProvider: provider
 });
 console.log(result3.value); // "Hello! How can I help?"
@@ -55,8 +55,8 @@ import { parse, createRuntime } from '@prism-lang/core';
 
 const code = `
   // Confidence values
-  prediction = "rain" ~> 0.8
-  temperature = 72 ~> 0.95
+  const prediction = "rain" ~> 0.8
+  const temperature = 72 ~> 0.95
   
   // Confidence-aware control flow
   uncertain if (prediction) {
@@ -87,14 +87,14 @@ const result = await runtime.execute(ast);
 
 ```prism
 // Assign confidence
-value = 100 ~> 0.9
+const value = 100 ~> 0.9
 
 // Extract confidence
-conf = <~ value
+const conf = <~ value
 
 // Confidence operations
-doubled = value ~* 2  // Maintains confidence
-combined = value1 ~||> value2  // Picks highest confidence
+const doubled = value ~* 2  // Maintains confidence
+const combined = value1 ~||> value2  // Picks highest confidence
 ```
 
 ### Uncertain Control Flow
@@ -136,14 +136,40 @@ uncertain while (sensor_reading ~> confidence) {
 
 ```prism
 // Note: llm() requires provider setup first
-response = llm("Is this safe?")
-conf = <~ response  // Automatic confidence extraction
+const response = llm("Is this safe?")
+const conf = <~ response  // Automatic confidence extraction
 
 // With confidence threshold
-safe = response ~> 0.9
+const safe = response ~> 0.9
 if (<~ safe >= 0.9) {
   proceed()
 }
+```
+
+`llm(prompt, options?)` accepts per-call configuration. Pass `{ provider, model, temperature, maxTokens, topP, timeout, structuredOutput, includeReasoning, confidenceExtractor }` to tweak the `LLMRequest`, or supply an `extractor` function that receives the raw response object and returns a custom confidence (number or confident value).
+
+Need live tokens? Use `stream_llm()`:
+
+```prism
+handle = stream_llm("Summarize the incident report", { provider: "claude", structuredOutput: false })
+
+chunk = await handle.next()
+while (chunk) {
+  console.log(chunk.text)
+  chunk = await handle.next()
+}
+
+final = await handle.result()
+console.log("Summary:", final.value)
+```
+
+```prism
+const analysis = llm("Assess rollout risk", {
+  provider: "claude",
+  model: "claude-3-sonnet",
+  temperature: 0.25,
+  extractor: response => response.confidence * 0.9
+})
 ```
 
 ## API Reference
@@ -158,10 +184,20 @@ if (<~ safe >= 0.9) {
 - `parse(code: string): Program` - Parse Prism code into AST
 
 ### Runtime
-- `createRuntime(): Runtime` - Create a new runtime instance
+- `createRuntime(options?: RuntimeOptions): Runtime` - Create a new runtime. Pass `{ moduleSystem }` to share a preconfigured module loader (custom file readers, caches) across runtimes.
 - `runtime.execute(ast: Program): Promise<Value>` - Execute AST
 - `runtime.registerLLMProvider(name: string, provider: LLMProvider)` - Register LLM provider
 - `runtime.setDefaultLLMProvider(name: string)` - Set default LLM provider
+- `runtime.getModuleSystem(): ModuleSystem` - Access the module system used by the runtime
+- `runtime.invalidateModule(path: string, options?: { invalidateDependents?: boolean })` - Drop a module (and optionally its dependents) from the cache
+- `runtime.reloadModule(path: string, options?: { invalidateDependents?: boolean }): Promise<Module>` - Convenience helper that invalidates the module, reloads it, and returns the new `Module` object (useful for hot reload tools)
+
+`RuntimeOptions`
+```ts
+interface RuntimeOptions {
+  moduleSystem?: ModuleSystem; // defaults to a new ModuleSystem()
+}
+```
 
 ### Value Types
 - `NumberValue`, `StringValue`, `BooleanValue`
@@ -170,7 +206,8 @@ if (<~ safe >= 0.9) {
 - `NullValue`, `UndefinedValue`
 
 ### Built-in Functions
-- `llm(prompt: string, options?: object)` - Make LLM calls (requires provider setup)
+- `llm(prompt: string, options?: LLMCallOptions)` - Make LLM calls (requires provider setup). `options` supports `{ provider, model, temperature, maxTokens, topP, timeout, structuredOutput, includeReasoning, confidenceExtractor, extractor }`.
+- `stream_llm(prompt: string, options?: LLMCallOptions)` - Return a stream handle with `next()`, `cancel()`, and `result()` helpers for incremental output.
 - `map(array: Array, fn: Function)` - Map over array elements
 - `filter(array: Array, fn: Function)` - Filter array elements
 - `reduce(array: Array, fn: Function, initial?: any)` - Reduce array to single value

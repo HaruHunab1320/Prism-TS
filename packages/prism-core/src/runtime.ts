@@ -1,4 +1,3 @@
-import { ModuleSystem } from './module-system';
 import {
   ASTNode,
   Program,
@@ -27,6 +26,7 @@ import {
   IfStatement,
   UncertainIfStatement,
   BlockStatement,
+  ContextStatement,
   ExpressionStatement,
   BinaryOperator,
   LambdaExpression,
@@ -34,6 +34,7 @@ import {
   ForLoop,
   ForInLoop,
   WhileLoop,
+  DoWhileLoop,
   UncertainForLoop,
   UncertainWhileLoop,
   ArrayPattern,
@@ -46,512 +47,64 @@ import {
   ImportStatement,
   ExportStatement,
   TryStatement,
+  AgentDeclaration,
 } from './ast';
 import { ConfidenceValue as ConfidenceLib, ConfidenceLevel } from './confidence';
-import { LLMProvider, LLMRequest, MockLLMProvider } from './llm-types';
+import { Environment } from './runtime/environment';
+import { RuntimeError, LoopControlError, ReturnException } from './runtime/errors';
+import { ModuleSystem, Module } from './module-system';
+import {
+  Value,
+  NumberValue,
+  StringValue,
+  BooleanValue,
+  NullValue,
+  UndefinedValue,
+  ConfidenceValue,
+  ArrayValue,
+  ObjectValue,
+  FunctionValue,
+  PromiseValue,
+} from './runtime/values';
+import { LLMProvider, LLMRequest, LLMResponse, LLMStreamChunk, LLMOptions } from './llm-types';
+import { createLLMBuiltin } from './runtime/builtins/llm';
+import { createLLMStreamBuiltin } from './runtime/builtins/llm-stream';
+import { registerArrayBuiltins } from './runtime/builtins/arrays';
+import { registerConsoleBuiltins } from './runtime/builtins/console';
+import { registerConfidenceBuiltins } from './runtime/builtins/confidence';
+import { registerCollectionBuiltins } from './runtime/builtins/collections';
+import { registerAsyncBuiltins } from './runtime/builtins/async';
 
-export class RuntimeError extends Error {
-  public line?: number;
-  public column?: number;
-  
-  constructor(message: string, public node?: ASTNode, location?: { line: number; column: number }) {
-    // If location is provided, enhance the error message
-    const enhancedMessage = location 
-      ? `Error at line ${location.line}, column ${location.column}: ${message}`
-      : message;
-    
-    super(enhancedMessage);
-    this.name = 'RuntimeError';
-    
-    if (location) {
-      this.line = location.line;
-      this.column = location.column;
-    }
-  }
-}
-
-export class LoopControlError extends Error {
-  constructor(public type: 'break' | 'continue') {
-    super(type);
-    this.name = 'LoopControlError';
-  }
-}
-
-export class ReturnException extends Error {
-  constructor(public value?: Value) {
-    super('return');
-    this.name = 'ReturnException';
-  }
-}
-
-export abstract class Value {
-  abstract type: string;
-  abstract value: unknown;
-  abstract equals(other: Value): boolean;
-  abstract isTruthy(): boolean;
-  abstract toString(): string;
-}
-
-export class NumberValue extends Value {
-  type = 'number';
-
-  constructor(public value: number) {
-    super();
-  }
-
-  equals(other: Value): boolean {
-    return other instanceof NumberValue && other.value === this.value;
-  }
-
-  isTruthy(): boolean {
-    return this.value !== 0;
-  }
-
-  toString(): string {
-    return this.value.toString();
-  }
-}
-
-export class StringValue extends Value {
-  type = 'string';
-
-  constructor(public value: string) {
-    super();
-  }
-
-  equals(other: Value): boolean {
-    return other instanceof StringValue && other.value === this.value;
-  }
-
-  isTruthy(): boolean {
-    return this.value.length > 0;
-  }
-
-  toString(): string {
-    return this.value;
-  }
-}
-
-export class BooleanValue extends Value {
-  type = 'boolean';
-
-  constructor(public value: boolean) {
-    super();
-  }
-
-  equals(other: Value): boolean {
-    return other instanceof BooleanValue && other.value === this.value;
-  }
-
-  isTruthy(): boolean {
-    return this.value;
-  }
-
-  toString(): string {
-    return this.value.toString();
-  }
-}
-
-export class NullValue extends Value {
-  type = 'null';
-  value = null;
-
-  constructor() {
-    super();
-  }
-
-  equals(other: Value): boolean {
-    return other instanceof NullValue;
-  }
-
-  isTruthy(): boolean {
-    return false;
-  }
-
-  toString(): string {
-    return 'null';
-  }
-}
-
-export class UndefinedValue extends Value {
-  type = 'undefined';
-  value = undefined;
-
-  constructor() {
-    super();
-  }
-
-  equals(other: Value): boolean {
-    return other instanceof UndefinedValue;
-  }
-
-  isTruthy(): boolean {
-    return false;
-  }
-
-  toString(): string {
-    return 'undefined';
-  }
-}
-
-export class ConfidenceValue extends Value {
-  type = 'confident';
-
-  constructor(
-    public value: Value,
-    public confidence: ConfidenceLib
-  ) {
-    super();
-  }
-
-  equals(other: Value): boolean {
-    return other instanceof ConfidenceValue && 
-           other.value.equals(this.value) &&
-           other.confidence.equals(this.confidence);
-  }
-
-  isTruthy(): boolean {
-    return this.value.isTruthy();
-  }
-
-  toString(): string {
-    return `${this.value.toString()} (~${this.confidence.toString()})`;
-  }
-}
-
-export class ArrayValue extends Value {
-  type = 'array';
-  value: Value[];
-
-  constructor(public elements: Value[]) {
-    super();
-    this.value = elements;
-  }
-
-  equals(other: Value): boolean {
-    if (!(other instanceof ArrayValue)) return false;
-    if (this.elements.length !== other.elements.length) return false;
-    return this.elements.every((elem, i) => elem.equals(other.elements[i]));
-  }
-
-  isTruthy(): boolean {
-    return true;
-  }
-
-  toString(): string {
-    return `[${this.elements.map(e => e.toString()).join(', ')}]`;
-  }
-}
-
-export class ObjectValue extends Value {
-  type = 'object';
-  value: Map<string, Value>;
-
-  constructor(public properties: Map<string, Value>) {
-    super();
-    this.value = properties;
-  }
-
-  equals(other: Value): boolean {
-    if (!(other instanceof ObjectValue)) return false;
-    if (this.properties.size !== other.properties.size) return false;
-    
-    for (const [key, value] of this.properties) {
-      const otherValue = other.properties.get(key);
-      if (!otherValue || !value.equals(otherValue)) return false;
-    }
-    return true;
-  }
-
-  isTruthy(): boolean {
-    return true;
-  }
-
-  toString(): string {
-    const props = Array.from(this.properties.entries())
-      .filter(([_, v]) => !(v instanceof UndefinedValue))
-      .map(([k, v]) => `${k}: ${v.toString()}`)
-      .join(', ');
-    return props.length > 0 ? `{ ${props} }` : '{}';
-  }
-}
-
-export class FunctionValue extends Value {
-  type = 'function';
-
-  constructor(
-    public name: string,
-    public value: (args: Value[]) => Promise<Value>,
-    public arity?: number
-  ) {
-    super();
-  }
-
-  equals(other: Value): boolean {
-    return other instanceof FunctionValue && other.name === this.name;
-  }
-
-  isTruthy(): boolean {
-    return true;
-  }
-
-  toString(): string {
-    return `[Function: ${this.name}]`;
-  }
-}
-
-export class PromiseValue extends Value {
-  type = 'promise';
-  
-  constructor(public value: Promise<Value>) {
-    super();
-  }
-  
-  equals(_other: Value): boolean {
-    return false; // Promises are never equal
-  }
-  
-  isTruthy(): boolean {
-    return true; // Promises are always truthy
-  }
-  
-  toString(): string {
-    return '[Promise]';
-  }
-}
-
-interface VariableInfo {
-  value: Value;
-  mutable: boolean;  // true for let, false for const
-  declared: boolean; // true for const/let, false for legacy assignments
-}
-
-export class Environment {
-  private variables = new Map<string, VariableInfo>();
-
-  constructor(private parent?: Environment) {}
-
-  // Define a variable with mutability info (for const/let)
-  define(name: string, value: Value, mutable: boolean = true, declared: boolean = false): void {
-    if (this.variables.has(name) && this.variables.get(name)!.declared) {
-      throw new RuntimeError(`Variable '${name}' already declared in this scope`);
-    }
-    this.variables.set(name, { value, mutable, declared });
-  }
-
-  get(name: string): Value {
-    if (this.variables.has(name)) {
-      return this.variables.get(name)!.value;
-    }
-
-    if (this.parent) {
-      return this.parent.get(name);
-    }
-
-    throw new RuntimeError(`Undefined variable: ${name}`, undefined, undefined);
-  }
-
-  set(name: string, value: Value): void {
-    if (this.variables.has(name)) {
-      const varInfo = this.variables.get(name)!;
-      if (!varInfo.mutable) {
-        throw new RuntimeError(`Cannot assign to const variable '${name}'`);
-      }
-      this.variables.set(name, { ...varInfo, value });
-      return;
-    }
-
-    if (this.parent) {
-      try {
-        this.parent.get(name); // Check if exists in parent
-        this.parent.set(name, value);
-        return;
-      } catch {
-        // Variable doesn't exist in parent, create in current scope (legacy behavior)
-      }
-    }
-
-    // Legacy assignment behavior - creates mutable variables
-    this.variables.set(name, { value, mutable: true, declared: false });
-  }
-
-  // Method to get all variables in current scope (for context copying)
-  getAllVariables(): Map<string, Value> {
-    const result = new Map<string, Value>();
-    for (const [name, info] of this.variables) {
-      result.set(name, info.value);
-    }
-    return result;
-  }
+interface PropertyAccessOptions {
+  nullishReturnsNull?: boolean;
+  missingReturnsUndefined?: boolean;
+  missingReturnsNull?: boolean;
+  forceConfidenceResult?: boolean;
+  wrapNullishResult?: boolean;
+  wrapMissingResult?: boolean;
+  fallbackToNullOnUnsupported?: boolean;
 }
 
 export class Interpreter {
   public environment: Environment;
   private llmProviders = new Map<string, LLMProvider>();
   private defaultLLMProvider?: string;
-  private moduleSystem: ModuleSystem;
+  private contextStack: string[] = [];
 
-  constructor(moduleSystem: ModuleSystem) {
+  constructor() {
     this.environment = new Environment();
-    this.moduleSystem = moduleSystem;
     this.setupBuiltins();
   }
 
   private setupBuiltins(): void {
-    // Add built-in functions
-    this.environment.define('llm', new FunctionValue('llm', async (args) => {
-      if (args.length === 0) {
-        throw new RuntimeError('llm() requires at least one argument');
-      }
-
-      const promptValue = args[0];
-      let promptString: string;
-      
-      // Handle different value types for the prompt
-      if (promptValue instanceof StringValue) {
-        promptString = promptValue.value;
-      } else if (promptValue instanceof ConfidenceValue && promptValue.value instanceof StringValue) {
-        // Handle confident string values
-        promptString = (promptValue.value as StringValue).value;
-      } else {
-        throw new RuntimeError('llm() first argument must be a string');
-      }
-
-      const provider = this.getDefaultLLMProvider();
-      if (!provider) {
-        throw new RuntimeError('No LLM provider configured');
-      }
-
-      try {
-        const request = new LLMRequest(promptString);
-        const response = await provider.complete(request);
-        
-        return new ConfidenceValue(
-          new StringValue(response.content),
-          new ConfidenceLib(response.confidence)
-        );
-      } catch (error) {
-        throw new RuntimeError(`LLM call failed: ${(error as Error).message}`);
-      }
-    }));
-
-    // Add array built-in functions
-    this.environment.define('map', new FunctionValue('map', async (args) => {
-      if (args.length !== 2) {
-        throw new RuntimeError('map() requires exactly 2 arguments: array and function');
-      }
-
-      const arrayArg = args[0];
-      const fnArg = args[1];
-
-      // Extract array from confident value if needed
-      const array = arrayArg instanceof ConfidenceValue ? arrayArg.value : arrayArg;
-      const confidence = arrayArg instanceof ConfidenceValue ? arrayArg.confidence : new ConfidenceLib(1.0);
-
-      if (!(array instanceof ArrayValue)) {
-        throw new RuntimeError('First argument to map() must be an array');
-      }
-
-      if (!(fnArg instanceof FunctionValue)) {
-        throw new RuntimeError('Second argument to map() must be a function');
-      }
-
-      const results: Value[] = [];
-      for (const element of array.elements) {
-        const result = await fnArg.value([element]);
-        results.push(result);
-      }
-
-      const resultArray = new ArrayValue(results);
-      return arrayArg instanceof ConfidenceValue 
-        ? new ConfidenceValue(resultArray, confidence)
-        : resultArray;
-    }));
-
-    this.environment.define('filter', new FunctionValue('filter', async (args) => {
-      if (args.length !== 2) {
-        throw new RuntimeError('filter() requires exactly 2 arguments: array and predicate');
-      }
-
-      const arrayArg = args[0];
-      const predicateArg = args[1];
-
-      // Extract array from confident value if needed
-      const array = arrayArg instanceof ConfidenceValue ? arrayArg.value : arrayArg;
-      const confidence = arrayArg instanceof ConfidenceValue ? arrayArg.confidence : new ConfidenceLib(1.0);
-
-      if (!(array instanceof ArrayValue)) {
-        throw new RuntimeError('First argument to filter() must be an array');
-      }
-
-      if (!(predicateArg instanceof FunctionValue)) {
-        throw new RuntimeError('Second argument to filter() must be a function');
-      }
-
-      const results: Value[] = [];
-      for (const element of array.elements) {
-        const predicateResult = await predicateArg.value([element]);
-        if (predicateResult.isTruthy()) {
-          results.push(element);
-        }
-      }
-
-      const resultArray = new ArrayValue(results);
-      return arrayArg instanceof ConfidenceValue 
-        ? new ConfidenceValue(resultArray, confidence)
-        : resultArray;
-    }));
-
-    this.environment.define('reduce', new FunctionValue('reduce', async (args) => {
-      if (args.length < 2 || args.length > 3) {
-        throw new RuntimeError('reduce() requires 2 or 3 arguments: array, reducer, and optional initial value');
-      }
-
-      const arrayArg = args[0];
-      const reducerArg = args[1];
-      const initialValue = args.length === 3 ? args[2] : undefined;
-
-      // Extract array from confident value if needed
-      const array = arrayArg instanceof ConfidenceValue ? arrayArg.value : arrayArg;
-      const confidence = arrayArg instanceof ConfidenceValue ? arrayArg.confidence : new ConfidenceLib(1.0);
-
-      if (!(array instanceof ArrayValue)) {
-        throw new RuntimeError('First argument to reduce() must be an array');
-      }
-
-      if (!(reducerArg instanceof FunctionValue)) {
-        throw new RuntimeError('Second argument to reduce() must be a function');
-      }
-
-      if (array.elements.length === 0 && initialValue === undefined) {
-        throw new RuntimeError('reduce() of empty array with no initial value');
-      }
-
-      let accumulator: Value;
-      let startIndex: number;
-
-      if (initialValue !== undefined) {
-        accumulator = initialValue;
-        startIndex = 0;
-      } else {
-        accumulator = array.elements[0];
-        startIndex = 1;
-      }
-
-      for (let i = startIndex; i < array.elements.length; i++) {
-        // Only pass index if the reducer expects 3 arguments
-        const args = [accumulator, array.elements[i]];
-        if (reducerArg.arity === 3) {
-          args.push(new NumberValue(i));
-        }
-        accumulator = await reducerArg.value(args);
-      }
-
-      // Preserve confidence if the original array was confident
-      return arrayArg instanceof ConfidenceValue && !(accumulator instanceof ConfidenceValue)
-        ? new ConfidenceValue(accumulator, confidence)
-        : accumulator;
-    }));
+    const registerValue = (name: string, value: Value) => this.environment.define(name, value);
+    this.environment.define('llm', new FunctionValue('llm', createLLMBuiltin((providerName?: string) => this.getLLMProvider(providerName))));
+    this.environment.define('stream_llm', new FunctionValue('stream_llm', createLLMStreamBuiltin((providerName?: string) => this.getLLMProvider(providerName))));
+    registerArrayBuiltins((name, fn) => registerValue(name, fn));
+    registerConsoleBuiltins(registerValue);
+    registerConfidenceBuiltins((name, fn) => registerValue(name, fn));
+    registerCollectionBuiltins(registerValue);
+    registerAsyncBuiltins(registerValue);
 
     // Built-in max function
     this.environment.define('max', new FunctionValue('max', async (args) => {
@@ -627,419 +180,6 @@ export class Interpreter {
       return minVal!;
     }));
 
-    // Print function - outputs values to console
-    this.environment.define('print', new FunctionValue('print', async (args) => {
-      const output = args.map(arg => {
-        const value = arg instanceof ConfidenceValue ? arg.value : arg;
-        // Handle confidence display
-        if (arg instanceof ConfidenceValue) {
-          return `${value.toString()} ~> ${arg.confidence.value.toFixed(2)}`;
-        }
-        return value.toString();
-      }).join(' ');
-      
-      console.log(output);
-      return new UndefinedValue();
-    }));
-
-    // Console object with log, warn, error methods
-    const consoleObject = new Map<string, Value>();
-    
-    consoleObject.set('log', new FunctionValue('log', async (args) => {
-      const output = args.map(arg => {
-        const value = arg instanceof ConfidenceValue ? arg.value : arg;
-        if (arg instanceof ConfidenceValue) {
-          return `${value.toString()} ~> ${arg.confidence.value.toFixed(2)}`;
-        }
-        return value.toString();
-      }).join(' ');
-      
-      console.log(output);
-      return new UndefinedValue();
-    }));
-
-    consoleObject.set('warn', new FunctionValue('warn', async (args) => {
-      const output = args.map(arg => {
-        const value = arg instanceof ConfidenceValue ? arg.value : arg;
-        if (arg instanceof ConfidenceValue) {
-          return `${value.toString()} ~> ${arg.confidence.value.toFixed(2)}`;
-        }
-        return value.toString();
-      }).join(' ');
-      
-      console.warn(output);
-      return new UndefinedValue();
-    }));
-
-    consoleObject.set('error', new FunctionValue('error', async (args) => {
-      const output = args.map(arg => {
-        const value = arg instanceof ConfidenceValue ? arg.value : arg;
-        if (arg instanceof ConfidenceValue) {
-          return `${value.toString()} ~> ${arg.confidence.value.toFixed(2)}`;
-        }
-        return value.toString();
-      }).join(' ');
-      
-      console.error(output);
-      return new UndefinedValue();
-    }));
-
-    // Debug function with more detailed output
-    consoleObject.set('debug', new FunctionValue('debug', async (args) => {
-      const formattedArgs = args.map(arg => {
-        const value = arg instanceof ConfidenceValue ? arg.value : arg;
-        if (arg instanceof ConfidenceValue) {
-          return `${value.toString()} ~> ${arg.confidence.value.toFixed(2)}`;
-        }
-        return value.toString();
-      }).join(' ');
-      
-      console.debug(`[DEBUG] ${formattedArgs}`);
-      return new UndefinedValue();
-    }));
-
-    this.environment.define('console', new ObjectValue(consoleObject));
-
-    // Parameterized Primitives - Higher-order functions with configuration
-    
-    // confidence() - Creates confidence-parameterized functions
-    this.environment.define('confidence', new FunctionValue('confidence', async (args) => {
-      if (args.length !== 1) {
-        throw new RuntimeError('confidence() requires exactly one argument: threshold');
-      }
-
-      const thresholdArg = args[0];
-      const threshold = thresholdArg instanceof ConfidenceValue ? thresholdArg.value : thresholdArg;
-
-      if (!(threshold instanceof NumberValue)) {
-        throw new RuntimeError('confidence() threshold must be a number');
-      }
-
-      const thresholdVal = threshold.value;
-      if (thresholdVal < 0 || thresholdVal > 1) {
-        throw new RuntimeError('confidence() threshold must be between 0 and 1');
-      }
-
-      // Return a function that applies the threshold
-      return new FunctionValue('confidenceThreshold', async (funcArgs) => {
-        if (funcArgs.length !== 1) {
-          throw new RuntimeError('confidence-configured function requires exactly one argument: function');
-        }
-
-        const func = funcArgs[0];
-        if (!(func instanceof FunctionValue)) {
-          throw new RuntimeError('confidence-configured function requires a function argument');
-        }
-
-        // Return a new function that applies confidence threshold to results
-        return new FunctionValue('confidenceWrapper', async (innerArgs) => {
-          const result = await func.value(innerArgs);
-          return new ConfidenceValue(result, new ConfidenceLib(thresholdVal));
-        });
-      });
-    }));
-
-    // threshold() - Creates threshold-filtering functions  
-    this.environment.define('threshold', new FunctionValue('threshold', async (args) => {
-      if (args.length !== 1) {
-        throw new RuntimeError('threshold() requires exactly one argument: minimum confidence');
-      }
-
-      const thresholdArg = args[0];
-      const threshold = thresholdArg instanceof ConfidenceValue ? thresholdArg.value : thresholdArg;
-
-      if (!(threshold instanceof NumberValue)) {
-        throw new RuntimeError('threshold() requires a number');
-      }
-
-      const thresholdVal = threshold.value;
-
-      // Return a function that filters by confidence threshold
-      return new FunctionValue('thresholdFilter', async (filterArgs) => {
-        if (filterArgs.length !== 1) {
-          throw new RuntimeError('threshold filter requires exactly one argument: array');
-        }
-
-        const arrayArg = filterArgs[0];
-        const array = arrayArg instanceof ConfidenceValue ? arrayArg.value : arrayArg;
-
-        if (!(array instanceof ArrayValue)) {
-          throw new RuntimeError('threshold filter requires an array');
-        }
-
-        const filtered = array.elements.filter(element => {
-          if (element instanceof ConfidenceValue) {
-            return element.confidence.value >= thresholdVal;
-          }
-          // Check if element is an object with confident properties
-          if (element instanceof ObjectValue) {
-            for (const [, value] of element.properties) {
-              if (value instanceof ConfidenceValue && value.confidence.value < thresholdVal) {
-                return false;
-              }
-            }
-          }
-          return true; // Non-confident values pass through
-        });
-
-        return new ArrayValue(filtered);
-      });
-    }));
-
-    // sortBy() - Creates parameterized sorting functions
-    this.environment.define('sortBy', new FunctionValue('sortBy', async (args) => {
-      if (args.length < 1 || args.length > 2) {
-        throw new RuntimeError('sortBy() requires 1-2 arguments: key [, direction]');
-      }
-
-      const keyArg = args[0];
-      const key = keyArg instanceof ConfidenceValue ? keyArg.value : keyArg;
-
-      if (!(key instanceof StringValue)) {
-        throw new RuntimeError('sortBy() key must be a string');
-      }
-
-      const direction = args.length === 2 ? args[1] : new StringValue('asc');
-      const dirValue = direction instanceof ConfidenceValue ? direction.value : direction;
-
-      if (!(dirValue instanceof StringValue)) {
-        throw new RuntimeError('sortBy() direction must be a string');
-      }
-
-      const isAscending = dirValue.value === 'asc';
-      const keyName = key.value;
-
-      // Return a sorting function
-      return new FunctionValue('sorter', async (sortArgs) => {
-        if (sortArgs.length !== 1) {
-          throw new RuntimeError('sortBy sorter requires exactly one argument: array');
-        }
-
-        const arrayArg = sortArgs[0];
-        const array = arrayArg instanceof ConfidenceValue ? arrayArg.value : arrayArg;
-
-        if (!(array instanceof ArrayValue)) {
-          throw new RuntimeError('sortBy sorter requires an array');
-        }
-
-        // Sort the array by the specified key
-        const sorted = [...array.elements].sort((a, b) => {
-          let aVal = a instanceof ConfidenceValue ? a.value : a;
-          let bVal = b instanceof ConfidenceValue ? b.value : b;
-
-          // Extract property values
-          if (aVal instanceof ObjectValue && bVal instanceof ObjectValue) {
-            const aProp = aVal.properties.get(keyName);
-            const bProp = bVal.properties.get(keyName);
-
-            if (!aProp || !bProp) {
-              // Handle missing properties by treating them as undefined
-              aVal = aProp ? (aProp instanceof ConfidenceValue ? aProp.value : aProp) : new UndefinedValue();
-              bVal = bProp ? (bProp instanceof ConfidenceValue ? bProp.value : bProp) : new UndefinedValue();
-            } else {
-              aVal = aProp instanceof ConfidenceValue ? aProp.value : aProp;
-              bVal = bProp instanceof ConfidenceValue ? bProp.value : bProp;
-            }
-          }
-
-          // Compare values
-          let comparison = 0;
-          if (aVal instanceof NumberValue && bVal instanceof NumberValue) {
-            comparison = aVal.value - bVal.value;
-          } else if (aVal instanceof StringValue && bVal instanceof StringValue) {
-            comparison = aVal.value.localeCompare(bVal.value);
-          } else {
-            comparison = aVal.toString().localeCompare(bVal.toString());
-          }
-
-          return isAscending ? comparison : -comparison;
-        });
-
-        return new ConfidenceValue(new ArrayValue(sorted), new ConfidenceLib(0.95));
-      });
-    }));
-
-    // groupBy() - Creates parameterized grouping functions
-    this.environment.define('groupBy', new FunctionValue('groupBy', async (args) => {
-      if (args.length !== 1) {
-        throw new RuntimeError('groupBy() requires exactly one argument: key or function');
-      }
-
-      const keyOrFunc = args[0];
-
-      // Return a grouping function
-      return new FunctionValue('grouper', async (groupArgs) => {
-        if (groupArgs.length !== 1) {
-          throw new RuntimeError('groupBy grouper requires exactly one argument: array');
-        }
-
-        const arrayArg = groupArgs[0];
-        const array = arrayArg instanceof ConfidenceValue ? arrayArg.value : arrayArg;
-
-        if (!(array instanceof ArrayValue)) {
-          throw new RuntimeError('groupBy grouper requires an array');
-        }
-
-        const groups = new Map<string, Value[]>();
-
-        for (const element of array.elements) {
-          let groupKey: string;
-
-          if (keyOrFunc instanceof StringValue) {
-            // Group by property key
-            const obj = element instanceof ConfidenceValue ? element.value : element;
-            if (obj instanceof ObjectValue) {
-              const prop = obj.properties.get(keyOrFunc.value);
-              groupKey = prop ? prop.toString() : 'undefined';
-            } else {
-              groupKey = obj.toString();
-            }
-          } else if (keyOrFunc instanceof FunctionValue) {
-            // Group by function result
-            const result = await keyOrFunc.value([element]);
-            groupKey = result.toString();
-          } else {
-            throw new RuntimeError('groupBy() requires a string key or function');
-          }
-
-          if (!groups.has(groupKey)) {
-            groups.set(groupKey, []);
-          }
-          groups.get(groupKey)!.push(element);
-        }
-
-        // Convert to object
-        const resultObj = new Map<string, Value>();
-        for (const [key, values] of groups) {
-          resultObj.set(key, new ArrayValue(values));
-        }
-
-        return new ObjectValue(resultObj);
-      });
-    }));
-
-    // debounce() - Creates debounced function wrappers
-    this.environment.define('debounce', new FunctionValue('debounce', async (args) => {
-      if (args.length !== 1) {
-        throw new RuntimeError('debounce() requires exactly one argument: delay in milliseconds');
-      }
-
-      const delayArg = args[0];
-      const delay = delayArg instanceof ConfidenceValue ? delayArg.value : delayArg;
-
-      if (!(delay instanceof NumberValue)) {
-        throw new RuntimeError('debounce() delay must be a number');
-      }
-
-      const delayMs = delay.value;
-
-      // Return a function that creates debounced versions
-      return new FunctionValue('debouncer', async (debounceArgs) => {
-        if (debounceArgs.length !== 1) {
-          throw new RuntimeError('debounce creator requires exactly one argument: function');
-        }
-
-        const func = debounceArgs[0];
-        if (!(func instanceof FunctionValue)) {
-          throw new RuntimeError('debounce creator requires a function argument');
-        }
-
-        let timeoutId: NodeJS.Timeout | null = null;
-        let lastResult: Value = new UndefinedValue();
-
-        // Return debounced function
-        return new FunctionValue('debouncedFunction', async (innerArgs) => {
-          return new Promise<Value>((resolve) => {
-            if (timeoutId) {
-              clearTimeout(timeoutId);
-            }
-
-            timeoutId = setTimeout(async () => {
-              try {
-                lastResult = await func.value(innerArgs);
-                resolve(lastResult);
-              } catch (error) {
-                resolve(new UndefinedValue());
-              }
-            }, delayMs);
-          });
-        });
-      });
-    }));
-
-    // Promise built-in functions
-    
-    // Promise.resolve() - Creates a resolved promise
-    const promiseObj = new ObjectValue(new Map<string, Value>());
-    
-    promiseObj.value.set('resolve', new FunctionValue('Promise.resolve', async (args) => {
-      if (args.length !== 1) {
-        throw new RuntimeError('Promise.resolve() requires exactly one argument');
-      }
-      
-      // Create a promise that immediately resolves to the value
-      return new PromiseValue(Promise.resolve(args[0]));
-    }));
-    
-    // Promise.reject() - Creates a rejected promise
-    promiseObj.value.set('reject', new FunctionValue('Promise.reject', async (args) => {
-      if (args.length !== 1) {
-        throw new RuntimeError('Promise.reject() requires exactly one argument');
-      }
-      
-      // Create a promise that immediately rejects (wrapped in StringValue for error message)
-      const errorMsg = args[0] instanceof StringValue ? args[0].value : args[0].toString();
-      return new PromiseValue(Promise.reject(new StringValue(errorMsg)));
-    }));
-    
-    // Promise.all() - Waits for all promises to resolve
-    promiseObj.value.set('all', new FunctionValue('Promise.all', async (args) => {
-      if (args.length !== 1 || !(args[0] instanceof ArrayValue)) {
-        throw new RuntimeError('Promise.all() requires an array of promises');
-      }
-      
-      const promises = args[0].value;
-      const results: Value[] = [];
-      
-      for (const promise of promises) {
-        if (promise instanceof PromiseValue) {
-          results.push(await promise.value);
-        } else {
-          // Non-promise values are treated as already resolved
-          results.push(promise);
-        }
-      }
-      
-      return new ArrayValue(results);
-    }));
-    
-    this.environment.define('Promise', promiseObj);
-    
-    // delay() / sleep() - Utility function to create a delay
-    this.environment.define('delay', new FunctionValue('delay', async (args) => {
-      if (args.length !== 1) {
-        throw new RuntimeError('delay() requires exactly one argument: milliseconds');
-      }
-      
-      const msArg = args[0];
-      const ms = msArg instanceof ConfidenceValue ? msArg.value : msArg;
-      
-      if (!(ms instanceof NumberValue)) {
-        throw new RuntimeError('delay() requires a number of milliseconds');
-      }
-      
-      const delayMs = Math.floor(ms.value);
-      
-      // Return a promise that resolves after the delay
-      return new PromiseValue(
-        new Promise(resolve => {
-          setTimeout(() => resolve(new UndefinedValue()), delayMs);
-        })
-      );
-    }));
-    
-    // Alias sleep to delay
-    this.environment.define('sleep', this.environment.get('delay'));
   }
 
   registerLLMProvider(name: string, provider: LLMProvider): void {
@@ -1057,7 +197,10 @@ export class Interpreter {
     return this.defaultLLMProvider;
   }
 
-  private getDefaultLLMProvider(): LLMProvider | undefined {
+  getLLMProvider(name?: string): LLMProvider | undefined {
+    if (name) {
+      return this.llmProviders.get(name);
+    }
     if (!this.defaultLLMProvider) {
       return undefined;
     }
@@ -1122,6 +265,8 @@ export class Interpreter {
         return this.interpretUncertainIfStatement(node as UncertainIfStatement);
       case 'BlockStatement':
         return this.interpretBlockStatement(node as BlockStatement);
+      case 'ContextStatement':
+        return this.interpretContextStatement(node as ContextStatement);
       case 'ExpressionStatement':
         return this.interpretExpressionStatement(node as ExpressionStatement);
       case 'ForLoop':
@@ -1130,6 +275,8 @@ export class Interpreter {
         return this.interpretForInLoop(node as ForInLoop);
       case 'WhileLoop':
         return this.interpretWhileLoop(node as WhileLoop);
+      case 'DoWhileLoop':
+        return this.interpretDoWhileLoop(node as DoWhileLoop);
       case 'UncertainForLoop':
         return this.interpretUncertainForLoop(node as UncertainForLoop);
       case 'UncertainWhileLoop':
@@ -1150,6 +297,8 @@ export class Interpreter {
         return this.interpretExportStatement(node as ExportStatement);
       case 'TryStatement':
         return this.interpretTryStatement(node as TryStatement);
+      case 'AgentDeclaration':
+        return this.interpretAgentDeclaration(node as AgentDeclaration);
       default:
         throw new RuntimeError(`Unknown node type: ${(node as any).type}`, node);
     }
@@ -1230,11 +379,15 @@ export class Interpreter {
   }
 
   private async interpretBinaryExpression(node: BinaryExpression): Promise<Value> {
-    // Special handling for property access operators where right side shouldn't be evaluated
     if (node.operator === '.' || node.operator === '~.') {
+      if (!(node.right instanceof IdentifierExpression)) {
+        throw new RuntimeError('Property access requires identifier on the right-hand side', node);
+      }
       const left = await this.interpret(node.left);
-      // Don't evaluate right side - it's a property name, not an expression
-      return this.applyBinaryOperator(node.operator, left, node.right as IdentifierExpression, node);
+      const options = node.operator === '~.'
+        ? { nullishReturnsNull: true, missingReturnsUndefined: true, forceConfidenceResult: true }
+        : {};
+      return this.resolvePropertyAccess(left, node.right.name, node, options);
     }
 
     // Special handling for short-circuit operators
@@ -1268,14 +421,6 @@ export class Interpreter {
     right: Value | IdentifierExpression,
     node: BinaryExpression
   ): Value {
-    // Handle property access operators early (they have special right-side handling)
-    if (operator === '.') {
-      return right as Value;
-    }
-    if (operator === '~.') {
-      return this.applyConfidentPropertyAccess(left, right as IdentifierExpression, node);
-    }
-
     // Ensure right is a Value for all other operators
     if (!(right instanceof NumberValue || right instanceof StringValue || right instanceof BooleanValue || 
           right instanceof ConfidenceValue || right instanceof FunctionValue || 
@@ -1451,35 +596,6 @@ export class Interpreter {
         // Confidence threshold gate - handle non-confident values
         return this.applyConfidenceThresholdGate(left, right, node);
 
-      case '~.':
-        // Confident property access - access property with confidence propagation
-        if (!(right instanceof IdentifierExpression)) {
-          throw new RuntimeError('Right side of ~. must be a property name', node);
-        }
-        
-        // Handle null/undefined gracefully
-        if (left instanceof NullValue || left instanceof UndefinedValue) {
-          return new NullValue();
-        }
-        
-        // For objects, access the property
-        if (left instanceof ObjectValue) {
-          const propName = (right as IdentifierExpression).name;
-          const value = left.value.get(propName);
-          return value || new UndefinedValue();
-        }
-        
-        // For arrays, handle special properties
-        if (left instanceof ArrayValue) {
-          return this.interpretPropertyAccess({
-            type: 'PropertyAccess',
-            object: node.left,
-            property: (right as IdentifierExpression).name
-          } as PropertyAccess);
-        }
-        
-        throw new RuntimeError(`Cannot access property of ${left.type}`, node);
-
       case 'instanceof':
         // Check if left is an instance of the constructor/type specified by right
         // For now, we'll check against built-in types
@@ -1574,47 +690,6 @@ export class Interpreter {
       return new ConfidenceValue(right, leftConf);
     }
 
-    // Special handling for confident property access (~.)
-    if (operator === '~.') {
-      // Extract actual values
-      const [leftValue, leftConf] = left instanceof ConfidenceValue 
-        ? [left.value, left.confidence]
-        : [left, new ConfidenceLib(1.0)];
-        
-      // Right must be an identifier
-      if (!(right instanceof IdentifierExpression)) {
-        throw new RuntimeError('Right side of ~. must be a property name', node);
-      }
-      
-      // Handle null/undefined gracefully
-      if (leftValue instanceof NullValue || leftValue instanceof UndefinedValue) {
-        return new ConfidenceValue(new NullValue(), leftConf);
-      }
-      
-      // For objects, access the property
-      if (leftValue instanceof ObjectValue) {
-        const propName = (right as IdentifierExpression).name;
-        const value = leftValue.value.get(propName) || new UndefinedValue();
-        return new ConfidenceValue(value, leftConf);
-      }
-      
-      // For arrays, handle special properties
-      if (leftValue instanceof ArrayValue) {
-        const propName = (right as IdentifierExpression).name;
-        
-        // Handle array properties directly
-        if (propName === 'length') {
-          return new ConfidenceValue(new NumberValue(leftValue.elements.length), leftConf);
-        }
-        
-        // For methods, we would need to create confident versions
-        // For now, throw an error
-        throw new RuntimeError(`Confident property access for array methods not yet implemented`, node);
-      }
-      
-      throw new RuntimeError(`Cannot access property of ${leftValue.type}`, node);
-    }
-    
     // Special handling for confidence threshold gate operator (~?>)
     if (operator === '~?>') {
       // This operator works with both confident and non-confident values
@@ -1794,50 +869,6 @@ export class Interpreter {
     const resultConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
     
     return new ConfidenceValue(new BooleanValue(result), resultConfidence);
-  }
-
-  private applyConfidentPropertyAccess(left: Value, right: IdentifierExpression, node: BinaryExpression): Value {
-    // For confident property access (~.), we implement safe navigation with confidence propagation
-    
-    const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
-    const leftValue = left instanceof ConfidenceValue ? left.value : left;
-    
-    // Extract the property name from the identifier
-    const propertyName = right.name;
-    
-    // Handle null/undefined gracefully
-    if (leftValue instanceof NullValue || leftValue instanceof UndefinedValue) {
-      return new ConfidenceValue(new NullValue(), leftConf);
-    }
-    
-    // For objects, access the property
-    if (leftValue instanceof ObjectValue) {
-      const value = leftValue.value.get(propertyName);
-      const result = value || new UndefinedValue();
-      
-      // Propagate confidence from the object
-      if (result instanceof ConfidenceValue) {
-        // If the property itself has confidence, combine it with object's confidence
-        const combinedConf = new ConfidenceLib(leftConf.value * result.confidence.value);
-        return new ConfidenceValue(result.value, combinedConf);
-      } else {
-        return new ConfidenceValue(result, leftConf);
-      }
-    }
-    
-    // For arrays, handle special properties
-    if (leftValue instanceof ArrayValue) {
-      if (propertyName === 'length') {
-        return new ConfidenceValue(new NumberValue(leftValue.elements.length), leftConf);
-      }
-      
-      // For array methods, we need to wrap them with confidence
-      // This is a simplified approach - in a full implementation, 
-      // we'd handle all array methods with confidence propagation
-      throw new RuntimeError(`Confident property access for array method '${propertyName}' not yet implemented`, node);
-    }
-    
-    throw new RuntimeError(`Cannot access property of ${leftValue.type}`, node);
   }
 
   private applyParallelConfidence(left: Value, right: Value, _node: BinaryExpression): Value {
@@ -2132,142 +1163,233 @@ export class Interpreter {
   
   private async interpretPropertyAccess(node: PropertyAccess): Promise<Value> {
     const object = await this.interpret(node.object);
-    
-    // Handle array methods
-    if (object instanceof ArrayValue) {
-      if (node.property === 'length') {
-        return new NumberValue(object.elements.length);
+    return this.resolvePropertyAccess(object, node.property, node);
+  }
+
+  private resolvePropertyAccess(
+    target: Value,
+    property: string,
+    node: ASTNode,
+    options: PropertyAccessOptions = {}
+  ): Value {
+    const {
+      nullishReturnsNull = false,
+      missingReturnsUndefined = false,
+      missingReturnsNull = false,
+      forceConfidenceResult = false,
+      wrapNullishResult = true,
+      wrapMissingResult = true,
+      fallbackToNullOnUnsupported = false,
+    } = options;
+
+    const targetIsConfident = target instanceof ConfidenceValue;
+    const activeConfidence = targetIsConfident
+      ? target.confidence
+      : forceConfidenceResult
+        ? new ConfidenceLib(1.0)
+        : undefined;
+    const wrapConfidence = !!activeConfidence;
+    const baseValue = targetIsConfident ? target.value : target;
+    const wrapValue = (value: Value): Value => {
+      if (!wrapConfidence) {
+        return value;
       }
-      
-      // Array methods as properties
-      if (node.property === 'map') {
-        return new FunctionValue('map', async (args: Value[]) => {
+      if (value instanceof ConfidenceValue) {
+        if (activeConfidence) {
+          return new ConfidenceValue(value.value, activeConfidence.multiply(value.confidence));
+        }
+        return value;
+      }
+      return new ConfidenceValue(value, activeConfidence ?? new ConfidenceLib(1.0));
+    };
+    const maybeWrap = (value: Value): Value => (wrapConfidence ? wrapValue(value) : value);
+
+    const handleNullish = (): Value => {
+      if (nullishReturnsNull) {
+        const result = new NullValue();
+        return wrapConfidence && wrapNullishResult ? wrapValue(result) : result;
+      }
+      throw new RuntimeError(`Cannot access property '${property}' on ${baseValue.type}`, node);
+    };
+
+    const handleMissing = (): Value => {
+      if (missingReturnsUndefined) {
+        const result = new UndefinedValue();
+        return wrapConfidence && wrapMissingResult ? wrapValue(result) : result;
+      }
+      if (missingReturnsNull) {
+        const result = new NullValue();
+        return wrapConfidence && wrapMissingResult ? wrapValue(result) : result;
+      }
+      throw new RuntimeError(`Property '${property}' does not exist`, node);
+    };
+
+    if (baseValue instanceof NullValue || baseValue instanceof UndefinedValue) {
+      return handleNullish();
+    }
+
+    if (baseValue instanceof ArrayValue) {
+      const wrapArrayResults = forceConfidenceResult;
+      return this.resolveArrayProperty(baseValue, property, node, maybeWrap, handleMissing, wrapArrayResults);
+    }
+
+    if (baseValue instanceof StringValue) {
+      if (property === 'length') {
+        return maybeWrap(new NumberValue(baseValue.value.length));
+      }
+      return handleMissing();
+    }
+
+    if (baseValue instanceof ObjectValue) {
+      const value = baseValue.properties.get(property);
+      if (!value) {
+        return handleMissing();
+      }
+      return maybeWrap(value);
+    }
+
+    if (fallbackToNullOnUnsupported) {
+      const result = new NullValue();
+      return wrapConfidence && wrapMissingResult ? wrapValue(result) : result;
+    }
+
+    throw new RuntimeError(`Cannot access property '${property}' on ${baseValue.type}`, node);
+  }
+
+  private resolveArrayProperty(
+    arrayValue: ArrayValue,
+    property: string,
+    node: ASTNode,
+    wrapValue: (value: Value) => Value,
+    handleMissing: () => Value,
+    wrapResults: boolean
+  ): Value {
+    const wrapIfNeeded = (value: Value): Value => (wrapResults ? wrapValue(value) : value);
+
+    switch (property) {
+      case 'length':
+        return wrapIfNeeded(new NumberValue(arrayValue.elements.length));
+
+      case 'map':
+        return wrapIfNeeded(new FunctionValue('map', async (args: Value[]) => {
           if (args.length !== 1) {
-            throw new RuntimeError('Array.map() requires exactly 1 argument: function');
+            throw new RuntimeError('Array.map() requires exactly 1 argument: function', node);
           }
           const fn = args[0];
           if (!(fn instanceof FunctionValue)) {
-            throw new RuntimeError('Argument to map() must be a function');
+            throw new RuntimeError('Argument to map() must be a function', node);
           }
-          
+
           const results: Value[] = [];
-          for (const element of object.elements) {
+          for (const element of arrayValue.elements) {
             const result = await fn.value([element]);
             results.push(result);
           }
           return new ArrayValue(results);
-        });
-      }
-      
-      if (node.property === 'filter') {
-        return new FunctionValue('filter', async (args: Value[]) => {
+        }));
+
+      case 'filter':
+        return wrapIfNeeded(new FunctionValue('filter', async (args: Value[]) => {
           if (args.length !== 1) {
-            throw new RuntimeError('Array.filter() requires exactly 1 argument: predicate');
+            throw new RuntimeError('Array.filter() requires exactly 1 argument: predicate', node);
           }
           const predicate = args[0];
           if (!(predicate instanceof FunctionValue)) {
-            throw new RuntimeError('Argument to filter() must be a function');
+            throw new RuntimeError('Argument to filter() must be a function', node);
           }
-          
+
           const results: Value[] = [];
-          for (const element of object.elements) {
+          for (const element of arrayValue.elements) {
             const predicateResult = await predicate.value([element]);
             if (predicateResult.isTruthy()) {
               results.push(element);
             }
           }
           return new ArrayValue(results);
-        });
-      }
-      
-      if (node.property === 'reduce') {
-        return new FunctionValue('reduce', async (args: Value[]) => {
+        }));
+
+      case 'reduce':
+        return wrapIfNeeded(new FunctionValue('reduce', async (args: Value[]) => {
           if (args.length < 1 || args.length > 2) {
-            throw new RuntimeError('Array.reduce() requires 1 or 2 arguments: reducer and optional initial value');
+            throw new RuntimeError('Array.reduce() requires 1 or 2 arguments: reducer and optional initial value', node);
           }
           const reducer = args[0];
           const initialValue = args.length === 2 ? args[1] : undefined;
-          
+
           if (!(reducer instanceof FunctionValue)) {
-            throw new RuntimeError('First argument to reduce() must be a function');
+            throw new RuntimeError('First argument to reduce() must be a function', node);
           }
-          
-          if (object.elements.length === 0 && initialValue === undefined) {
-            throw new RuntimeError('reduce() of empty array with no initial value');
+
+          if (arrayValue.elements.length === 0 && initialValue === undefined) {
+            throw new RuntimeError('reduce() of empty array with no initial value', node);
           }
-          
+
           let accumulator: Value;
           let startIndex: number;
-          
+
           if (initialValue !== undefined) {
             accumulator = initialValue;
             startIndex = 0;
           } else {
-            accumulator = object.elements[0];
+            accumulator = arrayValue.elements[0];
             startIndex = 1;
           }
-          
-          for (let i = startIndex; i < object.elements.length; i++) {
-            // Only pass index if the reducer expects 3 arguments
-            const args = [accumulator, object.elements[i]];
+
+          for (let i = startIndex; i < arrayValue.elements.length; i++) {
+            const callArgs = [accumulator, arrayValue.elements[i]];
             if (reducer.arity === 3) {
-              args.push(new NumberValue(i));
+              callArgs.push(new NumberValue(i));
             }
-            accumulator = await reducer.value(args);
+            accumulator = await reducer.value(callArgs);
           }
-          
+
           return accumulator;
-        });
-      }
-      
-      if (node.property === 'push') {
-        return new FunctionValue('push', async (args: Value[]) => {
+        }));
+
+      case 'push':
+        return wrapIfNeeded(new FunctionValue('push', async (args: Value[]) => {
           if (args.length === 0) {
-            throw new RuntimeError('Array.push() requires at least 1 argument');
+            throw new RuntimeError('Array.push() requires at least 1 argument', node);
           }
-          // Since arrays are immutable in Prism, return a new array
-          const newElements = [...object.elements, ...args];
+          const newElements = [...arrayValue.elements, ...args];
           return new ArrayValue(newElements);
-        });
-      }
-      
-      if (node.property === 'forEach') {
-        return new FunctionValue('forEach', async (args: Value[]) => {
+        }));
+
+      case 'forEach':
+        return wrapIfNeeded(new FunctionValue('forEach', async (args: Value[]) => {
           if (args.length !== 1) {
-            throw new RuntimeError('Array.forEach() requires exactly 1 argument: function');
+            throw new RuntimeError('Array.forEach() requires exactly 1 argument: function', node);
           }
           const fn = args[0];
           if (!(fn instanceof FunctionValue)) {
-            throw new RuntimeError('Argument to forEach() must be a function');
+            throw new RuntimeError('Argument to forEach() must be a function', node);
           }
-          
-          for (let i = 0; i < object.elements.length; i++) {
-            // Only pass index if the function expects 2 arguments
-            const args = [object.elements[i]];
+
+          for (let i = 0; i < arrayValue.elements.length; i++) {
+            const callArgs = [arrayValue.elements[i]];
             if (fn.arity === 2) {
-              args.push(new NumberValue(i));
+              callArgs.push(new NumberValue(i));
             }
-            await fn.value(args);
+            await fn.value(callArgs);
           }
           return new UndefinedValue();
-        });
-      }
-      
-      if (node.property === 'join') {
-        return new FunctionValue('join', async (args: Value[]) => {
+        }));
+
+      case 'join':
+        return wrapIfNeeded(new FunctionValue('join', async (args: Value[]) => {
           if (args.length > 1) {
-            throw new RuntimeError('Array.join() requires 0 or 1 argument');
+            throw new RuntimeError('Array.join() requires 0 or 1 argument', node);
           }
-          
+
           let separator = ',';
           if (args.length === 1) {
             if (!(args[0] instanceof StringValue)) {
-              throw new RuntimeError('Array.join() separator must be a string');
+              throw new RuntimeError('Array.join() separator must be a string', node);
             }
             separator = args[0].value;
           }
-          
-          const strings = object.elements.map(el => {
+
+          const strings = arrayValue.elements.map(el => {
             if (el instanceof StringValue) {
               return el.value;
             } else if (el instanceof NumberValue) {
@@ -2282,249 +1404,24 @@ export class Interpreter {
               return el.toString();
             }
           });
-          
-          return new StringValue(strings.join(separator));
-        });
-      }
-    }
 
-    // Handle string properties
-    if (object instanceof StringValue) {
-      if (node.property === 'length') {
-        return new NumberValue(object.value.length);
-      }
+          return new StringValue(strings.join(separator));
+        }));
+
+      default:
+        return handleMissing();
     }
-    
-    // Handle object property access
-    if (object instanceof ObjectValue) {
-      const value = object.properties.get(node.property);
-      if (!value) {
-        throw new RuntimeError(`Property '${node.property}' does not exist`, node);
-      }
-      return value;
-    }
-    
-    // Handle confidence values by accessing property on underlying value
-    if (object instanceof ConfidenceValue) {
-      const innerValue = object.value;
-      const confidence = object.confidence;
-      
-      if (innerValue instanceof ArrayValue) {
-        if (node.property === 'length') {
-          return new NumberValue(innerValue.elements.length);
-        }
-        
-        // Array methods on confident arrays
-        if (node.property === 'map') {
-          return new FunctionValue('map', async (args: Value[]) => {
-            if (args.length !== 1) {
-              throw new RuntimeError('Array.map() requires exactly 1 argument: function');
-            }
-            const fn = args[0];
-            if (!(fn instanceof FunctionValue)) {
-              throw new RuntimeError('Argument to map() must be a function');
-            }
-            
-            const results: Value[] = [];
-            for (const element of innerValue.elements) {
-              const result = await fn.value([element]);
-              results.push(result);
-            }
-            return new ConfidenceValue(new ArrayValue(results), confidence);
-          });
-        }
-        
-        if (node.property === 'filter') {
-          return new FunctionValue('filter', async (args: Value[]) => {
-            if (args.length !== 1) {
-              throw new RuntimeError('Array.filter() requires exactly 1 argument: predicate');
-            }
-            const predicate = args[0];
-            if (!(predicate instanceof FunctionValue)) {
-              throw new RuntimeError('Argument to filter() must be a function');
-            }
-            
-            const results: Value[] = [];
-            for (const element of innerValue.elements) {
-              const predicateResult = await predicate.value([element]);
-              if (predicateResult.isTruthy()) {
-                results.push(element);
-              }
-            }
-            return new ConfidenceValue(new ArrayValue(results), confidence);
-          });
-        }
-        
-        if (node.property === 'reduce') {
-          return new FunctionValue('reduce', async (args: Value[]) => {
-            if (args.length < 1 || args.length > 2) {
-              throw new RuntimeError('Array.reduce() requires 1 or 2 arguments: reducer and optional initial value');
-            }
-            const reducer = args[0];
-            const initialValue = args.length === 2 ? args[1] : undefined;
-            
-            if (!(reducer instanceof FunctionValue)) {
-              throw new RuntimeError('First argument to reduce() must be a function');
-            }
-            
-            if (innerValue.elements.length === 0 && initialValue === undefined) {
-              throw new RuntimeError('reduce() of empty array with no initial value');
-            }
-            
-            let accumulator: Value;
-            let startIndex: number;
-            
-            if (initialValue !== undefined) {
-              accumulator = initialValue;
-              startIndex = 0;
-            } else {
-              accumulator = innerValue.elements[0];
-              startIndex = 1;
-            }
-            
-            for (let i = startIndex; i < innerValue.elements.length; i++) {
-              // Only pass index if the reducer expects 3 arguments
-              const args = [accumulator, innerValue.elements[i]];
-              if (reducer.arity === 3) {
-                args.push(new NumberValue(i));
-              }
-              accumulator = await reducer.value(args);
-            }
-            
-            // Preserve confidence if result isn't already confident
-            return accumulator instanceof ConfidenceValue ? accumulator : new ConfidenceValue(accumulator, confidence);
-          });
-        }
-        
-        if (node.property === 'push') {
-          return new FunctionValue('push', async (args: Value[]) => {
-            if (args.length === 0) {
-              throw new RuntimeError('Array.push() requires at least 1 argument');
-            }
-            // Since arrays are immutable in Prism, return a new array
-            const newElements = [...innerValue.elements, ...args];
-            return new ConfidenceValue(new ArrayValue(newElements), confidence);
-          });
-        }
-        
-        if (node.property === 'forEach') {
-          return new FunctionValue('forEach', async (args: Value[]) => {
-            if (args.length !== 1) {
-              throw new RuntimeError('Array.forEach() requires exactly 1 argument: function');
-            }
-            const fn = args[0];
-            if (!(fn instanceof FunctionValue)) {
-              throw new RuntimeError('Argument to forEach() must be a function');
-            }
-            
-            for (let i = 0; i < innerValue.elements.length; i++) {
-              // Only pass index if the function expects 2 arguments
-              const args = [innerValue.elements[i]];
-              if (fn.arity === 2) {
-                args.push(new NumberValue(i));
-              }
-              await fn.value(args);
-            }
-            return new UndefinedValue();
-          });
-        }
-        
-        if (node.property === 'join') {
-          return new FunctionValue('join', async (args: Value[]) => {
-            if (args.length > 1) {
-              throw new RuntimeError('Array.join() requires 0 or 1 argument');
-            }
-            
-            let separator = ',';
-            if (args.length === 1) {
-              if (!(args[0] instanceof StringValue)) {
-                throw new RuntimeError('Array.join() separator must be a string');
-              }
-              separator = args[0].value;
-            }
-            
-            const strings = innerValue.elements.map(el => {
-              if (el instanceof StringValue) {
-                return el.value;
-              } else if (el instanceof NumberValue) {
-                return el.value.toString();
-              } else if (el instanceof BooleanValue) {
-                return el.value.toString();
-              } else if (el instanceof NullValue) {
-                return '';
-              } else if (el instanceof UndefinedValue) {
-                return '';
-              } else {
-                return el.toString();
-              }
-            });
-            
-            return new ConfidenceValue(new StringValue(strings.join(separator)), confidence);
-          });
-        }
-      }
-      
-      if (innerValue instanceof ObjectValue) {
-        const value = innerValue.properties.get(node.property);
-        if (!value) {
-          throw new RuntimeError(`Property '${node.property}' does not exist`, node);
-        }
-        // Wrap result in confidence value with same confidence
-        return new ConfidenceValue(value, object.confidence);
-      }
-    }
-    
-    throw new RuntimeError(`Cannot access property '${node.property}' on ${object.type}`, node);
   }
 
   private async interpretOptionalChainAccess(node: OptionalChainAccess): Promise<Value> {
     const object = await this.interpret(node.object);
-    
-    // If object is null or undefined, return null instead of throwing
-    if (object instanceof NullValue || object instanceof UndefinedValue) {
-      return new NullValue();
-    }
-    
-    // Handle array methods
-    if (object instanceof ArrayValue) {
-      if (node.property === 'length') {
-        return new NumberValue(object.elements.length);
-      }
-    }
-    
-    // Handle object property access
-    if (object instanceof ObjectValue) {
-      const value = object.properties.get(node.property);
-      if (!value) {
-        return new NullValue();
-      }
-      return value;
-    }
-    
-    // Handle confidence values by accessing property on underlying value
-    if (object instanceof ConfidenceValue) {
-      const innerValue = object.value;
-      
-      if (innerValue instanceof NullValue || innerValue instanceof UndefinedValue) {
-        return new NullValue();
-      }
-      
-      if (innerValue instanceof ArrayValue && node.property === 'length') {
-        return new NumberValue(innerValue.elements.length);
-      }
-      
-      if (innerValue instanceof ObjectValue) {
-        const value = innerValue.properties.get(node.property);
-        if (!value) {
-          return new NullValue();
-        }
-        // Wrap result in confidence value with same confidence
-        return new ConfidenceValue(value, object.confidence);
-      }
-    }
-    
-    // For other types, return null instead of throwing
-    return new NullValue();
+    return this.resolvePropertyAccess(object, node.property, node, {
+      nullishReturnsNull: true,
+      missingReturnsNull: true,
+      wrapNullishResult: false,
+      wrapMissingResult: false,
+      fallbackToNullOnUnsupported: true,
+    });
   }
   
   private async interpretIndexAccess(node: IndexAccess): Promise<Value> {
@@ -2683,13 +1580,21 @@ export class Interpreter {
 
   private async interpretAssignmentStatement(node: AssignmentStatement): Promise<Value> {
     const value = await this.interpret(node.value);
-    this.environment.set(node.identifier, value);
+    if (this.environment.has(node.identifier)) {
+      this.environment.set(node.identifier, value);
+    } else {
+      this.environment.define(node.identifier, value);
+    }
     return value;
   }
 
   private async interpretAssignmentExpression(node: AssignmentExpression): Promise<Value> {
     const value = await this.interpret(node.value);
-    this.environment.set(node.identifier, value);
+    if (this.environment.has(node.identifier)) {
+      this.environment.set(node.identifier, value);
+    } else {
+      this.environment.define(node.identifier, value);
+    }
     return value;
   }
   
@@ -2774,11 +1679,7 @@ export class Interpreter {
       if (!shouldAssign) {
         // Assign undefined if confidence is too low
         if (element instanceof IdentifierExpression) {
-          if (isDeclared) {
-            this.environment.define(element.name, new UndefinedValue(), isMutable, true);
-          } else {
-            this.environment.set(element.name, new UndefinedValue());
-          }
+          this.assignIdentifier(element.name, new UndefinedValue(), isMutable, isDeclared);
         } else if (element instanceof ArrayPattern) {
           await this.destructureArray(element, new ArrayValue([]), globalThreshold, isMutable, isDeclared);
         } else if (element instanceof ObjectPattern) {
@@ -2786,11 +1687,7 @@ export class Interpreter {
         }
       } else {
         if (element instanceof IdentifierExpression) {
-          if (isDeclared) {
-            this.environment.define(element.name, arrayValue, isMutable, true);
-          } else {
-            this.environment.set(element.name, arrayValue);
-          }
+          this.assignIdentifier(element.name, arrayValue, isMutable, isDeclared);
         } else if (element instanceof ArrayPattern) {
           await this.destructureArray(element, arrayValue, globalThreshold, isMutable, isDeclared);
         } else if (element instanceof ObjectPattern) {
@@ -2816,11 +1713,12 @@ export class Interpreter {
         }
       }
       
-      if (isDeclared) {
-        this.environment.define(restElement.argument.name, new ArrayValue(restArray), isMutable, true);
-      } else {
-        this.environment.set(restElement.argument.name, new ArrayValue(restArray));
-      }
+      this.assignIdentifier(
+        restElement.argument.name,
+        new ArrayValue(restArray),
+        isMutable,
+        isDeclared
+      );
     }
   }
   
@@ -2830,6 +1728,18 @@ export class Interpreter {
     }
     // Non-confident values are treated as having confidence 1.0
     return 1.0 >= threshold;
+  }
+
+  private assignIdentifier(name: string, value: Value, isMutable: boolean, isDeclared: boolean): void {
+    if (isDeclared) {
+      this.environment.define(name, value, isMutable, true);
+      return;
+    }
+
+    if (!this.environment.has(name)) {
+      throw new RuntimeError(`Undefined variable: ${name}`);
+    }
+    this.environment.set(name, value);
   }
   
   private async destructureObject(pattern: ObjectPattern, value: Value, globalThreshold?: number, isMutable: boolean = true, isDeclared: boolean = false): Promise<void> {
@@ -2874,11 +1784,7 @@ export class Interpreter {
       if (!shouldAssign) {
         // Assign undefined if confidence is too low
         if (prop.value instanceof IdentifierExpression) {
-          if (isDeclared) {
-            this.environment.define(prop.value.name, new UndefinedValue(), isMutable, true);
-          } else {
-            this.environment.set(prop.value.name, new UndefinedValue());
-          }
+          this.assignIdentifier(prop.value.name, new UndefinedValue(), isMutable, isDeclared);
         } else if (prop.value instanceof ArrayPattern) {
           await this.destructureArray(prop.value, new ArrayValue([]), globalThreshold, isMutable, isDeclared);
         } else if (prop.value instanceof ObjectPattern) {
@@ -2886,11 +1792,7 @@ export class Interpreter {
         }
       } else {
         if (prop.value instanceof IdentifierExpression) {
-          if (isDeclared) {
-            this.environment.define(prop.value.name, assignValue, isMutable, true);
-          } else {
-            this.environment.set(prop.value.name, assignValue);
-          }
+          this.assignIdentifier(prop.value.name, assignValue, isMutable, isDeclared);
         } else if (prop.value instanceof ArrayPattern) {
           // If this property has a confidence threshold, use it as the global threshold for the nested pattern
           const nestedThreshold = prop.confidenceThreshold ? 
@@ -2922,11 +1824,12 @@ export class Interpreter {
           }
         }
       }
-      if (isDeclared) {
-        this.environment.define(pattern.rest.argument.name, new ObjectValue(restObj), isMutable, true);
-      } else {
-        this.environment.set(pattern.rest.argument.name, new ObjectValue(restObj));
-      }
+      this.assignIdentifier(
+        pattern.rest.argument.name,
+        new ObjectValue(restObj),
+        isMutable,
+        isDeclared
+      );
     }
   }
 
@@ -3018,9 +1921,10 @@ export class Interpreter {
 
 
   private async interpretBlockStatement(node: BlockStatement): Promise<Value> {
-    // Create new scope
     const previousEnv = this.environment;
-    this.environment = new Environment(previousEnv);
+    if (node.createScope) {
+      this.environment = new Environment(previousEnv);
+    }
 
     try {
       let result: Value = new NumberValue(0);
@@ -3031,8 +1935,18 @@ export class Interpreter {
       
       return result;
     } finally {
-      // Restore previous scope
-      this.environment = previousEnv;
+      if (node.createScope) {
+        this.environment = previousEnv;
+      }
+    }
+  }
+
+  private async interpretContextStatement(node: ContextStatement): Promise<Value> {
+    this.contextStack.push(node.contextName);
+    try {
+      return await this.interpretBlockStatement(node.body);
+    } finally {
+      this.contextStack.pop();
     }
   }
 
@@ -3136,6 +2050,18 @@ export class Interpreter {
     }
     
     return new NumberValue(0); // Variable declarations return 0
+  }
+
+  private async interpretAgentDeclaration(node: AgentDeclaration): Promise<Value> {
+    const properties = new Map<string, Value>();
+    for (const [key, expression] of node.config.entries()) {
+      const value = await this.interpret(expression);
+      properties.set(key, value);
+    }
+
+    const agentValue = new ObjectValue(properties);
+    this.environment.define(node.name, agentValue);
+    return agentValue;
   }
 
   private async interpretImportStatement(node: ImportStatement): Promise<Value> {
@@ -3349,6 +2275,35 @@ export class Interpreter {
         } else {
           throw error;
         }
+      }
+    }
+
+    return result;
+  }
+
+  private async interpretDoWhileLoop(node: DoWhileLoop): Promise<Value> {
+    let result: Value = new UndefinedValue();
+
+    while (true) {
+      try {
+        result = await this.interpret(node.body);
+      } catch (error) {
+        if (error instanceof LoopControlError) {
+          if (error.type === 'break') {
+            break;
+          } else if (error.type === 'continue') {
+            // Skip directly to condition check
+          } else {
+            throw error;
+          }
+        } else {
+          throw error;
+        }
+      }
+
+      const conditionValue = await this.interpret(node.condition);
+      if (!conditionValue.isTruthy()) {
+        break;
       }
     }
 
@@ -3590,12 +2545,32 @@ export class Interpreter {
   }
 }
 
+export interface RuntimeOptions {
+  moduleSystem?: ModuleSystem;
+}
+
+export interface ModuleInvalidationOptions {
+  invalidateDependents?: boolean;
+}
+
+export interface RuntimeLLMCallOptions extends LLMOptions {
+  provider?: string;
+}
+
+export interface RuntimeLLMStream {
+  chunks: AsyncIterable<LLMStreamChunk>;
+  response: Promise<LLMResponse>;
+  cancel(reason?: unknown): void;
+}
+
 export class Runtime {
   private interpreter: Interpreter;
+  private moduleSystem: ModuleSystem;
 
-  constructor() {
-    const moduleSystem = new ModuleSystem();
-    this.interpreter = new Interpreter(moduleSystem);
+  constructor(options?: RuntimeOptions) {
+    this.moduleSystem = options?.moduleSystem ?? new ModuleSystem();
+    this.interpreter = new Interpreter();
+    (this.interpreter as any).__runtime = this;
   }
 
   async execute(program: Program): Promise<Value> {
@@ -3612,6 +2587,55 @@ export class Runtime {
 
   getDefaultLLMProvider(): string | undefined {
     return this.interpreter.getDefaultLLMProviderName();
+  }
+
+  getLLMProvider(name?: string): LLMProvider | undefined {
+    return this.interpreter.getLLMProvider(name);
+  }
+
+  streamLLM(prompt: string, options?: RuntimeLLMCallOptions): RuntimeLLMStream {
+    const provider = this.interpreter.getLLMProvider(options?.provider);
+    if (!provider) {
+      const providerName = options?.provider || this.interpreter.getDefaultLLMProviderName() || 'default';
+      throw new RuntimeError(`LLM provider '${providerName}' not found`);
+    }
+
+    const requestOptions = this.normalizeLLMOptions(options);
+    const request = new LLMRequest(prompt, requestOptions);
+
+    if (provider.stream) {
+      const session = provider.stream(request);
+      return {
+        chunks: session,
+        response: session.response,
+        cancel: (reason?: unknown) => session.cancel(reason),
+      };
+    }
+
+    let cancelled = false;
+    const responsePromise = (async () => {
+      const response = await provider.complete(request);
+      if (cancelled) {
+        throw new RuntimeError('LLM stream cancelled');
+      }
+      return response;
+    })();
+
+    const generator = (async function* (): AsyncGenerator<LLMStreamChunk> {
+      const response = await responsePromise;
+      if (cancelled) {
+        return;
+      }
+      yield { type: 'text', content: response.content };
+    })();
+
+    return {
+      chunks: generator,
+      response: responsePromise,
+      cancel: () => {
+        cancelled = true;
+      },
+    };
   }
 
   getVariable(name: string): Value {
@@ -3641,8 +2665,54 @@ export class Runtime {
   get environment(): Environment {
     return this.interpreter.environment;
   }
+
+  getModuleSystem(): ModuleSystem {
+    return this.moduleSystem;
+  }
+
+  invalidateModule(modulePath: string, options?: ModuleInvalidationOptions): void {
+    const invalidateDependents = options?.invalidateDependents ?? true;
+    this.moduleSystem.invalidateModule(modulePath, invalidateDependents);
+  }
+
+  async reloadModule(modulePath: string, options?: ModuleInvalidationOptions): Promise<Module> {
+    this.invalidateModule(modulePath, options);
+    return await this.moduleSystem.loadModule(modulePath, this);
+  }
+
+  private normalizeLLMOptions(options?: RuntimeLLMCallOptions): LLMOptions {
+    if (!options) {
+      return {};
+    }
+    const requestOptions: LLMOptions = {};
+    if (options.maxTokens !== undefined) requestOptions.maxTokens = options.maxTokens;
+    if (options.temperature !== undefined) requestOptions.temperature = options.temperature;
+    if (options.topP !== undefined) requestOptions.topP = options.topP;
+    if (options.timeout !== undefined) requestOptions.timeout = options.timeout;
+    if (options.model !== undefined) requestOptions.model = options.model;
+    if (options.structuredOutput !== undefined) requestOptions.structuredOutput = options.structuredOutput;
+    if (options.includeReasoning !== undefined) requestOptions.includeReasoning = options.includeReasoning;
+    if (options.confidenceExtractor !== undefined) requestOptions.confidenceExtractor = options.confidenceExtractor;
+    return requestOptions;
+  }
 }
 
-export function createRuntime(): Runtime {
-  return new Runtime();
+export function createRuntime(options?: RuntimeOptions): Runtime {
+  return new Runtime(options);
 }
+
+export {
+  Value,
+  NumberValue,
+  StringValue,
+  BooleanValue,
+  NullValue,
+  UndefinedValue,
+  ConfidenceValue,
+  ArrayValue,
+  ObjectValue,
+  FunctionValue,
+  PromiseValue,
+} from './runtime/values';
+export { Environment } from './runtime/environment';
+export { RuntimeError, LoopControlError, ReturnException } from './runtime/errors';

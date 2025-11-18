@@ -14,7 +14,7 @@ npm install @prism-lang/llm
 
 - **Multiple Providers**: Claude (Anthropic), Gemini (Google), Mock provider
 - **Automatic Fallback**: Configurable provider priority
-- **Mock Provider**: For testing without API calls
+- **Mock Provider**: For testing without API calls (configurable responses, queues, latency, streaming, deterministic embeddings)
 - **Confidence Integration**: Works seamlessly with Prism's confidence system
 - **Environment Configuration**: Automatic setup from environment variables
 
@@ -100,7 +100,9 @@ import { MockLLMProvider } from '@prism-lang/llm';
 
 const mock = new MockLLMProvider();
 mock.setMockResponse('Test response', 0.85);
+mock.queueResponse({ content: 'Next response', confidence: 0.7 });
 mock.setLatency(100); // Simulate network delay
+mock.setFailureRate(0); // deterministic behavior
 ```
 
 ## API Reference

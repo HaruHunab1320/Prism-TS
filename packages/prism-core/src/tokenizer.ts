@@ -14,6 +14,9 @@ export enum TokenType {
   LOW = 'LOW',
   DEFAULT = 'DEFAULT',
   IN = 'IN',
+  CONTEXT = 'CONTEXT',
+  AGENTS = 'AGENTS',
+  AGENT = 'AGENT',
   CONFIDENCE = 'CONFIDENCE',
   FUNCTION = 'FUNCTION',
   RETURN = 'RETURN',
@@ -38,6 +41,7 @@ export enum TokenType {
   TRY = 'TRY',
   CATCH = 'CATCH',
   FINALLY = 'FINALLY',
+  DO = 'DO',
 
   // Operators
   PLUS = 'PLUS',
@@ -112,6 +116,7 @@ export enum TokenType {
   PIPELINE = 'PIPELINE',
   CONFIDENCE_PIPELINE = 'CONFIDENCE_PIPELINE',
   CONFIDENCE_THRESHOLD_GATE = 'CONFIDENCE_THRESHOLD_GATE',
+  CONTEXT_ARROW = 'CONTEXT_ARROW',
   PLACEHOLDER = 'PLACEHOLDER',
   EOF = 'EOF',
 }
@@ -132,6 +137,9 @@ const keywords: { [key: string]: TokenType } = {
   'low': TokenType.LOW,
   'default': TokenType.DEFAULT,
   'in': TokenType.IN,
+  'context': TokenType.CONTEXT,
+  'agents': TokenType.AGENTS,
+  'Agent': TokenType.AGENT,
   'function': TokenType.FUNCTION,
   'return': TokenType.RETURN,
   'let': TokenType.LET,
@@ -155,6 +163,7 @@ const keywords: { [key: string]: TokenType } = {
   'try': TokenType.TRY,
   'catch': TokenType.CATCH,
   'finally': TokenType.FINALLY,
+  'do': TokenType.DO,
 };
 
 export class Tokenizer {
@@ -202,6 +211,10 @@ export class Tokenizer {
         }
         return this.makeToken(TokenType.PLUS, '+', startColumn);
       case '-': 
+        if (this.peek() === '>') {
+          this.advance();
+          return this.makeToken(TokenType.CONTEXT_ARROW, '->', startColumn);
+        }
         if (this.peek() === '=') {
           this.advance();
           return this.makeToken(TokenType.MINUS_EQUAL, '-=', startColumn);
@@ -630,6 +643,26 @@ export class Tokenizer {
       } else if (char === '/' && this.peekNext() === '/') {
         // Skip single-line comment
         while (this.peek() !== '\n' && !this.isAtEnd()) {
+          this.advance();
+        }
+      } else if (char === '/' && this.peekNext() === '*') {
+        // Skip multiline comment (including JSDoc)
+        this.advance(); // consume '/'
+        this.advance(); // consume '*'
+        
+        // Skip until we find */
+        while (!this.isAtEnd()) {
+          if (this.peek() === '*' && this.peekNext() === '/') {
+            this.advance(); // consume '*'
+            this.advance(); // consume '/'
+            break;
+          }
+          
+          if (this.peek() === '\n') {
+            this.line++;
+            this.column = 0;
+          }
+          
           this.advance();
         }
       } else {

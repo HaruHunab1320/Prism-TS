@@ -1,4 +1,5 @@
 import { Token, TokenType, tokenize } from './tokenizer';
+import { DiagnosticError } from './diagnostics';
 import {
   Expression,
   Statement,
@@ -27,6 +28,8 @@ import {
   IfStatement,
   UncertainIfStatement,
   BlockStatement,
+  ContextStatement,
+  AgentDeclaration,
   ExpressionStatement,
   UncertainBranches,
   BinaryOperator,
@@ -38,6 +41,7 @@ import {
   ForLoop,
   ForInLoop,
   WhileLoop,
+  DoWhileLoop,
   BreakStatement,
   ContinueStatement,
   UncertainForLoop,
@@ -56,33 +60,22 @@ import {
   TryStatement,
 } from './ast';
 
-export class ParseError extends Error {
-  constructor(message: string, public token: Token, public sourceCode?: string) {
-    const errorMessage = ParseError.formatError(message, token, sourceCode);
-    super(errorMessage);
+export class ParseError extends DiagnosticError {
+  constructor(message: string, public token: Token, sourceCode?: string, code: string = 'PARSER_ERROR') {
+    const spanEndColumn = token.value ? token.column + token.value.length : token.column + 1;
+    super(
+      {
+        level: 'error',
+        code,
+        message,
+        span: {
+          start: { line: token.line, column: token.column },
+          end: { line: token.line, column: spanEndColumn },
+        },
+      },
+      sourceCode
+    );
     this.name = 'ParseError';
-  }
-  
-  private static formatError(message: string, token: Token, sourceCode?: string): string {
-    let errorMsg = `ParseError at line ${token.line}, column ${token.column}: ${message}`;
-    
-    if (sourceCode) {
-      const lines = sourceCode.split('\n');
-      const errorLine = lines[token.line - 1];
-      
-      if (errorLine) {
-        errorMsg += '\n\n';
-        errorMsg += `  ${token.line} | ${errorLine}\n`;
-        errorMsg += `      ${' '.repeat(token.column)}^`;
-        
-        // Add some context - show the token that caused the error
-        if (token.type !== TokenType.EOF) {
-          errorMsg += `\n\nFound: '${token.value}' (${TokenType[token.type]})`;
-        }
-      }
-    }
-    
-    return errorMsg;
   }
 }
 
@@ -157,6 +150,14 @@ export class Parser {
       
       if (this.match(TokenType.DO)) {
         return this.doWhileStatement();
+      }
+
+      if (this.match(TokenType.IN)) {
+        return this.contextStatement();
+      }
+
+      if (this.match(TokenType.AGENTS)) {
+        return this.agentsStatement();
       }
       
       if (this.match(TokenType.BREAK)) {
@@ -360,6 +361,74 @@ export class Parser {
     }
     
     return statements;
+  }
+
+  private contextStatement(): Statement {
+    this.consume(TokenType.CONTEXT, "Expected 'context' after 'in'");
+    const contextName = this.parseContextName("Expected context name after 'context'");
+    
+    this.consume(TokenType.LEFT_BRACE, "Expected '{' to start context body");
+    const body = this.blockStatement();
+    body.createScope = false;
+
+    let shiftTo: string | undefined;
+    if (this.match(TokenType.CONTEXT_ARROW)) {
+      shiftTo = this.parseContextName("Expected context name after '->'");
+    }
+
+    return new ContextStatement(contextName, body, shiftTo);
+  }
+
+  private parseContextName(errorMessage: string): string {
+    if (this.match(TokenType.STRING)) {
+      return this.previous().value;
+    }
+    if (this.match(TokenType.IDENTIFIER)) {
+      return this.previous().value;
+    }
+    throw new ParseError(errorMessage, this.peek(), this.sourceCode);
+  }
+
+  private agentsStatement(): Statement {
+    this.consume(TokenType.LEFT_BRACE, "Expected '{' after 'agents'");
+    const declarations: AgentDeclaration[] = [];
+
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      const nameToken = this.consume(TokenType.IDENTIFIER, 'Expected agent name');
+      this.consume(TokenType.COLON, "Expected ':' after agent name");
+      this.consume(TokenType.AGENT, "Expected 'Agent' keyword");
+      const config = this.parseAgentConfig();
+      declarations.push(new AgentDeclaration(nameToken.value, config));
+
+      if (this.match(TokenType.COMMA) || this.match(TokenType.SEMICOLON)) {
+        continue;
+      }
+    }
+
+    this.consume(TokenType.RIGHT_BRACE, "Expected '}' after agents block");
+    return new BlockStatement(declarations, false);
+  }
+
+  private parseAgentConfig(): Map<string, Expression> {
+    this.consume(TokenType.LEFT_BRACE, "Expected '{' to start agent configuration");
+    const config = new Map<string, Expression>();
+
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      const keyToken = this.consume(TokenType.IDENTIFIER, 'Expected configuration key');
+      this.consume(TokenType.COLON, "Expected ':' after configuration key");
+      const value = this.expression();
+      if (!value) {
+        throw new ParseError('Expected value in agent configuration', this.peek(), this.sourceCode);
+      }
+      config.set(keyToken.value, value);
+
+      if (this.match(TokenType.COMMA) || this.match(TokenType.SEMICOLON)) {
+        continue;
+      }
+    }
+
+    this.consume(TokenType.RIGHT_BRACE, "Expected '}' after agent configuration");
+    return config;
   }
 
   private expressionStatement(): Statement {
