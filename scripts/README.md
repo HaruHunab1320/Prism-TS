@@ -26,12 +26,8 @@ pnpm release:publish
 - Keeps versions in sync across packages
 - Generates changelogs automatically
 
-### Legacy Script (Manual Bumps)
+### Legacy Script (Removed)
 
-`scripts/bump-version.mjs` still exists for emergency/manual version changes, but it is **not** the standard workflow.
-
-```bash
-pnpm bump-version --package @prism-lang/core --type patch
-```
+The old manual bump script was removed to avoid conflicting with Changesets.
    
 These tools automatically handle workspace protocol replacement during publishing.

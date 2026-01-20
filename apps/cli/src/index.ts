@@ -351,7 +351,7 @@ async function runLLMCommand(args: string[]): Promise<void> {
   };
 
   if (parsed.options.stream) {
-    if (requestOptions.structuredOutput && requestOptions.structuredOutput !== false) {
+    if (parsed.options.structuredOutput !== false) {
       console.error('❌ Streaming mode requires --no-structured-output');
       process.exit(1);
       return;
