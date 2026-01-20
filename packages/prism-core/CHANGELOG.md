@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.0
+
+### Major Changes
+
+- 90722f0: Major runtime and language update: strict scoping, module system overhaul, diagnostics with spans, `do…while` support, confident property access fixes, and builtins refactor.
+
+### Patch Changes
+
+- Updated dependencies [90722f0]
+  - @prism-lang/llm@1.3.0
+
 ## 1.3.0
 
 ### Minor Changes
