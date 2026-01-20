@@ -12,11 +12,11 @@
     "typecheck": "turbo run typecheck",
     "dev": "turbo run dev --filter=@prism-lang/cli",
     "clean": "turbo run clean",
-    "release": "turbo run build && changeset publish",
+    "release": "pnpm turbo run build --filter=@prism-lang/core --filter=@prism-lang/validator --filter=@prism-lang/llm --filter=@prism-lang/cli --filter=@prism-lang/repl --filter=@prism-lang/confidence && changeset publish",
     "release:check": "changeset status --verbose",
     "release:version": "changeset version",
     "release:create": "changeset",
-    "release:publish": "pnpm build && changeset publish && git push --follow-tags"
+    "release:publish": "pnpm turbo run build --filter=@prism-lang/core --filter=@prism-lang/validator --filter=@prism-lang/llm --filter=@prism-lang/cli --filter=@prism-lang/repl --filter=@prism-lang/confidence && changeset publish && git push --follow-tags"
   },
   "keywords": [
     "llm",
