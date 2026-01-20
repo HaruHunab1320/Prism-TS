@@ -15,7 +15,7 @@
     "bump-version": "node ./scripts/bump-version.mjs",
     "release": "turbo run build && changeset publish",
     "release:check": "changeset status --verbose",
-    "version": "changeset version",
+    "release:version": "changeset version",
     "release:create": "changeset",
     "release:publish": "pnpm build && changeset publish && git push --follow-tags"
   },
