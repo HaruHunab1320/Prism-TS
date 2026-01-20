@@ -1,0 +1,35 @@
+{
+  "name": "@prism-lang/prism-agent",
+  "version": "0.1.0",
+  "description": "Single-machine CLI coding agent powered by Prism",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "prism-agent": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@prism-lang/core": "workspace:*",
+    "@prism-lang/llm": "workspace:*",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "ora": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "rimraf": "^5.0.5",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.3"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "license": "MIT"
+}

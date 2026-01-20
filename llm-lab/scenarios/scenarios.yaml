@@ -1,0 +1,872 @@
+customer_escalation_playbook:
+  id: "customer_escalation_playbook"
+  title: "Customer Escalation Playbook"
+  description: "Executive, analyst, and risk agents score a proposal before either executing autonomously or escalating to a board review depending on confidence bands."
+  structuredSpec:
+    goal: "Resolve a Sev-1 customer escalation using multi-agent review and uncertainty thresholds."
+    inputs:
+      -
+        name: "proposal"
+        type: "object"
+        description: "Remediation plan or decision under review."
+      -
+        name: "urgency"
+        type: "string"
+        values:
+          - "sev1"
+          - "sev2"
+          - "sev3"
+      -
+        name: "impact_estimate"
+        type: "number"
+        description: "Financial or customer impact estimate."
+    signals:
+      -
+        name: "executive_assessment"
+        source: "agents.executive"
+        confidence: ">=0.8 executes autonomously"
+      -
+        name: "impact_review"
+        source: "agents.analyst"
+        confidence: ">=0.75 indicates reliable impact sizing"
+      -
+        name: "risk_review"
+        source: "agents.risk"
+        confidence: ">=0.75 indicates mitigated risk"
+    decisionPoints:
+      -
+        name: "autonomy_gate"
+        logic: "uncertain if (~decision && ~impact && ~risk)"
+        outcomes:
+          high: "Auto execute or notify stakeholders"
+          medium: "Structured review package and conditional execution"
+          low: "Human/board escalation"
+    escalationPaths:
+      -
+        trigger: "low confidence or impact_estimate > 1_000_000"
+        destination: "Board meeting"
+        owners:
+          - "ceo"
+          - "cfo"
+          - "risk_officer"
+    outputs:
+      -
+        name: "escalation_result"
+        description: "Action to take plus presenters/monitoring hooks."
+  nlArtifacts:
+    tickets:
+      -
+        subject: "Sev-1 escalation: Fortune 500 outage fix needed"
+        body: "Customer Success flagged a Sev-1 escalation from Apex Systems. Their customer-facing APIs have been down for 47 minutes.\n- Latest remediation proposal attached (v3) but the executive sponsor wants confidence-backed sign-off.\n- Impact estimate: $2.4M ARR at risk if not resolved in the next hour.\nNeed an orchestrated decision: auto-execute if we're >0.8 confident, otherwise escalate to the board bridge."
+      -
+        subject: "Follow-up escalation readiness"
+        body: "Board meeting scheduled in 45 minutes. Need status on the Apex Systems incident, including confidence bands, before executives join the call."
+    dialogues:
+      -
+        -
+          speaker: "Support Lead"
+          text: "We’ve applied two mitigations but telemetry still shows partial failures. Do we trust the latest fix?"
+        -
+          speaker: "Executive Liaison"
+          text: "C-level stakeholders demand confirmation within 20 minutes. If risk is still high we must escalate."
+        -
+          speaker: "Risk Officer"
+          text: "My model says confidence is 0.72; not enough for autonomous execution."
+        -
+          speaker: "Ops Captain"
+          text: "Telemetry trace 8471 suggests the blast radius is limited now."
+        -
+          speaker: "Support Lead"
+          text: "Let’s run the multi-agent review and see if any path reaches 0.8 before paging the board."
+      -
+        -
+          speaker: "CEO Agent"
+          text: "Give me a binary answer: can we roll back without customer data loss?"
+        -
+          speaker: "Risk Analyst"
+          text: "Rollback carries moderate risk; best path is executing the new fix with strict monitoring."
+        -
+          speaker: "Governance Liaison"
+          text: "If we can’t cross the high-confidence gate we’ll default to human override."
+        -
+          speaker: "Support Lead"
+          text: "Understood—kicking off the escalation playbook now."
+  references:
+    -
+      source: "docs/AUTONOMOUS_COMPANY_GUIDE.md#HumanEscalation"
+      summary: "Guide shows an uncertain-if escalation path where high confidence executes autonomously, medium triggers structured review, and low calls a board meeting."
+      quote: "escalationPath = uncertain if (~decision && ~impact && ~risk) { high { ... } medium { ... } low { ... } }"
+launch_readiness_gate:
+  id: "launch_readiness_gate"
+  title: "Launch Readiness Gate"
+  description: "Production test checklist verifies infrastructure services, pattern demos, dashboards, and tracing before giving a go signal."
+  structuredSpec:
+    goal: "Certify the platform is production ready before a launch."
+    inputs:
+      -
+        name: "test_suite"
+        type: "string"
+        values:
+          - "full"
+          - "smoke"
+      -
+        name: "services"
+        type: "list"
+        description: "Infra services (etcd, postgres, redis, etc.)."
+      -
+        name: "dashboards"
+        type: "list"
+        description: "Grafana dashboards to verify."
+    signals:
+      -
+        name: "infra_health"
+        source: "infrastructure monitors"
+        confidence: ">=0.9 requires all services healthy"
+      -
+        name: "pattern_demo"
+        source: "patternEngine"
+        confidence: ">=0.85 indicates run success"
+      -
+        name: "observability_stack"
+        source: "telemetry"
+        confidence: ">=0.8 ensures metrics/traces flowing"
+    decisionPoints:
+      -
+        name: "infra_gate"
+        condition: "all services healthy"
+        pass: "run tests"
+        fail: "restart stack"
+      -
+        name: "test_gate"
+        condition: "test_suite results stable"
+        pass: "check monitoring"
+        fail: "file incident"
+      -
+        name: "launch_gate"
+        condition: "dashboards & tracing live"
+        pass: "GO"
+        fail: "HOLD + escalate"
+    escalationPaths:
+      -
+        trigger: "Observability offline or repeated test failures"
+        destination: "SRE on-call"
+        actions:
+          - "restart services"
+          - "open incident"
+    outputs:
+      -
+        name: "readiness_report"
+        description: "Checklist of gates, outstanding issues, GO/NOGO decision."
+  nlArtifacts:
+    tickets:
+      -
+        subject: "Readiness gate for EU launch"
+        body: "We need a GO/NO-GO call for tomorrow’s EU region rollout.\n- Control plane + etcd restarts completed, but Grafana alerts lagged.\n- Pattern demo suite passed once, failed once due to latency blip.\nPlease run the launch readiness orchestration and produce a report with any blockers."
+      -
+        subject: "Launch retro gating"
+        body: "Ops review flagged inconsistent metrics from Jaeger after last rollout. Update the readiness checklist output with telemetry drift notes."
+    dialogues:
+      -
+        -
+          speaker: "SRE"
+          text: "Infra checks are green now, but observability took 30s to recover. Do we count that as a fail?"
+        -
+          speaker: "Program Manager"
+          text: "Stakeholders want proof the dashboards stream live before we flip the switch."
+        -
+          speaker: "Control Plane Lead"
+          text: "Let’s run the gate pattern: if tests and telemetry are confident we recommend GO, otherwise HOLD."
+        -
+          speaker: "Compliance Liaison"
+          text: "Remember to capture evidence for SOC2 after the run."
+      -
+        -
+          speaker: "Platform Lead"
+          text: "Has the pattern demo been stable for the last three runs?"
+        -
+          speaker: "Telemetry Analyst"
+          text: "Two green, one yellow due to collector restart. Confidence is 0.81."
+        -
+          speaker: "Program Manager"
+          text: "If the final gate stays medium we’ll delay launch by one day."
+        -
+          speaker: "SRE"
+          text: "Copy—running readiness gate now and will attach the report."
+  references:
+    -
+      source: "PRODUCTION_TEST_STATUS.md#✅ Success Criteria"
+      summary: "Document lists the exact conditions required before declaring the system production ready."
+      quote: "Your production system is ready when: [x] All infrastructure services running ... [ ] Grafana dashboards show data ... [ ] Jaeger shows traces."
+security_review_chain:
+  id: "security_review_chain"
+  title: "Security Review with Escalation"
+  description: "Generated pattern composes primitives to gather security agent inputs, build consensus, enforce confidence thresholds, and escalate to a security architect as needed."
+  structuredSpec:
+    goal: "Review code or infrastructure changes for security risks before deployment."
+    inputs:
+      -
+        name: "change_request"
+        type: "object"
+        description: "Pull request or architecture diff."
+      -
+        name: "severity"
+        type: "string"
+        values:
+          - "low"
+          - "medium"
+          - "high"
+    signals:
+      -
+        name: "static_analysis"
+        source: "securityAgents"
+        confidence: ">=0.8 indicates safe"
+      -
+        name: "threat_model"
+        source: "threatModeler"
+        confidence: ">=0.85 indicates validated mitigations"
+      -
+        name: "compliance_review"
+        source: "complianceAgent"
+        confidence: ">=0.8 indicates policy alignment"
+    decisionPoints:
+      -
+        name: "consensus_gate"
+        condition: "consensus(securityResults, 0.8)"
+        pass: "threshold step"
+        fail: "escalate to security-architect"
+      -
+        name: "threshold_gate"
+        condition: "confidence >= 0.9"
+        pass: "approve"
+        fail: "escalate"
+    escalationPaths:
+      -
+        trigger: "threshold not met"
+        destination: "security-architect"
+        action: "manual review"
+    outputs:
+      -
+        name: "security_report"
+        description: "Decision + mitigations + escalations"
+  nlArtifacts:
+    tickets:
+      -
+        subject: "Security review needed: Data egress proxy patch"
+        body: "Major PR modifies the egress proxy (TLS termination + logging). Severity HIGH.\nSecurity wants consensus and a 0.9 threshold before merge. Run the orchestration and escalate if we fall short."
+      -
+        subject: "Prod hotfix review: secrets service"
+        body: "Emergency change to secrets service requested. Confirm static analysis + compliance pass and document escalation path if target confidence isn’t met."
+    dialogues:
+      -
+        -
+          speaker: "Security Analyst"
+          text: "Static analysis looks fine, but threat modeling flagged a downgrade risk."
+        -
+          speaker: "Compliance Lead"
+          text: "Controls mapping is incomplete; we need proof this meets SOC2."
+        -
+          speaker: "Security Architect"
+          text: "If consensus confidence stays below 0.9 we’ll do a manual review."
+        -
+          speaker: "Dev Lead"
+          text: "I can ship mitigations if you tell me what’s missing."
+      -
+        -
+          speaker: "Security Architect"
+          text: "We’re at 0.86 confidence. What’s holding us back?"
+        -
+          speaker: "Threat Modeler"
+          text: "Need proof of downgrade mitigation. Without it, I recommend escalating."
+        -
+          speaker: "Compliance Lead"
+          text: "Agreed—without evidence we can’t certify the change."
+        -
+          speaker: "Security Architect"
+          text: "Okay, escalation path engaged."
+  references:
+    -
+      source: "ARCHITECTURE_V2.md#Pattern Generation & Execution"
+      summary: "Architecture doc walks through composing a SecurityReview pattern with consensus and escalation primitives."
+      quote: "@name SecurityReview ... goal: \"Security review with escalation\" ... final = validated ~> 0.9 ? validated : escalate(\"security-architect\")"
+runway_finance_monitoring:
+  id: "runway_finance_monitoring"
+  title: "Runway Monitoring & Cashflow Actions"
+  description: "Financial agents monitor runway confidence, trigger revenue acceleration tasks, or convene emergency meetings when uncertainty spikes."
+  structuredSpec:
+    goal: "Continuously monitor company runway and trigger interventions based on confidence."
+    inputs:
+      -
+        name: "cashflow"
+        type: "object"
+        description: "Cash balance, burn, runway in months."
+      -
+        name: "receivables"
+        type: "object"
+        description: "Outstanding invoices and probabilities."
+    signals:
+      -
+        name: "runway_confidence"
+        source: "finance agents"
+        confidence: ">=0.9 indicates reliable runway projection"
+      -
+        name: "forecast"
+        source: "analyst.forecastCashflow"
+        confidence: ">=0.8 indicates trustworthy forecast"
+    decisionPoints:
+      -
+        name: "runway_gate"
+        logic: "uncertain if (cashflow.runway ~> 0.9)"
+        outcomes:
+          high: "execute playbooks"
+          medium: "investigate deeper"
+          low: "board meeting"
+    escalationPaths:
+      -
+        trigger: "low confidence runway"
+        destination: "Board meeting"
+        actions:
+          - "analyst briefing"
+          - "risk worst-case analysis"
+    outputs:
+      -
+        name: "financial_health"
+        description: "Summary of cashflow, actions taken, health label."
+  nlArtifacts:
+    tickets:
+      -
+        subject: "Runway alert: Burn accelerated last week"
+        body: "Finance bot noticed burn rate spiking 18% WoW. Receivables slipped, runway confidence now 0.58.\nNeed orchestrated actions: revenue acceleration vs cost controls vs board briefing."
+      -
+        subject: "Board prep: runway sensitivity"
+        body: "Board wants scenarios for 6/9/12 month runway under different burn profiles. Include confidence commentary per action."
+    dialogues:
+      -
+        -
+          speaker: "Finance Analyst"
+          text: "Forecast says 7 months runway but confidence is shaky."
+        -
+          speaker: "CEO Agent"
+          text: "Do we trigger the revenue push or wait for collections to land?"
+        -
+          speaker: "Risk Watch"
+          text: "If confidence stays low we must brief the board tonight."
+        -
+          speaker: "Ops Lead"
+          text: "I can implement cost controls immediately if requested."
+      -
+        -
+          speaker: "Finance Analyst"
+          text: "New receivables report bumped confidence to 0.69."
+        -
+          speaker: "CFO Agent"
+          text: "Still below our 0.75 target; consider soft cost freezes."
+        -
+          speaker: "CEO Agent"
+          text: "Let’s see what the orchestration recommends before the investor call."
+  references:
+    -
+      source: "docs/AUTONOMOUS_COMPANY_GUIDE.md#Monitoring & Governance"
+      summary: "Guide showcases a runwayActions uncertain-if block that branches between proactive actions, deeper investigation, and board meetings."
+      quote: "runwayActions = uncertain if (cashflow.runway ~> 0.9) { high { ... } medium { ... } low { agents.governance.callBoardMeeting(\"urgent_financial\") } }"
+telemetry_signal_triage:
+  id: "telemetry_signal_triage"
+  title: "Telemetry Signal Triage"
+  description: "Observability package instruments pattern execution and agent calls so critical alerts can be prioritized with tracing metadata."
+  structuredSpec:
+    goal: "Ingest telemetry signals, prioritize critical alerts, and emit diagnostics."
+    inputs:
+      -
+        name: "signals"
+        type: "list"
+        description: "Telemetry events with severity + confidence."
+    signals:
+      -
+        name: "otel_traces"
+        source: "@parallax/telemetry"
+        confidence: ">=0.8 ensures tracing coverage"
+      -
+        name: "alert_stream"
+        source: "telemetry.signals()"
+        confidence: ">=0.75 indicates reliable severity tags"
+    decisionPoints:
+      -
+        name: "severity_filter"
+        condition: "signal.severity == \"critical\""
+        action: "prioritize list"
+      -
+        name: "info_logging"
+        condition: "non-critical signals"
+        action: "diagnostics.info"
+    escalationPaths:
+      -
+        trigger: "Multiple critical signals"
+        destination: "on-call"
+        actions:
+          - "page SRE"
+          - "attach trace IDs"
+    outputs:
+      -
+        name: "telemetry_summary"
+        description: "Counts plus prioritized critical entries."
+  nlArtifacts:
+    tickets:
+      -
+        subject: "Telemetry stream noisy—need prioritization"
+        body: "PagerDuty fired twice due to conflicting alerts. Need prioritized telemetry summary with confidence for the incident commander."
+      -
+        subject: "Observability catch-up"
+        body: "Yesterday’s incident review flagged missing severity annotations. Generate telemetry summary showing how confident we are in each signal."
+    dialogues:
+      -
+        -
+          speaker: "Observability Lead"
+          text: "We’re drowning in warnings. Which ones are truly critical?"
+        -
+          speaker: "SRE On-call"
+          text: "Give me a list sorted by severity and confidence so I can focus the response."
+        -
+          speaker: "Telemetry Bot"
+          text: "I can provide trace IDs for the top alerts once prioritized."
+      -
+        -
+          speaker: "Incident Commander"
+          text: "How many alerts are we treating as P1 right now?"
+        -
+          speaker: "Observability Lead"
+          text: "Three, but confidence ranges from 0.6 to 0.9."
+        -
+          speaker: "Incident Commander"
+          text: "Run the triage pattern and only escalate those above 0.8."
+  references:
+    -
+      source: "docs/observability/opentelemetry-setup.md#Instrumentation"
+      summary: "Observability guide details automatic instrumentation for HTTP, gRPC, and pattern execution with @parallax/telemetry."
+      quote: "The platform automatically instruments: HTTP requests, gRPC calls, pattern execution, agent communication."
+fraud_triage_matrix:
+  id: "fraud_triage_matrix"
+  title: "Fraud Triage Matrix"
+  description: "Risk, machine-learning, and compliance agents score suspicious transactions before escalating to humans."
+  structuredSpec:
+    goal: "Identify and triage fraudulent transactions using multi-agent voting and escalation."
+    inputs:
+      -
+        name: "transactions"
+        type: "list"
+        description: "Batch of transactions with metadata and confidence."
+      -
+        name: "risk_policy"
+        type: "object"
+        description: "Thresholds for auto-freeze vs manual review."
+    signals:
+      -
+        name: "ml_score"
+        source: "agents.ml"
+        confidence: ">=0.85 indicates strong fraud signal"
+      -
+        name: "rules_engine"
+        source: "agents.rules"
+        confidence: ">=0.75 indicates policy violation"
+      -
+        name: "compliance_review"
+        source: "agents.compliance"
+        confidence: ">=0.8 indicates regulatory concern"
+    decisionPoints:
+      -
+        name: "triage_gate"
+        logic: "uncertain if (~ml_score && ~rules_engine)"
+        outcomes:
+          high: "Auto freeze account + notify compliance"
+          medium: "Queue for compliance review with risk summary"
+          low: "Log and monitor"
+    escalationPaths:
+      -
+        trigger: "High confidence fraud combined with compliance flag"
+        destination: "fraud_bridge"
+        actions:
+          - "page human investigator"
+          - "file SAR draft"
+    outputs:
+      -
+        name: "fraud_actions"
+        description: "List of frozen accounts, queued investigations, and monitoring notes."
+  nlArtifacts:
+    tickets:
+      -
+        subject: "Spike in card-not-present fraud"
+        body: "Risk team detected anomalies from LATAM merchants. Run fraud triage now to decide auto-freeze vs manual review for 42 accounts."
+      -
+        subject: "Weekend fraud sweep"
+        body: "Weekend transactions show elevated ML scores. Need a nightly triage summary with confidence per merchant."
+    dialogues:
+      -
+        -
+          speaker: "Fraud Analyst"
+          text: "ML score is 0.92 but compliance is nervous about false positives."
+        -
+          speaker: "Risk Lead"
+          text: "If both ML and rules agree at high confidence, we freeze automatically."
+        -
+          speaker: "Compliance Officer"
+          text: "Log every auto-freeze with rationale for regulators."
+      -
+        -
+          speaker: "Fraud Bot"
+          text: "Three merchants triggered our high-risk rules in the last hour."
+        -
+          speaker: "Risk Lead"
+          text: "Send them to manual review unless the triage matrix hits high confidence."
+        -
+          speaker: "Compliance Officer"
+          text: "We need evidence to show SAR filings if required."
+  references:
+    -
+      source: "docs/archive/COMPLETE_IMPLEMENTATION_ROADMAP_ARCHIVED.md#@parallax-patternsfraud-detection"
+      summary: "Roadmap lists a fraud-detection pattern that aggregates ML, analysis, and compliance capabilities."
+      quote: "\"@parallax-patterns/fraud-detection\" ... requiredCapabilities: [\"fraud\", \"ml\", \"analysis\"]"
+compliance_audit_chain:
+  id: "compliance_audit_chain"
+  title: "Compliance Audit Chain"
+  description: "Legal, compliance, and audit agents collaborate on reviews with confidence thresholds and escalation hooks."
+  structuredSpec:
+    goal: "Perform automated compliance audits with multi-agent validation before notifying humans."
+    inputs:
+      -
+        name: "policy_area"
+        type: "string"
+        values:
+          - "gdpr"
+          - "hipaa"
+          - "sox"
+      -
+        name: "evidence_package"
+        type: "object"
+        description: "Artifacts gathered for the audit."
+    signals:
+      -
+        name: "legal_review"
+        source: "agents.legal"
+        confidence: ">=0.8 indicates policy alignment"
+      -
+        name: "control_validation"
+        source: "agents.audit"
+        confidence: ">=0.8 indicates control effectiveness"
+      -
+        name: "compliance_score"
+        source: "agents.compliance"
+        confidence: ">=0.85 indicates clean audit"
+    decisionPoints:
+      -
+        name: "audit_gate"
+        logic: "uncertain if (~legal_review && ~control_validation)"
+        outcomes:
+          high: "auto certify"
+          medium: "request remediations"
+          low: "escalate to compliance officer"
+    escalationPaths:
+      -
+        trigger: "low confidence or repeated failures"
+        destination: "compliance_officer"
+        actions:
+          - "schedule review"
+          - "attach evidence_package"
+    outputs:
+      -
+        name: "audit_report"
+        description: "Certification status, remediation checklist, escalation info."
+  nlArtifacts:
+    tickets:
+      -
+        subject: "Quarterly GDPR audit package"
+        body: "Legal needs an automated compliance sweep for EU data residency controls. Attach remediation requests if confidence drops below 0.8."
+      -
+        subject: "SOX evidence refresh"
+        body: "Audit partner asked for updated control evidence on logging + access review. Run the compliance chain and export the remediation checklist."
+    dialogues:
+      -
+        -
+          speaker: "Compliance Bot"
+          text: "Control validation looks good except for the new logging cluster."
+        -
+          speaker: "Legal Advisor"
+          text: "If we can’t reach 0.85 confidence we’ll schedule a human review."
+        -
+          speaker: "Audit Lead"
+          text: "Document any medium-confidence findings for remediation follow-up."
+      -
+        -
+          speaker: "Legal Advisor"
+          text: "What’s our confidence that policy updates shipped last week?"
+        -
+          speaker: "Compliance Bot"
+          text: "0.78—control evidence from region A is missing."
+        -
+          speaker: "Audit Lead"
+          text: "Okay, route it through the human review path."
+  references:
+    -
+      source: "docs/AUTONOMOUS_COMPANY_GUIDE.md#Legal & Compliance"
+      summary: "Guide outlines automated legal/compliance agents handling contract review and compliance checks."
+      quote: "capabilities = ['contract-review', 'compliance-check', 'risk-assessment'];"
+    -
+      source: "PRODUCTION_DEPLOYMENT_CHECKLIST.md#Security"
+      summary: "Checklist emphasizes GDPR/privacy compliance milestones before launch."
+      quote: "- GDPR/privacy compliance"
+data_egress_review:
+  id: "data_egress_review"
+  title: "Data Egress Review"
+  description: "Security and governance agents vet data egress requests with policy checks and human escalation."
+  structuredSpec:
+    goal: "Review outbound data transfers to ensure they comply with security and privacy policies."
+    inputs:
+      -
+        name: "egress_request"
+        type: "object"
+        description: "Dataset metadata, destination, requester justification."
+      -
+        name: "classification"
+        type: "string"
+        values:
+          - "public"
+          - "internal"
+          - "restricted"
+    signals:
+      -
+        name: "security_review"
+        source: "agents.security"
+        confidence: ">=0.85 indicates safe transfer"
+      -
+        name: "privacy_check"
+        source: "agents.privacy"
+        confidence: ">=0.8 indicates privacy compliance"
+      -
+        name: "governance_policy"
+        source: "agents.governance"
+        confidence: ">=0.8 indicates policy alignment"
+    decisionPoints:
+      -
+        name: "egress_gate"
+        logic: "uncertain if (~security_review && ~privacy_check)"
+        outcomes:
+          high: "approve with logging"
+          medium: "apply redaction & re-run checks"
+          low: "escalate to governance board"
+    escalationPaths:
+      -
+        trigger: "low confidence or restricted classification"
+        destination: "governance_board"
+        actions:
+          - "create briefing"
+          - "attach mitigations"
+    outputs:
+      -
+        name: "egress_decision"
+        description: "Approve/deny plus conditions and audit trail."
+  nlArtifacts:
+    tickets:
+      -
+        subject: "Data egress request: Research vendor export"
+        body: "Research wants to export anonymized datasets to an external vendor. Ensure security/privacy approvals are confident before granting access."
+      -
+        subject: "Follow-up on egress exception"
+        body: "Last week’s exception is expiring; rerun the egress review with updated classification and attach confidence bands for governance."
+    dialogues:
+      -
+        -
+          speaker: "Security Analyst"
+          text: "Classification is restricted; I’m not comfortable approving without redaction."
+        -
+          speaker: "Governance Chair"
+          text: "Let’s see what the policy agent says and escalate if either signal is low."
+        -
+          speaker: "Privacy Officer"
+          text: "Remember to capture audit logs for the transfer."
+      -
+        -
+          speaker: "Research Lead"
+          text: "We need the data out before Monday. What’s blocking us?"
+        -
+          speaker: "Policy Agent"
+          text: "Privacy confidence is 0.62 because justification is thin."
+        -
+          speaker: "Governance Chair"
+          text: "In that case we escalate to the board for sign-off."
+  references:
+    -
+      source: "PRODUCTION_DEPLOYMENT_CHECKLIST.md#Security"
+      summary: "Checklist calls out security/privacy checks before deployment."
+      quote: "Security review complete · GDPR/privacy compliance"
+    -
+      source: "ARCHITECTURE_V2.md#Pattern Generation & Execution"
+      summary: "Security review pattern demonstrates consensus + escalation flows for governance decisions."
+      quote: "goal: \"Security review with escalation\"... escalate(\"security-architect\")"
+incident_response_bridge:
+  id: "incident_response_bridge"
+  title: "Incident Response Bridge"
+  description: "Telemetry, incident commander, and SRE agents coordinate mitigations with uncertain branching and escalation."
+  structuredSpec:
+    goal: "Coordinate automated incident response with clear escalation to humans when uncertainty is high."
+    inputs:
+      -
+        name: "incident_signal"
+        type: "object"
+        description: "Alert payload, severity, affected services."
+      -
+        name: "runbook"
+        type: "string"
+        description: "Runbook identifier or remediation plan."
+    signals:
+      -
+        name: "telemetry_view"
+        source: "telemetry"
+        confidence: ">=0.8 indicates reliable telemetry"
+      -
+        name: "impact_assessment"
+        source: "agents.analyst"
+        confidence: ">=0.75 indicates bounded impact"
+      -
+        name: "mitigation_effectiveness"
+        source: "agents.sre"
+        confidence: ">=0.8 indicates fix applied"
+    decisionPoints:
+      -
+        name: "response_gate"
+        logic: "uncertain if (~telemetry_view && ~impact_assessment)"
+        outcomes:
+          high: "auto run mitigation + notify stakeholders"
+          medium: "engage incident commander + partial mitigation"
+          low: "page full incident response team"
+    escalationPaths:
+      -
+        trigger: "low confidence or critical severity"
+        destination: "incident_bridge"
+        actions:
+          - "page on-call"
+          - "open war room"
+          - "attach traces"
+    outputs:
+      -
+        name: "incident_report"
+        description: "Mitigations executed, outstanding risks, escalation state."
+  nlArtifacts:
+    tickets:
+      -
+        subject: "P1 incident bridge activation"
+        body: "Control-plane latency spiked to 900ms. Initiate the incident response bridge to decide if we auto-mitigate or page the entire on-call crew."
+      -
+        subject: "Retroactive incident drill"
+        body: "Run the incident bridge against last week’s simulated outage to ensure telemetry + mitigation hooks behave as expected."
+    dialogues:
+      -
+        -
+          speaker: "Telemetry Bot"
+          text: "Confidence in the signal is 0.82; looks real."
+        -
+          speaker: "Incident Commander"
+          text: "If mitigation confidence stays low we pull everyone into the war room."
+        -
+          speaker: "SRE"
+          text: "Mitigation script is ready but untested this week."
+      -
+        -
+          speaker: "Incident Commander"
+          text: "Status update?"
+        -
+          speaker: "SRE"
+          text: "Latency still high, mitigation effectiveness confidence 0.51."
+        -
+          speaker: "Comms Lead"
+          text: "Customers are asking for ETA."
+        -
+          speaker: "Incident Commander"
+          text: "Escalating to full bridge now."
+  references:
+    -
+      source: "ROADMAP.md#Production Hardening"
+      summary: "Roadmap highlights automated incident response as a goal under production hardening."
+      quote: "- [ ] Automated incident response"
+    -
+      source: "PRODUCTION_TEST_STATUS.md#Run Pattern Demo"
+      summary: "Production checklist suggests running pattern demos to generate metrics/traces useful during incidents."
+      quote: "This will: Execute all patterns · Generate metrics · Create traces"
+experimentation_loop:
+  id: "experimentation_loop"
+  title: "Experimentation Orchestration"
+  description: "Meta-orchestration agents compose primitives to explore hypotheses with telemetry feedback."
+  structuredSpec:
+    goal: "Generate, evaluate, and deploy experiments using primitive-based orchestration."
+    inputs:
+      -
+        name: "hypothesis"
+        type: "string"
+        description: "Experiment hypothesis or objective."
+      -
+        name: "metrics"
+        type: "list"
+        description: "Success metrics to monitor."
+    signals:
+      -
+        name: "pattern_generator"
+        source: "@parallax/pattern-sdk"
+        confidence: ">=0.8 indicates viable pattern composition"
+      -
+        name: "telemetry_feedback"
+        source: "telemetry"
+        confidence: ">=0.75 indicates trustworthy metrics"
+    decisionPoints:
+      -
+        name: "pattern_selection"
+        condition: "generator.compose(...)"
+        pass: "register + execute pattern"
+        fail: "fallback to manual design"
+      -
+        name: "go_no_go"
+        logic: "uncertain if (~telemetry_feedback)"
+        outcomes:
+          high: "promote experiment"
+          medium: "run additional cycles"
+          low: "sunset experiment"
+    escalationPaths:
+      -
+        trigger: "low confidence telemetry or high risk"
+        destination: "product_council"
+        actions:
+          - "share metrics"
+          - "recommend pivot"
+    outputs:
+      -
+        name: "experiment_catalog"
+        description: "Registered patterns, metrics, promotion decisions."
+  nlArtifacts:
+    tickets:
+      -
+        subject: "New onboarding experiment proposal"
+        body: "Product wants to test a guided onboarding flow. Need the experimentation orchestrator to generate a pattern, monitor metrics, and recommend promote/pivot/sunset."
+      -
+        subject: "Experiment sunset review"
+        body: "Conversion dropped 2%. Run the experimentation loop to decide if we pivot, collect more data, or sunset entirely."
+    dialogues:
+      -
+        -
+          speaker: "Product Lead"
+          text: "Our hypothesis is conversion improves 10%. Can we automate the experiment lifecycle?"
+        -
+          speaker: "Meta-Agent"
+          text: "I’ll compose a pattern from primitives and watch telemetry for promotion confidence."
+        -
+          speaker: "Data Scientist"
+          text: "Please log metrics per cohort so we can validate uplift."
+      -
+        -
+          speaker: "Product Lead"
+          text: "Telemetry shows mixed results. Promote or keep iterating?"
+        -
+          speaker: "Meta-Agent"
+          text: "Confidence is 0.64; we need another cycle."
+        -
+          speaker: "Growth PM"
+          text: "Alright, run another loop and send me the catalog."
+  references:
+    -
+      source: "docs/META_ORCHESTRATION.md"
+      summary: "Meta-orchestration doc describes primitive-based generation, pattern marketplaces, and learning loops."
+      quote: "Meta-agents learn from deployment outcomes ... share successful patterns across deployments."
