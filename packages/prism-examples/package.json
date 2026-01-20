@@ -13,8 +13,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@prism/core": "workspace:*",
-    "@prism/cli": "workspace:*"
+    "@prism-lang/core": "workspace:*",
+    "@prism-lang/cli": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
