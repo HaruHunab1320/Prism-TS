@@ -272,6 +272,41 @@ def load_wikitext(split: str = "train", max_samples: Optional[int] = None) -> Li
         return load_tiny_shakespeare(max_samples)
 
 
+def load_openwebtext(split: str = "train", max_samples: Optional[int] = None) -> List[str]:
+    """
+    Load OpenWebText dataset - same data GPT-2 was trained on.
+
+    This is ~38GB total, so we use streaming and limit samples.
+    """
+    try:
+        from datasets import load_dataset
+
+        print(f"Loading OpenWebText ({split})...")
+
+        # Use streaming to avoid downloading entire dataset
+        dataset = load_dataset("openwebtext", split="train", streaming=True)
+
+        texts = []
+        for i, item in enumerate(dataset):
+            if max_samples and i >= max_samples:
+                break
+
+            text = item["text"]
+            if len(text.strip()) > 100:  # Filter short texts
+                texts.append(text)
+
+            if i % 10000 == 0 and i > 0:
+                print(f"  Loaded {i:,} samples...")
+
+        print(f"  Total: {len(texts):,} samples")
+        return texts
+
+    except Exception as e:
+        print(f"Could not load OpenWebText: {e}")
+        print("Falling back to WikiText...")
+        return load_wikitext(split, max_samples)
+
+
 class DataLoader:
     """
     DataLoader that yields batches for training.
@@ -306,6 +341,8 @@ def create_train_dataloader(
         texts = load_wikitext("train", max_samples)
     elif dataset_name == "shakespeare":
         texts = load_tiny_shakespeare(max_samples)
+    elif dataset_name == "openwebtext":
+        texts = load_openwebtext("train", max_samples)
     else:
         raise ValueError(f"Unknown dataset: {dataset_name}")
 
@@ -325,6 +362,10 @@ def create_eval_dataloader(
         texts = load_wikitext("validation", max_samples)
     elif dataset_name == "shakespeare":
         texts = load_tiny_shakespeare(max_samples)
+    elif dataset_name == "openwebtext":
+        # OpenWebText has no validation split, use WikiText validation instead
+        print("Note: Using WikiText validation for OpenWebText training evaluation")
+        texts = load_wikitext("validation", max_samples)
     else:
         raise ValueError(f"Unknown dataset: {dataset_name}")
 
