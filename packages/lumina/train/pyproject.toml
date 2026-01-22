@@ -1,0 +1,50 @@
+[project]
+name = "lumina-train"
+version = "0.1.0"
+description = "Training infrastructure for Lumina - superposition-native LLM architecture"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Prism Team"}
+]
+keywords = ["mlx", "llm", "uncertainty", "confidence", "transformer"]
+
+dependencies = [
+    "mlx>=0.16.0",
+    "mlx-lm>=0.16.0",
+    "numpy>=1.24.0",
+    "tqdm>=4.65.0",
+    "datasets>=2.14.0",
+    "transformers>=4.35.0",  # For tokenizers
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+viz = [
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+]
+
+[project.scripts]
+lumina-train = "lumina_train.train:main"
+lumina-eval = "lumina_train.evaluate:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "N", "W"]
