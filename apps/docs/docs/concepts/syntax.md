@@ -132,6 +132,20 @@ a ** b   // Exponentiation
 
 // Unary operators
 -x       // Negation
++x       // Unary plus (converts to number)
+
+// Increment/Decrement operators
+i++      // Post-increment (returns value, then increments)
+i--      // Post-decrement (returns value, then decrements)
+++i      // Pre-increment (increments, then returns value)
+--i      // Pre-decrement (decrements, then returns value)
+
+// Example usage
+counter = 0
+print(counter++)  // Prints 0, counter is now 1
+print(++counter)  // Prints 2, counter is now 2
+print(counter--)  // Prints 2, counter is now 1
+print(--counter)  // Prints 0, counter is now 0
 ```
 
 ### Comparison Operators
@@ -256,6 +270,74 @@ for i = 0; i < 100; i = i + 1 {
     continue // Skip to next iteration
   }
   // process odd numbers
+}
+```
+
+### Exception Handling
+
+Prism supports try/catch/finally for handling errors and ensuring cleanup:
+
+```prism
+// Basic try/catch
+try {
+  result = riskyOperation()
+  processResult(result)
+} catch (error) {
+  console.error("Operation failed:", error)
+}
+
+// Try/catch/finally - finally always executes
+try {
+  connection = openConnection()
+  data = fetchData(connection)
+  return data
+} catch (error) {
+  console.error("Failed to fetch data:", error)
+  return null
+} finally {
+  // Cleanup - runs whether or not an error occurred
+  closeConnection(connection)
+}
+
+// Catching specific error handling
+try {
+  user = await fetchUser(userId)
+  profile = await fetchProfile(user.id)
+} catch (error) {
+  if (error.code == "NOT_FOUND") {
+    return createDefaultProfile()
+  } else if (error.code == "NETWORK_ERROR") {
+    console.warn("Network issue, retrying...")
+    return await retryWithBackoff(() => fetchProfile(user.id))
+  }
+  // Re-throw unknown errors
+  throw error
+}
+
+// Try/catch with async/await
+async function safeApiCall(url) {
+  try {
+    response = await fetch(url)
+    data = await response.json()
+    return data ~> 0.95
+  } catch (error) {
+    console.error("API call failed:", error)
+    return null ~> 0.0
+  }
+}
+
+// Nested try/catch for granular error handling
+try {
+  config = loadConfig()
+  try {
+    data = parseData(config.input)
+  } catch (parseError) {
+    console.warn("Parse failed, using defaults")
+    data = defaultData
+  }
+  processData(data)
+} catch (error) {
+  console.error("Fatal error:", error)
 }
 ```
 
@@ -461,9 +543,9 @@ mixed = await Promise.all([
 // Delay/sleep functions
 async function delayedOperation() {
   console.log("Starting...")
-  await delay(1000)  // Wait 1 second
+  await delay(1000)  // Wait 1 second (1000ms)
   console.log("...continued after delay")
-  
+
   await sleep(500)   // sleep is an alias for delay
   return "completed"
 }
@@ -476,16 +558,62 @@ async function processItems(items) {
   }
 }
 
-// Error handling (when try/catch is available)
-// async function safeOperation() {
-//   try {
-//     result = await riskyOperation()
-//     return result
-//   } catch (error) {
-//     console.error("Operation failed:", error)
-//     return null
-//   }
-// }
+// Async error handling with try/catch
+async function safeOperation() {
+  try {
+    result = await riskyOperation()
+    return result ~> 0.95
+  } catch (error) {
+    console.error("Operation failed:", error)
+    return null ~> 0.0
+  } finally {
+    console.log("Operation completed")
+  }
+}
+
+// Retry pattern with delay
+async function fetchWithRetry(url, maxRetries) {
+  let attempts = 0
+  while (attempts < maxRetries) {
+    try {
+      return await fetch(url)
+    } catch (error) {
+      attempts++
+      if (attempts < maxRetries) {
+        console.warn("Retrying in 1 second...")
+        await delay(1000 * attempts)  // Exponential backoff
+      }
+    }
+  }
+  throw "Max retries exceeded"
+}
+
+// Debounce - delays execution until after wait period with no new calls
+debouncedSearch = debounce(500)  // Create 500ms debouncer
+// Usage: debouncedSearch(searchFunction)
+
+// Timeout pattern
+async function withTimeout(operation, timeoutMs) {
+  result = null
+  timedOut = false
+
+  // Start timer
+  setTimeout = async () => {
+    await delay(timeoutMs)
+    timedOut = true
+  }
+
+  // Race between operation and timeout
+  [opResult, _] = await Promise.all([
+    operation(),
+    setTimeout()
+  ])
+
+  if (timedOut && !opResult) {
+    throw "Operation timed out"
+  }
+  return opResult
+}
 ```
 
 ## Data Structures

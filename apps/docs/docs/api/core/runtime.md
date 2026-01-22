@@ -598,6 +598,219 @@ smallest = min(10, 5, 20, 15);
 // Returns: 5
 ```
 
+### Async Functions
+
+#### delay()
+
+```typescript
+delay(milliseconds: number): Promise<void>
+```
+
+Pauses execution for the specified number of milliseconds. Returns a promise that resolves after the delay.
+
+**Example:**
+```prism
+async function slowOperation() {
+  console.log("Starting...")
+  await delay(2000)  // Wait 2 seconds
+  console.log("Done!")
+}
+
+// Retry with exponential backoff
+async function retryWithBackoff(operation, maxRetries) {
+  for i = 0; i < maxRetries; i++ {
+    try {
+      return await operation()
+    } catch (e) {
+      await delay(1000 * (2 ** i))  // 1s, 2s, 4s...
+    }
+  }
+}
+```
+
+#### sleep()
+
+```typescript
+sleep(milliseconds: number): Promise<void>
+```
+
+Alias for `delay()`. Pauses execution for the specified duration.
+
+**Example:**
+```prism
+await sleep(500)  // Same as await delay(500)
+```
+
+#### debounce()
+
+```typescript
+debounce(waitMs: number): Function
+```
+
+Creates a debounced wrapper that delays invoking a function until after `waitMs` milliseconds have elapsed since the last call. Useful for rate-limiting user input handlers.
+
+**Example:**
+```prism
+// Create a debounced search function
+searchDebouncer = debounce(300)
+
+// In event handler
+onSearchInput = (query) => {
+  searchDebouncer(() => {
+    results = performSearch(query)
+    updateUI(results)
+  })
+}
+
+// Only executes 300ms after the user stops typing
+```
+
+### Collection Functions
+
+#### sortBy()
+
+```typescript
+sortBy(key: string, direction?: "asc" | "desc"): Function
+```
+
+Creates a function that sorts an array of objects by the specified key. Returns a higher-order function for use in pipelines.
+
+**Parameters:**
+- `key`: The property name to sort by
+- `direction`: Sort direction - `"asc"` (default) or `"desc"`
+
+**Example:**
+```prism
+users = [
+  {name: "Alice", score: 85},
+  {name: "Bob", score: 92},
+  {name: "Charlie", score: 78}
+]
+
+// Create sorter functions
+byScoreDesc = sortBy("score", "desc")
+byName = sortBy("name")
+
+// Apply sorting
+rankedUsers = byScoreDesc(users)
+// [{name: "Bob", score: 92}, {name: "Alice", score: 85}, {name: "Charlie", score: 78}]
+
+alphabetical = byName(users)
+// [{name: "Alice", ...}, {name: "Bob", ...}, {name: "Charlie", ...}]
+
+// Use in pipeline
+result = users |> sortBy("score", "desc")(_) |> map(u => u.name)
+// ["Bob", "Alice", "Charlie"]
+```
+
+#### groupBy()
+
+```typescript
+groupBy(key: string | Function): Function
+```
+
+Creates a function that groups an array of objects by the specified key or function. Returns an object with keys for each group.
+
+**Parameters:**
+- `key`: Property name to group by, or a function that returns the group key
+
+**Example:**
+```prism
+items = [
+  {name: "Apple", category: "fruit", price: 1.5},
+  {name: "Banana", category: "fruit", price: 0.5},
+  {name: "Carrot", category: "vegetable", price: 0.8},
+  {name: "Broccoli", category: "vegetable", price: 1.2}
+]
+
+// Group by property
+byCategory = groupBy("category")
+grouped = byCategory(items)
+// {
+//   fruit: [{name: "Apple", ...}, {name: "Banana", ...}],
+//   vegetable: [{name: "Carrot", ...}, {name: "Broccoli", ...}]
+// }
+
+// Group by computed value
+byPriceRange = groupBy(item => item.price > 1 ? "expensive" : "cheap")
+priceGrouped = byPriceRange(items)
+// {
+//   expensive: [{name: "Apple", ...}, {name: "Broccoli", ...}],
+//   cheap: [{name: "Banana", ...}, {name: "Carrot", ...}]
+// }
+
+// Use in pipeline
+result = items |> groupBy("category")(_)
+```
+
+### Confidence Functions
+
+#### confidence()
+
+```typescript
+confidence(threshold: number): Function
+```
+
+Creates a function that wraps another function's return value with the specified confidence level. Useful for creating confidence-aware processing pipelines.
+
+**Parameters:**
+- `threshold`: Confidence value between 0 and 1 to attach to results
+
+**Example:**
+```prism
+// Wrap a function to add confidence to its output
+highConfidence = confidence(0.95)
+mediumConfidence = confidence(0.7)
+
+processWithConfidence = highConfidence(data => data * 2)
+result = processWithConfidence(10)
+// 20 ~> 0.95
+
+// Create calibrated processors
+sensorProcessor = confidence(0.85)
+userInputProcessor = confidence(0.6)
+
+sensorReading = sensorProcessor(() => readSensor())
+userValue = userInputProcessor(() => getUserInput())
+```
+
+#### threshold()
+
+```typescript
+threshold(minConfidence: number): Function
+```
+
+Creates a filter function that only passes values meeting the minimum confidence threshold. Values below the threshold are filtered out.
+
+**Parameters:**
+- `minConfidence`: Minimum confidence value (0-1) required to pass
+
+**Example:**
+```prism
+// Filter data by confidence level
+highConfidenceOnly = threshold(0.9)
+moderateConfidence = threshold(0.5)
+
+data = [
+  10 ~> 0.95,
+  20 ~> 0.7,
+  30 ~> 0.92,
+  40 ~> 0.4
+]
+
+reliable = highConfidenceOnly(data)
+// [10 ~> 0.95, 30 ~> 0.92]
+
+usable = moderateConfidence(data)
+// [10 ~> 0.95, 20 ~> 0.7, 30 ~> 0.92]
+
+// Use in pipeline for confident decision making
+result = predictions
+  |> threshold(0.8)(_)
+  |> map(p => p.recommendation)
+  |> first
+```
+
 ## Execution Features
 
 ### Confidence Propagation

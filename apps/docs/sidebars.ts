@@ -14,12 +14,21 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Reference',
+      collapsed: false,
+      items: [
+        'reference/quick-reference',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Core Concepts',
       items: [
         'concepts/syntax',
         'concepts/confidence-operators',
         'concepts/uncertainty-propagation',
         'concepts/control-flow',
+        'concepts/modules',
         'concepts/syntax-highlighting-demo',
       ],
     },
