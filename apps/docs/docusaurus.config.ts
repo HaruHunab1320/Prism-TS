@@ -82,6 +82,17 @@ const config: Config = {
     ],
   ],
 
+  headTags: [
+    // llms.txt standard - help AI assistants understand the site
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'llms-txt',
+        href: '/llms.txt',
+      },
+    },
+  ],
+
   themeConfig: {
     // SEO and social sharing
     image: "img/prism-social-card.png",

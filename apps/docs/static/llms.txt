@@ -1,0 +1,165 @@
+# Prism Programming Language
+
+> Prism is a programming language where uncertainty is a first-class citizen. It extends JavaScript-like syntax with confidence-based operations for handling AI responses, sensor data, and probabilistic computations.
+
+## Quick Facts
+
+- **Type**: Programming language / DSL
+- **Syntax**: JavaScript-like with confidence operators
+- **Runtime**: Node.js / TypeScript
+- **Primary Use**: AI/LLM applications, IoT, risk analysis
+- **Package**: `@prism-lang/core` on npm
+
+## Key Differentiator
+
+Prism introduces **confidence values** that attach to any value and propagate through computations:
+
+```prism
+// Attach confidence to a value
+temperature = 23.5 ~> 0.92
+
+// Confidence propagates through operations
+adjusted = temperature ~+ (offset ~> 0.85)
+
+// Make decisions based on confidence
+uncertain if (prediction) {
+  high { execute() }      // confidence >= 0.7
+  medium { review() }     // 0.5 <= confidence < 0.7
+  low { reject() }        // confidence < 0.5
+}
+```
+
+## Core Concepts
+
+### Confidence Operators
+- `~>` - Attach confidence: `value ~> 0.85`
+- `~` - Extract confidence: `~value` returns the confidence level
+- `<~` - Extract raw value: `<~value` returns the underlying value
+- `~+`, `~-`, `~*`, `~/` - Confident arithmetic (propagates confidence)
+- `~==`, `~!=`, `~<`, `~>` - Confident comparisons
+- `~&&`, `~||` - Confident logical operators
+- `~.` - Confident property access
+- `|>` - Pipeline operator
+- `~|>` - Confidence-aware pipeline
+
+### Uncertain Control Flow
+```prism
+uncertain if (llm_response) {
+  high { /* confidence >= 0.7 */ }
+  medium { /* 0.5 <= confidence < 0.7 */ }
+  low { /* confidence < 0.5 */ }
+  default { /* fallback */ }
+}
+```
+
+### LLM Integration
+```prism
+// Built-in LLM function returns confident values
+analysis = llm("Analyze this text for sentiment")
+// Returns: "positive" ~> 0.87
+
+// Streaming support
+stream = stream_llm("Generate a summary")
+```
+
+### Async/Await
+```prism
+async function fetchData(url) {
+  try {
+    response = await fetch(url)
+    return response ~> 0.95
+  } catch (error) {
+    return null ~> 0.0
+  }
+}
+```
+
+### Modules
+```prism
+import {analyze, summarize} from "./utils.prism"
+export function process(data) { ... }
+```
+
+## Built-in Functions
+
+### Array Operations
+- `map(array, fn)` - Transform elements
+- `filter(array, predicate)` - Filter elements
+- `reduce(array, fn, initial)` - Reduce to single value
+
+### Async Utilities
+- `delay(ms)` / `sleep(ms)` - Pause execution
+- `debounce(ms)` - Debounce function calls
+- `Promise.all([...])` - Wait for multiple promises
+
+### Collection Functions
+- `sortBy(key, direction?)` - Create sorter function
+- `groupBy(key)` - Create grouper function
+
+### Confidence Functions
+- `confidence(threshold)` - Wrap function output with confidence
+- `threshold(minConfidence)` - Filter by confidence level
+
+### Output
+- `print(...)` - Print to console
+- `console.log/warn/error/debug(...)` - Logging
+
+## npm Packages
+
+- `@prism-lang/core` - Core language runtime
+- `@prism-lang/llm` - LLM provider integrations (Claude, Gemini)
+- `@prism-lang/confidence` - Confidence extraction library
+- `@prism-lang/validator` - Validation and linting
+
+## Documentation URLs
+
+- Homepage: https://docs.prismlang.dev/
+- Quick Reference: https://docs.prismlang.dev/docs/reference/quick-reference
+- Syntax Guide: https://docs.prismlang.dev/docs/concepts/syntax
+- Confidence Operators: https://docs.prismlang.dev/docs/concepts/confidence-operators
+- LLM Integration: https://docs.prismlang.dev/docs/guides/llm-integration
+- API Reference: https://docs.prismlang.dev/docs/api/core/runtime
+
+## Installation
+
+```bash
+npm install @prism-lang/core @prism-lang/llm
+```
+
+## Example Program
+
+```prism
+// Import LLM provider
+import {configureLLM} from "@prism-lang/llm"
+
+// Configure Claude as the LLM provider
+configureLLM({provider: "claude", model: "claude-3-sonnet"})
+
+// Analyze text with confidence tracking
+async function analyzeWithConfidence(text) {
+  analysis = llm("Analyze sentiment: " + text)
+
+  uncertain if (analysis) {
+    high {
+      return {sentiment: <~analysis, reliable: true}
+    }
+    medium {
+      // Get a second opinion
+      verification = llm("Verify this analysis: " + <~analysis)
+      return {sentiment: <~analysis, reliable: ~verification > 0.7}
+    }
+    low {
+      return {sentiment: "unknown", reliable: false}
+    }
+  }
+}
+
+// Use the function
+result = await analyzeWithConfidence("I love this product!")
+print("Result:", result)
+```
+
+## Contact
+
+- GitHub: https://github.com/HaruHunab1320/Prism-TS
+- npm: https://www.npmjs.com/package/@prism-lang/core
