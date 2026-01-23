@@ -98,7 +98,7 @@ To switch themes:
 ## Code Examples
 
 ### Basic Syntax
-```prism
+```javascript
 // Variables and operations
 name = "Prism"
 version = 1.0
@@ -113,7 +113,7 @@ message = "Welcome to ${name} v${version}!"
 ```
 
 ### Uncertainty Control Flow
-```prism
+```javascript
 uncertain if (analysis) {
   high {        // Green highlighting
     deploy()
@@ -131,7 +131,7 @@ uncertain if (analysis) {
 ```
 
 ### LLM Integration
-```prism
+```javascript
 // LLM calls with confidence
 response = llm("Analyze security") ~> 0.9
 summary = llm("Summarize: ${text}") ~> 0.85
@@ -142,7 +142,7 @@ fallback = response ~?? backup_analysis
 ```
 
 ### Advanced Features
-```prism
+```javascript
 // Pipeline operations
 result = data
   |> validate

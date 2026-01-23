@@ -13,7 +13,7 @@ Uncertainty propagation is a fundamental concept in Prism that determines how co
 
 Prism automatically tracks confidence values through all operations:
 
-```prism
+```javascript
 // Initial values with confidence
 measurement1 = 100 ~> 0.9
 measurement2 = 50 ~> 0.85
@@ -29,7 +29,7 @@ confidentSum = measurement1 ~+ measurement2  // 150 (~85.0%)
 
 Non-confident values have an implicit confidence of 1.0:
 
-```prism
+```javascript
 plainValue = 42
 confidence = ~plainValue  // 1.0
 
@@ -48,7 +48,7 @@ Different arithmetic operations use different confidence propagation strategies:
 
 #### Addition and Subtraction (Minimum Strategy)
 
-```prism
+```javascript
 // Takes the minimum confidence of operands
 a = 100 ~> 0.9
 b = 50 ~> 0.8
@@ -61,7 +61,7 @@ difference = a ~- b  // 50 (~80.0%)  - min(0.9, 0.8)
 
 #### Multiplication and Division (Product Strategy)
 
-```prism
+```javascript
 // Multiplies confidence values
 x = 10 ~> 0.9
 y = 5 ~> 0.8
@@ -74,7 +74,7 @@ quotient = x ~/ y   // 2 (~72.0%)   - 0.9 * 0.8
 
 #### Chain Operations
 
-```prism
+```javascript
 // Confidence degrades through chains
 a = 100 ~> 0.95
 b = 50 ~> 0.9
@@ -94,7 +94,7 @@ result2 = (a ~+ b) ~* c
 
 Comparisons propagate confidence using the minimum strategy:
 
-```prism
+```javascript
 val1 = 100 ~> 0.9
 val2 = 100 ~> 0.85
 
@@ -109,7 +109,7 @@ less = val1 ~< val2        // false (~85.0%)
 
 #### AND Operations (Minimum Strategy)
 
-```prism
+```javascript
 cond1 = true ~> 0.8
 cond2 = true ~> 0.9
 
@@ -120,7 +120,7 @@ result = cond1 ~&& cond2  // true (~80.0%)
 
 #### OR Operations (Maximum Strategy)
 
-```prism
+```javascript
 option1 = false ~> 0.7
 option2 = true ~> 0.9
 
@@ -133,7 +133,7 @@ result = option1 ~|| option2  // true (~90.0%)
 
 Confidence propagates through function applications:
 
-```prism
+```javascript
 // Simple function
 double = x => x * 2
 
@@ -151,7 +151,7 @@ processChain = value
 
 ### Object and Array Operations
 
-```prism
+```javascript
 // Object with confident values
 data = {
   temperature: 23.5 ~> 0.92,
@@ -173,7 +173,7 @@ first = measurements[0]  // 10 (~90.0%)
 
 ### Destructuring with Confidence
 
-```prism
+```javascript
 // Array destructuring preserves confidence
 values = [100 ~> 0.9, 200 ~> 0.85, 300 ~> 0.8]
 [a, b, c] = values
@@ -194,7 +194,7 @@ sensor = {
 
 ### Conditional Propagation
 
-```prism
+```javascript
 // Ternary preserves branch confidence
 condition = true ~> 0.9
 valueIfTrue = 100 ~> 0.85
@@ -224,7 +224,7 @@ uncertain if data {
 
 ### Null and Undefined Handling
 
-```prism
+```javascript
 // Confident null/undefined
 nullValue = null ~> 0.9
 undefinedValue = undefined ~> 0.85
@@ -240,7 +240,7 @@ prop = obj~.someProperty  // Special null handling with confidence
 
 ### Error Propagation
 
-```prism
+```javascript
 // Errors can carry confidence information
 riskyOperation = () => {
   if Math.random() > 0.5 {
@@ -262,7 +262,7 @@ try {
 
 ### Combining Independent Sources
 
-```prism
+```javascript
 // Independent measurements
 sensor1 = 23.5 ~> 0.85
 sensor2 = 24.1 ~> 0.90
@@ -277,7 +277,7 @@ combinedReading = avgValue ~> avgConfidence
 
 ### Confidence Decay Over Time
 
-```prism
+```javascript
 // Model confidence decay
 initialReading = 100 ~> 0.95
 decayRate = 0.01  // 1% per time unit
@@ -294,7 +294,7 @@ agedReading = updateConfidence(initialReading, 10)  // 100 (~85.5%)
 
 ### Bayesian-style Updates
 
-```prism
+```javascript
 // Update confidence based on new evidence
 prior = "hypothesis" ~> 0.6
 evidence = "supporting data" ~> 0.8
@@ -318,7 +318,7 @@ updated = updateBelief(prior, evidence)  // "hypothesis" (~80.0%)
 
 ### Sensor Fusion with Weighted Average
 
-```prism
+```javascript
 // Multiple sensors with different reliabilities
 sensors = [
   {value: 23.5, confidence: 0.9},
@@ -348,7 +348,7 @@ fusedReading = weightedAverage()  // ~23.75 (~89.0%)
 
 ### Multi-stage Processing Pipeline
 
-```prism
+```javascript
 // Each stage can affect confidence
 rawData = fetchFromSensor() ~> 0.95
 
@@ -369,7 +369,7 @@ final = process(validated) ~> 0.88
 
 ### Decision Tree with Confidence
 
-```prism
+```javascript
 // Decision nodes with confidence
 makeDecision = (input) => {
   // First decision point

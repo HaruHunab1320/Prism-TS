@@ -11,7 +11,7 @@ This guide provides complete example implementations showcasing various Prism fe
 
 ### 1. Simple Confidence Assignment
 
-```prism
+```javascript
 // Basic confidence assignment
 weather_prediction = "sunny" ~> 0.85
 temperature = 72 ~> 0.95
@@ -57,7 +57,7 @@ console.log(result);
 
 ### 3. Confidence Propagation
 
-```prism
+```javascript
 // Initial values with confidence
 sensor1 = 23.5 ~> 0.9
 sensor2 = 24.1 ~> 0.85
@@ -79,7 +79,7 @@ uncertain if (avg_confidence > 0.8) {
 
 ### 1. Variable Declarations and Block Scoping
 
-```prism
+```javascript
 // Using const/let with block scoping
 function userProcessing() {
   const API_BASE = "https://api.example.com"
@@ -114,7 +114,7 @@ function userProcessing() {
 
 ### 2. Named Functions with Returns
 
-```prism
+```javascript
 // Traditional function declarations with hoisting
 function calculateRiskScore(transactions, userProfile) {
   // Early return for invalid input
@@ -174,7 +174,7 @@ console.log("Risk assessment:", userRisk)
 
 ### 3. Block-Statement Lambdas
 
-```prism
+```javascript
 // Complex data processing with block-statement lambdas
 const users = [
   {name: "Alice", age: 28, score: 85},
@@ -272,7 +272,7 @@ const aggregator = items => {
 
 ### 4. Parameterized Primitives and Pipeline Operations
 
-```prism
+```javascript
 // Create reusable, configurable functions
 const highConfidenceFilter = threshold(0.8)
 const scoreSorter = sortBy("score", "desc")
@@ -348,7 +348,7 @@ console.log("Quality analysis complete:", qualityAnalysis)
 
 ### 5. Import/Export Module System
 
-```prism
+```javascript
 // math-utils.prism - Utility module
 export const PI = 3.14159
 export const E = 2.71828
@@ -448,7 +448,7 @@ print("Final result:", processed)
 
 ### 6. Debugging and Output
 
-```prism
+```javascript
 // Comprehensive debugging example
 function debugDataProcessing(rawData) {
   console.debug("Starting data processing")

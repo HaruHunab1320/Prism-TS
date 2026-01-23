@@ -15,7 +15,7 @@ Prism provides a rich set of operators for working with confidence values, enabl
 
 The confidence annotation operator `~>` attaches a confidence value to any expression:
 
-```prism
+```javascript
 // Attach confidence to values
 sensorReading = 23.5 ~> 0.92
 userInput = "verified data" ~> 0.85
@@ -31,7 +31,7 @@ lowConfidence = "uncertain" ~> 0.3
 
 The tilde operator `~` extracts the confidence value from a confident expression:
 
-```prism
+```javascript
 data = "important" ~> 0.87
 confidence = ~data  // 0.87
 
@@ -48,7 +48,7 @@ defaultConf = ~plainValue  // 1.0
 
 The value extraction operator `<~` retrieves the underlying value without confidence:
 
-```prism
+```javascript
 confidentData = "hello" ~> 0.75
 plainData = <~ confidentData  // "hello"
 
@@ -63,7 +63,7 @@ These operators perform arithmetic while propagating confidence values:
 
 ### Confident Addition (`~+`)
 
-```prism
+```javascript
 a = 10 ~> 0.9
 b = 20 ~> 0.8
 
@@ -77,7 +77,7 @@ total = a ~+ b ~+ c  // 35 (~72.0%)
 
 ### Confident Subtraction (`~-`)
 
-```prism
+```javascript
 x = 100 ~> 0.85
 y = 30 ~> 0.9
 
@@ -86,7 +86,7 @@ result = x ~- y  // 70 (~85.0%)
 
 ### Confident Multiplication (`~*`)
 
-```prism
+```javascript
 price = 50 ~> 0.9
 quantity = 3 ~> 0.95
 
@@ -96,7 +96,7 @@ total = price ~* quantity  // 150 (~85.5%)
 
 ### Confident Division (`~/`)
 
-```prism
+```javascript
 total = 1000 ~> 0.8
 count = 10 ~> 0.9
 
@@ -107,7 +107,7 @@ average = total ~/ count  // 100 (~72.0%)
 
 These operators compare values while considering their confidence:
 
-```prism
+```javascript
 a = 10 ~> 0.8
 b = 10 ~> 0.9
 
@@ -131,7 +131,7 @@ x ~>= y  // false (~56.0%)
 
 Access properties while preserving confidence:
 
-```prism
+```javascript
 user = {name: "Alice", age: 30} ~> 0.85
 userName = user~.name  // "Alice" (~85.0%)
 
@@ -157,7 +157,7 @@ result = nullData~.property  // Returns confident null
 
 The parallel confidence operator selects the option with the highest confidence:
 
-```prism
+```javascript
 // Model ensemble - select best prediction
 model1 = "rain" ~> 0.7
 model2 = "sunny" ~> 0.9
@@ -182,7 +182,7 @@ bestOption = option1 ~||> option2 ~||> option3
 
 The confident ternary operator works like the regular ternary but propagates confidence from both the condition and the selected branch:
 
-```prism
+```javascript
 // Regular ternary - ignores confidence
 condition = true ~> 0.8
 regular = condition ? "yes" : "no"  // Result: "yes" (no confidence)
@@ -208,7 +208,7 @@ result = a ~? (b ~? "both" : "just a") : "neither"
 Confident assignment operators provide syntactic sugar for updating variables while preserving confidence:
 
 #### Addition Assignment (~+=)
-```prism
+```javascript
 // Regular += with confident value
 balance = 1000 ~> 0.95
 balance += 100  // 1100 ~> 0.95 (keeps original confidence)
@@ -220,21 +220,21 @@ balance ~+= deposit  // 1100 ~> 0.8 (min confidence)
 ```
 
 #### Subtraction Assignment (~-=)
-```prism
+```javascript
 inventory = 500 ~> 0.9
 withdrawal = 50 ~> 0.85
 inventory ~-= withdrawal  // 450 ~> 0.85
 ```
 
 #### Multiplication Assignment (~*=)
-```prism
+```javascript
 price = 100 ~> 0.9
 taxRate = 1.2 ~> 0.99
 price ~*= taxRate  // 120 ~> 0.9
 ```
 
 #### Division Assignment (~/=)
-```prism
+```javascript
 total = 1000 ~> 0.9
 divisor = 4 ~> 0.95
 total ~/= divisor  // 250 ~> 0.9
@@ -248,7 +248,7 @@ These operators are equivalent to:
 
 They're particularly useful for accumulating values with confidence tracking:
 
-```prism
+```javascript
 // Running total with confidence tracking
 total = 0 ~> 1.0
 for measurement in measurements {
@@ -261,7 +261,7 @@ for measurement in measurements {
 
 The threshold gate operator passes values only if they meet a confidence threshold:
 
-```prism
+```javascript
 // Basic threshold gate
 data = "important" ~> 0.8
 threshold = 0.7
@@ -284,7 +284,7 @@ processedData = rawData
 
 Propagate confidence through function pipelines:
 
-```prism
+```javascript
 // Functions that work with confidence
 addTax = x => x * 1.1
 applyDiscount = x => x * 0.9
@@ -302,7 +302,7 @@ finalPrice = price
 
 Returns the first non-null/undefined value with its confidence:
 
-```prism
+```javascript
 // Similar to ?? but confidence-aware
 primary = null ~> 0.9
 secondary = "backup" ~> 0.7
@@ -320,7 +320,7 @@ theme = userPref ~?? systemDefault ~?? hardcoded
 
 ### Confident Logical Operators
 
-```prism
+```javascript
 // Confident AND
 a = true ~> 0.8
 b = true ~> 0.9
@@ -336,7 +336,7 @@ result = x ~|| y  // true (~90.0%)
 
 Prism uses confidence thresholds to categorize values:
 
-```prism
+```javascript
 // Default thresholds
 // HIGH: >= 0.7
 // MEDIUM: >= 0.5 and < 0.7  
@@ -369,7 +369,7 @@ uncertain if data {
 
 When working with multiple confident values, Prism provides various strategies:
 
-```prism
+```javascript
 // Minimum confidence (default for most operations)
 a = 10 ~> 0.8
 b = 20 ~> 0.9
@@ -395,7 +395,7 @@ avgConf = (conf1 + conf2) / 2  // 0.8
 
 ### Sensor Fusion
 
-```prism
+```javascript
 // Multiple sensors measuring temperature
 sensor1 = 23.5 ~> 0.85
 sensor2 = 24.1 ~> 0.92
@@ -410,7 +410,7 @@ avgTemp = (sensor1 ~+ sensor2 ~+ sensor3) ~/ 3
 
 ### Data Validation Pipeline
 
-```prism
+```javascript
 // Multi-stage validation with confidence
 validateEmail = email => {
   hasAt = email.includes("@") ~> 0.9
@@ -429,7 +429,7 @@ processUser = userData => {
 
 ### Decision Making with Uncertainty
 
-```prism
+```javascript
 // Investment decision based on multiple factors
 marketTrend = "bullish" ~> 0.7
 companyHealth = "strong" ~> 0.85
@@ -453,7 +453,7 @@ uncertain if shouldInvest {
 
 ### Model Ensemble
 
-```prism
+```javascript
 // Combine predictions from multiple models
 predict = (input) => {
   // Different models with varying confidence

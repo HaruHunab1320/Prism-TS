@@ -23,21 +23,21 @@ Prism solves this by making uncertainty a core language feature.
 
 ### 🎯 Confidence Values
 Attach confidence levels to any value:
-```prism
+```javascript
 temperature = 72.5 ~> 0.95  // 72.5°F with 95% confidence
 analysis = llm("Is this secure?") ~> 0.8
 ```
 
 ### 🔄 Uncertainty Propagation
 Confidence automatically flows through calculations:
-```prism
+```javascript
 avg_temp = (temp1 ~> 0.9 + temp2 ~> 0.85) / 2
 // Result carries combined uncertainty
 ```
 
 ### 🌊 Confidence-Based Control Flow
 Make decisions based on confidence levels:
-```prism
+```javascript
 uncertain if (analysis ~> 0.7) {
   high { deploy_to_production() }
   medium { request_human_review() }
@@ -47,7 +47,7 @@ uncertain if (analysis ~> 0.7) {
 
 ### 🤖 Built-in AI Integration
 Native LLM support with automatic confidence extraction:
-```prism
+```javascript
 response = llm("Analyze this code for vulnerabilities")
 confidence = <~ response  // Extract confidence
 decision = response ~@> "approve"  // Threshold gate

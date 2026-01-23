@@ -488,7 +488,7 @@ interface LLMCallOptions {
 **Returns:** Confident string response using either the provider-reported confidence or the extractor override.
 
 **Example:**
-```prism
+```javascript
 response = llm("What is 2+2?");
 // => "4" (~95%)
 
@@ -502,7 +502,7 @@ custom = llm("Summarize this doc", {
 
 ### stream_llm()
 
-```prism
+```javascript
 handle = stream_llm("Draft a summary", { structuredOutput: false })
 
 chunk = await handle.next()
@@ -532,7 +532,7 @@ map(array: Array, fn: Function): Array
 Transforms array elements.
 
 **Example:**
-```prism
+```javascript
 numbers = [1, 2, 3];
 doubled = map(numbers, x => x * 2);
 // Returns: [2, 4, 6]
@@ -547,7 +547,7 @@ filter(array: Array, predicate: Function): Array
 Filters array elements.
 
 **Example:**
-```prism
+```javascript
 numbers = [1, 2, 3, 4, 5];
 evens = filter(numbers, x => x % 2 == 0);
 // Returns: [2, 4]
@@ -562,7 +562,7 @@ reduce(array: Array, reducer: Function, initial?: any): any
 Reduces array to single value.
 
 **Example:**
-```prism
+```javascript
 numbers = [1, 2, 3, 4];
 sum = reduce(numbers, (acc, x) => acc + x, 0);
 // Returns: 10
@@ -579,7 +579,7 @@ max(...values: number[]): number
 Returns maximum value.
 
 **Example:**
-```prism
+```javascript
 largest = max(10, 5, 20, 15);
 // Returns: 20
 ```
@@ -593,7 +593,7 @@ min(...values: number[]): number
 Returns minimum value.
 
 **Example:**
-```prism
+```javascript
 smallest = min(10, 5, 20, 15);
 // Returns: 5
 ```
@@ -609,7 +609,7 @@ delay(milliseconds: number): Promise<void>
 Pauses execution for the specified number of milliseconds. Returns a promise that resolves after the delay.
 
 **Example:**
-```prism
+```javascript
 async function slowOperation() {
   console.log("Starting...")
   await delay(2000)  // Wait 2 seconds
@@ -637,7 +637,7 @@ sleep(milliseconds: number): Promise<void>
 Alias for `delay()`. Pauses execution for the specified duration.
 
 **Example:**
-```prism
+```javascript
 await sleep(500)  // Same as await delay(500)
 ```
 
@@ -650,7 +650,7 @@ debounce(waitMs: number): Function
 Creates a debounced wrapper that delays invoking a function until after `waitMs` milliseconds have elapsed since the last call. Useful for rate-limiting user input handlers.
 
 **Example:**
-```prism
+```javascript
 // Create a debounced search function
 searchDebouncer = debounce(300)
 
@@ -680,7 +680,7 @@ Creates a function that sorts an array of objects by the specified key. Returns 
 - `direction`: Sort direction - `"asc"` (default) or `"desc"`
 
 **Example:**
-```prism
+```javascript
 users = [
   {name: "Alice", score: 85},
   {name: "Bob", score: 92},
@@ -715,7 +715,7 @@ Creates a function that groups an array of objects by the specified key or funct
 - `key`: Property name to group by, or a function that returns the group key
 
 **Example:**
-```prism
+```javascript
 items = [
   {name: "Apple", category: "fruit", price: 1.5},
   {name: "Banana", category: "fruit", price: 0.5},
@@ -757,7 +757,7 @@ Creates a function that wraps another function's return value with the specified
 - `threshold`: Confidence value between 0 and 1 to attach to results
 
 **Example:**
-```prism
+```javascript
 // Wrap a function to add confidence to its output
 highConfidence = confidence(0.95)
 mediumConfidence = confidence(0.7)
@@ -786,7 +786,7 @@ Creates a filter function that only passes values meeting the minimum confidence
 - `minConfidence`: Minimum confidence value (0-1) required to pass
 
 **Example:**
-```prism
+```javascript
 // Filter data by confidence level
 highConfidenceOnly = threshold(0.9)
 moderateConfidence = threshold(0.5)
@@ -817,7 +817,7 @@ result = predictions
 
 Confidence values are propagated through operations:
 
-```prism
+```javascript
 x = 10 ~> 0.9;
 y = 20 ~> 0.8;
 z = x + y;  // Result has confidence based on inputs
@@ -827,7 +827,7 @@ z = x + y;  // Result has confidence based on inputs
 
 The runtime maintains execution contexts for uncertainty handling:
 
-```prism
+```javascript
 in context "analysis" {
   // Code executes in analysis context
   result = processData(input);
@@ -838,7 +838,7 @@ in context "analysis" {
 
 Supports break and continue statements:
 
-```prism
+```javascript
 for i = 0; i < 10; i++ {
   if (i == 5) {
     break;  // Exit loop
@@ -854,7 +854,7 @@ for i = 0; i < 10; i++ {
 
 Supports array and object destructuring with confidence:
 
-```prism
+```javascript
 // Array destructuring
 [a, b, c] = [1, 2, 3];
 [x, ...rest] = array;

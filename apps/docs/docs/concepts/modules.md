@@ -15,7 +15,7 @@ Prism provides a modern module system inspired by ES modules, allowing you to or
 
 You can export values, functions, and variables from a module:
 
-```prism
+```javascript
 // math.prism
 export const PI = 3.14159
 export const E = 2.71828
@@ -41,7 +41,7 @@ export default {
 
 Import functionality from other modules using various patterns:
 
-```prism
+```javascript
 // Named imports
 import {PI, square} from "./math.prism"
 
@@ -64,7 +64,7 @@ import defaultMath, {PI, E} from "./math.prism"
 
 Export individual values with names:
 
-```prism
+```javascript
 // Direct export
 export const VERSION = "1.0.0"
 export apiKey = "secret-key" ~> 0.9
@@ -89,7 +89,7 @@ export {internalFunction as publicAPI}
 
 Each module can have one default export:
 
-```prism
+```javascript
 // Export default object
 export default {
   name: "MyModule",
@@ -110,7 +110,7 @@ export default 42
 
 Re-export from other modules:
 
-```prism
+```javascript
 // Re-export specific items
 export {helper1, helper2} from "./helpers.prism"
 
@@ -127,7 +127,7 @@ export * from "./utilities.prism"
 
 Modules are resolved relative to the importing file:
 
-```prism
+```javascript
 // Same directory
 import {util} from "./utils.prism"
 
@@ -142,7 +142,7 @@ import {component} from "./components/button.prism"
 
 The `.prism` extension is optional in imports:
 
-```prism
+```javascript
 // Both work the same
 import {data} from "./data.prism"
 import {data} from "./data"
@@ -152,7 +152,7 @@ import {data} from "./data"
 
 When an import path starts with `/`, Prism resolves it from the filesystem root (or the virtual root used by your host environment):
 
-```prism
+```javascript
 import settings from "/config/app-settings"
 ```
 
@@ -162,7 +162,7 @@ This is helpful for tooling that presents a virtual filesystem or for server-sid
 
 Bare specifiers (no `./`, `../`, or `/`) are resolved like Node.js: Prism looks for a `node_modules/<package>` directory starting from the importing file's folder and walking up parent directories. You can omit `.prism`; the runtime tries both `<package>.prism` and `<package>/index.prism`.
 
-```prism
+```javascript
 import logger from "shared-logger"
 import { formatNumber } from "@acme/prism-utils"
 ```
@@ -175,7 +175,7 @@ This allows sharing utilities between Prism projects without manual relative pat
 
 Imports are hoisted and processed before any other code:
 
-```prism
+```javascript
 // This works even though import appears after usage
 console.log("PI is", PI)
 import {PI} from "./math.prism"
@@ -185,7 +185,7 @@ import {PI} from "./math.prism"
 
 Each module has its own scope:
 
-```prism
+```javascript
 // module-a.prism
 secret = "module A secret"
 export public = "module A public"
@@ -200,7 +200,7 @@ console.log(secret)  // Error: undefined variable
 
 Modules are evaluated only once, even if imported multiple times:
 
-```prism
+```javascript
 // counter.prism
 console.log("Counter module loaded")
 count = 0
@@ -240,7 +240,7 @@ await runtime.reloadModule('/shared/state.prism');
 
 Confidence values are preserved through imports and exports:
 
-```prism
+```javascript
 // sensor.prism
 export temperature = 23.5 ~> 0.92
 export humidity = 65 ~> 0.88
@@ -265,7 +265,7 @@ reading = await readSensor()
 
 Modules can use async/await at the top level:
 
-```prism
+```javascript
 // data-loader.prism
 const data = await fetchData("/api/config")
 export config = data.config
@@ -282,7 +282,7 @@ import {config, settings} from "./data-loader.prism"
 
 Keep modules focused on a single concern:
 
-```prism
+```javascript
 // Good: math-utils.prism
 export add = (a, b) => a + b
 export multiply = (a, b) => a * b
@@ -295,7 +295,7 @@ export average = nums => nums.reduce(add, 0) / nums.length
 
 Be explicit about what you export:
 
-```prism
+```javascript
 // Good: Clear public API
 internal = "private implementation"
 helper = x => x * 2
@@ -311,7 +311,7 @@ export function publicFunction() {
 
 Use consistent naming for modules and exports:
 
-```prism
+```javascript
 // user-service.prism
 export function getUser(id) { /* ... */ }
 export function updateUser(id, data) { /* ... */ }
@@ -326,7 +326,7 @@ const user = userService.getUser(123)
 
 Structure modules to avoid circular imports:
 
-```prism
+```javascript
 // Bad: Circular dependency
 // a.prism: import {b} from "./b.prism"
 // b.prism: import {a} from "./a.prism"
@@ -341,7 +341,7 @@ Structure modules to avoid circular imports:
 
 Create index modules for cleaner imports:
 
-```prism
+```javascript
 // utils/index.prism
 export * from "./math.prism"
 export * from "./string.prism"
@@ -357,7 +357,7 @@ import {add, capitalize, unique} from "./utils"
 
 Export factory functions:
 
-```prism
+```javascript
 // logger.prism
 export function createLogger(name) {
   return {
@@ -377,7 +377,7 @@ logger.log("Application started")
 
 Centralize configuration:
 
-```prism
+```javascript
 // config.prism
 export default {
   apiUrl: "https://api.example.com",
@@ -400,7 +400,7 @@ if (config.features.debug) {
 
 Organize related functionality:
 
-```prism
+```javascript
 // api-service.prism
 baseUrl = "https://api.example.com"
 

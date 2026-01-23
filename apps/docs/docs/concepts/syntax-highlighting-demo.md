@@ -8,7 +8,7 @@ This page demonstrates Prism's comprehensive syntax highlighting with support fo
 
 ## Basic Syntax
 
-```prism
+```javascript
 // Variables and basic operations
 name = "Prism"
 version = 1.0
@@ -28,7 +28,7 @@ multiline string"
 
 Prism's unique confidence operators are highlighted with distinct colors to make confidence flow clear:
 
-```prism
+```javascript
 // Basic confidence assignment
 temperature = 72 ~> 0.95
 humidity = 65 ~> 0.87
@@ -60,7 +60,7 @@ piped = input ~|> transform       // Confidence pipeline
 
 The uncertainty keywords are highlighted to show the different confidence branches:
 
-```prism
+```javascript
 // Basic uncertain if
 uncertain if (analysis) {
   high {
@@ -97,7 +97,7 @@ uncertain while (condition) {
 
 Context switching and agent declarations have special highlighting:
 
-```prism
+```javascript
 // Context switching
 in context Medical {
   diagnosis = analyzeSymptoms(patient)
@@ -128,7 +128,7 @@ summary = writer.summarize(result)
 
 ## Functions and Lambdas
 
-```prism
+```javascript
 // Function declarations
 function calculateRisk(value, threshold) {
   risk = value / threshold
@@ -153,7 +153,7 @@ extractFirst = ([first, ...rest]) => first
 
 ## Advanced Features
 
-```prism
+```javascript
 // Pipeline operator
 processed = rawData
   |> validate(_)
@@ -187,7 +187,7 @@ filtered = filter(data, _ > threshold)
 
 ## LLM Integration
 
-```prism
+```javascript
 // Basic LLM calls
 response = llm("Analyze this text: ${input}")
 summary = llm("Summarize in 3 bullets: ${article}")
@@ -211,7 +211,7 @@ result = document
 
 Here's a complete example showcasing many features together:
 
-```prism
+```javascript
 // Content moderation system with confidence handling
 function moderateContent(content) {
   // Parallel analysis with different aspects

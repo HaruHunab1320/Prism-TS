@@ -157,7 +157,7 @@ PRISM_DEFAULT_LLM=claude
 
 ### Basic Script
 
-```prism
+```javascript
 // analyze.prism
 data = "User feedback: The product is amazing but shipping was slow"
 

@@ -13,7 +13,7 @@ Prism extends traditional control flow constructs with confidence-aware capabili
 
 Standard if statements work as expected:
 
-```prism
+```javascript
 // Basic if
 if temperature > 30 {
   status = "hot"
@@ -55,7 +55,7 @@ if user.isAuthenticated {
 
 For simple conditional expressions:
 
-```prism
+```javascript
 // Basic ternary
 status = temperature > 30 ? "hot" : "cool"
 
@@ -74,7 +74,7 @@ result = (confidence > 0.8) ?
 
 ### For Loops
 
-```prism
+```javascript
 // Traditional for loop
 for i = 0; i < 10; i = i + 1 {
   console.log(i)
@@ -101,7 +101,7 @@ for i = 0; i < 100; i = i + 1 {
 
 Iterate over collections:
 
-```prism
+```javascript
 // Iterate over array values
 numbers = [1, 2, 3, 4, 5]
 for num in numbers {
@@ -129,7 +129,7 @@ for {x, y} in points {
 
 ### While Loops
 
-```prism
+```javascript
 // Basic while loop
 count = 0
 while count < 10 {
@@ -158,7 +158,7 @@ while true {
 
 Execute at least once:
 
-```prism
+```javascript
 // Basic do-while
 attempts = 0
 do {
@@ -178,7 +178,7 @@ do {
 
 Branch based on confidence levels:
 
-```prism
+```javascript
 // Basic uncertain if
 data = fetchSensorData() ~> 0.75
 
@@ -251,7 +251,7 @@ uncertain if result {
 
 Loops that behave differently based on confidence:
 
-```prism
+```javascript
 // Uncertain for loop
 uncertain for i = 0; i < dataPoints.length; i = i + 1 {
   high {
@@ -299,7 +299,7 @@ uncertain while (attempts < maxAttempts) ~> 0.9 {
 
 The `default` branch in uncertain constructs acts like a switch statement's default case, executing when the confidence level doesn't match any of the standard thresholds:
 
-```prism
+```javascript
 // Use cases for default branch
 uncertain if (apiResponse) {
   high { processNormally() }
@@ -348,7 +348,7 @@ The default branch ensures your uncertainty-aware code can gracefully handle all
 
 Using confident values in conditions:
 
-```prism
+```javascript
 // Confident comparison
 temp1 = 25 ~> 0.9
 temp2 = 26 ~> 0.85
@@ -380,7 +380,7 @@ if condition1 ~&& condition2 {
 
 ### Confidence-Based State Machines
 
-```prism
+```javascript
 // State machine with confidence transitions
 currentState = "idle"
 confidence = 1.0
@@ -411,7 +411,7 @@ processEvent = (event) => {
 
 ### Early Exit Patterns
 
-```prism
+```javascript
 // Confidence gates for early exit
 processData = (data) => {
   // Check confidence at entry
@@ -458,7 +458,7 @@ analyzeReading = (reading) => {
 
 ### Nested Uncertain Control Flow
 
-```prism
+```javascript
 // Nested uncertain structures
 mainProcess = (input) => {
   primaryResult = primaryModel(input) ~> 0.8
@@ -493,7 +493,7 @@ mainProcess = (input) => {
 
 ### Sensor Reading Validation
 
-```prism
+```javascript
 // Multi-stage sensor validation with confidence
 validateSensorReading = (reading) => {
   // Stage 1: Range check
@@ -534,7 +534,7 @@ validateSensorReading = (reading) => {
 
 ### Adaptive Algorithm Selection
 
-```prism
+```javascript
 // Choose algorithm based on data confidence
 processDataAdaptively = (data) => {
   dataQuality = assessQuality(data) ~> 0.85
@@ -574,7 +574,7 @@ processDataAdaptively = (data) => {
 
 ### Retry Logic with Confidence Decay
 
-```prism
+```javascript
 // Retry with decreasing confidence
 reliableOperation = (params) => {
   maxRetries = 5
@@ -615,7 +615,7 @@ reliableOperation = (params) => {
 
 ### Decision Tree with Confidence
 
-```prism
+```javascript
 // Medical diagnosis decision tree
 diagnose = (symptoms) => {
   // Check primary symptom

@@ -11,7 +11,7 @@ Let's write a simple program that demonstrates Prism's unique features: confiden
 
 Create a file called `hello.prism`:
 
-```prism
+```javascript
 // Basic confidence assignment
 greeting = "Hello, World!" ~> 0.95
 console.log(greeting)
@@ -49,7 +49,7 @@ console.log(result);
 
 Let's build a simple AI-powered decision maker:
 
-```prism
+```javascript
 // AI Analysis with Confidence
 analysis = llm("Should we deploy this code to production?")
 confidence = <~ analysis  // Extract confidence from LLM response

@@ -13,7 +13,7 @@ Prism is a probabilistic programming language that extends familiar JavaScript-l
 
 Prism supports standard literal types with optional confidence annotations:
 
-```prism
+```javascript
 // Numbers
 42
 3.14
@@ -46,7 +46,7 @@ undefined
 
 ### Comments
 
-```prism
+```javascript
 // Single-line comment
 
 /* 
@@ -60,7 +60,7 @@ undefined
 Prism supports both traditional assignment syntax and modern declaration keywords:
 
 ### Basic Assignment
-```prism
+```javascript
 // Simple assignment
 x = 10
 name = "Alice"
@@ -83,7 +83,7 @@ balance ~/= 2 ~> 0.9     // balance = balance ~/ (2 ~> 0.9)
 ```
 
 ### Declaration Keywords (const/let)
-```prism
+```javascript
 // Immutable bindings with const
 const PI = 3.14159
 const users = ["alice", "bob"]  // Reference is immutable, contents can change
@@ -121,7 +121,7 @@ let {name, age} = user
 
 ### Arithmetic Operators
 
-```prism
+```javascript
 // Basic arithmetic
 a + b    // Addition
 a - b    // Subtraction
@@ -150,7 +150,7 @@ print(--counter)  // Prints 0, counter is now 0
 
 ### Comparison Operators
 
-```prism
+```javascript
 // Loose equality (with type coercion)
 a == b   // Equality with type coercion
 a != b   // Inequality with type coercion
@@ -169,7 +169,7 @@ a >= b   // Greater than or equal
 #### Type Coercion in Comparisons
 
 Loose equality (`==`) performs type coercion:
-```prism
+```javascript
 5 == "5"          // true - number to string coercion
 0 == false        // true - number to boolean coercion
 null == undefined // true - null equals undefined
@@ -183,7 +183,7 @@ null === undefined // false - different types
 
 ### Logical Operators
 
-```prism
+```javascript
 a && b   // Logical AND
 a || b   // Logical OR
 !a       // Logical NOT
@@ -192,7 +192,7 @@ a ?? b   // Nullish coalescing (returns b if a is null/undefined)
 
 ### Type Operators
 
-```prism
+```javascript
 typeof x          // Returns type as string
 x instanceof Y    // Checks if x is instance of Y
 ```
@@ -201,7 +201,7 @@ x instanceof Y    // Checks if x is instance of Y
 
 ### Conditional Statements
 
-```prism
+```javascript
 // Basic if statement
 if x > 0 {
   // positive case
@@ -234,7 +234,7 @@ confident = condition ~? valueIfTrue : valueIfFalse
 
 ### Loops
 
-```prism
+```javascript
 // For loop
 for i = 0; i < 10; i = i + 1 {
   // loop body
@@ -277,7 +277,7 @@ for i = 0; i < 100; i = i + 1 {
 
 Prism supports try/catch/finally for handling errors and ensuring cleanup:
 
-```prism
+```javascript
 // Basic try/catch
 try {
   result = riskyOperation()
@@ -347,7 +347,7 @@ Prism supports both traditional named functions and modern lambda expressions:
 
 ### Named Functions
 
-```prism
+```javascript
 // Basic function declaration
 function calculateScore(data, weights) {
   scores = data.map((item, index) => item * weights[index])
@@ -394,7 +394,7 @@ function validateUser(user) {
 
 ### Lambda Expressions
 
-```prism
+```javascript
 // Single parameter
 double = x => x * 2
 
@@ -476,7 +476,7 @@ result4 = sum(1, 2, 3, 4)        // 10
 
 ### Function Composition
 
-```prism
+```javascript
 // Pipeline operator
 result = value |> func1 |> func2 |> func3
 
@@ -496,7 +496,7 @@ result = 10 |> add(5, _)  // 15 (placeholder represents piped value)
 
 Prism supports asynchronous programming with async/await for handling promises and asynchronous operations:
 
-```prism
+```javascript
 // Async function declaration
 async function fetchData(url) {
   response = await httpGet(url)
@@ -620,7 +620,7 @@ async function withTimeout(operation, timeoutMs) {
 
 ### Arrays
 
-```prism
+```javascript
 // Array creation
 numbers = [1, 2, 3, 4, 5]
 mixed = [1, "two", true, null]
@@ -657,7 +657,7 @@ combined = [...arr1, ...arr2]  // [1, 2, 3, 4, 5, 6]
 
 ### Objects
 
-```prism
+```javascript
 // Object creation
 person = {
   name: "Alice",
@@ -697,7 +697,7 @@ settings = {...defaults, ...userPrefs}  // {theme: "dark", fontSize: 16}
 
 ### Array Destructuring
 
-```prism
+```javascript
 // Basic array destructuring
 [a, b, c] = [1, 2, 3]
 // a = 1, b = 2, c = 3
@@ -717,7 +717,7 @@ result = sumFirst2([10, 20, 30])  // 30
 
 ### Object Destructuring
 
-```prism
+```javascript
 // Basic object destructuring
 {name, age} = {name: "Alice", age: 30, city: "NYC"}
 // name = "Alice", age = 30
@@ -744,7 +744,7 @@ result = sumFirst2([10, 20, 30])  // 30
 Prism provides a rich set of built-in functions for common operations:
 
 ### Output and Debugging
-```prism
+```javascript
 // Simple print function
 print("Hello, World!")
 print("Answer:", 42, "is", true)  // Hello, World! Answer: 42 is true
@@ -762,7 +762,7 @@ console.log("Analysis:", analysis)   // Shows confidence levels
 ```
 
 ### Array Operations
-```prism
+```javascript
 // Global array functions
 numbers = [1, 2, 3, 4, 5]
 doubled = map(numbers, x => x * 2)           // [2, 4, 6, 8, 10]
@@ -778,7 +778,7 @@ minimum = min(...values)     // 5
 ### Parameterized Primitives
 Prism supports type-parameterized primitives for type-safe operations:
 
-```prism
+```javascript
 // Array operations with type parameters
 numbers = [3, 1, 4, 1, 5]
 sorted = sort<number>(numbers, (a, b) => a - b)
@@ -824,7 +824,7 @@ grouped = categoryGrouper(items)  // Grouped by category
 ```
 
 ### Import/Export System
-```prism
+```javascript
 // Importing functions and values
 import {sum, multiply, PI} from "./math.prism"
 import * as utils from "./utilities.prism"
@@ -849,7 +849,7 @@ export * from "./constants.prism"
 
 ### Confidence Expressions
 
-```prism
+```javascript
 // Basic confidence annotation
 value = "high quality data" ~> 0.95
 
@@ -862,7 +862,7 @@ rawValue = <~ value  // "high quality data"
 
 ### Context Statements
 
-```prism
+```javascript
 // Define a context
 context experiment {
   // Code within experimental context
@@ -878,7 +878,7 @@ context production shifting to staging {
 
 ### Agent Declarations
 
-```prism
+```javascript
 // Simple agent
 agent Assistant
 

@@ -78,6 +78,7 @@ const sidebars: SidebarsConfig = {
             'api/confidence/extractor',
             'api/confidence/calibration',
             'api/confidence/patterns',
+            'api/confidence/sources',
           ],
         },
         {
@@ -97,6 +98,7 @@ const sidebars: SidebarsConfig = {
             'api/validator/type-checking',
             'api/validator/linting',
             'api/validator/streaming',
+            'api/validator/utilities',
           ],
         },
       ],

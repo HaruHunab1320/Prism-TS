@@ -127,7 +127,7 @@ function HomepageHeader() {
           </div>
         </div>
         <div className={styles.heroCode}>
-          <CodeBlock language="javascript" title="example.prism">
+          <CodeBlock language="javascript" title="example.prism" >
             {heroCode}
           </CodeBlock>
         </div>

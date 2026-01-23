@@ -15,7 +15,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
-  align-items: center;
+  align-items: start;
 }
 
 @media (max-width: 996px) {
@@ -123,9 +123,11 @@
 }
 
 .heroCode {
+  height: auto;
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 8px 8px 0 rgba(8, 145, 178, 0.15),
+              0 4px 24px rgba(0, 0, 0, 0.08);
 }
 
 @media (max-width: 996px) {
@@ -332,7 +334,8 @@
 }
 
 [data-theme='dark'] .heroCode {
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 8px 8px 0 rgba(34, 211, 238, 0.2),
+              0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme='dark'] .feature:hover,

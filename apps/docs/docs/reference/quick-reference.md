@@ -41,9 +41,9 @@ A comprehensive cheat sheet for the Prism programming language.
 | Keyword | Description | Example |
 |---------|-------------|---------|
 | `uncertain` | Confidence-based control | `uncertain if (value) { ... }` |
-| `high` | Confidence >= 0.7 | `high { handleConfident() }` |
-| `medium` | 0.5 <= confidence < 0.7 | `medium { needsReview() }` |
-| `low` | Confidence < 0.5 | `low { reject() }` |
+| `high` | Confidence ≥ 0.7 | `high { handleConfident() }` |
+| `medium` | 0.5 ≤ confidence &lt; 0.7 | `medium { needsReview() }` |
+| `low` | Confidence &lt; 0.5 | `low { reject() }` |
 | `default` | Fallback branch | `default { handleUnknown() }` |
 | `context` | Context block | `context analysis { ... }` |
 | `Agent` | Agent declaration | `Agent Assistant { ... }` |
@@ -226,7 +226,7 @@ A comprehensive cheat sheet for the Prism programming language.
 ## Common Patterns
 
 ### Confident Value Creation
-```prism
+```javascript
 // Attach confidence to any value
 temperature = 23.5 ~> 0.92
 prediction = "sunny" ~> 0.75
@@ -234,7 +234,7 @@ data = {score: 85} ~> 0.88
 ```
 
 ### Uncertain Control Flow
-```prism
+```javascript
 uncertain if (prediction) {
   high { executeWithConfidence() }
   medium { requestReview() }
@@ -244,7 +244,7 @@ uncertain if (prediction) {
 ```
 
 ### Async with Error Handling
-```prism
+```javascript
 async function safeFetch(url) {
   try {
     response = await fetch(url)
@@ -257,7 +257,7 @@ async function safeFetch(url) {
 ```
 
 ### Pipeline Processing
-```prism
+```javascript
 result = data
   |> filter(x => x > 0)
   |> map(x => x * 2)
@@ -266,7 +266,7 @@ result = data
 ```
 
 ### LLM with Confidence
-```prism
+```javascript
 analysis = llm("Analyze: " + text)
 
 uncertain if (analysis) {
@@ -286,7 +286,7 @@ uncertain if (analysis) {
 ```
 
 ### Module Structure
-```prism
+```javascript
 // utils.prism
 export const VERSION = "1.0.0"
 export function validate(input) {
@@ -299,7 +299,7 @@ console.log("Version:", VERSION)
 ```
 
 ### Destructuring
-```prism
+```javascript
 // Arrays
 [first, second, ...rest] = [1, 2, 3, 4, 5]
 
