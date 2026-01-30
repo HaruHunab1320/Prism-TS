@@ -1,0 +1,13 @@
+# Lumina PoC Requirements
+# For Apple Silicon Macs
+
+# Core ML framework
+mlx>=0.5.0
+mlx-lm>=0.5.0
+
+# Utilities
+tqdm>=4.65.0
+
+# Optional: for extended functionality
+# transformers>=4.35.0  # For tokenizers
+# datasets>=2.14.0      # For data loading

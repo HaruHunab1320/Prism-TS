@@ -1,0 +1,83 @@
+// Lumina Specialist Network Orchestration Pattern (Prism)
+//
+// This pattern encodes routing, confidence gating, and aggregation policy
+// as Prism control flow. It assumes the runtime provides lumina.* functions
+// that return ConfidenceValue objects (value + confidence).
+//
+// NOTE: This is a policy layer, not model code.
+
+// --- Configuration ---
+const THRESHOLDS = {
+  high: 0.80,
+  medium: 0.60,
+  low: 0.40
+}
+
+const ROUTE_TOP_K = 3
+const DISAGREEMENT_THRESHOLD = 0.25
+const MIN_AGREEMENT_FOR_SYNTHESIS = 0.50
+
+// --- Helper functions ---
+fn topKByConfidence(responses, k) {
+  return responses.sort((a, b) => b.confidence - a.confidence).slice(0, k)
+}
+
+fn agreementScore(responses) {
+  // Placeholder: implement semantic similarity or exact match agreement.
+  // Returns a value in [0,1].
+  return 0.5
+}
+
+fn aggregateResponses(responses) {
+  // Placeholder aggregation policy: select highest confidence.
+  const best = topKByConfidence(responses, 1)[0]
+  return best
+}
+
+// --- Main orchestration ---
+fn luminaAnswer(query) {
+  // Step 1: Router predicts candidate domains with confidence
+  const routing = lumina.route(query)
+  // routing: { domain: string, confidence: number, alternatives: [{domain, confidence}] }
+
+  uncertain if (routing.confidence) {
+    high {
+      // High confidence routing: call single specialist
+      const specialist = lumina.specialist(routing.domain)
+      const result = specialist.query(query)
+      return result
+    }
+
+    medium {
+      // Medium confidence routing: call top-K specialists in parallel
+      const candidates = routing.alternatives
+        .sort((a, b) => b.confidence - a.confidence)
+        .slice(0, ROUTE_TOP_K)
+
+      const responses = parallel(candidates.map(c => lumina.specialist(c.domain).query(query)))
+
+      // Check for disagreement
+      const agreement = agreementScore(responses)
+      if (agreement < MIN_AGREEMENT_FOR_SYNTHESIS) {
+        // Disagreement: defer to aggregator policy
+        return lumina.aggregate(responses)
+      }
+
+      // If agreement is decent, use the most confident response
+      return aggregateResponses(responses)
+    }
+
+    low {
+      // Low confidence routing: call all specialists and aggregate
+      const responses = parallel(lumina.specialists().map(s => s.query(query)))
+      return lumina.aggregate(responses)
+    }
+  }
+}
+
+// --- Example usage ---
+fn main() {
+  const query = "How do I use the ~> operator in Prism?"
+  const result = luminaAnswer(query)
+  return result
+}
