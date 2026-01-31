@@ -12,12 +12,6 @@ describe('Array Methods', () => {
 
   describe('map function', () => {
     test('map with identity function', async () => {
-      // First define a simple function that doubles numbers
-      await runtime.execute(new Parser(tokenize(`
-        double = llm
-      `), '').parse());
-      
-      // Override with a proper function
       const env = (runtime as any).interpreter.environment;
       env.define('double', new FunctionValue('double', async (args) => {
         const num = args[0] as NumberValue;
@@ -25,7 +19,7 @@ describe('Array Methods', () => {
       }));
 
       const source = `
-        arr = [1, 2, 3]
+        let arr = [1, 2, 3]
         map(arr, double)
       `;
       const tokens = tokenize(source);
@@ -50,7 +44,7 @@ describe('Array Methods', () => {
       }));
 
       const source = `
-        arr = [1, 2, 3] ~> 0.8
+        let arr = [1, 2, 3] ~> 0.8
         map(arr, inc)
       `;
       const tokens = tokenize(source);
@@ -87,7 +81,7 @@ describe('Array Methods', () => {
       }));
 
       const source = `
-        arr = [1, 2, 3, 4, 5]
+        let arr = [1, 2, 3, 4, 5]
         filter(arr, isEven)
       `;
       const tokens = tokenize(source);
@@ -111,7 +105,7 @@ describe('Array Methods', () => {
       }));
 
       const source = `
-        arr = [1, 2, 3, 4] ~> 0.7
+        let arr = [1, 2, 3, 4] ~> 0.7
         filter(arr, gt2)
       `;
       const tokens = tokenize(source);
@@ -141,7 +135,7 @@ describe('Array Methods', () => {
       }));
 
       const source = `
-        arr = [1, 2, 3, 4]
+        let arr = [1, 2, 3, 4]
         reduce(arr, sum, 0)
       `;
       const tokens = tokenize(source);
@@ -163,7 +157,7 @@ describe('Array Methods', () => {
       }));
 
       const source = `
-        arr = [3, 1, 4, 1, 5]
+        let arr = [3, 1, 4, 1, 5]
         reduce(arr, max)
       `;
       const tokens = tokenize(source);
@@ -184,7 +178,7 @@ describe('Array Methods', () => {
       }));
 
       const source = `
-        arr = []
+        let arr = []
         reduce(arr, sum, 42)
       `;
       const tokens = tokenize(source);
@@ -198,7 +192,7 @@ describe('Array Methods', () => {
 
     test('reduce on empty array without initial value throws', async () => {
       const source = `
-        arr = []
+        let arr = []
         reduce(arr, llm)
       `;
       const tokens = tokenize(source);
@@ -217,7 +211,7 @@ describe('Array Methods', () => {
       }));
 
       const source = `
-        arr = [1, 2, 3] ~> 0.9
+        let arr = [1, 2, 3] ~> 0.9
         reduce(arr, sum, 0)
       `;
       const tokens = tokenize(source);
@@ -248,8 +242,8 @@ describe('Array Methods', () => {
       }));
 
       const source = `
-        arr = [1, 2, 3, 4, 5]
-        filtered = filter(arr, isOdd)
+        let arr = [1, 2, 3, 4, 5]
+        let filtered = filter(arr, isOdd)
         map(filtered, square)
       `;
       const tokens = tokenize(source);

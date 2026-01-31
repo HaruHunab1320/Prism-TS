@@ -1,5 +1,5 @@
 import { parse, createRuntime } from '../src';
-import { PromiseValue, NumberValue, StringValue, ArrayValue, UndefinedValue } from '../src/runtime';
+import { PromiseValue, NumberValue, StringValue, ArrayValue, NullValue } from '../src/runtime';
 
 describe('Async/Await', () => {
   let runtime: ReturnType<typeof createRuntime>;
@@ -54,22 +54,22 @@ describe('Async/Await', () => {
     it('should parse await expression', () => {
       const code = `
         async function test() {
-          x = await getValue()
+          let x = await getValue()
           return x
         }
       `;
       
       const ast = parse(code);
       const funcBody = (ast.statements[0] as any).body;
-      const assignment = funcBody.statements[0];
-      expect(assignment.value.type).toBe('AwaitExpression');
+      const declaration = funcBody.statements[0];
+      expect(declaration.initializer.type).toBe('AwaitExpression');
     });
 
     it('should await Promise values', async () => {
       const code = `
         async function delayedValue() {
-          p = Promise.resolve(42)
-          result = await p
+          let p = Promise.resolve(42)
+          let result = await p
           return result
         }
         delayedValue()
@@ -83,7 +83,7 @@ describe('Async/Await', () => {
     it('should pass through non-promise values', async () => {
       const code = `
         async function test() {
-          x = await 42
+          let x = await 42
           return x
         }
         test()
@@ -98,8 +98,8 @@ describe('Async/Await', () => {
   describe('Promise Built-ins', () => {
     it('should create resolved promise with Promise.resolve', async () => {
       const code = `
-        p = Promise.resolve(100)
-        result = await p
+        let p = Promise.resolve(100)
+        let result = await p
         result
       `;
       
@@ -111,7 +111,7 @@ describe('Async/Await', () => {
     it('should handle Promise.reject', async () => {
       const code = `
         async function testReject() {
-          p = Promise.reject("error")
+          let p = Promise.reject("error")
           // For now, we don't have try/catch, so this will throw
           return "should not reach"
         }
@@ -125,10 +125,10 @@ describe('Async/Await', () => {
     it('should wait for all promises with Promise.all', async () => {
       const code = `
         async function waitAll() {
-          p1 = Promise.resolve(1)
-          p2 = Promise.resolve(2)
-          p3 = Promise.resolve(3)
-          results = await Promise.all([p1, p2, p3])
+          let p1 = Promise.resolve(1)
+          let p2 = Promise.resolve(2)
+          let p3 = Promise.resolve(3)
+          let results = await Promise.all([p1, p2, p3])
           return results
         }
         waitAll()
@@ -146,9 +146,9 @@ describe('Async/Await', () => {
     it('should handle mixed promise and non-promise values in Promise.all', async () => {
       const code = `
         async function mixedAll() {
-          p1 = Promise.resolve(10)
-          v2 = 20
-          results = await Promise.all([p1, v2])
+          let p1 = Promise.resolve(10)
+          let v2 = 20
+          let results = await Promise.all([p1, v2])
           return results
         }
         mixedAll()
@@ -166,9 +166,9 @@ describe('Async/Await', () => {
     it('should delay execution with delay()', async () => {
       const code = `
         async function delayTest() {
-          start = 1
+          let start = 1
           await delay(10)
-          end = 2
+          let end = 2
           return end
         }
         delayTest()
@@ -205,7 +205,7 @@ describe('Async/Await', () => {
           async function inner() {
             return 42
           }
-          result = await inner()
+          let result = await inner()
           return result
         }
         outer()
@@ -219,10 +219,10 @@ describe('Async/Await', () => {
     it('should chain multiple awaits', async () => {
       const code = `
         async function chain() {
-          p1 = Promise.resolve(10)
-          v1 = await p1
-          p2 = Promise.resolve(v1 + 20)
-          v2 = await p2
+          let p1 = Promise.resolve(10)
+          let v1 = await p1
+          let p2 = Promise.resolve(v1 + 20)
+          let v2 = await p2
           return v2
         }
         chain()
@@ -236,9 +236,9 @@ describe('Async/Await', () => {
     it('should work with array methods', async () => {
       const code = `
         async function processArray() {
-          values = [1, 2, 3]
-          promises = values.map(v => Promise.resolve(v * 2))
-          results = await Promise.all(promises)
+          let values = [1, 2, 3]
+          let promises = values.map(v => Promise.resolve(v * 2))
+          let results = await Promise.all(promises)
           return results
         }
         processArray()
@@ -255,9 +255,9 @@ describe('Async/Await', () => {
     it('should work with confidence values', async () => {
       const code = `
         async function confidentAsync() {
-          value = 42 ~> 0.8
-          p = Promise.resolve(value)
-          result = await p
+          let value = 42 ~> 0.8
+          let p = Promise.resolve(value)
+          let result = await p
           return result
         }
         confidentAsync()
@@ -280,7 +280,7 @@ describe('Async/Await', () => {
     it('should handle missing expression after await', () => {
       const code = `
         async function test() {
-          x = await
+          let x = await
         }
       `;
       expect(() => parse(code)).toThrow("Expected expression");

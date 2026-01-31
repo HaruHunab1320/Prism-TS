@@ -272,17 +272,17 @@ Provide only the corrected code:`;
 import {UnifiedValidator, ErrorFormatter} from "@prism-lang/validator"
 
 function explainErrors(code) {
-  validator = new UnifiedValidator()
-  result = validator.validateAll(code)
+  let validator = new UnifiedValidator()
+  let result = validator.validateAll(code)
 
   if result.valid {
     return "Code is valid!" ~> 1.0
   }
 
-  errors = result.syntax.errors
-  formatted = ErrorFormatter.formatMultipleErrors(errors)
+  let errors = result.syntax.errors
+  let formatted = ErrorFormatter.formatMultipleErrors(errors)
 
-  explanation = ""
+  let explanation = ""
   for error in formatted {
     explanation = explanation + "Line " + error.line + ": " + error.message + "\n"
     if error.fix {
@@ -297,7 +297,7 @@ function explainErrors(code) {
 }
 
 // Usage
-code = "uncertain if (x { high { } }"
-help = explainErrors(code)
+let code = "uncertain if (x { high { } }"
+let help = explainErrors(code)
 print(help)
 ```

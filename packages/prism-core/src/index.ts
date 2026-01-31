@@ -13,7 +13,6 @@ export {
   StringValue,
   BooleanValue,
   NullValue,
-  UndefinedValue,
   ArrayValue,
   ObjectValue,
   FunctionValue,

@@ -2,6 +2,8 @@
 
 <div align="center">
 
+<img src="./apps/docs/static/img/prism-logo-v1.png" width="220" alt="Prism logo" />
+
 [![npm version](https://img.shields.io/npm/v/@prism-lang/core.svg?style=for-the-badge)](https://www.npmjs.com/package/@prism-lang/core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
@@ -150,11 +152,11 @@ Every AI application deals with uncertainty, but traditional languages pretend i
 
 ```prism
 // Traditional approach: Uncertainty is hidden
-result = llm_call()
+let result = llm_call()
 if (result) { /* hope for the best */ }
 
 // Prism: Uncertainty is explicit
-result = llm_call() ~> 0.7
+let result = llm_call() ~> 0.7
 uncertain if (result) {
   high { proceed_with_confidence() }
   medium { add_human_review() }
@@ -171,10 +173,10 @@ const gpt_says = llm("Analyze risk", { provider: "gpt4" }) ~> 0.8
 const gemini_says = llm("Analyze risk", { provider: "gemini" }) ~> 0.7
 
 // Automatically use highest confidence result
-best_analysis = claude_says ~||> gpt_says ~||> gemini_says
+let best_analysis = claude_says ~||> gpt_says ~||> gemini_says
 
 // Confidence-aware null coalescing
-decision = best_analysis ~?? fallback_analysis ~?? "manual_review"
+let decision = best_analysis ~?? fallback_analysis ~?? "manual_review"
 ```
 
 ### ⚙️ Configurable LLM Calls
@@ -201,15 +203,15 @@ Supported fields: `provider`, `model`, `temperature`, `maxTokens`, `topP`, `time
 Use `stream_llm()` to process tokens as they arrive:
 
 ```prism
-handle = stream_llm("Draft a haiku about autumn rain", { provider: "claude", structuredOutput: false })
+let handle = stream_llm("Draft a haiku about autumn rain", { provider: "claude", structuredOutput: false })
 
-chunk = await handle.next()
+let chunk = await handle.next()
 while (chunk != null) {
   console.log(chunk.text)
   chunk = await handle.next()
 }
 
-final = await handle.result()
+let final = await handle.result()
 console.log("Final confidence:", <~ final)
 ```
 
@@ -259,13 +261,14 @@ uncertain if (measurement) {
 
 // Uncertain loops
 uncertain while (condition) {
-  confident { /* >70% */ }
-  attempt { /* 30-70% */ }
-  abort { /* <30% */ }
+  high { /* >70% */ }
+  medium { /* 30-70% */ }
+  low { /* <30% */ }
+  default { /* fallback */ }
 }
 
 // Deterministic do/while
-count = 0
+let count = 0
 do {
   count = count + 1
 } while (count < 3)
@@ -273,10 +276,13 @@ do {
 
 ### Modern Language Features
 - First-class functions and lambdas
-- Pattern matching with uncertainty
 - Async/await with confidence propagation
+- Module system with `import`/`export`
+- Confident ternary (`~?`) and confident assignment operators (`~+=`, `~-=`, `~*=`, `~/=`)
 - Destructuring with confidence preservation
+- Rust-style `match` expressions with guards and patterns
 - Type checking with `typeof` and `instanceof`
+- `try`/`catch`/`finally` error handling
 
 ## 🛠️ Development
 
@@ -386,8 +392,8 @@ prism/
 
 ### AI Safety Analysis
 ```prism
-code = read_file("user_submission.py")
-safety = llm("Analyze for vulnerabilities: " + code)
+let code = read_file("user_submission.py")
+let safety = llm("Analyze for vulnerabilities: " + code)
 
 uncertain if (safety) {
   high { 
@@ -395,7 +401,7 @@ uncertain if (safety) {
     log("Deployed with confidence: " + (<~ safety))
   }
   medium {
-    results = run_sandboxed_tests(code)
+    let results = run_sandboxed_tests(code)
     if (results.pass) { deploy_to_staging() }
   }
   low {
@@ -406,16 +412,16 @@ uncertain if (safety) {
 
 ### Multi-Model Consensus
 ```prism
-question = "Will it rain tomorrow?"
+let question = "Will it rain tomorrow?"
 
 // Get predictions from multiple sources
-weather_api = fetch_weather_api() ~> 0.8
-model1 = llm(question, { provider: "claude" }) ~> 0.9  
-model2 = llm(question, { provider: "gemini" }) ~> 0.85
-local_sensors = analyze_pressure() ~> 0.7
+let weather_api = fetch_weather_api() ~> 0.8
+let model1 = llm(question, { provider: "claude" }) ~> 0.9  
+let model2 = llm(question, { provider: "gemini" }) ~> 0.85
+let local_sensors = analyze_pressure() ~> 0.7
 
 // Combine predictions with confidence weighting
-consensus = (weather_api ~+ model1 ~+ model2 ~+ local_sensors) ~/ 4
+let consensus = (weather_api ~+ model1 ~+ model2 ~+ local_sensors) ~/ 4
 
 uncertain if (consensus) {
   high { "Definitely bring an umbrella! ☔" }

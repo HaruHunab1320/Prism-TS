@@ -66,7 +66,7 @@ describe('Print and Console Functions', () => {
 
     it('should print confidence values with confidence level', async () => {
       const program = parse(`
-        confident = 100 ~> 0.85
+        let confident = 100 ~> 0.85
         print("Confident value:", confident)
       `);
       
@@ -77,8 +77,8 @@ describe('Print and Console Functions', () => {
 
     it('should print arrays and objects', async () => {
       const program = parse(`
-        arr = [1, 2, 3]
-        obj = {name: "Alice", age: 30}
+        let arr = [1, 2, 3]
+        let obj = {name: "Alice", age: 30}
         print("Array:", arr)
         print("Object:", obj)
       `);
@@ -90,15 +90,15 @@ describe('Print and Console Functions', () => {
       expect(mockConsole.log).toHaveBeenNthCalledWith(2, expect.stringContaining('Object:'));
     });
 
-    it('should return undefined', async () => {
+    it('should return null', async () => {
       const program = parse(`
-        result = print("test")
+        let result = print("test")
       `);
       
       await runtime.execute(program);
       
       const result = runtime.getVariable('result');
-      expect(result.type).toBe('undefined');
+      expect(result.type).toBe('null');
     });
   });
 
@@ -118,7 +118,7 @@ describe('Print and Console Functions', () => {
 
     it('should log confidence values', async () => {
       const program = parse(`
-        value = 50 ~> 0.9
+        let value = 50 ~> 0.9
         console.log("High confidence:", value)
       `);
       
@@ -186,9 +186,9 @@ describe('Print and Console Functions', () => {
   describe('Mixed usage scenarios', () => {
     it('should work with variables and expressions', async () => {
       const program = parse(`
-        name = "Alice"
-        age = 25
-        score = 95 ~> 0.8
+        let name = "Alice"
+        let age = 25
+        let score = 95 ~> 0.8
         
         print("User:", name, "Age:", age)
         console.log("Score:", score)
@@ -209,13 +209,13 @@ describe('Print and Console Functions', () => {
           return value
         }
         
-        logger = x => {
+        let logger = x => {
           print("Lambda log:", x)
           return x * 2
         }
         
-        result1 = debug(42)
-        result2 = logger(10)
+        let result1 = debug(42)
+        let result2 = logger(10)
       `);
       
       await runtime.execute(program);
@@ -228,9 +228,9 @@ describe('Print and Console Functions', () => {
 
     it('should work with array processing', async () => {
       const program = parse(`
-        numbers = [1, 2, 3, 4, 5]
+        let numbers = [1, 2, 3, 4, 5]
         
-        results = numbers.map(x => {
+        let results = numbers.map(x => {
           print("Processing:", x)
           return x * 2
         })
@@ -250,7 +250,7 @@ describe('Print and Console Functions', () => {
 
     it('should work with uncertain control flow', async () => {
       const program = parse(`
-        value = 75 ~> 0.8
+        let value = 75 ~> 0.8
         
         uncertain if (value > 50) {
           high { 
@@ -276,16 +276,16 @@ describe('Print and Console Functions', () => {
   });
 
   describe('Edge cases', () => {
-    it('should handle null and undefined values', async () => {
+    it('should handle null and null values', async () => {
       const program = parse(`
-        print(null, undefined)
-        console.log("Null:", null, "Undefined:", undefined)
+        print(null, null)
+        console.log("Null:", null, "Undefined:", null)
       `);
       
       await runtime.execute(program);
       
-      expect(mockConsole.log).toHaveBeenCalledWith('null undefined');
-      expect(mockConsole.log).toHaveBeenCalledWith('Null: null Undefined: undefined');
+      expect(mockConsole.log).toHaveBeenCalledWith('null null');
+      expect(mockConsole.log).toHaveBeenCalledWith('Null: null Undefined: null');
     });
 
     it('should handle empty arguments', async () => {
@@ -302,7 +302,7 @@ describe('Print and Console Functions', () => {
 
     it('should handle complex nested structures', async () => {
       const program = parse(`
-        complex = {
+        let complex = {
           users: ["Alice", "Bob"],
           scores: [95 ~> 0.9, 87 ~> 0.7],
           meta: {count: 2}

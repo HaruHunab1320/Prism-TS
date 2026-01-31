@@ -21,7 +21,7 @@ describe('Logical NOT Operator', () => {
   describe('Basic NOT operations', () => {
     it('should negate true to false', async () => {
       const code = `
-        result = !true
+        let result = !true
         result
       `;
       const result = await execute(code);
@@ -31,7 +31,7 @@ describe('Logical NOT Operator', () => {
 
     it('should negate false to true', async () => {
       const code = `
-        result = !false
+        let result = !false
         result
       `;
       const result = await execute(code);
@@ -41,8 +41,8 @@ describe('Logical NOT Operator', () => {
 
     it('should work with variables', async () => {
       const code = `
-        someValue = true
-        result = !someValue
+        let someValue = true
+        let result = !someValue
         result
       `;
       const result = await execute(code);
@@ -52,8 +52,8 @@ describe('Logical NOT Operator', () => {
 
     it('should work with null (falsy)', async () => {
       const code = `
-        value = null
-        result = !value
+        let value = null
+        let result = !value
         result
       `;
       const result = await execute(code);
@@ -61,10 +61,10 @@ describe('Logical NOT Operator', () => {
       expect((result as BooleanValue).value).toBe(true);
     });
 
-    it('should work with undefined (falsy)', async () => {
+    it('should work with null (falsy)', async () => {
       const code = `
-        value = undefined
-        result = !value
+        let value = null
+        let result = !value
         result
       `;
       const result = await execute(code);
@@ -74,8 +74,8 @@ describe('Logical NOT Operator', () => {
 
     it('should work with empty string (falsy)', async () => {
       const code = `
-        value = ""
-        result = !value
+        let value = ""
+        let result = !value
         result
       `;
       const result = await execute(code);
@@ -85,8 +85,8 @@ describe('Logical NOT Operator', () => {
 
     it('should work with non-empty string (truthy)', async () => {
       const code = `
-        value = "hello"
-        result = !value
+        let value = "hello"
+        let result = !value
         result
       `;
       const result = await execute(code);
@@ -96,8 +96,8 @@ describe('Logical NOT Operator', () => {
 
     it('should work with zero (falsy)', async () => {
       const code = `
-        value = 0
-        result = !value
+        let value = 0
+        let result = !value
         result
       `;
       const result = await execute(code);
@@ -107,8 +107,8 @@ describe('Logical NOT Operator', () => {
 
     it('should work with non-zero number (truthy)', async () => {
       const code = `
-        value = 42
-        result = !value
+        let value = 42
+        let result = !value
         result
       `;
       const result = await execute(code);
@@ -120,8 +120,8 @@ describe('Logical NOT Operator', () => {
   describe('NOT in expressions', () => {
     it('should work in if conditions', async () => {
       const code = `
-        someValue = false
-        result = "no"
+        let someValue = false
+        let result = "no"
         if (!someValue) {
           result = "yes"
         }
@@ -134,9 +134,9 @@ describe('Logical NOT Operator', () => {
 
     it('should work with parentheses', async () => {
       const code = `
-        a = true
-        b = false
-        result = !(a && b)
+        let a = true
+        let b = false
+        let result = !(a && b)
         result
       `;
       const result = await execute(code);
@@ -146,8 +146,8 @@ describe('Logical NOT Operator', () => {
 
     it('should work with double negation', async () => {
       const code = `
-        value = true
-        result = !!value
+        let value = true
+        let result = !!value
         result
       `;
       const result = await execute(code);
@@ -157,10 +157,10 @@ describe('Logical NOT Operator', () => {
 
     it('should work with complex expressions', async () => {
       const code = `
-        a = true
-        b = false
-        c = true
-        result = !(a && (b || c))
+        let a = true
+        let b = false
+        let c = true
+        let result = !(a && (b || c))
         result
       `;
       const result = await execute(code);
@@ -172,8 +172,8 @@ describe('Logical NOT Operator', () => {
   describe('Common patterns', () => {
     it('should check for empty array', async () => {
       const code = `
-        arr = []
-        isEmpty = !arr.length
+        let arr = []
+        let isEmpty = !arr.length
         isEmpty
       `;
       const result = await execute(code);
@@ -183,8 +183,8 @@ describe('Logical NOT Operator', () => {
 
     it('should check for non-empty array', async () => {
       const code = `
-        arr = [1, 2, 3]
-        hasItems = !(!arr.length)
+        let arr = [1, 2, 3]
+        let hasItems = !(!arr.length)
         hasItems
       `;
       const result = await execute(code);

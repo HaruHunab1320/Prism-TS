@@ -13,7 +13,7 @@ describe('Lambda Expressions', () => {
   describe('Basic lambda syntax', () => {
     test('single parameter lambda without parentheses', async () => {
       const source = `
-        double = x => x * 2
+        let double = x => x * 2
         double(5)
       `;
       const tokens = tokenize(source);
@@ -27,7 +27,7 @@ describe('Lambda Expressions', () => {
 
     test('single parameter lambda with parentheses', async () => {
       const source = `
-        increment = (x) => x + 1
+        let increment = (x) => x + 1
         increment(9)
       `;
       const tokens = tokenize(source);
@@ -41,7 +41,7 @@ describe('Lambda Expressions', () => {
 
     test('multiple parameter lambda', async () => {
       const source = `
-        add = (x, y) => x + y
+        let add = (x, y) => x + y
         add(3, 7)
       `;
       const tokens = tokenize(source);
@@ -55,7 +55,7 @@ describe('Lambda Expressions', () => {
 
     test('zero parameter lambda', async () => {
       const source = `
-        getAnswer = () => 42
+        let getAnswer = () => 42
         getAnswer()
       `;
       const tokens = tokenize(source);
@@ -71,8 +71,8 @@ describe('Lambda Expressions', () => {
   describe('Lambda with array methods', () => {
     test('map with lambda', async () => {
       const source = `
-        numbers = [1, 2, 3, 4, 5]
-        doubled = map(numbers, x => x * 2)
+        let numbers = [1, 2, 3, 4, 5]
+        let doubled = map(numbers, x => x * 2)
         doubled
       `;
       const tokens = tokenize(source);
@@ -89,8 +89,8 @@ describe('Lambda Expressions', () => {
 
     test('filter with lambda', async () => {
       const source = `
-        numbers = [1, 2, 3, 4, 5, 6]
-        evens = filter(numbers, x => x % 2 == 0)
+        let numbers = [1, 2, 3, 4, 5, 6]
+        let evens = filter(numbers, x => x % 2 == 0)
         evens
       `;
       const tokens = tokenize(source);
@@ -108,8 +108,8 @@ describe('Lambda Expressions', () => {
 
     test('reduce with lambda', async () => {
       const source = `
-        numbers = [1, 2, 3, 4]
-        sum = reduce(numbers, (acc, x, idx) => acc + x, 0)
+        let numbers = [1, 2, 3, 4]
+        let sum = reduce(numbers, (acc, x, idx) => acc + x, 0)
         sum
       `;
       const tokens = tokenize(source);
@@ -125,8 +125,8 @@ describe('Lambda Expressions', () => {
   describe('Lambda closures', () => {
     test('lambda captures outer scope', async () => {
       const source = `
-        multiplier = 10
-        scale = x => x * multiplier
+        let multiplier = 10
+        let scale = x => x * multiplier
         scale(5)
       `;
       const tokens = tokenize(source);
@@ -140,8 +140,8 @@ describe('Lambda Expressions', () => {
 
     test('nested lambdas', async () => {
       const source = `
-        makeAdder = x => (y => x + y)
-        add5 = makeAdder(5)
+        let makeAdder = x => (y => x + y)
+        let add5 = makeAdder(5)
         add5(3)
       `;
       const tokens = tokenize(source);
@@ -157,8 +157,8 @@ describe('Lambda Expressions', () => {
   describe('Lambda with confidence', () => {
     test('lambda preserves confidence in map', async () => {
       const source = `
-        numbers = [1, 2, 3] ~> 0.9
-        doubled = map(numbers, x => x * 2)
+        let numbers = [1, 2, 3] ~> 0.9
+        let doubled = map(numbers, x => x * 2)
         doubled
       `;
       const tokens = tokenize(source);
@@ -173,7 +173,7 @@ describe('Lambda Expressions', () => {
   describe('Complex lambda expressions', () => {
     test('lambda with ternary expression', async () => {
       const source = `
-        abs = x => x < 0 ? -x : x
+        let abs = x => x < 0 ? -x : x
         abs(-5)
       `;
       const tokens = tokenize(source);
@@ -187,9 +187,9 @@ describe('Lambda Expressions', () => {
 
     test('chained array operations with lambdas', async () => {
       const source = `
-        numbers = [1, 2, 3, 4, 5, 6]
-        evens = filter(numbers, x => x % 2 == 0)
-        result = map(evens, x => x * x)
+        let numbers = [1, 2, 3, 4, 5, 6]
+        let evens = filter(numbers, x => x % 2 == 0)
+        let result = map(evens, x => x * x)
         result
       `;
       const tokens = tokenize(source);
@@ -209,7 +209,7 @@ describe('Lambda Expressions', () => {
   describe('Multi-parameter lambda expressions', () => {
     test('three parameter lambda', async () => {
       const source = `
-        multiply3 = (a, b, c) => a * b * c
+        let multiply3 = (a, b, c) => a * b * c
         multiply3(2, 3, 4)
       `;
       const tokens = tokenize(source);
@@ -223,7 +223,7 @@ describe('Lambda Expressions', () => {
 
     test('lambda with string parameters', async () => {
       const source = `
-        greet = (first, last, title) => title + " " + first + " " + last
+        let greet = (first, last, title) => title + " " + first + " " + last
         greet("John", "Doe", "Dr.")
       `;
       const tokens = tokenize(source);
@@ -236,9 +236,9 @@ describe('Lambda Expressions', () => {
 
     test('array.filter with multi-param predicate', async () => {
       const source = `
-        pairs = [[1, 2], [3, 4], [5, 6]]
-        sumGreaterThan5 = filter(pairs, (pair) => {
-          sum = pair[0] + pair[1]
+        let pairs = [[1, 2], [3, 4], [5, 6]]
+        let sumGreaterThan5 = filter(pairs, (pair) => {
+          let sum = pair[0] + pair[1]
           sum > 5
         })
         sumGreaterThan5
@@ -255,8 +255,8 @@ describe('Lambda Expressions', () => {
 
     test('reduce with accumulator and value', async () => {
       const source = `
-        numbers = [1, 2, 3, 4, 5]
-        product = reduce(numbers, (acc, val) => acc * val, 1)
+        let numbers = [1, 2, 3, 4, 5]
+        let product = reduce(numbers, (acc, val) => acc * val, 1)
         product
       `;
       const tokens = tokenize(source);
@@ -270,9 +270,9 @@ describe('Lambda Expressions', () => {
 
     test('nested multi-param lambdas', async () => {
       const source = `
-        makeCalculator = (op) => (a, b) => op == "+" ? a + b : a * b
-        adder = makeCalculator("+")
-        result = adder(3, 4)
+        let makeCalculator = (op) => (a, b) => op == "+" ? a + b : a * b
+        let adder = makeCalculator("+")
+        let result = adder(3, 4)
         result
       `;
       const tokens = tokenize(source);
@@ -286,8 +286,8 @@ describe('Lambda Expressions', () => {
 
     test('multi-param lambda with confidence', async () => {
       const source = `
-        confidenceAdd = (a, b) => (a ~+ b) ~> 0.95
-        result = confidenceAdd(10 ~> 0.8, 20 ~> 0.9)
+        let confidenceAdd = (a, b) => (a ~+ b) ~> 0.95
+        let result = confidenceAdd(10 ~> 0.8, 20 ~> 0.9)
         result
       `;
       const tokens = tokenize(source);

@@ -13,8 +13,8 @@ describe('Confident Ternary Operator', () => {
   describe('Basic confident ternary', () => {
     test('confident ternary with confident condition', async () => {
       const source = `
-        condition = true ~> 0.8
-        result = condition ~? "yes" : "no"
+        let condition = true ~> 0.8
+        let result = condition ~? "yes" : "no"
         result
       `;
       const tokens = tokenize(source);
@@ -29,10 +29,10 @@ describe('Confident Ternary Operator', () => {
 
     test('confident ternary with confident branches', async () => {
       const source = `
-        condition = true
-        yes = "YES" ~> 0.9
-        no = "NO" ~> 0.7
-        result = condition ~? yes : no
+        let condition = true
+        let yes = "YES" ~> 0.9
+        let no = "NO" ~> 0.7
+        let result = condition ~? yes : no
         result
       `;
       const tokens = tokenize(source);
@@ -47,10 +47,10 @@ describe('Confident Ternary Operator', () => {
 
     test('confident ternary combines confidences', async () => {
       const source = `
-        condition = true ~> 0.8
-        yes = "YES" ~> 0.9
-        no = "NO" ~> 0.7
-        result = condition ~? yes : no
+        let condition = true ~> 0.8
+        let yes = "YES" ~> 0.9
+        let no = "NO" ~> 0.7
+        let result = condition ~? yes : no
         result
       `;
       const tokens = tokenize(source);
@@ -65,10 +65,10 @@ describe('Confident Ternary Operator', () => {
 
     test('confident ternary with false condition', async () => {
       const source = `
-        condition = false ~> 0.8
-        yes = "YES" ~> 0.9
-        no = "NO" ~> 0.7
-        result = condition ~? yes : no
+        let condition = false ~> 0.8
+        let yes = "YES" ~> 0.9
+        let no = "NO" ~> 0.7
+        let result = condition ~? yes : no
         result
       `;
       const tokens = tokenize(source);
@@ -83,9 +83,9 @@ describe('Confident Ternary Operator', () => {
 
     test('nested confident ternary', async () => {
       const source = `
-        a = true ~> 0.9
-        b = false ~> 0.8
-        result = a ~? (b ~? "A&B" : "A only") : "neither"
+        let a = true ~> 0.9
+        let b = false ~> 0.8
+        let result = a ~? (b ~? "A&B" : "A only") : "neither"
         result
       `;
       const tokens = tokenize(source);
@@ -100,13 +100,13 @@ describe('Confident Ternary Operator', () => {
 
     test('confident ternary vs regular ternary', async () => {
       const source = `
-        condition = true ~> 0.5
+        let condition = true ~> 0.5
         
         // Regular ternary ignores confidence
-        regular = condition ? "yes" : "no"
+        let regular = condition ? "yes" : "no"
         
         // Confident ternary propagates confidence
-        confident = condition ~? "yes" : "no"
+        let confident = condition ~? "yes" : "no"
         
         regular
       `;
@@ -115,9 +115,10 @@ describe('Confident Ternary Operator', () => {
       const ast = parser.parse();
       const regular = await runtime.execute(ast);
       
+      runtime = createRuntime();
       const source2 = `
-        condition = true ~> 0.5
-        confident = condition ~? "yes" : "no"
+        let condition = true ~> 0.5
+        let confident = condition ~? "yes" : "no"
         confident
       `;
       const tokens2 = tokenize(source2);
@@ -139,10 +140,10 @@ describe('Confident Ternary Operator', () => {
   describe('Confident ternary with complex expressions', () => {
     test('confident ternary with expression branches', async () => {
       const source = `
-        x = 10 ~> 0.8
-        y = 20 ~> 0.9
-        condition = x < y
-        result = condition ~? x + y : x - y
+        let x = 10 ~> 0.8
+        let y = 20 ~> 0.9
+        let condition = x < y
+        let result = condition ~? x + y : x - y
         result
       `;
       const tokens = tokenize(source);
@@ -158,11 +159,11 @@ describe('Confident Ternary Operator', () => {
 
     test('confident ternary in function', async () => {
       const source = `
-        getGrade = (score) => {
+        let getGrade = (score) => {
           score ~? (score >= 90 ~? "A" : "B") : "F"
         }
         
-        result = getGrade(85 ~> 0.95)
+        let result = getGrade(85 ~> 0.95)
         result
       `;
       const tokens = tokenize(source);

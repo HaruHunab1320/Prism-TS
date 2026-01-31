@@ -1,7 +1,7 @@
 import { Tokenizer } from '../src/tokenizer';
 import { Parser } from '../src/parser';
 import { Runtime } from '../src/runtime';
-import { NumberValue, ArrayValue } from '../src/runtime';
+import { NumberValue, ArrayValue, ConfidenceValue } from '../src/runtime';
 
 describe('Array Length Property', () => {
   let runtime: Runtime;
@@ -21,8 +21,8 @@ describe('Array Length Property', () => {
   describe('Basic .length usage', () => {
     it('should get length of array literal', async () => {
       const code = `
-        arr = [1, 2, 3, 4, 5]
-        len = arr.length
+        let arr = [1, 2, 3, 4, 5]
+        let len = arr.length
         len
       `;
       const result = await execute(code);
@@ -32,7 +32,7 @@ describe('Array Length Property', () => {
 
     it('should get length of empty array', async () => {
       const code = `
-        arr = []
+        let arr = []
         arr.length
       `;
       const result = await execute(code);
@@ -42,7 +42,7 @@ describe('Array Length Property', () => {
 
     it('should get length of single element array', async () => {
       const code = `
-        arr = ["hello"]
+        let arr = ["hello"]
         arr.length
       `;
       const result = await execute(code);
@@ -61,7 +61,7 @@ describe('Array Length Property', () => {
 
     it('should work after array modifications', async () => {
       const code = `
-        arr = [1, 2]
+        let arr = [1, 2]
         // Using spread to add elements (since push isn't implemented as method)
         arr = [...arr, 3, 4]
         arr.length
@@ -75,8 +75,8 @@ describe('Array Length Property', () => {
   describe('Length in control flow', () => {
     it('should work in if conditions', async () => {
       const code = `
-        arr = [1, 2, 3]
-        result = "not empty"
+        let arr = [1, 2, 3]
+        let result = "not empty"
         if (arr.length == 0) {
           result = "empty"
         }
@@ -88,8 +88,8 @@ describe('Array Length Property', () => {
 
     it('should work with logical NOT for empty check', async () => {
       const code = `
-        arr = []
-        isEmpty = !arr.length
+        let arr = []
+        let isEmpty = !arr.length
         isEmpty
       `;
       const result = await execute(code);
@@ -98,8 +98,8 @@ describe('Array Length Property', () => {
 
     it('should work in loops (map as workaround)', async () => {
       const code = `
-        arrays = [[1], [1, 2], [1, 2, 3]]
-        lengths = map(arrays, arr => arr.length)
+        let arrays = [[1], [1, 2], [1, 2, 3]]
+        let lengths = map(arrays, arr => arr.length)
         lengths
       `;
       const result = await execute(code);
@@ -114,31 +114,33 @@ describe('Array Length Property', () => {
   describe('Length with confidence', () => {
     it('should work with confident arrays', async () => {
       const code = `
-        arr = [1, 2, 3] ~> 0.8
-        len = arr.length
+        let arr = [1, 2, 3] ~> 0.8
+        let len = arr.length
         len
       `;
       const result = await execute(code);
-      expect(result).toBeInstanceOf(NumberValue);
-      expect((result as NumberValue).value).toBe(3);
+      expect(result).toBeInstanceOf(ConfidenceValue);
+      const confident = result as ConfidenceValue;
+      expect((confident.value as NumberValue).value).toBe(3);
+      expect(confident.confidence.value).toBeCloseTo(0.8);
     });
 
     it('should propagate confidence through length access', async () => {
       const code = `
-        arr = [1, 2, 3] ~> 0.8
-        hasItems = arr.length > 0
+        let arr = [1, 2, 3] ~> 0.8
+        let hasItems = arr.length > 0
         hasItems
       `;
       const result = await execute(code);
-      expect(result.value).toBe(true);
+      expect((result as any).value.value).toBe(true);
     });
   });
 
   describe('Common patterns', () => {
     it('should check array has items', async () => {
       const code = `
-        items = ["apple", "banana", "orange"]
-        hasItems = items.length > 0
+        let items = ["apple", "banana", "orange"]
+        let hasItems = items.length > 0
         hasItems
       `;
       const result = await execute(code);
@@ -147,9 +149,9 @@ describe('Array Length Property', () => {
 
     it('should get last index', async () => {
       const code = `
-        arr = [10, 20, 30, 40]
-        lastIndex = arr.length - 1
-        lastItem = arr[lastIndex]
+        let arr = [10, 20, 30, 40]
+        let lastIndex = arr.length - 1
+        let lastItem = arr[lastIndex]
         lastItem
       `;
       const result = await execute(code);
@@ -158,8 +160,8 @@ describe('Array Length Property', () => {
 
     it('should validate array size', async () => {
       const code = `
-        data = [1, 2, 3, 4, 5]
-        isValid = data.length >= 3 && data.length <= 10
+        let data = [1, 2, 3, 4, 5]
+        let isValid = data.length >= 3 && data.length <= 10
         isValid
       `;
       const result = await execute(code);
@@ -168,8 +170,8 @@ describe('Array Length Property', () => {
 
     it('should work with ternary for size check', async () => {
       const code = `
-        items = []
-        message = items.length == 0 ? "No items" : "Has \${items.length} items"
+        let items = []
+        let message = items.length == 0 ? "No items" : "Has \${items.length} items"
         message
       `;
       const result = await execute(code);

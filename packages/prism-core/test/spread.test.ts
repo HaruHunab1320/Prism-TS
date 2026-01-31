@@ -21,9 +21,9 @@ describe('Spread Operator', () => {
   describe('Array Spread', () => {
     it('should spread array elements', async () => {
       const code = `
-        arr1 = [1, 2, 3]
-        arr2 = [4, 5, 6]
-        combined = [...arr1, ...arr2]
+        let arr1 = [1, 2, 3]
+        let arr2 = [4, 5, 6]
+        let combined = [...arr1, ...arr2]
         combined
       `;
       const result = await execute(code);
@@ -36,8 +36,8 @@ describe('Spread Operator', () => {
 
     it('should spread in the middle of array', async () => {
       const code = `
-        arr = [2, 3, 4]
-        result = [1, ...arr, 5]
+        let arr = [2, 3, 4]
+        let result = [1, ...arr, 5]
         result
       `;
       const result = await execute(code);
@@ -50,10 +50,10 @@ describe('Spread Operator', () => {
 
     it('should handle multiple spreads', async () => {
       const code = `
-        a = [1, 2]
-        b = [3, 4]
-        c = [5, 6]
-        result = [...a, ...b, ...c]
+        let a = [1, 2]
+        let b = [3, 4]
+        let c = [5, 6]
+        let result = [...a, ...b, ...c]
         result
       `;
       const result = await execute(code);
@@ -65,8 +65,8 @@ describe('Spread Operator', () => {
 
     it('should spread empty arrays', async () => {
       const code = `
-        empty = []
-        result = [1, ...empty, 2]
+        let empty = []
+        let result = [1, ...empty, 2]
         result
       `;
       const result = await execute(code);
@@ -78,8 +78,8 @@ describe('Spread Operator', () => {
 
     it('should handle confident arrays when spreading', async () => {
       const code = `
-        confident = [1, 2, 3] ~> 0.8
-        result = [...confident, 4]
+        let confident = [1, 2, 3] ~> 0.8
+        let result = [...confident, 4]
         result
       `;
       const result = await execute(code);
@@ -96,9 +96,9 @@ describe('Spread Operator', () => {
   describe('Object Spread', () => {
     it('should spread object properties', async () => {
       const code = `
-        obj1 = {a: 1, b: 2}
-        obj2 = {c: 3, d: 4}
-        combined = {...obj1, ...obj2}
+        let obj1 = {a: 1, b: 2}
+        let obj2 = {c: 3, d: 4}
+        let combined = {...obj1, ...obj2}
         combined
       `;
       const result = await execute(code);
@@ -112,9 +112,9 @@ describe('Spread Operator', () => {
 
     it('should override properties with spread', async () => {
       const code = `
-        obj1 = {a: 1, b: 2}
-        obj2 = {b: 3, c: 4}
-        result = {...obj1, ...obj2}
+        let obj1 = {a: 1, b: 2}
+        let obj2 = {b: 3, c: 4}
+        let result = {...obj1, ...obj2}
         result
       `;
       const result = await execute(code);
@@ -126,8 +126,8 @@ describe('Spread Operator', () => {
 
     it('should mix spread with regular properties', async () => {
       const code = `
-        base = {a: 1, b: 2}
-        result = {...base, b: 3, c: 4}
+        let base = {a: 1, b: 2}
+        let result = {...base, b: 3, c: 4}
         result
       `;
       const result = await execute(code);
@@ -139,8 +139,8 @@ describe('Spread Operator', () => {
 
     it('should handle empty object spread', async () => {
       const code = `
-        empty = {}
-        result = {a: 1, ...empty, b: 2}
+        let empty = {}
+        let result = {a: 1, ...empty, b: 2}
         result
       `;
       const result = await execute(code);
@@ -151,8 +151,8 @@ describe('Spread Operator', () => {
 
     it('should handle confident objects when spreading', async () => {
       const code = `
-        confident = {a: 1, b: 2} ~> 0.9
-        result = {...confident, c: 3}
+        let confident = {a: 1, b: 2} ~> 0.9
+        let result = {...confident, c: 3}
         result
       `;
       const result = await execute(code);
@@ -167,11 +167,11 @@ describe('Spread Operator', () => {
   describe('Complex Spread Scenarios', () => {
     it('should work with nested structures', async () => {
       const code = `
-        nested = {
+        let nested = {
           data: [1, 2, 3],
           meta: {status: "ok"}
         }
-        result = {
+        let result = {
           ...nested,
           extra: "info"
         }
@@ -186,8 +186,8 @@ describe('Spread Operator', () => {
 
     it('should work with expressions', async () => {
       const code = `
-        getArray = () => [1, 2, 3]
-        result = [...getArray(), 4, 5]
+        let getArray = () => [1, 2, 3]
+        let result = [...getArray(), 4, 5]
         result
       `;
       const result = await execute(code);
@@ -199,8 +199,8 @@ describe('Spread Operator', () => {
 
     it('should work with computed property spread', async () => {
       const code = `
-        getObj = () => ({a: 1, b: 2})
-        result = {...getObj(), c: 3}
+        let getObj = () => ({a: 1, b: 2})
+        let result = {...getObj(), c: 3}
         result
       `;
       const result = await execute(code);
@@ -214,30 +214,30 @@ describe('Spread Operator', () => {
   describe('Error Handling', () => {
     it('should error when spreading non-array in array literal', async () => {
       const code = `
-        notArray = 42
-        result = [...notArray]
+        let notArray = 42
+        let result = [...notArray]
       `;
       await expect(execute(code)).rejects.toThrow('Cannot spread non-array value');
     });
 
     it('should error when spreading non-object in object literal', async () => {
       const code = `
-        notObject = 42
-        result = {...notObject}
+        let notObject = 42
+        let result = {...notObject}
       `;
       await expect(execute(code)).rejects.toThrow('Cannot spread non-object value');
     });
 
     it('should error when spreading null', async () => {
       const code = `
-        result = [...null]
+        let result = [...null]
       `;
       await expect(execute(code)).rejects.toThrow('Cannot spread non-array value');
     });
 
-    it('should error when spreading undefined', async () => {
+    it('should error when spreading null', async () => {
       const code = `
-        result = [...undefined]
+        let result = [...null]
       `;
       await expect(execute(code)).rejects.toThrow('Cannot spread non-array value');
     });

@@ -4,7 +4,7 @@ import {
   FunctionDeclaration,
   ReturnStatement,
   BlockStatement,
-  AssignmentStatement,
+  VariableDeclaration,
   ExpressionStatement,
   NumberLiteral,
   IdentifierExpression,
@@ -66,16 +66,16 @@ describe('Function Declarations', () => {
     it('should parse function with multiple statements', () => {
       const program = parse(`
         function complex(x, y) {
-          temp = x + y
-          result = temp * 2
+          let temp = x + y
+          let result = temp * 2
           return result
         }
       `);
       
       const stmt = program.statements[0] as FunctionDeclaration;
       expect(stmt.body.statements).toHaveLength(3);
-      expect(stmt.body.statements[0]).toBeInstanceOf(AssignmentStatement);
-      expect(stmt.body.statements[1]).toBeInstanceOf(AssignmentStatement);
+      expect(stmt.body.statements[0]).toBeInstanceOf(VariableDeclaration);
+      expect(stmt.body.statements[1]).toBeInstanceOf(VariableDeclaration);
       expect(stmt.body.statements[2]).toBeInstanceOf(ReturnStatement);
     });
   });
@@ -171,7 +171,7 @@ describe('Function Declarations', () => {
         function add(a, b) {
           return a + b
         }
-        result = add(5, 3)
+        let result = add(5, 3)
       `);
       
       const result = await runtime.execute(program);
@@ -183,7 +183,7 @@ describe('Function Declarations', () => {
         function getAnswer() {
           return 42
         }
-        answer = getAnswer()
+        let answer = getAnswer()
       `);
       
       await runtime.execute(program);
@@ -193,11 +193,11 @@ describe('Function Declarations', () => {
     it('should execute function with local variables', async () => {
       const program = parse(`
         function calculate(x) {
-          temp = x * 2
-          result = temp + 1
+          let temp = x * 2
+          let result = temp + 1
           return result
         }
-        output = calculate(5)
+        let output = calculate(5)
       `);
       
       await runtime.execute(program);
@@ -211,14 +211,14 @@ describe('Function Declarations', () => {
     it('should execute function without explicit return', async () => {
       const program = parse(`
         function withoutReturn(x) {
-          y = x + 1
+          let y = x + 1
         }
-        result = withoutReturn(5)
+        let result = withoutReturn(5)
       `);
       
       await runtime.execute(program);
       // Should return the last expression value or 0
-      expect(runtime.getVariable('result').value).toBe(6);
+      expect(runtime.getVariable('result').value).toBe(0);
     });
 
     it('should execute function with early return', async () => {
@@ -229,8 +229,8 @@ describe('Function Declarations', () => {
           }
           return x * 2
         }
-        negative = earlyReturn(-5)
-        positive = earlyReturn(5)
+        let negative = earlyReturn(-5)
+        let positive = earlyReturn(5)
       `);
       
       await runtime.execute(program);
@@ -241,13 +241,13 @@ describe('Function Declarations', () => {
     it('should execute function with rest parameters', async () => {
       const program = parse(`
         function sum(first, ...rest) {
-          total = first
+          let total = first
           for item in rest {
             total = total + item
           }
           return total
         }
-        result = sum(1, 2, 3, 4, 5)
+        let result = sum(1, 2, 3, 4, 5)
       `);
       
       await runtime.execute(program);
@@ -259,7 +259,7 @@ describe('Function Declarations', () => {
         function estimate() ~> 0.8 {
           return 100
         }
-        result = estimate()
+        let result = estimate()
       `);
       
       await runtime.execute(program);
@@ -281,7 +281,7 @@ describe('Function Declarations', () => {
           }
           return n * factorial(n - 1)
         }
-        result = factorial(5)
+        let result = factorial(5)
       `);
       
       await runtime.execute(program);
@@ -290,11 +290,11 @@ describe('Function Declarations', () => {
 
     it('should handle function closures', async () => {
       const program = parse(`
-        outer = 10
+        let outer = 10
         function addOuter(x) {
           return x + outer
         }
-        result = addOuter(5)
+        let result = addOuter(5)
       `);
       
       await runtime.execute(program);
@@ -309,7 +309,7 @@ describe('Function Declarations', () => {
           }
           return inner(x) + 1
         }
-        result = outer(5)
+        let result = outer(5)
       `);
       
       await runtime.execute(program);
@@ -323,7 +323,7 @@ describe('Function Declarations', () => {
         function add(a, b) {
           return a + b
         }
-        result = add(5)
+        let result = add(5)
       `);
       
       await expect(runtime.execute(program)).rejects.toThrow('Function expects 2 arguments, got 1');
@@ -334,7 +334,7 @@ describe('Function Declarations', () => {
         function add(a, b) {
           return a + b
         }
-        result = add(1, 2, 3)
+        let result = add(1, 2, 3)
       `);
       
       await expect(runtime.execute(program)).rejects.toThrow('Function expects 2 arguments, got 3');
@@ -363,7 +363,7 @@ describe('Function Declarations', () => {
   describe('Function Hoisting', () => {
     it('should allow function calls before declaration', async () => {
       const program = parse(`
-        result = add(5, 3)
+        let result = add(5, 3)
         function add(a, b) {
           return a + b
         }
@@ -380,12 +380,12 @@ describe('Function Declarations', () => {
         function test() {
           return 1
         }
-        first = test()
+        let first = test()
         
         function test() {
           return 2
         }
-        second = test()
+        let second = test()
       `);
       
       await runtime.execute(program);
@@ -397,10 +397,10 @@ describe('Function Declarations', () => {
   describe('Integration with Existing Features', () => {
     it('should work with confidence expressions in function body', async () => {
       const program = parse(`function estimate(x) {
-  value = x ~> 0.7
+  let value = x ~> 0.7
   return value
 }
-result = estimate(100)`);
+let result = estimate(100)`);
       
       await runtime.execute(program);
       // The function should execute without error
@@ -410,10 +410,10 @@ result = estimate(100)`);
     it('should work with array methods', async () => {
       const program = parse(`
         function processArray(arr) {
-          doubled = arr.map(x => x * 2)
+          let doubled = arr.map(x => x * 2)
           return doubled
         }
-        result = processArray([1, 2, 3])
+        let result = processArray([1, 2, 3])
       `);
       
       await runtime.execute(program);
@@ -429,14 +429,14 @@ result = estimate(100)`);
     it('should work with uncertain if statements', async () => {
       const program = parse(`
         function analyze(input) {
-          confidentInput = input ~> 0.9
+          let confidentInput = input ~> 0.9
           uncertain if (confidentInput) {
             high { return "high confidence" }
             medium { return "medium confidence" }
             low { return "low confidence" }
           }
         }
-        result = analyze(100)
+        let result = analyze(100)
       `);
       
       await runtime.execute(program);

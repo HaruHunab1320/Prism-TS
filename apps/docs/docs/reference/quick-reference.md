@@ -25,7 +25,8 @@ A comprehensive cheat sheet for the Prism programming language.
 | Keyword | Description | Example |
 |---------|-------------|---------|
 | `if` / `else` | Conditional | `if x > 0 { ... } else { ... }` |
-| `for` | For loop | `for i = 0; i < 10; i++ { ... }` |
+| `match` | Pattern matching | `match value { 0 => "zero", _ => "other" }` |
+| `for` | For loop | `for let i = 0; i < 10; i++ { ... }` |
 | `for...in` | Iterate array | `for item in array { ... }` |
 | `while` | While loop | `while condition { ... }` |
 | `do...while` | Do-while loop | `do { ... } while condition` |
@@ -51,10 +52,10 @@ A comprehensive cheat sheet for the Prism programming language.
 ### Literals
 | Keyword | Description | Example |
 |---------|-------------|---------|
-| `true` | Boolean true | `isValid = true` |
-| `false` | Boolean false | `isValid = false` |
-| `null` | Null value | `data = null` |
-| `undefined` | Undefined value | `value = undefined` |
+| `true` | Boolean true | `let isValid = true` |
+| `false` | Boolean false | `let isValid = false` |
+| `null` | Null value | `let data = null` |
+| `undefined` | Alias of `null` | `let value = undefined` |
 
 ### Type Checking
 | Keyword | Description | Example |
@@ -103,7 +104,7 @@ A comprehensive cheat sheet for the Prism programming language.
 ### Assignment
 | Operator | Description | Example |
 |----------|-------------|---------|
-| `=` | Assignment | `x = 10` |
+| `=` | Assignment | `let x = 10` |
 | `+=` | Add-assign | `x += 5` |
 | `-=` | Subtract-assign | `x -= 5` |
 | `*=` | Multiply-assign | `x *= 2` |
@@ -228,9 +229,9 @@ A comprehensive cheat sheet for the Prism programming language.
 ### Confident Value Creation
 ```javascript
 // Attach confidence to any value
-temperature = 23.5 ~> 0.92
-prediction = "sunny" ~> 0.75
-data = {score: 85} ~> 0.88
+let temperature = 23.5 ~> 0.92
+let prediction = "sunny" ~> 0.75
+let data = {score: 85} ~> 0.88
 ```
 
 ### Uncertain Control Flow
@@ -247,7 +248,7 @@ uncertain if (prediction) {
 ```javascript
 async function safeFetch(url) {
   try {
-    response = await fetch(url)
+    let response = await fetch(url)
     return response ~> 0.95
   } catch (error) {
     console.error("Fetch failed:", error)
@@ -258,7 +259,7 @@ async function safeFetch(url) {
 
 ### Pipeline Processing
 ```javascript
-result = data
+let result = data
   |> filter(x => x > 0)
   |> map(x => x * 2)
   |> sortBy("value", "desc")(_)
@@ -267,7 +268,7 @@ result = data
 
 ### LLM with Confidence
 ```javascript
-analysis = llm("Analyze: " + text)
+let analysis = llm("Analyze: " + text)
 
 uncertain if (analysis) {
   high {
@@ -301,13 +302,13 @@ console.log("Version:", VERSION)
 ### Destructuring
 ```javascript
 // Arrays
-[first, second, ...rest] = [1, 2, 3, 4, 5]
+let [first, second, ...rest] = [1, 2, 3, 4, 5]
 
 // Objects
-{name, age, city = "Unknown"} = user
+let {name, age, city = "Unknown"} = user
 
 // In function parameters
-processPoint = ({x, y}) => Math.sqrt(x*x + y*y)
+let processPoint = ({x, y}) => Math.sqrt(x*x + y*y)
 ```
 
 ---

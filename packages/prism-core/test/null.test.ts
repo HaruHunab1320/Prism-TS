@@ -14,7 +14,7 @@ describe('Null Support', () => {
   describe('Basic null operations', () => {
     it('should support null assignment', async () => {
       const source = `
-        value = null
+        let value = null
         value
       `;
       const tokens = tokenize(source);
@@ -27,7 +27,7 @@ describe('Null Support', () => {
 
     it('should support null in comparisons', async () => {
       const source = `
-        value = null
+        let value = null
         value == null
       `;
       const tokens = tokenize(source);
@@ -41,7 +41,7 @@ describe('Null Support', () => {
 
     it('should support null inequality', async () => {
       const source = `
-        value = 42
+        let value = 42
         value != null
       `;
       const tokens = tokenize(source);
@@ -55,7 +55,7 @@ describe('Null Support', () => {
 
     it('should treat null as falsy', async () => {
       const source = `
-        value = null
+        let value = null
         if (value) {
           "truthy"
         } else {
@@ -75,7 +75,7 @@ describe('Null Support', () => {
   describe('Null in data structures', () => {
     it('should support null in arrays', async () => {
       const source = `
-        arr = [1, null, 3]
+        let arr = [1, null, 3]
         arr[1]
       `;
       const tokens = tokenize(source);
@@ -88,7 +88,7 @@ describe('Null Support', () => {
 
     it('should support null in objects', async () => {
       const source = `
-        obj = { name: "Alice", email: null }
+        let obj = { name: "Alice", email: null }
         obj.email
       `;
       const tokens = tokenize(source);
@@ -101,7 +101,7 @@ describe('Null Support', () => {
 
     it('should support nested nulls', async () => {
       const source = `
-        data = {
+        let data = {
           user: {
             name: "Bob",
             phone: null,
@@ -125,8 +125,8 @@ describe('Null Support', () => {
   describe('Null with operators', () => {
     it('should support ternary with null', async () => {
       const source = `
-        value = null
-        result = value != null ? value : "default"
+        let value = null
+        let result = value != null ? value : "default"
         result
       `;
       const tokens = tokenize(source);
@@ -140,8 +140,8 @@ describe('Null Support', () => {
 
     it('should work with logical operators', async () => {
       const source = `
-        a = null
-        b = false
+        let a = null
+        let b = false
         a || b
       `;
       const tokens = tokenize(source);
@@ -155,8 +155,8 @@ describe('Null Support', () => {
 
     it('should work with logical AND', async () => {
       const source = `
-        a = null
-        b = true
+        let a = null
+        let b = true
         a && b
       `;
       const tokens = tokenize(source);
@@ -173,7 +173,7 @@ describe('Null Support', () => {
   describe('Null with confidence', () => {
     it('should support null with confidence values', async () => {
       const source = `
-        value = null ~> 0.9
+        let value = null ~> 0.9
         value
       `;
       const tokens = tokenize(source);
@@ -188,8 +188,8 @@ describe('Null Support', () => {
 
     it('should support confident null comparisons', async () => {
       const source = `
-        value = null ~> 0.8
-        check = value ~== null
+        let value = null ~> 0.8
+        let check = value ~== null
         check
       `;
       const tokens = tokenize(source);
@@ -207,8 +207,8 @@ describe('Null Support', () => {
   describe('Null with array methods', () => {
     it('should filter out nulls', async () => {
       const source = `
-        data = [1, null, 2, null, 3]
-        filtered = filter(data, x => x != null)
+        let data = [1, null, 2, null, 3]
+        let filtered = filter(data, x => x != null)
         filtered
       `;
       const tokens = tokenize(source);
@@ -226,8 +226,8 @@ describe('Null Support', () => {
 
     it('should map with null handling', async () => {
       const source = `
-        data = [1, null, 3]
-        mapped = map(data, x => x != null ? x * 2 : 0)
+        let data = [1, null, 3]
+        let mapped = map(data, x => x != null ? x * 2 : 0)
         mapped
       `;
       const tokens = tokenize(source);
@@ -245,8 +245,8 @@ describe('Null Support', () => {
 
     it('should reduce with null values', async () => {
       const source = `
-        data = [1, null, 2, null, 3]
-        sum = reduce(data, (acc, val, idx) => val != null ? acc + val : acc, 0)
+        let data = [1, null, 2, null, 3]
+        let sum = reduce(data, (acc, val, idx) => val != null ? acc + val : acc, 0)
         sum
       `;
       const tokens = tokenize(source);
@@ -262,18 +262,18 @@ describe('Null Support', () => {
   describe('Null edge cases', () => {
     it('should distinguish null from other falsy values', async () => {
       const source = `
-        nullVal = null
-        zero = 0
-        empty = ""
-        falseVal = false
-        undef = undefined
+        let nullVal = null
+        let zero = 0
+        let empty = ""
+        let falseVal = false
+        let undef = null
         
-        results = [
+        let results = [
           nullVal == null,      // true
           zero == null,         // true (Prism converts null to 0 for number comparison)
           empty == null,        // false
           falseVal == null,     // true (Prism converts null to 0, false to 0)
-          nullVal == undefined  // true (matches JavaScript behavior)
+          nullVal == null  // true (matches JavaScript behavior)
         ]
         results
       `;
@@ -289,14 +289,14 @@ describe('Null Support', () => {
       expect((array.elements[1] as BooleanValue).value).toBe(true);  // Prism behavior: 0 == null is true
       expect((array.elements[2] as BooleanValue).value).toBe(false);
       expect((array.elements[3] as BooleanValue).value).toBe(true); // Prism behavior: false == null is true  
-      expect((array.elements[4] as BooleanValue).value).toBe(true); // null == undefined is true
+      expect((array.elements[4] as BooleanValue).value).toBe(true); // null == null is true
     });
 
     it('should support multiple null assignments', async () => {
       const source = `
-        a = null
-        b = null
-        c = a
+        let a = null
+        let b = null
+        let c = a
         c == b
       `;
       const tokens = tokenize(source);

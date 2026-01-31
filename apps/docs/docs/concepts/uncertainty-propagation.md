@@ -15,14 +15,14 @@ Prism automatically tracks confidence values through all operations:
 
 ```javascript
 // Initial values with confidence
-measurement1 = 100 ~> 0.9
-measurement2 = 50 ~> 0.85
+let measurement1 = 100 ~> 0.9
+let measurement2 = 50 ~> 0.85
 
 // Confidence propagates automatically
-sum = measurement1 + measurement2  // 150 with implicit confidence tracking
+let sum = measurement1 + measurement2  // 150 with implicit confidence tracking
 
 // Explicit confidence operations
-confidentSum = measurement1 ~+ measurement2  // 150 (~85.0%)
+let confidentSum = measurement1 ~+ measurement2  // 150 (~85.0%)
 ```
 
 ### Default Confidence Values
@@ -30,14 +30,14 @@ confidentSum = measurement1 ~+ measurement2  // 150 (~85.0%)
 Non-confident values have an implicit confidence of 1.0:
 
 ```javascript
-plainValue = 42
-confidence = ~plainValue  // 1.0
+let plainValue = 42
+let confidence = ~plainValue  // 1.0
 
 // Mixing confident and non-confident values
-confident = 10 ~> 0.8
-plain = 5
+let confident = 10 ~> 0.8
+let plain = 5
 
-result = confident ~+ plain  // 15 (~80.0%)
+let result = confident ~+ plain  // 15 (~80.0%)
 ```
 
 ## Propagation Rules by Operation Type
@@ -50,11 +50,11 @@ Different arithmetic operations use different confidence propagation strategies:
 
 ```javascript
 // Takes the minimum confidence of operands
-a = 100 ~> 0.9
-b = 50 ~> 0.8
+let a = 100 ~> 0.9
+let b = 50 ~> 0.8
 
-sum = a ~+ b         // 150 (~80.0%) - min(0.9, 0.8)
-difference = a ~- b  // 50 (~80.0%)  - min(0.9, 0.8)
+let sum = a ~+ b         // 150 (~80.0%) - min(0.9, 0.8)
+let difference = a ~- b  // 50 (~80.0%)  - min(0.9, 0.8)
 
 // Rationale: Sum is only as reliable as its least reliable component
 ```
@@ -63,11 +63,11 @@ difference = a ~- b  // 50 (~80.0%)  - min(0.9, 0.8)
 
 ```javascript
 // Multiplies confidence values
-x = 10 ~> 0.9
-y = 5 ~> 0.8
+let x = 10 ~> 0.9
+let y = 5 ~> 0.8
 
-product = x ~* y    // 50 (~72.0%)  - 0.9 * 0.8
-quotient = x ~/ y   // 2 (~72.0%)   - 0.9 * 0.8
+let product = x ~* y    // 50 (~72.0%)  - 0.9 * 0.8
+let quotient = x ~/ y   // 2 (~72.0%)   - 0.9 * 0.8
 
 // Rationale: Multiplicative uncertainty compounds
 ```
@@ -76,16 +76,16 @@ quotient = x ~/ y   // 2 (~72.0%)   - 0.9 * 0.8
 
 ```javascript
 // Confidence degrades through chains
-a = 100 ~> 0.95
-b = 50 ~> 0.9
-c = 25 ~> 0.85
+let a = 100 ~> 0.95
+let b = 50 ~> 0.9
+let c = 25 ~> 0.85
 
 // Each operation applies its rule
-result1 = a ~+ b ~* c
+let result1 = a ~+ b ~* c
 // First: b ~* c = 1250 (~76.5%) - product rule
 // Then: a ~+ 1250 = 1350 (~76.5%) - minimum rule
 
-result2 = (a ~+ b) ~* c
+let result2 = (a ~+ b) ~* c
 // First: a ~+ b = 150 (~90.0%) - minimum rule
 // Then: 150 ~* c = 3750 (~76.5%) - product rule
 ```
@@ -95,14 +95,14 @@ result2 = (a ~+ b) ~* c
 Comparisons propagate confidence using the minimum strategy:
 
 ```javascript
-val1 = 100 ~> 0.9
-val2 = 100 ~> 0.85
+let val1 = 100 ~> 0.9
+let val2 = 100 ~> 0.85
 
 // All comparisons use minimum confidence
-equal = val1 ~== val2      // true (~85.0%)
-notEqual = val1 ~!= val2   // false (~85.0%)
-greater = val1 ~> val2     // false (~85.0%)
-less = val1 ~< val2        // false (~85.0%)
+let equal = val1 ~== val2      // true (~85.0%)
+let notEqual = val1 ~!= val2   // false (~85.0%)
+let greater = val1 ~> val2     // false (~85.0%)
+let less = val1 ~< val2        // false (~85.0%)
 ```
 
 ### Logical Operations
@@ -110,10 +110,10 @@ less = val1 ~< val2        // false (~85.0%)
 #### AND Operations (Minimum Strategy)
 
 ```javascript
-cond1 = true ~> 0.8
-cond2 = true ~> 0.9
+let cond1 = true ~> 0.8
+let cond2 = true ~> 0.9
 
-result = cond1 ~&& cond2  // true (~80.0%)
+let result = cond1 ~&& cond2  // true (~80.0%)
 
 // AND requires both conditions, so limited by weakest
 ```
@@ -121,10 +121,10 @@ result = cond1 ~&& cond2  // true (~80.0%)
 #### OR Operations (Maximum Strategy)
 
 ```javascript
-option1 = false ~> 0.7
-option2 = true ~> 0.9
+let option1 = false ~> 0.7
+let option2 = true ~> 0.9
 
-result = option1 ~|| option2  // true (~90.0%)
+let result = option1 ~|| option2  // true (~90.0%)
 
 // OR succeeds with best available option
 ```
@@ -135,13 +135,13 @@ Confidence propagates through function applications:
 
 ```javascript
 // Simple function
-double = x => x * 2
+let double = x => x * 2
 
-value = 10 ~> 0.85
-result = double(value)  // 20 (confidence preserved in context)
+let value = 10 ~> 0.85
+let result = double(value)  // 20 (confidence preserved in context)
 
 // Using confident pipeline
-processChain = value 
+let processChain = value 
   ~|> double 
   ~|> addTen 
   ~|> validate  // Confidence flows through
@@ -153,42 +153,42 @@ processChain = value
 
 ```javascript
 // Object with confident values
-data = {
+let data = {
   temperature: 23.5 ~> 0.92,
   humidity: 65 ~> 0.88,
   pressure: 1013 ~> 0.95
 }
 
 // Accessing preserves individual confidence
-temp = data.temperature  // 23.5 (~92.0%)
+let temp = data.temperature  // 23.5 (~92.0%)
 
 // Confident object access
-confidentData = data ~> 0.8
-reading = confidentData~.temperature  // 23.5 (~80.0%) - uses object confidence
+let confidentData = data ~> 0.8
+let reading = confidentData~.temperature  // 23.5 (~80.0%) - uses object confidence
 
 // Array operations
-measurements = [10 ~> 0.9, 20 ~> 0.85, 30 ~> 0.95]
-first = measurements[0]  // 10 (~90.0%)
+let measurements = [10 ~> 0.9, 20 ~> 0.85, 30 ~> 0.95]
+let first = measurements[0]  // 10 (~90.0%)
 ```
 
 ### Destructuring with Confidence
 
 ```javascript
 // Array destructuring preserves confidence
-values = [100 ~> 0.9, 200 ~> 0.85, 300 ~> 0.8]
-[a, b, c] = values
+let values = [100 ~> 0.9, 200 ~> 0.85, 300 ~> 0.8]
+let [a, b, c] = values
 // a = 100 (~90.0%), b = 200 (~85.0%), c = 300 (~80.0%)
 
 // Object destructuring
-sensor = {
+let sensor = {
   reading: 42 ~> 0.88,
   status: "ok" ~> 0.95
 }
-{reading, status} = sensor
+let {reading, status} = sensor
 // reading = 42 (~88.0%), status = "ok" (~95.0%)
 
 // Confidence thresholds in destructuring
-[x, y] = riskyData ~> 0.6
+let [x, y] = riskyData ~> 0.6
 // x and y inherit appropriate confidence
 ```
 
@@ -196,53 +196,52 @@ sensor = {
 
 ```javascript
 // Ternary preserves branch confidence
-condition = true ~> 0.9
-valueIfTrue = 100 ~> 0.85
-valueIfFalse = 200 ~> 0.8
+let condition = true ~> 0.9
+let valueIfTrue = 100 ~> 0.85
+let valueIfFalse = 200 ~> 0.8
 
-result = condition ? valueIfTrue : valueIfFalse
+let result = condition ? valueIfTrue : valueIfFalse
 // Result is 100 (~85.0%) - takes confidence from selected branch
 
 // Uncertain if propagates based on confidence level
-data = fetchData() ~> 0.75
+let data = fetchData() ~> 0.75
 
 uncertain if data {
   high {
     // Executes with high confidence
-    processedData = transform(data)  // Maintains confidence
+    let processedData = transform(data)  // Maintains confidence
   }
   medium {
-    validatedData = validate(data) ~> 0.6  // Can modify confidence
+    let validatedData = validate(data) ~> 0.6  // Can modify confidence
   }
   low {
-    fallbackData = getDefault() ~> 0.9  // New confidence
+    let fallbackData = getDefault() ~> 0.9  // New confidence
   }
 }
 ```
 
 ## Special Propagation Cases
 
-### Null and Undefined Handling
+### Null Handling
 
 ```javascript
-// Confident null/undefined
-nullValue = null ~> 0.9
-undefinedValue = undefined ~> 0.85
+// Confident null
+let nullValue = null ~> 0.9
 
-// Operations on null/undefined preserve confidence
-result1 = nullValue?.property  // undefined (maintains confidence context)
-result2 = undefinedValue ?? "default"  // "default" 
+// Operations on null preserve confidence
+let result1 = nullValue?.property  // null (maintains confidence context)
+let result2 = nullValue ?? "default"  // "default" 
 
 // Confident property access on null
-obj = null ~> 0.9
-prop = obj~.someProperty  // Special null handling with confidence
+let obj = null ~> 0.9
+let prop = obj~.someProperty  // Special null handling with confidence
 ```
 
 ### Error Propagation
 
 ```javascript
 // Errors can carry confidence information
-riskyOperation = () => {
+let riskyOperation = () => {
   if Math.random() > 0.5 {
     throw Error("Operation failed") ~> 0.7
   }
@@ -251,10 +250,10 @@ riskyOperation = () => {
 
 // Handle with confidence awareness
 try {
-  result = riskyOperation()
+  let result = riskyOperation()
 } catch (error) {
   // Error confidence available for decision making
-  errorConfidence = ~error
+  let errorConfidence = ~error
 }
 ```
 
@@ -264,54 +263,54 @@ try {
 
 ```javascript
 // Independent measurements
-sensor1 = 23.5 ~> 0.85
-sensor2 = 24.1 ~> 0.90
-sensor3 = 23.8 ~> 0.82
+let sensor1 = 23.5 ~> 0.85
+let sensor2 = 24.1 ~> 0.90
+let sensor3 = 23.8 ~> 0.82
 
 // Average with confidence (custom combination)
-avgValue = (sensor1 + sensor2 + sensor3) / 3
-avgConfidence = (0.85 + 0.90 + 0.82) / 3  // 0.857
+let avgValue = (sensor1 + sensor2 + sensor3) / 3
+let avgConfidence = (0.85 + 0.90 + 0.82) / 3  // 0.857
 
-combinedReading = avgValue ~> avgConfidence
+let combinedReading = avgValue ~> avgConfidence
 ```
 
 ### Confidence Decay Over Time
 
 ```javascript
 // Model confidence decay
-initialReading = 100 ~> 0.95
-decayRate = 0.01  // 1% per time unit
+let initialReading = 100 ~> 0.95
+let decayRate = 0.01  // 1% per time unit
 
-updateConfidence = (value, time) => {
-  currentConf = ~value
-  newConf = currentConf * (1 - decayRate * time)
+let updateConfidence = (value, time) => {
+  let currentConf = ~value
+  let newConf = currentConf * (1 - decayRate * time)
   (<~ value) ~> Math.max(0.1, newConf)  // Floor at 10%
 }
 
 // After 10 time units
-agedReading = updateConfidence(initialReading, 10)  // 100 (~85.5%)
+let agedReading = updateConfidence(initialReading, 10)  // 100 (~85.5%)
 ```
 
 ### Bayesian-style Updates
 
 ```javascript
 // Update confidence based on new evidence
-prior = "hypothesis" ~> 0.6
-evidence = "supporting data" ~> 0.8
+let prior = "hypothesis" ~> 0.6
+let evidence = "supporting data" ~> 0.8
 
 // Simple Bayesian update
-updateBelief = (prior, evidence) => {
-  priorConf = ~prior
-  evidenceConf = ~evidence
+let updateBelief = (prior, evidence) => {
+  let priorConf = ~prior
+  let evidenceConf = ~evidence
   
   // Simplified update rule
-  posterior = priorConf * evidenceConf / 
+  let posterior = priorConf * evidenceConf / 
     (priorConf * evidenceConf + (1 - priorConf) * (1 - evidenceConf))
   
   (<~ prior) ~> posterior
 }
 
-updated = updateBelief(prior, evidence)  // "hypothesis" (~80.0%)
+let updated = updateBelief(prior, evidence)  // "hypothesis" (~80.0%)
 ```
 
 ## Practical Examples
@@ -320,49 +319,49 @@ updated = updateBelief(prior, evidence)  // "hypothesis" (~80.0%)
 
 ```javascript
 // Multiple sensors with different reliabilities
-sensors = [
+let sensors = [
   {value: 23.5, confidence: 0.9},
   {value: 24.1, confidence: 0.85},
   {value: 23.8, confidence: 0.92}
 ]
 
 // Weighted average by confidence
-weightedAverage = () => {
-  totalWeight = 0
-  weightedSum = 0
+let weightedAverage = () => {
+  let totalWeight = 0
+  let weightedSum = 0
   
   for sensor in sensors {
-    weight = sensor.confidence
+    let weight = sensor.confidence
     totalWeight = totalWeight + weight
     weightedSum = weightedSum + (sensor.value * weight)
   }
   
-  avgValue = weightedSum / totalWeight
-  avgConfidence = totalWeight / sensors.length
+  let avgValue = weightedSum / totalWeight
+  let avgConfidence = totalWeight / sensors.length
   
   avgValue ~> avgConfidence
 }
 
-fusedReading = weightedAverage()  // ~23.75 (~89.0%)
+let fusedReading = weightedAverage()  // ~23.75 (~89.0%)
 ```
 
 ### Multi-stage Processing Pipeline
 
 ```javascript
 // Each stage can affect confidence
-rawData = fetchFromSensor() ~> 0.95
+let rawData = fetchFromSensor() ~> 0.95
 
 // Stage 1: Calibration (high confidence process)
-calibrated = calibrate(rawData) ~> 0.98
+let calibrated = calibrate(rawData) ~> 0.98
 
 // Stage 2: Filtering (may reduce confidence)
-filtered = applyFilter(calibrated) ~> 0.9
+let filtered = applyFilter(calibrated) ~> 0.9
 
 // Stage 3: Validation (confidence gate)
-validated = filtered ~@> 0.85  // Only pass if confidence >= 85%
+let validated = filtered ~@> 0.85  // Only pass if confidence >= 85%
 
 // Stage 4: Final processing
-final = process(validated) ~> 0.88
+let final = process(validated) ~> 0.88
 
 // Overall confidence tracked through pipeline
 ```
@@ -371,7 +370,7 @@ final = process(validated) ~> 0.88
 
 ```javascript
 // Decision nodes with confidence
-makeDecision = (input) => {
+let makeDecision = (input) => {
   // First decision point
   if (input.temperature ~> 0.9) > 25 {
     // Hot path
@@ -390,7 +389,7 @@ makeDecision = (input) => {
   }
 }
 
-action = makeDecision(sensorData)
+let action = makeDecision(sensorData)
 ```
 
 ## Best Practices

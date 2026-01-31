@@ -14,7 +14,7 @@ describe('Compound Assignment Operators', () => {
   describe('Basic compound assignments', () => {
     it('should support += operator', async () => {
       const source = `
-        x = 10
+        let x = 10
         x += 5
         x
       `;
@@ -29,7 +29,7 @@ describe('Compound Assignment Operators', () => {
 
     it('should support -= operator', async () => {
       const source = `
-        x = 20
+        let x = 20
         x -= 8
         x
       `;
@@ -44,7 +44,7 @@ describe('Compound Assignment Operators', () => {
 
     it('should support *= operator', async () => {
       const source = `
-        x = 5
+        let x = 5
         x *= 3
         x
       `;
@@ -59,7 +59,7 @@ describe('Compound Assignment Operators', () => {
 
     it('should support /= operator', async () => {
       const source = `
-        x = 20
+        let x = 20
         x /= 4
         x
       `;
@@ -74,7 +74,7 @@ describe('Compound Assignment Operators', () => {
 
     it('should support %= operator', async () => {
       const source = `
-        x = 17
+        let x = 17
         x %= 5
         x
       `;
@@ -91,7 +91,7 @@ describe('Compound Assignment Operators', () => {
   describe('Compound assignments with strings', () => {
     it('should support += with strings', async () => {
       const source = `
-        message = "Hello"
+        let message = "Hello"
         message += " World"
         message
       `;
@@ -108,7 +108,7 @@ describe('Compound Assignment Operators', () => {
   describe('Compound assignments with confidence', () => {
     it('should preserve confidence with +=', async () => {
       const source = `
-        x = 10 ~> 0.8
+        let x = 10 ~> 0.8
         x += 5
         x
       `;
@@ -124,8 +124,8 @@ describe('Compound Assignment Operators', () => {
 
     it('should use minimum confidence when both operands have confidence', async () => {
       const source = `
-        x = 10 ~> 0.9
-        y = 5 ~> 0.7
+        let x = 10 ~> 0.9
+        let y = 5 ~> 0.7
         x += y
         x
       `;
@@ -143,7 +143,7 @@ describe('Compound Assignment Operators', () => {
   describe('Chain compound assignments', () => {
     it('should support multiple compound assignments', async () => {
       const source = `
-        x = 100
+        let x = 100
         x += 50
         x *= 2
         x -= 100
@@ -163,7 +163,7 @@ describe('Compound Assignment Operators', () => {
   describe('Compound assignments in expressions', () => {
     it('should work in conditional statements', async () => {
       const source = `
-        count = 0
+        let count = 0
         if (true) {
           count += 10
         }
@@ -180,8 +180,8 @@ describe('Compound Assignment Operators', () => {
 
     it('should work with array elements', async () => {
       const source = `
-        sum = 0
-        numbers = [1, 2, 3, 4, 5]
+        let sum = 0
+        let numbers = [1, 2, 3, 4, 5]
         sum += numbers[0]
         sum += numbers[1]
         sum += numbers[2]

@@ -241,8 +241,8 @@ Confidence naturally decays over time as information becomes stale:
 
 ```typescript
 // Exponential decay formula
-decayFactor = Math.pow(0.5, age / halfLife)
-calibrated = original * decayFactor + 0.5 * (1 - decayFactor)
+const decayFactor = Math.pow(0.5, age / halfLife)
+const calibrated = original * decayFactor + 0.5 * (1 - decayFactor)
 ```
 
 **Example:**

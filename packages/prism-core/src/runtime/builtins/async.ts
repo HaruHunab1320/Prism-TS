@@ -6,7 +6,7 @@ import {
   FunctionValue,
   NumberValue,
   StringValue,
-  UndefinedValue,
+  NullValue,
   PromiseValue,
   ObjectValue,
 } from '../values';
@@ -39,7 +39,7 @@ export function registerAsyncBuiltins(register: Registrar): void {
       }
 
       let timeoutId: NodeJS.Timeout | null = null;
-      let lastResult: Value = new UndefinedValue();
+      let lastResult: Value = new NullValue();
 
       return new FunctionValue('debouncedFunction', async (innerArgs) => {
         return new Promise<Value>((resolve) => {
@@ -52,7 +52,7 @@ export function registerAsyncBuiltins(register: Registrar): void {
               lastResult = await func.value(innerArgs);
               resolve(lastResult);
             } catch {
-              resolve(new UndefinedValue());
+              resolve(new NullValue());
             }
           }, delayMs);
         });
@@ -114,7 +114,7 @@ export function registerAsyncBuiltins(register: Registrar): void {
 
     return new PromiseValue(
       new Promise(resolve => {
-        setTimeout(() => resolve(new UndefinedValue()), delayMs);
+        setTimeout(() => resolve(new NullValue()), delayMs);
       })
     );
   });

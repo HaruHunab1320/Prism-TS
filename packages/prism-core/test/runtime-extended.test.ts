@@ -95,8 +95,8 @@ describe('Runtime Extended Tests', () => {
 
     it('should short-circuit AND operations', async () => {
       const program = parse(`
-        x = 0
-        result = false && x
+        let x = 0
+        let result = false && x
         x
       `);
       const result = await runtime.execute(program);
@@ -105,8 +105,8 @@ describe('Runtime Extended Tests', () => {
 
     it('should short-circuit OR operations', async () => {
       const program = parse(`
-        x = 0
-        result = true || x
+        let x = 0
+        let result = true || x
         x
       `);
       const result = await runtime.execute(program);
@@ -123,7 +123,7 @@ describe('Runtime Extended Tests', () => {
 
     it('should handle property access on objects', async () => {
       const program = parse(`
-        obj = { name: "John", age: 30 }
+        let obj = { name: "John", age: 30 }
         obj.name
       `);
       const result = await runtime.execute(program);
@@ -132,7 +132,7 @@ describe('Runtime Extended Tests', () => {
 
     it('should handle nested property access', async () => {
       const program = parse(`
-        obj = { person: { name: "John", age: 30 } }
+        let obj = { person: { name: "John", age: 30 } }
         obj.person.name
       `);
       const result = await runtime.execute(program);
@@ -141,7 +141,7 @@ describe('Runtime Extended Tests', () => {
 
     it('should handle array index access', async () => {
       const program = parse(`
-        arr = [10, 20, 30]
+        let arr = [10, 20, 30]
         arr[1]
       `);
       const result = await runtime.execute(program);
@@ -157,7 +157,7 @@ describe('Runtime Extended Tests', () => {
       }));
 
       const program = parse(`
-        arr = [1, 2, 3]
+        let arr = [1, 2, 3]
         map(arr, double)
       `);
       const result = await runtime.execute(program);
@@ -170,7 +170,7 @@ describe('Runtime Extended Tests', () => {
 
     it('should handle array length property', async () => {
       const program = parse(`
-        arr = [1, 2, 3, 4, 5]
+        let arr = [1, 2, 3, 4, 5]
         arr.length
       `);
       const result = await runtime.execute(program);
@@ -180,17 +180,17 @@ describe('Runtime Extended Tests', () => {
 
     it('should handle confident array length', async () => {
       const program = parse(`
-        arr = [1, 2, 3, 4] ~> 0.8
+        let arr = [1, 2, 3, 4] ~> 0.8
         arr.length
       `);
       const result = await runtime.execute(program);
-      expect(result.type).toBe('number');
-      expect(result.value).toBe(4);
+      expect(result.type).toBe('confident');
+      expect(result.value.value).toBe(4);
     });
 
-    it('should handle undefined property access', async () => {
+    it('should handle null property access', async () => {
       const program = parse(`
-        obj = { name: "John" }
+        let obj = { name: "John" }
         obj.age
       `);
       await expect(runtime.execute(program)).rejects.toThrow('Property \'age\' does not exist');
@@ -198,7 +198,7 @@ describe('Runtime Extended Tests', () => {
 
     it('should handle out of bounds array access', async () => {
       const program = parse(`
-        arr = [1, 2, 3]
+        let arr = [1, 2, 3]
         arr[10]
       `);
       await expect(runtime.execute(program)).rejects.toThrow('Array index 10 out of bounds');
@@ -214,9 +214,9 @@ describe('Runtime Extended Tests', () => {
 
     it('should execute context blocks without losing scope', async () => {
       const program = parse(`
-        shared = "outside"
+        let shared = "outside"
         in context Analysis {
-          result = "contextual " + shared
+          let result = "contextual " + shared
         }
         result
       `);
@@ -274,7 +274,7 @@ describe('Runtime Extended Tests', () => {
 
     it('should handle simple string interpolation', async () => {
       const program = parse(`
-        name = "World"
+        let name = "World"
         "Hello, \${name}!"
       `);
       const result = await runtime.execute(program);
@@ -283,8 +283,8 @@ describe('Runtime Extended Tests', () => {
 
     it('should handle multiple interpolations', async () => {
       const program = parse(`
-        x = 10
-        y = 20
+        let x = 10
+        let y = 20
         "x = \${x}, y = \${y}, sum = \${x + y}"
       `);
       const result = await runtime.execute(program);
@@ -293,7 +293,7 @@ describe('Runtime Extended Tests', () => {
 
     it('should handle interpolation with confident values', async () => {
       const program = parse(`
-        value = 42 ~> 0.8
+        let value = 42 ~> 0.8
         "The value is \${value}"
       `);
       const result = await runtime.execute(program);
@@ -328,8 +328,8 @@ describe('Runtime Extended Tests', () => {
 
     it('should handle confidence coalesce (~??)', async () => {
       const program = parse(`
-        value1 = 0 ~> 0.3
-        value2 = 42 ~> 0.8
+        let value1 = 0 ~> 0.3
+        let value2 = 42 ~> 0.8
         value1 ~?? value2
       `);
       const result = await runtime.execute(program);
@@ -341,8 +341,8 @@ describe('Runtime Extended Tests', () => {
 
     it('should handle confidence min (~&&)', async () => {
       const program = parse(`
-        value1 = 10 ~> 0.8
-        value2 = 20 ~> 0.6
+        let value1 = 10 ~> 0.8
+        let value2 = 20 ~> 0.6
         value1 ~&& value2
       `);
       const result = await runtime.execute(program);
@@ -351,8 +351,8 @@ describe('Runtime Extended Tests', () => {
 
     it('should handle confidence max (~||)', async () => {
       const program = parse(`
-        value1 = 10 ~> 0.8
-        value2 = 20 ~> 0.6
+        let value1 = 10 ~> 0.8
+        let value2 = 20 ~> 0.6
         value1 ~|| value2
       `);
       const result = await runtime.execute(program);
@@ -376,9 +376,9 @@ describe('Runtime Extended Tests', () => {
     it('should handle errors in block statements', async () => {
       const program = parse(`
         {
-          x = 10
+          let x = 10
           undefined_var + 5
-          y = 20
+          let y = 20
         }
       `);
       await expect(runtime.execute(program)).rejects.toThrow(/undefined_var/);
@@ -400,7 +400,7 @@ describe('Runtime Extended Tests', () => {
 
     it('should handle multiline strings with interpolation', async () => {
       const program = parse(`
-        name = "World"
+        let name = "World"
         \`\`\`
 Hello, \${name}!
 This is a multiline string.
@@ -449,8 +449,8 @@ This is a multiline string.
 
     it('should handle confidence arithmetic with mixed values', async () => {
       const program = parse(`
-        confident = 10 ~> 0.9
-        regular = 20
+        let confident = 10 ~> 0.9
+        let regular = 20
         confident + regular
       `);
       const result = await runtime.execute(program);

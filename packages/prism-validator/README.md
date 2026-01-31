@@ -118,7 +118,6 @@ const completions = validator.getStreamingCompletions(); // ["llm(\""]
 
 The validator provides LLM-optimized error messages with:
 
-- Clear error codes for pattern matching
 - Specific fix suggestions
 - Working code examples
 - Contextual help

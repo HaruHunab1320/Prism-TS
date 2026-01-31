@@ -21,25 +21,25 @@ describe('Nullish Coalescing Operator', () => {
   describe('Basic nullish coalescing', () => {
     it('should return right side for null', async () => {
       const code = `
-        result = null ?? "default"
+        let result = null ?? "default"
         result
       `;
       const result = await execute(code);
       expect((result as StringValue).value).toBe('default');
     });
 
-    it('should return right side for undefined', async () => {
+    it('should return right side for null', async () => {
       const code = `
-        result = undefined ?? "default"
+        let result = null ?? "default"
         result
       `;
       const result = await execute(code);
       expect((result as StringValue).value).toBe('default');
     });
 
-    it('should return left side for non-null/undefined values', async () => {
+    it('should return left side for non-null/null values', async () => {
       const code = `
-        result = "value" ?? "default"
+        let result = "value" ?? "default"
         result
       `;
       const result = await execute(code);
@@ -48,7 +48,7 @@ describe('Nullish Coalescing Operator', () => {
 
     it('should return 0 when left is 0', async () => {
       const code = `
-        result = 0 ?? 42
+        let result = 0 ?? 42
         result
       `;
       const result = await execute(code);
@@ -57,7 +57,7 @@ describe('Nullish Coalescing Operator', () => {
 
     it('should return false when left is false', async () => {
       const code = `
-        result = false ?? true
+        let result = false ?? true
         result
       `;
       const result = await execute(code);
@@ -66,7 +66,7 @@ describe('Nullish Coalescing Operator', () => {
 
     it('should return empty string when left is empty string', async () => {
       const code = `
-        result = "" ?? "default"
+        let result = "" ?? "default"
         result
       `;
       const result = await execute(code);
@@ -77,7 +77,7 @@ describe('Nullish Coalescing Operator', () => {
   describe('Chaining nullish coalescing', () => {
     it('should chain multiple ?? operators', async () => {
       const code = `
-        result = null ?? undefined ?? "final"
+        let result = null ?? null ?? "final"
         result
       `;
       const result = await execute(code);
@@ -86,7 +86,7 @@ describe('Nullish Coalescing Operator', () => {
 
     it('should stop at first non-nullish value', async () => {
       const code = `
-        result = null ?? "second" ?? "third"
+        let result = null ?? "second" ?? "third"
         result
       `;
       const result = await execute(code);
@@ -95,10 +95,10 @@ describe('Nullish Coalescing Operator', () => {
 
     it('should work with variables', async () => {
       const code = `
-        a = null
-        b = undefined
-        c = "value"
-        result = a ?? b ?? c
+        let a = null
+        let b = null
+        let c = "value"
+        let result = a ?? b ?? c
         result
       `;
       const result = await execute(code);
@@ -109,37 +109,37 @@ describe('Nullish Coalescing Operator', () => {
   describe('Difference from logical OR', () => {
     it('should differ from || for falsy values', async () => {
       const code = `
-        zero = 0 ?? 10
+        let zero = 0 ?? 10
         zero
       `;
       const result = await execute(code);
       expect((result as NumberValue).value).toBe(0);
       
       const code2 = `
-        emptyStr = "" ?? "default"
+        let emptyStr = "" ?? "default"
         emptyStr
       `;
       const result2 = await execute(code2);
       expect((result2 as StringValue).value).toBe('');
       
       const code3 = `
-        falseBool = false ?? true
+        let falseBool = false ?? true
         falseBool
       `;
       const result3 = await execute(code3);
       expect((result3 as BooleanValue).value).toBe(false);
     });
 
-    it('should behave like || for null/undefined', async () => {
+    it('should behave like || for null/null', async () => {
       const code = `
-        nullResult = null ?? "default"
+        let nullResult = null ?? "default"
         nullResult
       `;
       const result = await execute(code);
       expect((result as StringValue).value).toBe('default');
       
       const code2 = `
-        undefinedResult = undefined ?? "default"
+        let undefinedResult = null ?? "default"
         undefinedResult
       `;
       const result2 = await execute(code2);
@@ -150,8 +150,8 @@ describe('Nullish Coalescing Operator', () => {
   describe('With other operators', () => {
     it('should work with ternary operator', async () => {
       const code = `
-        value = null
-        result = (value ?? "default") == "default" ? "correct" : "wrong"
+        let value = null
+        let result = (value ?? "default") == "default" ? "correct" : "wrong"
         result
       `;
       const result = await execute(code);
@@ -160,8 +160,8 @@ describe('Nullish Coalescing Operator', () => {
 
     it('should work with optional chaining', async () => {
       const code = `
-        obj = { data: null }
-        result = obj?.data ?? "fallback"
+        let obj = { data: null }
+        let result = obj?.data ?? "fallback"
         result
       `;
       const result = await execute(code);
@@ -170,7 +170,7 @@ describe('Nullish Coalescing Operator', () => {
 
     it('should have correct precedence', async () => {
       const code = `
-        result = null ?? "default" + " value"
+        let result = null ?? "default" + " value"
         result
       `;
       const result = await execute(code);
@@ -182,8 +182,8 @@ describe('Nullish Coalescing Operator', () => {
   describe('With confidence values', () => {
     it('should work with confident null', async () => {
       const code = `
-        value = null ~> 0.8
-        result = value ?? "default"
+        let value = null ~> 0.8
+        let result = value ?? "default"
         result
       `;
       const result = await execute(code);
@@ -196,8 +196,8 @@ describe('Nullish Coalescing Operator', () => {
 
     it('should preserve confidence when not null', async () => {
       const code = `
-        value = "data" ~> 0.7
-        result = value ?? "default"
+        let value = "data" ~> 0.7
+        let result = value ?? "default"
         <~ result
       `;
       const result = await execute(code);
@@ -206,9 +206,9 @@ describe('Nullish Coalescing Operator', () => {
 
     it('should handle confidence on both sides', async () => {
       const code = `
-        left = null ~> 0.8
-        right = "default" ~> 0.6
-        result = left ?? right
+        let left = null ~> 0.8
+        let right = "default" ~> 0.6
+        let result = left ?? right
         <~ result
       `;
       const result = await execute(code);
@@ -219,13 +219,13 @@ describe('Nullish Coalescing Operator', () => {
   describe('Complex scenarios', () => {
     it('should work in object property access chains', async () => {
       const code = `
-        config = {
+        let config = {
           server: {
-            host: undefined,
+            host: null,
             port: null
           }
         }
-        host = config.server.host ?? "localhost"
+        let host = config.server.host ?? "localhost"
         host
       `;
       const result = await execute(code);
@@ -234,11 +234,11 @@ describe('Nullish Coalescing Operator', () => {
       const code2 = `
         config = {
           server: {
-            host: undefined,
+            host: null,
             port: null
           }
         }
-        port = config.server.port ?? 3000
+        let port = config.server.port ?? 3000
         port
       `;
       const result2 = await execute(code2);
@@ -247,18 +247,18 @@ describe('Nullish Coalescing Operator', () => {
 
     it('should work with function results', async () => {
       const code = `
-        getValue = () => null
-        result = getValue() ?? "default"
+        let getValue = () => null
+        let result = getValue() ?? "default"
         result
       `;
       const result = await execute(code);
       expect((result as StringValue).value).toBe('default');
     });
 
-    it('should handle mixed null and undefined', async () => {
+    it('should handle mixed null and null', async () => {
       const code = `
-        data = [null, undefined, 0, false, ""]
-        results = map(data, x => x ?? "replaced")
+        let data = [null, null, 0, false, ""]
+        let results = map(data, x => x ?? "replaced")
         results
       `;
       const result = await execute(code);

@@ -13,12 +13,13 @@ describe('Integration: Core Language Features', () => {
     it('should handle confidence propagation through multiple operations', async () => {
       const program = parse(`
         // Set up confident values
-        a = 10 ~> 0.9
-        b = 20 ~> 0.1
-        c = 30 ~> 0.8
+        let a = 10 ~> 0.9
+        let b = 20 ~> 0.1
+        let c = 30 ~> 0.8
         
         // Complex expression with mixed operations
-        result = (a * b) + c
+        let result = (a * b) + c
+        result
       `);
       
       const result = await runtime.execute(program);
@@ -28,12 +29,13 @@ describe('Integration: Core Language Features', () => {
 
     it('should maintain confidence through variable assignments', async () => {
       const program = parse(`
-        data_quality = 0.8
-        measurement = 100
-        processed = (measurement * 2) ~> data_quality
+        let data_quality = 0.8
+        let measurement = 100
+        let processed = (measurement * 2) ~> data_quality
         
         // Use the confident value in further calculations
-        final = processed + 50
+        let final = processed + 50
+        final
       `);
       
       const result = await runtime.execute(program);
@@ -45,10 +47,10 @@ describe('Integration: Core Language Features', () => {
   describe('edge cases and boundaries', () => {
     it('should handle extreme confidence values', async () => {
       const program = parse(`
-        max_conf = 100 ~> 1.0
-        min_conf = 50 ~> 0.0
-        very_low = 75 ~> 0.001
-        very_high = 25 ~> 0.999
+        let max_conf = 100 ~> 1.0
+        let min_conf = 50 ~> 0.0
+        let very_low = 75 ~> 0.001
+        let very_high = 25 ~> 0.999
         
         // Array to collect all values
         [max_conf, min_conf, very_low, very_high]
@@ -60,7 +62,8 @@ describe('Integration: Core Language Features', () => {
 
     it('should handle deeply nested operations', async () => {
       const program = parse(`
-        result = ((((10 + 5) * 2) - 3) / 4)
+        let result = ((((10 + 5) * 2) - 3) / 4)
+        result
       `);
       
       const result = await runtime.execute(program);
@@ -70,10 +73,11 @@ describe('Integration: Core Language Features', () => {
 
     it('should handle long variable names and strings', async () => {
       const program = parse(`
-        very_long_variable_name_that_tests_parser_limits = 42
-        long_string = "This is a very long string that tests how well the parser and runtime handle extended text content!"
+        let very_long_variable_name_that_tests_parser_limits = 42
+        let long_string = "This is a very long string that tests how well the parser and runtime handle extended text content!"
         
-        result = very_long_variable_name_that_tests_parser_limits
+        let result = very_long_variable_name_that_tests_parser_limits
+        result
       `);
       
       const result = await runtime.execute(program);
@@ -86,8 +90,8 @@ describe('Integration: Core Language Features', () => {
     it('should handle uncertain if at exact thresholds', async () => {
       const program = parse(`
         // Test at exact high threshold (0.7)
-        val1 = 1 ~> 0.70
-        result1 = 0
+        let val1 = 1 ~> 0.70
+        let result1 = 0
         
         uncertain if (val1) {
           high { result1 = 1 }
@@ -106,8 +110,8 @@ describe('Integration: Core Language Features', () => {
     it('should handle uncertain if just below thresholds', async () => {
       const program = parse(`
         // Just below high threshold
-        val2 = 1 ~> 0.69
-        result2 = 0
+        let val2 = 1 ~> 0.69
+        let result2 = 0
         
         uncertain if (val2) {
           high { result2 = 1 }
@@ -155,8 +159,8 @@ describe('Integration: Core Language Features', () => {
   describe('complex boolean logic', () => {
     it('should evaluate complex boolean expressions correctly', async () => {
       const program = parse(`
-        complex_bool = true && (false || true) && !false
-        comparison = (10 > 5) && (20 < 30) && (15 == 15)
+        let complex_bool = true && (false || true) && !false
+        let comparison = (10 > 5) && (20 < 30) && (15 == 15)
         
         complex_bool && comparison
       `);
@@ -171,12 +175,13 @@ describe('Integration: Core Language Features', () => {
     it('should handle chained confidence operations', async () => {
       const program = parse(`
         // Start with confident values
-        step1 = 10 ~> 0.9
-        step2 = 20 ~> 0.8
-        step3 = 30 ~> 0.7
+        let step1 = 10 ~> 0.9
+        let step2 = 20 ~> 0.8
+        let step3 = 30 ~> 0.7
         
         // Chain multiple confidence operations
-        result = step1 ~+ step2 ~* step3
+        let result = step1 ~+ step2 ~* step3
+        result
       `);
       
       const result = await runtime.execute(program);
@@ -187,11 +192,11 @@ describe('Integration: Core Language Features', () => {
 
     it('should handle mixed confident and regular operations', async () => {
       const program = parse(`
-        confident = 50 ~> 0.8
-        regular = 25
+        let confident = 50 ~> 0.8
+        let regular = 25
         
         // Mix confident and regular operations
-        result1 = confident + regular  // Regular addition
+        let result1 = confident + regular  // Regular addition
         
         result1
       `);

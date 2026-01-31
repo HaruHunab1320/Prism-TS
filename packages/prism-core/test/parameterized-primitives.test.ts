@@ -11,10 +11,10 @@ describe('Parameterized Primitives', () => {
   describe('confidence() parameterized function', () => {
     it('should create confidence-wrapped functions', async () => {
       const program = parse(`
-        confidenceWrapper = confidence(0.8)
-        doubler = x => x * 2
-        confidentDoubler = confidenceWrapper(doubler)
-        result = confidentDoubler(5)
+        let confidenceWrapper = confidence(0.8)
+        let doubler = x => x * 2
+        let confidentDoubler = confidenceWrapper(doubler)
+        let result = confidentDoubler(5)
       `);
       
       await runtime.execute(program);
@@ -27,7 +27,7 @@ describe('Parameterized Primitives', () => {
 
     it('should validate threshold range', async () => {
       const program = parse(`
-        invalid = confidence(1.5)
+        let invalid = confidence(1.5)
       `);
       
       await expect(runtime.execute(program)).rejects.toThrow('confidence() threshold must be between 0 and 1');
@@ -35,7 +35,7 @@ describe('Parameterized Primitives', () => {
 
     it('should require numeric threshold', async () => {
       const program = parse(`
-        invalid = confidence("high")
+        let invalid = confidence("high")
       `);
       
       await expect(runtime.execute(program)).rejects.toThrow('confidence() threshold must be a number');
@@ -43,13 +43,13 @@ describe('Parameterized Primitives', () => {
 
     it('should work with existing confident values', async () => {
       const program = parse(`
-        confidenceWrapper = confidence(0.9)
-        processor = x => {
+        let confidenceWrapper = confidence(0.9)
+        let processor = x => {
           return x + 10
         }
-        confidentProcessor = confidenceWrapper(processor)
-        input = 5 ~> 0.7
-        result = confidentProcessor(input)
+        let confidentProcessor = confidenceWrapper(processor)
+        let input = 5 ~> 0.7
+        let result = confidentProcessor(input)
       `);
       
       await runtime.execute(program);
@@ -64,14 +64,14 @@ describe('Parameterized Primitives', () => {
   describe('threshold() parameterized filter', () => {
     it('should filter array by confidence threshold', async () => {
       const program = parse(`
-        highConfidenceFilter = threshold(0.8)
-        data = [
+        let highConfidenceFilter = threshold(0.8)
+        let data = [
           10 ~> 0.9,
           20 ~> 0.7,
           30 ~> 0.85,
           40 ~> 0.6
         ]
-        filtered = highConfidenceFilter(data)
+        let filtered = highConfidenceFilter(data)
       `);
       
       await runtime.execute(program);
@@ -84,13 +84,13 @@ describe('Parameterized Primitives', () => {
 
     it('should pass through non-confident values', async () => {
       const program = parse(`
-        filter = threshold(0.8)
-        data = [
+        let filter = threshold(0.8)
+        let data = [
           10 ~> 0.9,
           20,  // No confidence
           30 ~> 0.7
         ]
-        filtered = filter(data)
+        let filtered = filter(data)
       `);
       
       await runtime.execute(program);
@@ -103,7 +103,7 @@ describe('Parameterized Primitives', () => {
 
     it('should require numeric threshold', async () => {
       const program = parse(`
-        invalid = threshold("high")
+        let invalid = threshold("high")
       `);
       
       await expect(runtime.execute(program)).rejects.toThrow('threshold() requires a number');
@@ -113,13 +113,13 @@ describe('Parameterized Primitives', () => {
   describe('sortBy() parameterized sorting', () => {
     it('should sort objects by property ascending', async () => {
       const program = parse(`
-        scoreSorter = sortBy("score")
-        users = [
+        let scoreSorter = sortBy("score")
+        let users = [
           {name: "Alice", score: 85},
           {name: "Bob", score: 92},
           {name: "Carol", score: 78}
         ]
-        sorted = scoreSorter(users)
+        let sorted = scoreSorter(users)
       `);
       
       await runtime.execute(program);
@@ -136,13 +136,13 @@ describe('Parameterized Primitives', () => {
 
     it('should sort objects by property descending', async () => {
       const program = parse(`
-        scoreSorter = sortBy("score", "desc")
-        users = [
+        let scoreSorter = sortBy("score", "desc")
+        let users = [
           {name: "Alice", score: 85},
           {name: "Bob", score: 92},
           {name: "Carol", score: 78}
         ]
-        sorted = scoreSorter(users)
+        let sorted = scoreSorter(users)
       `);
       
       await runtime.execute(program);
@@ -156,13 +156,13 @@ describe('Parameterized Primitives', () => {
 
     it('should sort strings alphabetically', async () => {
       const program = parse(`
-        nameSorter = sortBy("name")
-        users = [
+        let nameSorter = sortBy("name")
+        let users = [
           {name: "Charlie"},
           {name: "Alice"},
           {name: "Bob"}
         ]
-        sorted = nameSorter(users)
+        let sorted = nameSorter(users)
       `);
       
       await runtime.execute(program);
@@ -176,13 +176,13 @@ describe('Parameterized Primitives', () => {
 
     it('should work with confident values', async () => {
       const program = parse(`
-        scoreSorter = sortBy("score")
-        users = [
+        let scoreSorter = sortBy("score")
+        let users = [
           {name: "Alice", score: 85 ~> 0.9},
           {name: "Bob", score: 92 ~> 0.8},
           {name: "Carol", score: 78 ~> 0.95}
         ]
-        sorted = scoreSorter(users)
+        let sorted = scoreSorter(users)
       `);
       
       await runtime.execute(program);
@@ -196,7 +196,7 @@ describe('Parameterized Primitives', () => {
 
     it('should require string key', async () => {
       const program = parse(`
-        invalid = sortBy(123)
+        let invalid = sortBy(123)
       `);
       
       await expect(runtime.execute(program)).rejects.toThrow('sortBy() key must be a string');
@@ -206,14 +206,14 @@ describe('Parameterized Primitives', () => {
   describe('groupBy() parameterized grouping', () => {
     it('should group by property key', async () => {
       const program = parse(`
-        categoryGrouper = groupBy("category")
-        items = [
+        let categoryGrouper = groupBy("category")
+        let items = [
           {name: "Apple", category: "fruit"},
           {name: "Carrot", category: "vegetable"},
           {name: "Banana", category: "fruit"},
           {name: "Broccoli", category: "vegetable"}
         ]
-        grouped = categoryGrouper(items)
+        let grouped = categoryGrouper(items)
       `);
       
       await runtime.execute(program);
@@ -235,9 +235,9 @@ describe('Parameterized Primitives', () => {
 
     it('should group by function result', async () => {
       const program = parse(`
-        lengthGrouper = groupBy(x => x.length)
-        words = ["cat", "dog", "elephant", "bee"]
-        grouped = lengthGrouper(words)
+        let lengthGrouper = groupBy(x => x.length)
+        let words = ["cat", "dog", "elephant", "bee"]
+        let grouped = lengthGrouper(words)
       `);
       
       await runtime.execute(program);
@@ -258,13 +258,13 @@ describe('Parameterized Primitives', () => {
 
     it('should handle objects without the property', async () => {
       const program = parse(`
-        statusGrouper = groupBy("status")
-        items = [
+        let statusGrouper = groupBy("status")
+        let items = [
           {name: "Alice", status: "active"},
           {name: "Bob"},  // No status property
           {name: "Carol", status: "inactive"}
         ]
-        grouped = statusGrouper(items)
+        let grouped = statusGrouper(items)
       `);
       
       await runtime.execute(program);
@@ -276,23 +276,23 @@ describe('Parameterized Primitives', () => {
       const grouped = groupedVar as any;
       expect(grouped.properties.has('active')).toBe(true);
       expect(grouped.properties.has('inactive')).toBe(true);
-      expect(grouped.properties.has('undefined')).toBe(true);
+      expect(grouped.properties.has('null')).toBe(true);
       
-      const undefined_group = grouped.properties.get('undefined').elements;
-      expect(undefined_group).toHaveLength(1);
+      const null_group = grouped.properties.get('null').elements;
+      expect(null_group).toHaveLength(1);
     });
   });
 
   describe('debounce() parameterized timing', () => {
     it('should create debounced functions', async () => {
       const program = parse(`
-        debouncer = debounce(100)
-        counter = 0
-        increment = () => {
+        let debouncer = debounce(100)
+        let counter = 0
+        let increment = () => {
           counter = counter + 1
           return counter
         }
-        debouncedIncrement = debouncer(increment)
+        let debouncedIncrement = debouncer(increment)
       `);
       
       await runtime.execute(program);
@@ -304,7 +304,7 @@ describe('Parameterized Primitives', () => {
 
     it('should require numeric delay', async () => {
       const program = parse(`
-        invalid = debounce("fast")
+        let invalid = debounce("fast")
       `);
       
       await expect(runtime.execute(program)).rejects.toThrow('debounce() delay must be a number');
@@ -312,8 +312,8 @@ describe('Parameterized Primitives', () => {
 
     it('should require function argument', async () => {
       const program = parse(`
-        debouncer = debounce(100)
-        invalid = debouncer("not a function")
+        let debouncer = debounce(100)
+        let invalid = debouncer("not a function")
       `);
       
       await expect(runtime.execute(program)).rejects.toThrow('debounce creator requires a function argument');
@@ -324,19 +324,19 @@ describe('Parameterized Primitives', () => {
     it('should chain parameterized functions', async () => {
       const program = parse(`
         // Create parameterized functions
-        highConfidenceFilter = threshold(0.8)
-        scoreSorter = sortBy("score", "desc")
-        confidenceWrapper = confidence(0.95)
+        let highConfidenceFilter = threshold(0.8)
+        let scoreSorter = sortBy("score", "desc")
+        let confidenceWrapper = confidence(0.95)
         
         // Process data through chain
-        users = [
+        let users = [
           {name: "Alice", score: 85 ~> 0.9},
           {name: "Bob", score: 92 ~> 0.7},    // Will be filtered out
           {name: "Carol", score: 78 ~> 0.85}
         ]
         
-        filtered = highConfidenceFilter(users)
-        sorted = scoreSorter(filtered)
+        let filtered = highConfidenceFilter(users)
+        let sorted = scoreSorter(filtered)
       `);
       
       await runtime.execute(program);
@@ -352,16 +352,16 @@ describe('Parameterized Primitives', () => {
 
     it('should work with array pipeline operations', async () => {
       const program = parse(`
-        scoreFilter = threshold(0.8)
-        nameSorter = sortBy("name")
+        let scoreFilter = threshold(0.8)
+        let nameSorter = sortBy("name")
         
-        users = [
+        let users = [
           {name: "Charlie", score: 85 ~> 0.9},
           {name: "Alice", score: 75 ~> 0.7},
           {name: "Bob", score: 92 ~> 0.85}
         ]
         
-        result = users
+        let result = users
           |> scoreFilter(_)
           |> nameSorter(_)
       `);
@@ -378,15 +378,15 @@ describe('Parameterized Primitives', () => {
     it('should work with lambda functions', async () => {
       const program = parse(`
         // Create custom processors
-        confidenceProcessor = confidence(0.8)
+        let confidenceProcessor = confidence(0.8)
         
-        multiplier = confidenceProcessor(x => x * 3)
-        adder = confidenceProcessor(x => x + 10)
+        let multiplier = confidenceProcessor(x => x * 3)
+        let adder = confidenceProcessor(x => x + 10)
         
         // Use in array processing
-        numbers = [1, 2, 3, 4, 5]
-        multiplied = numbers.map(multiplier)
-        processed = multiplied.map(adder)
+        let numbers = [1, 2, 3, 4, 5]
+        let multiplied = numbers.map(multiplier)
+        let processed = multiplied.map(adder)
       `);
       
       await runtime.execute(program);
@@ -401,20 +401,20 @@ describe('Parameterized Primitives', () => {
     it('should handle nested parameterization', async () => {
       const program = parse(`
         // Create factory for confidence wrappers
-        createConfidenceWrapper = threshold => {
+        let createConfidenceWrapper = threshold => {
           return confidence(threshold)
         }
         
-        highConfidence = createConfidenceWrapper(0.9)
-        mediumConfidence = createConfidenceWrapper(0.7)
+        let highConfidence = createConfidenceWrapper(0.9)
+        let mediumConfidence = createConfidenceWrapper(0.7)
         
-        processor = x => x * 2
+        let processor = x => x * 2
         
-        highConfidentProcessor = highConfidence(processor)
-        mediumConfidentProcessor = mediumConfidence(processor)
+        let highConfidentProcessor = highConfidence(processor)
+        let mediumConfidentProcessor = mediumConfidence(processor)
         
-        result1 = highConfidentProcessor(10)
-        result2 = mediumConfidentProcessor(10)
+        let result1 = highConfidentProcessor(10)
+        let result2 = mediumConfidentProcessor(10)
       `);
       
       await runtime.execute(program);
@@ -432,9 +432,9 @@ describe('Parameterized Primitives', () => {
   describe('Error handling', () => {
     it('should validate argument counts', async () => {
       const program = parse(`
-        invalid1 = confidence()
-        invalid2 = threshold(0.8, "extra")
-        invalid3 = sortBy()
+        let invalid1 = confidence()
+        let invalid2 = threshold(0.8, "extra")
+        let invalid3 = sortBy()
       `);
       
       await expect(runtime.execute(program)).rejects.toThrow();
@@ -442,9 +442,9 @@ describe('Parameterized Primitives', () => {
 
     it('should validate argument types', async () => {
       const programs = [
-        `sorter = sortBy(123)`,  // Non-string key
-        `filter = threshold("high")`,  // Non-numeric threshold
-        `debouncer = debounce("fast")`  // Non-numeric delay
+        `let sorter = sortBy(123)`,  // Non-string key
+        `let filter = threshold("high")`,  // Non-numeric threshold
+        `let debouncer = debounce("fast")`  // Non-numeric delay
       ];
       
       for (const code of programs) {
@@ -455,9 +455,9 @@ describe('Parameterized Primitives', () => {
 
     it('should handle missing properties in sortBy', async () => {
       const program = parse(`
-        sorter = sortBy("missing")
-        data = [{name: "Alice"}, {name: "Bob", missing: "value"}]  // One has missing property, one doesn't
-        result = sorter(data)
+        let sorter = sortBy("missing")
+        let data = [{name: "Alice"}, {name: "Bob", missing: "value"}]  // One has missing property, one doesn't
+        let result = sorter(data)
       `);
       
       await runtime.execute(program);
@@ -465,7 +465,7 @@ describe('Parameterized Primitives', () => {
       const result = runtime.getVariable('result');
       expect(result.type).toBe('confident');
       expect(result.value.elements).toHaveLength(2);
-      // Should sort with undefined treated as lower value
+      // Should sort with null treated as lower value
     });
   });
 });

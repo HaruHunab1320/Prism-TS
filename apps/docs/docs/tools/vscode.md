@@ -100,16 +100,16 @@ To switch themes:
 ### Basic Syntax
 ```javascript
 // Variables and operations
-name = "Prism"
-version = 1.0
-isAwesome = true
+let name = "Prism"
+let version = 1.0
+let isAwesome = true
 
 // Confidence operations
-temperature = 72 ~> 0.95
-humidity = 65 ~> 0.87
+let temperature = 72 ~> 0.95
+let humidity = 65 ~> 0.87
 
 // String interpolation
-message = "Welcome to ${name} v${version}!"
+let message = "Welcome to ${name} v${version}!"
 ```
 
 ### Uncertainty Control Flow
@@ -133,25 +133,25 @@ uncertain if (analysis) {
 ### LLM Integration
 ```javascript
 // LLM calls with confidence
-response = llm("Analyze security") ~> 0.9
-summary = llm("Summarize: ${text}") ~> 0.85
+let response = llm("Analyze security") ~> 0.9
+let summary = llm("Summarize: ${text}") ~> 0.85
 
 // Confidence propagation
-combined = response ~&& summary
-fallback = response ~?? backup_analysis
+let combined = response ~&& summary
+let fallback = response ~?? backup_analysis
 ```
 
 ### Advanced Features
 ```javascript
 // Pipeline operations
-result = data
+let result = data
   |> validate
   |> transform
   |> optimize
 
 // Context blocks
 in context Security {
-  scan = analyze(code)
+  let scan = analyze(code)
 } shifting to Deployment {
   deploy(scan)
 }

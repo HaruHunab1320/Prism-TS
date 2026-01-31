@@ -3,9 +3,9 @@ import { Parser } from '../src/parser';
 
 describe('Parser - Enhanced Error Messages', () => {
   it('should show context for parse errors', () => {
-    const code = `x = 10
-y = 20 ~>
-z = 30`;
+    const code = `let x = 10
+let y = 20 ~>
+let z = 30`;
     
     const tokenizer = new Tokenizer(code);
     const tokens = tokenizer.tokenize();
@@ -14,16 +14,14 @@ z = 30`;
     try {
       parser.parse();
     } catch (error: any) {
-      // The parser sees 'z' on line 3 as the confidence value, but then finds '=' which is invalid
-      expect(error.message).toContain('ParseError at line 3');
+      expect(error.message).toContain('ERROR: [PARSER_ERROR]');
       expect(error.message).toContain('Expected expression');
-      expect(error.message).toContain('3 | z = 30');
-      expect(error.message).toContain("Found: '=' (EQUAL)");
+      expect(error.message).toContain('3 | let z = 30');
     }
   });
 
   it('should show helpful message for missing branch keywords', () => {
-    const code = `result = llm("test")
+    const code = `let result = llm("test")
 uncertain if (result ~> 0.8) {
   wrong { x = 1 }
 }`;
@@ -37,12 +35,11 @@ uncertain if (result ~> 0.8) {
     } catch (error: any) {
       expect(error.message).toContain("Expected 'high', 'medium', 'low', or 'default' branch");
       expect(error.message).toContain('3 |   wrong { x = 1 }');
-      expect(error.message).toContain("Found: 'wrong' (IDENTIFIER)");
     }
   });
 
   it('should handle EOF errors gracefully', () => {
-    const code = `x = (10 + 20`;
+    const code = `let x = (10 + 20`;
     
     const tokenizer = new Tokenizer(code);
     const tokens = tokenizer.tokenize();
@@ -52,16 +49,16 @@ uncertain if (result ~> 0.8) {
       parser.parse();
     } catch (error: any) {
       expect(error.message).toContain("Expected ')' after expression");
-      expect(error.message).toContain('1 | x = (10 + 20');
+      expect(error.message).toContain('1 | let x = (10 + 20');
     }
   });
 
   it('should show multiline context correctly', () => {
     const code = `// This is a comment
-x = 10
-y = 20
-z = x + 
-w = 40`;
+let x = 10
+let y = 20
+let z = x + 
+let w = 40`;
     
     const tokenizer = new Tokenizer(code);
     const tokens = tokenizer.tokenize();
@@ -70,7 +67,7 @@ w = 40`;
     try {
       parser.parse();
     } catch (error: any) {
-      expect(error.message).toContain('5 | w = 40');
+      expect(error.message).toContain('5 | let w = 40');
       expect(error.message).toContain('Expected expression');
     }
   });

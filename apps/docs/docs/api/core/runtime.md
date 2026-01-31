@@ -261,20 +261,6 @@ Represents null values.
 
 **Truthy:** Always false
 
-### UndefinedValue
-
-```typescript
-class UndefinedValue extends Value {
-  constructor()
-  type: 'undefined'
-  value: undefined
-}
-```
-
-Represents undefined values.
-
-**Truthy:** Always false
-
 ### ArrayValue
 
 ```typescript
@@ -489,10 +475,10 @@ interface LLMCallOptions {
 
 **Example:**
 ```javascript
-response = llm("What is 2+2?");
+let response = llm("What is 2+2?");
 // => "4" (~95%)
 
-custom = llm("Summarize this doc", {
+let custom = llm("Summarize this doc", {
   provider: "claude",
   model: "claude-3-sonnet",
   temperature: 0.2,
@@ -503,15 +489,15 @@ custom = llm("Summarize this doc", {
 ### stream_llm()
 
 ```javascript
-handle = stream_llm("Draft a summary", { structuredOutput: false })
+let handle = stream_llm("Draft a summary", { structuredOutput: false })
 
-chunk = await handle.next()
+let chunk = await handle.next()
 while (chunk) {
   console.log(chunk.text)
   chunk = await handle.next()
 }
 
-final = await handle.result()
+let final = await handle.result()
 ```
 
 Returns a stream handle containing:
@@ -533,8 +519,8 @@ Transforms array elements.
 
 **Example:**
 ```javascript
-numbers = [1, 2, 3];
-doubled = map(numbers, x => x * 2);
+let numbers = [1, 2, 3];
+let doubled = map(numbers, x => x * 2);
 // Returns: [2, 4, 6]
 ```
 
@@ -548,8 +534,8 @@ Filters array elements.
 
 **Example:**
 ```javascript
-numbers = [1, 2, 3, 4, 5];
-evens = filter(numbers, x => x % 2 == 0);
+let numbers = [1, 2, 3, 4, 5];
+let evens = filter(numbers, x => x % 2 == 0);
 // Returns: [2, 4]
 ```
 
@@ -563,8 +549,8 @@ Reduces array to single value.
 
 **Example:**
 ```javascript
-numbers = [1, 2, 3, 4];
-sum = reduce(numbers, (acc, x) => acc + x, 0);
+let numbers = [1, 2, 3, 4];
+let sum = reduce(numbers, (acc, x) => acc + x, 0);
 // Returns: 10
 ```
 
@@ -580,7 +566,7 @@ Returns maximum value.
 
 **Example:**
 ```javascript
-largest = max(10, 5, 20, 15);
+let largest = max(10, 5, 20, 15);
 // Returns: 20
 ```
 
@@ -594,7 +580,7 @@ Returns minimum value.
 
 **Example:**
 ```javascript
-smallest = min(10, 5, 20, 15);
+let smallest = min(10, 5, 20, 15);
 // Returns: 5
 ```
 
@@ -618,7 +604,7 @@ async function slowOperation() {
 
 // Retry with exponential backoff
 async function retryWithBackoff(operation, maxRetries) {
-  for i = 0; i < maxRetries; i++ {
+  for let i = 0; i < maxRetries; i++ {
     try {
       return await operation()
     } catch (e) {
@@ -652,12 +638,12 @@ Creates a debounced wrapper that delays invoking a function until after `waitMs`
 **Example:**
 ```javascript
 // Create a debounced search function
-searchDebouncer = debounce(300)
+let searchDebouncer = debounce(300)
 
 // In event handler
-onSearchInput = (query) => {
+let onSearchInput = (query) => {
   searchDebouncer(() => {
-    results = performSearch(query)
+    let results = performSearch(query)
     updateUI(results)
   })
 }
@@ -681,25 +667,25 @@ Creates a function that sorts an array of objects by the specified key. Returns 
 
 **Example:**
 ```javascript
-users = [
+let users = [
   {name: "Alice", score: 85},
   {name: "Bob", score: 92},
   {name: "Charlie", score: 78}
 ]
 
 // Create sorter functions
-byScoreDesc = sortBy("score", "desc")
-byName = sortBy("name")
+let byScoreDesc = sortBy("score", "desc")
+let byName = sortBy("name")
 
 // Apply sorting
-rankedUsers = byScoreDesc(users)
+let rankedUsers = byScoreDesc(users)
 // [{name: "Bob", score: 92}, {name: "Alice", score: 85}, {name: "Charlie", score: 78}]
 
-alphabetical = byName(users)
+let alphabetical = byName(users)
 // [{name: "Alice", ...}, {name: "Bob", ...}, {name: "Charlie", ...}]
 
 // Use in pipeline
-result = users |> sortBy("score", "desc")(_) |> map(u => u.name)
+let result = users |> sortBy("score", "desc")(_) |> map(u => u.name)
 // ["Bob", "Alice", "Charlie"]
 ```
 
@@ -716,7 +702,7 @@ Creates a function that groups an array of objects by the specified key or funct
 
 **Example:**
 ```javascript
-items = [
+let items = [
   {name: "Apple", category: "fruit", price: 1.5},
   {name: "Banana", category: "fruit", price: 0.5},
   {name: "Carrot", category: "vegetable", price: 0.8},
@@ -724,23 +710,23 @@ items = [
 ]
 
 // Group by property
-byCategory = groupBy("category")
-grouped = byCategory(items)
+let byCategory = groupBy("category")
+let grouped = byCategory(items)
 // {
 //   fruit: [{name: "Apple", ...}, {name: "Banana", ...}],
 //   vegetable: [{name: "Carrot", ...}, {name: "Broccoli", ...}]
 // }
 
 // Group by computed value
-byPriceRange = groupBy(item => item.price > 1 ? "expensive" : "cheap")
-priceGrouped = byPriceRange(items)
+let byPriceRange = groupBy(item => item.price > 1 ? "expensive" : "cheap")
+let priceGrouped = byPriceRange(items)
 // {
 //   expensive: [{name: "Apple", ...}, {name: "Broccoli", ...}],
 //   cheap: [{name: "Banana", ...}, {name: "Carrot", ...}]
 // }
 
 // Use in pipeline
-result = items |> groupBy("category")(_)
+let result = items |> groupBy("category")(_)
 ```
 
 ### Confidence Functions
@@ -759,19 +745,19 @@ Creates a function that wraps another function's return value with the specified
 **Example:**
 ```javascript
 // Wrap a function to add confidence to its output
-highConfidence = confidence(0.95)
-mediumConfidence = confidence(0.7)
+let highConfidence = confidence(0.95)
+let mediumConfidence = confidence(0.7)
 
-processWithConfidence = highConfidence(data => data * 2)
-result = processWithConfidence(10)
+let processWithConfidence = highConfidence(data => data * 2)
+let result = processWithConfidence(10)
 // 20 ~> 0.95
 
 // Create calibrated processors
-sensorProcessor = confidence(0.85)
-userInputProcessor = confidence(0.6)
+let sensorProcessor = confidence(0.85)
+let userInputProcessor = confidence(0.6)
 
-sensorReading = sensorProcessor(() => readSensor())
-userValue = userInputProcessor(() => getUserInput())
+let sensorReading = sensorProcessor(() => readSensor())
+let userValue = userInputProcessor(() => getUserInput())
 ```
 
 #### threshold()
@@ -788,24 +774,24 @@ Creates a filter function that only passes values meeting the minimum confidence
 **Example:**
 ```javascript
 // Filter data by confidence level
-highConfidenceOnly = threshold(0.9)
-moderateConfidence = threshold(0.5)
+let highConfidenceOnly = threshold(0.9)
+let moderateConfidence = threshold(0.5)
 
-data = [
+let data = [
   10 ~> 0.95,
   20 ~> 0.7,
   30 ~> 0.92,
   40 ~> 0.4
 ]
 
-reliable = highConfidenceOnly(data)
+let reliable = highConfidenceOnly(data)
 // [10 ~> 0.95, 30 ~> 0.92]
 
-usable = moderateConfidence(data)
+let usable = moderateConfidence(data)
 // [10 ~> 0.95, 20 ~> 0.7, 30 ~> 0.92]
 
 // Use in pipeline for confident decision making
-result = predictions
+let result = predictions
   |> threshold(0.8)(_)
   |> map(p => p.recommendation)
   |> first
@@ -818,9 +804,9 @@ result = predictions
 Confidence values are propagated through operations:
 
 ```javascript
-x = 10 ~> 0.9;
-y = 20 ~> 0.8;
-z = x + y;  // Result has confidence based on inputs
+let x = 10 ~> 0.9;
+let y = 20 ~> 0.8;
+let z = x + y;  // Result has confidence based on inputs
 ```
 
 ### Context Management
@@ -830,7 +816,7 @@ The runtime maintains execution contexts for uncertainty handling:
 ```javascript
 in context "analysis" {
   // Code executes in analysis context
-  result = processData(input);
+  let result = processData(input);
 }
 ```
 
@@ -839,7 +825,7 @@ in context "analysis" {
 Supports break and continue statements:
 
 ```javascript
-for i = 0; i < 10; i++ {
+for let i = 0; i < 10; i++ {
   if (i == 5) {
     break;  // Exit loop
   }
@@ -856,14 +842,16 @@ Supports array and object destructuring with confidence:
 
 ```javascript
 // Array destructuring
-[a, b, c] = [1, 2, 3];
-[x, ...rest] = array;
+let [a, b, c] = [1, 2, 3];
+let [x, ...rest] = array;
 
 // Object destructuring
-{name, age} = person;
-{x: coordX, y: coordY} = point;
+let {name, age} = person;
+let {x: coordX, y: coordY} = point;
 
 // With confidence thresholds
+let a = null;
+let b = null;
 [a, b] ~> 0.8 = uncertainArray;
 ```
 

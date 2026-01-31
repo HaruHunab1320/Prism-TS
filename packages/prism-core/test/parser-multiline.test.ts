@@ -10,7 +10,7 @@ describe('Parser - Multiline and Semicolon Support', () => {
   });
 
   test('should parse multiple statements on one line with semicolons', async () => {
-    const code = 'x = 10; y = 20; z = x + y; z';
+    const code = 'let x = 10; let y = 20; let z = x + y; z';
     
     const tokenizer = new Tokenizer(code);
     const tokens = tokenizer.tokenize();
@@ -22,7 +22,7 @@ describe('Parser - Multiline and Semicolon Support', () => {
   });
 
   test('should parse confidence operations on one line', async () => {
-    const code = 'temp = 22.5 ~> 0.85; conf = <~ temp; conf';
+    const code = 'let temp = 22.5 ~> 0.85; let conf = <~ temp; conf';
     
     const tokenizer = new Tokenizer(code);
     const tokens = tokenizer.tokenize();
@@ -34,8 +34,8 @@ describe('Parser - Multiline and Semicolon Support', () => {
   });
 
   test('should parse mixed statements with and without semicolons', async () => {
-    const code = `x = 5; y = 10
-    z = x + y; z`;
+    const code = `let x = 5; let y = 10
+    let z = x + y; z`;
     
     const tokenizer = new Tokenizer(code);
     const tokens = tokenizer.tokenize();
@@ -47,7 +47,7 @@ describe('Parser - Multiline and Semicolon Support', () => {
   });
 
   test('should parse complex one-liner with confidence operators', async () => {
-    const code = 'a = 10 ~> 0.9; b = 20 ~> 0.7; c = a ~+ b; c';
+    const code = 'let a = 10 ~> 0.9; let b = 20 ~> 0.7; let c = a ~+ b; c';
     
     const tokenizer = new Tokenizer(code);
     const tokens = tokenizer.tokenize();
@@ -72,7 +72,7 @@ describe('Parser - Multiline and Semicolon Support', () => {
   });
 
   test('should parse parallel confidence on one line', async () => {
-    const code = 'opt1 = "a" ~> 0.6; opt2 = "b" ~> 0.9; best = opt1 ~||> opt2; best';
+    const code = 'let opt1 = "a" ~> 0.6; let opt2 = "b" ~> 0.9; let best = opt1 ~||> opt2; best';
     
     const tokenizer = new Tokenizer(code);
     const tokens = tokenizer.tokenize();

@@ -27,7 +27,6 @@ if (result.errors.length > 0) {
 - `string` - Text values
 - `boolean` - true/false
 - `null` - Null value
-- `undefined` - Undefined value
 - `array` - Arrays of any type
 - `object` - Key-value objects
 - `function` - Functions

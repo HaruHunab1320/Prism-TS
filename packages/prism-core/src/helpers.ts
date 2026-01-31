@@ -17,7 +17,7 @@ export interface RunPrismOptions {
  * @example
  * ```javascript
  * const { runPrism } = require('@prism-lang/core');
- * const result = await runPrism('x = 5 ~> 0.9; x * 2');
+ * const result = await runPrism('let x = 5 ~> 0.9; x * 2');
  * console.log(result); // 10 with 90% confidence
  * ```
  * 
@@ -42,15 +42,15 @@ export async function runPrism(
     const globalAssignments = Object.entries(options.globals)
       .map(([name, value]) => {
         if (typeof value === 'string') {
-          return `${name} = "${value.replace(/"/g, '\\"')}"`;
+          return `let ${name} = "${value.replace(/"/g, '\\"')}"`;
         } else if (typeof value === 'number' || typeof value === 'boolean') {
-          return `${name} = ${value}`;
+          return `let ${name} = ${value}`;
         } else if (typeof value === 'function') {
           // For functions, we can't inject them this way
           // This is a limitation we need to document
           return '';
         } else {
-          return `${name} = ${JSON.stringify(value)}`;
+          return `let ${name} = ${JSON.stringify(value)}`;
         }
       })
       .filter(Boolean)
@@ -92,7 +92,7 @@ export async function runPrism(
  * const runtime = createPrismRuntime();
  * 
  * // Set globals by executing assignment code
- * const setupAst = parse('PI = 3.14159');
+ * const setupAst = parse('let PI = 3.14159');
  * await runtime.execute(setupAst);
  * 
  * const ast1 = parse('x = PI * 2');

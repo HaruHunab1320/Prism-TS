@@ -220,7 +220,7 @@ export class Linter implements PrismLinter {
         break;
 
       case 'IdentifierExpression':
-        if (context.usedVars && !['undefined', 'null', 'true', 'false'].includes(n.name)) {
+        if (context.usedVars && !['null', 'true', 'false'].includes(n.name)) {
           context.usedVars.add(n.name);
         }
         this.checkVariableDeclaredBeforeUse(n, context);
@@ -383,6 +383,15 @@ export class Linter implements PrismLinter {
         n.cases.forEach((caseNode: any) => {
           this.lintNode(caseNode.pattern, context);
           this.lintNode(caseNode.value, context);
+        });
+        break;
+
+      case 'MatchExpression':
+        this.lintNode(n.value, context);
+        n.arms.forEach((arm: any) => {
+          this.lintNode(arm.pattern, context);
+          if (arm.guard) this.lintNode(arm.guard, context);
+          this.lintNode(arm.body, context);
         });
         break;
 
@@ -635,7 +644,7 @@ export class Linter implements PrismLinter {
     if (!this.isRuleEnabled('variable-declared-before-use')) return;
     if (!context.declaredVars) return;
 
-    const builtins = ['undefined', 'null', 'true', 'false', 'llm', 'map', 'filter', 'reduce', 'max', 'min', 'Math', 'console', 'print', 'confidence', 'threshold', 'sortBy', 'groupBy', 'debounce', 'doSomething', 'doNothing', 'risky'];
+    const builtins = ['null', 'true', 'false', 'llm', 'map', 'filter', 'reduce', 'max', 'min', 'Math', 'console', 'print', 'confidence', 'threshold', 'sortBy', 'groupBy', 'debounce', 'doSomething', 'doNothing', 'risky'];
     
     if (!builtins.includes(node.name) && !context.declaredVars.has(node.name)) {
       this.addResult({
@@ -872,7 +881,7 @@ export class Linter implements PrismLinter {
         break;
       
       case 'IdentifierExpression':
-        if (!['undefined', 'null', 'true', 'false', 'print', 'llm', 'map', 'filter', 'reduce', 'max', 'min', 'console', 'confidence', 'threshold', 'sortBy', 'groupBy', 'debounce', 'risky'].includes(node.name)) {
+        if (!['null', 'true', 'false', 'print', 'llm', 'map', 'filter', 'reduce', 'max', 'min', 'console', 'confidence', 'threshold', 'sortBy', 'groupBy', 'debounce', 'risky'].includes(node.name)) {
           used.add(node.name);
         }
         break;

@@ -7,7 +7,7 @@ import {
   UnaryExpression,
   CallExpression,
   ConfidenceExpression,
-  AssignmentStatement,
+  VariableDeclaration,
   IfStatement,
   UncertainIfStatement,
   BlockStatement,
@@ -101,20 +101,20 @@ describe('Parser', () => {
 
   describe('Statements', () => {
     it('should parse assignment statements', () => {
-      const program = parse('x = 42');
+      const program = parse('let x = 42');
       expect(program.statements).toHaveLength(1);
-      expect(program.statements[0]).toBeInstanceOf(AssignmentStatement);
-      const assignment = program.statements[0] as AssignmentStatement;
-      expect(assignment.identifier).toBe('x');
-      expect((assignment.value as NumberLiteral).value).toBe(42);
+      expect(program.statements[0]).toBeInstanceOf(VariableDeclaration);
+      const declaration = program.statements[0] as VariableDeclaration;
+      expect(declaration.identifier).toBe('x');
+      expect((declaration.initializer as NumberLiteral).value).toBe(42);
     });
 
     it('should parse if statements', () => {
       const program = parse(`
         if (x > 0) {
-          y = 1
+          let y = 1
         } else {
-          y = 0
+          let y = 0
         }
       `);
       expect(program.statements).toHaveLength(1);
@@ -169,27 +169,27 @@ describe('Parser', () => {
   describe('Multiple statements', () => {
     it('should parse multiple statements', () => {
       const program = parse(`
-        x = 10
-        y = 20
-        result = x + y
+        let x = 10
+        let y = 20
+        let result = x + y
       `);
       expect(program.statements).toHaveLength(3);
-      expect(program.statements[0]).toBeInstanceOf(AssignmentStatement);
-      expect(program.statements[1]).toBeInstanceOf(AssignmentStatement);
-      expect(program.statements[2]).toBeInstanceOf(AssignmentStatement);
+      expect(program.statements[0]).toBeInstanceOf(VariableDeclaration);
+      expect(program.statements[1]).toBeInstanceOf(VariableDeclaration);
+      expect(program.statements[2]).toBeInstanceOf(VariableDeclaration);
     });
   });
 
   describe('Error handling', () => {
     it('should handle syntax errors gracefully', () => {
-      expect(() => parse('x =')).toThrow();
+      expect(() => parse('let x =')).toThrow();
       expect(() => parse('if (')).toThrow();
       expect(() => parse('{')).toThrow();
     });
 
     it('should provide meaningful error messages', () => {
       try {
-        parse('x =');
+        parse('let x =');
         fail('Should have thrown');
       } catch (error) {
         expect((error as Error).message).toContain('Expected expression');

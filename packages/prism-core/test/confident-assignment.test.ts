@@ -13,8 +13,8 @@ describe('Confident Assignment Operators', () => {
   describe('Confident addition assignment (~+=)', () => {
     test('basic confident addition assignment', async () => {
       const source = `
-        total = 100 ~> 0.9
-        increment = 20 ~> 0.8
+        let total = 100 ~> 0.9
+        let increment = 20 ~> 0.8
         total ~+= increment
         total
       `;
@@ -31,7 +31,7 @@ describe('Confident Assignment Operators', () => {
 
     test('accumulating with confidence', async () => {
       const source = `
-        sum = 0 ~> 1.0
+        let sum = 0 ~> 1.0
         sum ~+= 10 ~> 0.9
         sum ~+= 20 ~> 0.8
         sum ~+= 30 ~> 0.7
@@ -52,8 +52,8 @@ describe('Confident Assignment Operators', () => {
   describe('Confident subtraction assignment (~-=)', () => {
     test('basic confident subtraction assignment', async () => {
       const source = `
-        balance = 1000 ~> 0.95
-        withdrawal = 250 ~> 0.85
+        let balance = 1000 ~> 0.95
+        let withdrawal = 250 ~> 0.85
         balance ~-= withdrawal
         balance
       `;
@@ -71,8 +71,8 @@ describe('Confident Assignment Operators', () => {
   describe('Confident multiplication assignment (~*=)', () => {
     test('basic confident multiplication assignment', async () => {
       const source = `
-        price = 100 ~> 0.9
-        taxRate = 1.2 ~> 0.99
+        let price = 100 ~> 0.9
+        let taxRate = 1.2 ~> 0.99
         price ~*= taxRate
         price
       `;
@@ -88,8 +88,8 @@ describe('Confident Assignment Operators', () => {
 
     test('compound interest calculation', async () => {
       const source = `
-        principal = 1000 ~> 1.0
-        rate = 1.05 ~> 0.95
+        let principal = 1000 ~> 1.0
+        let rate = 1.05 ~> 0.95
         
         // Year 1
         principal ~*= rate
@@ -114,8 +114,8 @@ describe('Confident Assignment Operators', () => {
   describe('Confident division assignment (~/=)', () => {
     test('basic confident division assignment', async () => {
       const source = `
-        total = 1000 ~> 0.9
-        divisor = 4 ~> 0.95
+        let total = 1000 ~> 0.9
+        let divisor = 4 ~> 0.95
         total ~/= divisor
         total
       `;
@@ -133,7 +133,7 @@ describe('Confident Assignment Operators', () => {
   describe('Mixed confident assignment operators', () => {
     test('combining different confident assignments', async () => {
       const source = `
-        value = 100 ~> 0.9
+        let value = 100 ~> 0.9
         
         value ~+= 50 ~> 0.95   // 150
         value ~*= 2 ~> 0.85    // 300
@@ -156,7 +156,7 @@ describe('Confident Assignment Operators', () => {
     test('confident assignment vs regular assignment', async () => {
       const source = `
         // Regular assignment with confident value
-        regular = 100 ~> 0.9
+        let regular = 100 ~> 0.9
         regular += 50  // Regular addition - adds plain 50 to confident 100
         regular
       `;
@@ -167,7 +167,7 @@ describe('Confident Assignment Operators', () => {
       
       const source2 = `
         // Confident assignment preserves and propagates confidence
-        confident = 100 ~> 0.9
+        let confident = 100 ~> 0.9
         confident ~+= 50 ~> 0.8
         confident
       `;

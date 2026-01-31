@@ -92,7 +92,7 @@ describe('Arrays and Lists', () => {
   describe('Array Property Access', () => {
     test('array length property', async () => {
       const source = `
-        arr = [1, 2, 3, 4, 5]
+        let arr = [1, 2, 3, 4, 5]
         arr.length
       `;
       const tokens = tokenize(source);
@@ -122,15 +122,15 @@ describe('Arrays and Lists', () => {
       const ast = parser.parse();
       const result = await runtime.execute(ast);
       
-      expect(result).toBeInstanceOf(NumberValue);
-      expect((result as NumberValue).value).toBe(3);
+      expect(result).toBeInstanceOf(ConfidenceValue);
+      expect(((result as ConfidenceValue).value as NumberValue).value).toBe(3);
     });
   });
 
   describe('Array Index Access', () => {
     test('basic index access', async () => {
       const source = `
-        arr = ["a", "b", "c"]
+        let arr = ["a", "b", "c"]
         arr[1]
       `;
       const tokens = tokenize(source);
@@ -144,8 +144,8 @@ describe('Arrays and Lists', () => {
 
     test('index access with expression', async () => {
       const source = `
-        arr = [10, 20, 30]
-        idx = 2
+        let arr = [10, 20, 30]
+        let idx = 2
         arr[idx]
       `;
       const tokens = tokenize(source);
@@ -159,7 +159,7 @@ describe('Arrays and Lists', () => {
 
     test('index access with confident array', async () => {
       const source = `
-        arr = [10, 20, 30] ~> 0.7
+        let arr = [10, 20, 30] ~> 0.7
         arr[1]
       `;
       const tokens = tokenize(source);
@@ -203,7 +203,7 @@ describe('Arrays and Lists', () => {
 
   describe('Object Literals', () => {
     test('empty object', async () => {
-      const source = 'obj = {}; obj';
+      const source = 'let obj = {}; obj';
       const tokens = tokenize(source);
       const parser = new Parser(tokens, source);
       const ast = parser.parse();
@@ -214,7 +214,7 @@ describe('Arrays and Lists', () => {
     });
 
     test('object with properties', async () => {
-      const source = 'obj = { name: "John", age: 30 }; obj';
+      const source = 'let obj = { name: "John", age: 30 }; obj';
       const tokens = tokenize(source);
       const parser = new Parser(tokens, source);
       const ast = parser.parse();
@@ -228,7 +228,7 @@ describe('Arrays and Lists', () => {
     });
 
     test('object with string keys', async () => {
-      const source = 'obj = { "first name": "John", "age": 30 }; obj';
+      const source = 'let obj = { "first name": "John", "age": 30 }; obj';
       const tokens = tokenize(source);
       const parser = new Parser(tokens, source);
       const ast = parser.parse();
@@ -240,7 +240,7 @@ describe('Arrays and Lists', () => {
     });
 
     test('nested objects', async () => {
-      const source = 'obj = { user: { name: "John", age: 30 }, active: true }; obj';
+      const source = 'let obj = { user: { name: "John", age: 30 }, active: true }; obj';
       const tokens = tokenize(source);
       const parser = new Parser(tokens, source);
       const ast = parser.parse();
@@ -256,7 +256,7 @@ describe('Arrays and Lists', () => {
   describe('Object Property Access', () => {
     test('basic property access', async () => {
       const source = `
-        person = { name: "Alice", age: 25 }
+        let person = { name: "Alice", age: 25 }
         person.name
       `;
       const tokens = tokenize(source);
@@ -270,7 +270,7 @@ describe('Arrays and Lists', () => {
 
     test('nested property access', async () => {
       const source = `
-        data = { user: { name: "Bob", score: 100 } }
+        let data = { user: { name: "Bob", score: 100 } }
         data.user.score
       `;
       const tokens = tokenize(source);
@@ -284,7 +284,7 @@ describe('Arrays and Lists', () => {
 
     test('property access on confident object', async () => {
       const source = `
-        obj = { value: 42 } ~> 0.6
+        let obj = { value: 42 } ~> 0.6
         obj.value
       `;
       const tokens = tokenize(source);
@@ -299,7 +299,7 @@ describe('Arrays and Lists', () => {
     });
 
     test('non-existent property error', async () => {
-      const source = 'obj = { name: "John" }; obj.age';
+      const source = 'let obj = { name: "John" }; obj.age';
       const tokens = tokenize(source);
       const parser = new Parser(tokens, source);
       const ast = parser.parse();
@@ -311,7 +311,7 @@ describe('Arrays and Lists', () => {
   describe('Combined Operations', () => {
     test('array of objects', async () => {
       const source = `
-        users = [
+        let users = [
           { name: "Alice", score: 90 },
           { name: "Bob", score: 85 }
         ]
@@ -328,7 +328,7 @@ describe('Arrays and Lists', () => {
 
     test('object with array property', async () => {
       const source = `
-        result = {
+        let result = {
           data: [10, 20, 30],
           count: 3
         }
@@ -345,7 +345,7 @@ describe('Arrays and Lists', () => {
 
     test('complex nesting with confidence', async () => {
       const source = `
-        analysis = {
+        let analysis = {
           results: [
             { score: 95 ~> 0.9 },
             { score: 88 ~> 0.7 }
@@ -369,7 +369,7 @@ describe('Arrays and Lists', () => {
   describe('Array Methods (via built-in functions)', () => {
     test('using arrays with ternary operator', async () => {
       const source = `
-        scores = [85, 92, 78]
+        let scores = [85, 92, 78]
         scores.length > 2 ? "many" : "few"
       `;
       const tokens = tokenize(source);
@@ -383,8 +383,8 @@ describe('Arrays and Lists', () => {
 
     test('array assignment and modification', async () => {
       const source = `
-        arr = [1, 2, 3]
-        newArr = [arr[0], arr[1] * 2, arr[2]]
+        let arr = [1, 2, 3]
+        let newArr = [arr[0], arr[1] * 2, arr[2]]
         newArr[1]
       `;
       const tokens = tokenize(source);
@@ -410,7 +410,7 @@ describe('Arrays and Lists', () => {
     });
 
     test('object equality', async () => {
-      const source = 'a = { a: 1 }; b = { a: 1 }; a == b';
+      const source = 'let a = { a: 1 }; let b = { a: 1 }; a == b';
       const tokens = tokenize(source);
       const parser = new Parser(tokens, source);
       const ast = parser.parse();

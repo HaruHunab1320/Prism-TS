@@ -117,8 +117,7 @@ Found: '{' (LEFT_BRACE)
 - Strings: `"hello"`, `'world'`
 - Interpolated strings: `` `Hello ${name}` ``
 - Booleans: `true`, `false`
-- Null: `null`
-- Undefined: `undefined`
+- Null: `null` (the `undefined` keyword is treated as an alias of `null`)
 
 #### Operators
 - Arithmetic: `+`, `-`, `*`, `/`, `%`, `**`
@@ -141,11 +140,12 @@ Found: '{' (LEFT_BRACE)
 
 ### Statements
 
-#### Variable Assignment
+#### Variable Declaration
 ```typescript
-x = 42;
-y = "hello" ~> 0.9;  // with confidence
+let x = 42;
+let y = "hello" ~> 0.9;  // with confidence
 ```
+Assignments (`x = value`) are parsed as statements too, but require a prior declaration.
 
 #### Compound Assignment
 ```typescript
@@ -179,7 +179,7 @@ uncertain if (condition ~> 0.8) {
 #### Loops
 ```typescript
 // C-style for loop
-for i = 0; i < 10; i++ {
+for let i = 0; i < 10; i++ {
   // statements
 }
 
@@ -204,7 +204,7 @@ do {
 } while condition;
 
 // Uncertain loops
-uncertain for i = 0; i < 10; i++ {
+uncertain for let i = 0; i < 10; i++ {
   high { /* high confidence */ }
   low { /* low confidence */ }
 }
@@ -248,33 +248,37 @@ agents {
 
 #### Array Destructuring
 ```typescript
-[a, b, c] = array;
-[first, ...rest] = array;
-[a, , c] = array;  // Skip element
+let [a, b, c] = array;
+let [first, ...rest] = array;
+let [a, , c] = array;  // Skip element
 
 // With confidence thresholds
+let a = null;
+let b = null;
 [a, b] ~> 0.8 = array;
-[a ~> 0.9, b ~> 0.7] = array;
+let [a ~> 0.9, b ~> 0.7] = array;
 ```
 
 #### Object Destructuring
 ```typescript
-{x, y} = point;
-{name: userName, age} = user;
-{a, ...rest} = obj;
+let {x, y} = point;
+let {name: userName, age} = user;
+let {a, ...rest} = obj;
 
 // With confidence thresholds
+let x = null;
+let y = null;
 {x, y} ~> 0.8 = point;
-{x ~> 0.9, y ~> 0.7} = point;
+let {x ~> 0.9, y ~> 0.7} = point;
 
 // With default values
-{x = 0, y = 0} = point;
+let {x = 0, y = 0} = point;
 ```
 
 #### Nested Destructuring
 ```typescript
-[{x, y}, [a, b]] = data;
-{user: {name, age}} = response;
+let [{x, y}, [a, b]] = data;
+let {user: {name, age}} = response;
 ```
 
 ### Pipeline Operations

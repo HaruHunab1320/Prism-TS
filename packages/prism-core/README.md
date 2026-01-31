@@ -203,7 +203,7 @@ interface RuntimeOptions {
 - `NumberValue`, `StringValue`, `BooleanValue`
 - `ArrayValue`, `ObjectValue`, `FunctionValue`
 - `ConfidenceValue` - Wraps any value with confidence
-- `NullValue`, `UndefinedValue`
+- `NullValue` (the `undefined` keyword maps to `null`)
 
 ### Built-in Functions
 - `llm(prompt: string, options?: LLMCallOptions)` - Make LLM calls (requires provider setup). `options` supports `{ provider, model, temperature, maxTokens, topP, timeout, structuredOutput, includeReasoning, confidenceExtractor, extractor }`.

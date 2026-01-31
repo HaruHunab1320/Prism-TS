@@ -3,7 +3,7 @@ import {
   ConfidenceValue,
   ObjectValue,
   FunctionValue,
-  UndefinedValue,
+  NullValue,
 } from '../values';
 
 type Registrar = (name: string, fn: FunctionValue | ObjectValue) => void;
@@ -21,25 +21,25 @@ function formatArgs(args: Value[]): string {
 export function registerConsoleBuiltins(register: Registrar): void {
   register('print', new FunctionValue('print', async (args) => {
     console.log(formatArgs(args));
-    return new UndefinedValue();
+    return new NullValue();
   }));
 
   const consoleObject = new Map<string, Value>();
   consoleObject.set('log', new FunctionValue('log', async (args) => {
     console.log(formatArgs(args));
-    return new UndefinedValue();
+    return new NullValue();
   }));
   consoleObject.set('warn', new FunctionValue('warn', async (args) => {
     console.warn(formatArgs(args));
-    return new UndefinedValue();
+    return new NullValue();
   }));
   consoleObject.set('error', new FunctionValue('error', async (args) => {
     console.error(formatArgs(args));
-    return new UndefinedValue();
+    return new NullValue();
   }));
   consoleObject.set('debug', new FunctionValue('debug', async (args) => {
     console.debug(`[DEBUG] ${formatArgs(args)}`);
-    return new UndefinedValue();
+    return new NullValue();
   }));
 
   register('console', new ObjectValue(consoleObject));

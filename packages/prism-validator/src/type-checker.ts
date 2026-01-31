@@ -10,7 +10,6 @@ type PrismType =
   | 'string'
   | 'boolean'
   | 'null'
-  | 'undefined'
   | 'function'
   | 'array'
   | 'object'
@@ -90,7 +89,7 @@ export class TypeAnalyzer implements TypeChecker {
     this.typeEnvironment.set('print', {
       type: 'function',
       paramTypes: ['any'],
-      returnType: 'undefined'
+      returnType: 'null'
     });
   }
 
@@ -121,14 +120,14 @@ export class TypeAnalyzer implements TypeChecker {
   }
 
   private inferType(node: ASTNode | null): TypeInfo {
-    if (!node) return { type: 'undefined' };
+    if (!node) return { type: 'unknown' };
 
     const n = node as any;
 
     switch (n.type) {
       case 'Program':
         n.statements.forEach((stmt: any) => this.inferType(stmt));
-        return { type: 'undefined' };
+        return { type: 'unknown' };
 
       case 'NumberLiteral':
         return { type: 'number' };
@@ -141,9 +140,6 @@ export class TypeAnalyzer implements TypeChecker {
 
       case 'NullLiteral':
         return { type: 'null' };
-
-      case 'UndefinedLiteral':
-        return { type: 'undefined' };
 
       case 'IdentifierExpression':
         const identType = this.getType(n.name);
@@ -179,7 +175,7 @@ export class TypeAnalyzer implements TypeChecker {
         if (n.identifier) {
           this.setType(n.identifier, stmtRightType);
         }
-        return { type: 'undefined' };
+        return { type: 'unknown' };
 
       case 'ArrayLiteral':
         const elementTypes = n.elements.map((elem: any) => this.inferType(elem));
@@ -238,7 +234,7 @@ export class TypeAnalyzer implements TypeChecker {
         this.pushScope();
         n.statements.forEach((stmt: any) => this.inferType(stmt));
         this.popScope();
-        return { type: 'undefined' };
+        return { type: 'unknown' };
 
       case 'IfStatement':
         this.inferType(n.condition);
@@ -246,7 +242,7 @@ export class TypeAnalyzer implements TypeChecker {
         if (n.elseStatement) {
           this.inferType(n.elseStatement);
         }
-        return { type: 'undefined' };
+        return { type: 'unknown' };
 
       case 'UncertainIfStatement':
         const uncertainTestType = this.inferType(n.condition);
@@ -264,14 +260,14 @@ export class TypeAnalyzer implements TypeChecker {
         if (branches.medium) this.inferType(branches.medium);
         if (branches.low) this.inferType(branches.low);
         if (branches.default) this.inferType(branches.default);
-        return { type: 'undefined' };
+        return { type: 'unknown' };
 
       case 'ForLoop':
         if (n.init) this.inferType(n.init);
         if (n.condition) this.inferType(n.condition);
         if (n.update) this.inferType(n.update);
         this.inferType(n.body);
-        return { type: 'undefined' };
+        return { type: 'unknown' };
 
       case 'ForInLoop':
         this.pushScope();
@@ -282,26 +278,26 @@ export class TypeAnalyzer implements TypeChecker {
         this.inferType(n.iterable);
         this.inferType(n.body);
         this.popScope();
-        return { type: 'undefined' };
+        return { type: 'unknown' };
 
       case 'WhileLoop':
       case 'DoWhileLoop':
         this.inferType(n.condition);
         this.inferType(n.body);
-        return { type: 'undefined' };
+        return { type: 'unknown' };
 
       case 'ExpressionStatement':
         this.inferType(n.expression);
-        return { type: 'undefined' };
+        return { type: 'unknown' };
 
       case 'ContextStatement':
         this.pushScope();
         this.inferType(n.body);
         this.popScope();
-        return { type: 'undefined' };
+        return { type: 'unknown' };
 
       case 'AgentDeclaration':
-        return { type: 'undefined' };
+        return { type: 'unknown' };
 
       case 'InterpolatedString':
         n.expressions.forEach((expr: any) => this.inferType(expr));
@@ -320,17 +316,17 @@ export class TypeAnalyzer implements TypeChecker {
         if (ubranches.medium) this.inferType(ubranches.medium);
         if (ubranches.low) this.inferType(ubranches.low);
         if (ubranches.default) this.inferType(ubranches.default);
-        return { type: 'undefined' };
+        return { type: 'unknown' };
 
       case 'BreakStatement':
       case 'ContinueStatement':
-        return { type: 'undefined' };
+        return { type: 'unknown' };
 
       case 'ArrayPattern':
       case 'ObjectPattern':
       case 'DestructuringAssignment':
         // Complex destructuring - simplified for now
-        return { type: 'undefined' };
+        return { type: 'unknown' };
 
       default:
         return { type: 'any' };
@@ -565,7 +561,7 @@ export class TypeAnalyzer implements TypeChecker {
   }
 
   private unifyTypes(types: TypeInfo[]): TypeInfo {
-    if (types.length === 0) return { type: 'undefined' };
+    if (types.length === 0) return { type: 'unknown' };
     if (types.length === 1) return types[0];
 
     const allSame = types.every(t => t.type === types[0].type);
@@ -586,8 +582,8 @@ export class TypeAnalyzer implements TypeChecker {
     if (expected === 'confidence' && actual.isConfident) return true;
     if (actual.type === 'confidence' && expected === 'number') return true;
     
-    if (actual.type === 'null' || actual.type === 'undefined') {
-      return expected === 'null' || expected === 'undefined';
+    if (actual.type === 'null') {
+      return expected === 'null';
     }
 
     return false;

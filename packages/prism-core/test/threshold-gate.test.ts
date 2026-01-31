@@ -11,9 +11,9 @@ describe('Threshold Gate Operator ~?>', () => {
   describe('Basic threshold gate', () => {
     it('should continue pipeline when confidence meets threshold', async () => {
       const program = parse(`
-        double = x => x * 2
-        value = 10 ~> 0.9
-        result = value ~?> 0.8 ~|> double(_)
+        let double = x => x * 2
+        let value = 10 ~> 0.9
+        let result = value ~?> 0.8 ~|> double(_)
         result
       `);
       const result = await runtime.execute(program);
@@ -21,21 +21,21 @@ describe('Threshold Gate Operator ~?>', () => {
       expect(result.toString()).toContain('90.0%'); // Confidence preserved
     });
 
-    it('should return undefined when confidence below threshold', async () => {
+    it('should return null when confidence below threshold', async () => {
       const program = parse(`
-        double = x => x * 2
-        value = 10 ~> 0.5
-        result = value ~?> 0.8
+        let double = x => x * 2
+        let value = 10 ~> 0.5
+        let result = value ~?> 0.8
         result
       `);
       const result = await runtime.execute(program);
-      expect(result.toString()).toBe('undefined');
+      expect(result.toString()).toBe('null');
     });
 
     it('should work with exact threshold match', async () => {
       const program = parse(`
-        value = 42 ~> 0.7
-        result = value ~?> 0.7
+        let value = 42 ~> 0.7
+        let result = value ~?> 0.7
         result
       `);
       const result = await runtime.execute(program);
@@ -45,8 +45,8 @@ describe('Threshold Gate Operator ~?>', () => {
 
     it('should work with non-confident values (confidence = 1.0)', async () => {
       const program = parse(`
-        value = 100
-        result = value ~?> 0.5
+        let value = 100
+        let result = value ~?> 0.5
         result
       `);
       const result = await runtime.execute(program);
@@ -58,8 +58,8 @@ describe('Threshold Gate Operator ~?>', () => {
   describe('Threshold gate with default value', () => {
     it('should return default value when below threshold', async () => {
       const program = parse(`
-        value = 10 ~> 0.3
-        result = value ~?> [0.5, "low_confidence"]
+        let value = 10 ~> 0.3
+        let result = value ~?> [0.5, "low_confidence"]
         result
       `);
       const result = await runtime.execute(program);
@@ -68,8 +68,8 @@ describe('Threshold Gate Operator ~?>', () => {
 
     it('should continue with value when above threshold with array syntax', async () => {
       const program = parse(`
-        value = 10 ~> 0.8
-        result = value ~?> [0.5, "low_confidence"]
+        let value = 10 ~> 0.8
+        let result = value ~?> [0.5, "low_confidence"]
         result
       `);
       const result = await runtime.execute(program);
@@ -79,9 +79,9 @@ describe('Threshold Gate Operator ~?>', () => {
 
     it('should handle complex default values', async () => {
       const program = parse(`
-        value = 10 ~> 0.3
-        defaultObj = {status: "uncertain", fallback: true}
-        result = value ~?> [0.7, defaultObj]
+        let value = 10 ~> 0.3
+        let defaultObj = {status: "uncertain", fallback: true}
+        let result = value ~?> [0.7, defaultObj]
         result
       `);
       const result = await runtime.execute(program);
@@ -93,11 +93,11 @@ describe('Threshold Gate Operator ~?>', () => {
   describe('Chaining with pipeline operators', () => {
     it('should chain multiple threshold gates', async () => {
       const program = parse(`
-        process1 = x => x * 2
-        process2 = x => x + 10
+        let process1 = x => x * 2
+        let process2 = x => x + 10
         
-        value = 5 ~> 0.9
-        result = value 
+        let value = 5 ~> 0.9
+        let result = value 
           ~?> 0.5           // Passes (0.9 >= 0.5)
           ~|> process1(_)   // 10
           ~?> 0.8           // Passes (0.9 >= 0.8)
@@ -111,17 +111,17 @@ describe('Threshold Gate Operator ~?>', () => {
 
     it('should stop pipeline at failed threshold', async () => {
       const program = parse(`
-        process1 = x => x * 2
-        process2 = x => x + 10
+        let process1 = x => x * 2
+        let process2 = x => x + 10
         
-        value = 5 ~> 0.6
-        temp = value 
+        let value = 5 ~> 0.6
+        let temp = value 
           ~?> 0.5           // Passes
           ~|> process1(_)   // 10
-          ~?> 0.8           // Fails, returns undefined
+          ~?> 0.8           // Fails, returns null
         
         // Check if threshold failed before continuing
-        result = temp || "stopped"
+        let result = temp || "stopped"
         result
       `);
       const result = await runtime.execute(program);
@@ -130,10 +130,10 @@ describe('Threshold Gate Operator ~?>', () => {
 
     it('should use default and continue pipeline', async () => {
       const program = parse(`
-        enhance = x => x + " enhanced"
+        let enhance = x => x + " enhanced"
         
-        value = "data" ~> 0.4
-        result = value 
+        let value = "data" ~> 0.4
+        let result = value 
           ~?> [0.7, "fallback"]  // Below threshold, use fallback
           |> enhance(_)          // Regular pipeline continues with fallback
         result
@@ -146,8 +146,8 @@ describe('Threshold Gate Operator ~?>', () => {
   describe('Integration with confidence operations', () => {
     it('should work with confidence modification mid-pipeline', async () => {
       const program = parse(`
-        value = 100 ~> 0.8
-        result = value
+        let value = 100 ~> 0.8
+        let result = value
           ~?> 0.7                    // Passes
           ~|> (_ * 2) ~> 0.9        // Modify confidence
           ~?> 0.85                   // Passes with new confidence
@@ -160,10 +160,10 @@ describe('Threshold Gate Operator ~?>', () => {
 
     it('should work with parallel confidence operator', async () => {
       const program = parse(`
-        option1 = 10 ~> 0.4
-        option2 = 20 ~> 0.8
+        let option1 = 10 ~> 0.4
+        let option2 = 20 ~> 0.8
         
-        result = (option1 ~||> option2) ~?> 0.7
+        let result = (option1 ~||> option2) ~?> 0.7
         result
       `);
       const result = await runtime.execute(program);
@@ -175,32 +175,32 @@ describe('Threshold Gate Operator ~?>', () => {
   describe('Error handling', () => {
     it('should error on invalid threshold value', async () => {
       const program = parse(`
-        value = 10 ~> 0.5
-        result = value ~?> 1.5
+        let value = 10 ~> 0.5
+        let result = value ~?> 1.5
       `);
       await expect(runtime.execute(program)).rejects.toThrow('Confidence threshold must be between 0 and 1');
     });
 
     it('should error on negative threshold', async () => {
       const program = parse(`
-        value = 10 ~> 0.5
-        result = value ~?> -0.1
+        let value = 10 ~> 0.5
+        let result = value ~?> -0.1
       `);
       await expect(runtime.execute(program)).rejects.toThrow('Confidence threshold must be between 0 and 1');
     });
 
     it('should error on non-numeric threshold', async () => {
       const program = parse(`
-        value = 10 ~> 0.5
-        result = value ~?> "high"
+        let value = 10 ~> 0.5
+        let result = value ~?> "high"
       `);
       await expect(runtime.execute(program)).rejects.toThrow('Threshold gate expects a number or [threshold, default] array');
     });
 
     it('should error on invalid array format', async () => {
       const program = parse(`
-        value = 10 ~> 0.5
-        result = value ~?> ["high", "default"]
+        let value = 10 ~> 0.5
+        let result = value ~?> ["high", "default"]
       `);
       await expect(runtime.execute(program)).rejects.toThrow('Threshold gate array first element must be a number');
     });
@@ -210,10 +210,10 @@ describe('Threshold Gate Operator ~?>', () => {
     it('should implement quality gate for AI responses', async () => {
       const program = parse(`
         // Simulate AI response with varying confidence
-        aiResponse = "Generated content" ~> 0.85
+        let aiResponse = "Generated content" ~> 0.85
         
         // Quality gate pipeline
-        finalResponse = aiResponse
+        let finalResponse = aiResponse
           ~?> [0.9, "Please try again - low confidence"]  // High quality gate
         
         finalResponse
@@ -224,18 +224,18 @@ describe('Threshold Gate Operator ~?>', () => {
 
     it('should implement adaptive processing based on confidence', async () => {
       const program = parse(`
-        simpleProcess = x => "Simple: " + x
-        complexProcess = x => "Complex: " + x
+        let simpleProcess = x => "Simple: " + x
+        let complexProcess = x => "Complex: " + x
         
-        data = "sensor reading" ~> 0.75
+        let data = "sensor reading" ~> 0.75
         
         // Try complex processing first, fall back to simple if not confident enough
-        result = data
+        let result = data
           ~?> [0.8, data]        // If < 80%, keep original
           ~|> complexProcess(_)  // Only runs if >= 80%
         
         // Always run simple process as fallback
-        finalResult = result ~?> [0.8, data |> simpleProcess(_)]
+        let finalResult = result ~?> [0.8, data |> simpleProcess(_)]
         finalResult
       `);
       const result = await runtime.execute(program);
@@ -244,13 +244,13 @@ describe('Threshold Gate Operator ~?>', () => {
 
     it('should implement progressive enhancement pipeline', async () => {
       const program = parse(`
-        basicAnalysis = x => ({result: x, level: "basic"})
-        advancedAnalysis = data => ({result: data.result * 2, level: "advanced"})
-        expertAnalysis = data => ({result: data.result * 3, level: "expert"})
+        let basicAnalysis = x => ({result: x, level: "basic"})
+        let advancedAnalysis = data => ({result: data.result * 2, level: "advanced"})
+        let expertAnalysis = data => ({result: data.result * 3, level: "expert"})
         
-        measurement = 100 ~> 0.95
+        let measurement = 100 ~> 0.95
         
-        analysis = measurement
+        let analysis = measurement
           ~|> basicAnalysis(_)     // Always run basic
           ~?> 0.7                   // Continue if confident
           ~|> advancedAnalysis(_)   // Enhance with advanced

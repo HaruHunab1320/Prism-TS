@@ -20,8 +20,8 @@ describe('Uncertain Loop Basic Test', () => {
 
   it('should execute uncertain for loop with high confidence', async () => {
     const code = `
-      count = 0
-      uncertain for i = 0; i < 3; i = i + 1 {
+      let count = 0
+      uncertain for let i = 0; i < 3; i = i + 1 {
         high {
           count = count + 1
         }
@@ -41,8 +41,8 @@ describe('Uncertain Loop Basic Test', () => {
 
   it('should execute uncertain while loop based on confidence', async () => {
     const code = `
-      result = ""
-      i = 0
+      let result = ""
+      let i = 0
       uncertain while (i < 2) ~> 0.8 {
         high {
           result = result + "H"

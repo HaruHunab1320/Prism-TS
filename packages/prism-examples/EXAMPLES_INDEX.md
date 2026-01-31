@@ -12,7 +12,6 @@ This document provides a comprehensive index of all Prism language examples, org
 ### 02. Control Flow
 - **[01-if-else.prism](examples/02-control-flow/01-if-else.prism)** - Conditional statements and ternary operators
 - **[02-loops.prism](examples/02-control-flow/02-loops.prism)** - All loop types: for, while, do-while, for-in, for-of
-- **[03-switch.prism](examples/02-control-flow/03-switch.prism)** - Switch statements and pattern matching
 
 ### 03. Functions
 - **[01-function-basics.prism](examples/03-functions/01-function-basics.prism)** - Function declarations, expressions, arrow functions

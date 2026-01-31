@@ -28,6 +28,7 @@ const sidebars: SidebarsConfig = {
         'concepts/confidence-operators',
         'concepts/uncertainty-propagation',
         'concepts/control-flow',
+        'concepts/pattern-matching',
         'concepts/modules',
         'concepts/syntax-highlighting-demo',
       ],

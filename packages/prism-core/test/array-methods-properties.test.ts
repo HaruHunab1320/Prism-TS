@@ -1,7 +1,7 @@
 import { Tokenizer } from '../src/tokenizer';
 import { Parser } from '../src/parser';
 import { Runtime } from '../src/runtime';
-import { NumberValue, StringValue, ArrayValue, BooleanValue, UndefinedValue } from '../src/runtime';
+import { NumberValue, StringValue, ArrayValue, BooleanValue, NullValue, ConfidenceValue } from '../src/runtime';
 
 describe('Array Methods as Properties', () => {
   let runtime: Runtime;
@@ -21,8 +21,8 @@ describe('Array Methods as Properties', () => {
   describe('Array.map()', () => {
     it('should transform array elements', async () => {
       const code = `
-        arr = [1, 2, 3]
-        doubled = arr.map(x => x * 2)
+        let arr = [1, 2, 3]
+        let doubled = arr.map(x => x * 2)
         doubled
       `;
       const result = await execute(code);
@@ -36,8 +36,8 @@ describe('Array Methods as Properties', () => {
 
     it('should work with string transformations', async () => {
       const code = `
-        names = ["alice", "bob", "charlie"]
-        upper = names.map(name => name + "!")
+        let names = ["alice", "bob", "charlie"]
+        let upper = names.map(name => name + "!")
         upper
       `;
       const result = await execute(code);
@@ -50,8 +50,8 @@ describe('Array Methods as Properties', () => {
 
     it('should work with confident arrays', async () => {
       const code = `
-        confident = [1, 2, 3] ~> 0.8
-        result = confident.map(x => x + 10)
+        let confident = [1, 2, 3] ~> 0.8
+        let result = confident.map(x => x + 10)
         result
       `;
       const result = await execute(code);
@@ -66,7 +66,7 @@ describe('Array Methods as Properties', () => {
 
     it('should chain with other methods', async () => {
       const code = `
-        result = [1, 2, 3, 4, 5]
+        let result = [1, 2, 3, 4, 5]
           .map(x => x * 2)
           .filter(x => x > 5)
         result
@@ -83,8 +83,8 @@ describe('Array Methods as Properties', () => {
   describe('Array.filter()', () => {
     it('should filter array elements', async () => {
       const code = `
-        arr = [1, 2, 3, 4, 5]
-        evens = arr.filter(x => x % 2 == 0)
+        let arr = [1, 2, 3, 4, 5]
+        let evens = arr.filter(x => x % 2 == 0)
         evens
       `;
       const result = await execute(code);
@@ -96,8 +96,8 @@ describe('Array Methods as Properties', () => {
 
     it('should work with boolean predicates', async () => {
       const code = `
-        arr = [true, false, true, false, true]
-        truthy = arr.filter(x => x)
+        let arr = [true, false, true, false, true]
+        let truthy = arr.filter(x => x)
         truthy
       `;
       const result = await execute(code);
@@ -110,8 +110,8 @@ describe('Array Methods as Properties', () => {
 
     it('should preserve confidence', async () => {
       const code = `
-        confident = [1, 2, 3, 4, 5] ~> 0.7
-        result = confident.filter(x => x > 2)
+        let confident = [1, 2, 3, 4, 5] ~> 0.7
+        let result = confident.filter(x => x > 2)
         result
       `;
       const result = await execute(code);
@@ -126,8 +126,8 @@ describe('Array Methods as Properties', () => {
 
     it('should return empty array when nothing matches', async () => {
       const code = `
-        arr = [1, 2, 3]
-        result = arr.filter(x => x > 10)
+        let arr = [1, 2, 3]
+        let result = arr.filter(x => x > 10)
         result
       `;
       const result = await execute(code);
@@ -139,8 +139,8 @@ describe('Array Methods as Properties', () => {
   describe('Array.reduce()', () => {
     it('should reduce array to single value', async () => {
       const code = `
-        arr = [1, 2, 3, 4, 5]
-        sum = arr.reduce((acc, x) => acc + x)
+        let arr = [1, 2, 3, 4, 5]
+        let sum = arr.reduce((acc, x) => acc + x)
         sum
       `;
       const result = await execute(code);
@@ -150,8 +150,8 @@ describe('Array Methods as Properties', () => {
 
     it('should work with initial value', async () => {
       const code = `
-        arr = [1, 2, 3]
-        sum = arr.reduce((acc, x) => acc + x, 10)
+        let arr = [1, 2, 3]
+        let sum = arr.reduce((acc, x) => acc + x, 10)
         sum
       `;
       const result = await execute(code);
@@ -160,8 +160,8 @@ describe('Array Methods as Properties', () => {
 
     it('should work with string concatenation', async () => {
       const code = `
-        words = ["hello", "world", "!"]
-        sentence = words.reduce((acc, word) => acc + " " + word)
+        let words = ["hello", "world", "!"]
+        let sentence = words.reduce((acc, word) => acc + " " + word)
         sentence
       `;
       const result = await execute(code);
@@ -170,8 +170,8 @@ describe('Array Methods as Properties', () => {
 
     it('should preserve confidence from input array', async () => {
       const code = `
-        confident = [1, 2, 3] ~> 0.9
-        result = confident.reduce((acc, x) => acc + x)
+        let confident = [1, 2, 3] ~> 0.9
+        let result = confident.reduce((acc, x) => acc + x)
         result
       `;
       const result = await execute(code);
@@ -182,8 +182,8 @@ describe('Array Methods as Properties', () => {
 
     it('should pass index as third argument', async () => {
       const code = `
-        arr = [10, 20, 30]
-        result = arr.reduce((acc, val, idx) => acc + val * idx, 0)
+        let arr = [10, 20, 30]
+        let result = arr.reduce((acc, val, idx) => acc + val * idx, 0)
         result
       `;
       const result = await execute(code);
@@ -192,8 +192,8 @@ describe('Array Methods as Properties', () => {
 
     it('should error on empty array without initial value', async () => {
       const code = `
-        empty = []
-        result = empty.reduce((a, b) => a + b)
+        let empty = []
+        let result = empty.reduce((a, b) => a + b)
       `;
       await expect(execute(code)).rejects.toThrow('reduce() of empty array with no initial value');
     });
@@ -202,8 +202,8 @@ describe('Array Methods as Properties', () => {
   describe('Array.push()', () => {
     it('should add elements to array', async () => {
       const code = `
-        arr = [1, 2, 3]
-        newArr = arr.push(4)
+        let arr = [1, 2, 3]
+        let newArr = arr.push(4)
         newArr
       `;
       const result = await execute(code);
@@ -214,8 +214,8 @@ describe('Array Methods as Properties', () => {
 
     it('should add multiple elements', async () => {
       const code = `
-        arr = [1]
-        newArr = arr.push(2, 3, 4)
+        let arr = [1]
+        let newArr = arr.push(2, 3, 4)
         newArr
       `;
       const result = await execute(code);
@@ -228,8 +228,8 @@ describe('Array Methods as Properties', () => {
 
     it('should preserve confidence', async () => {
       const code = `
-        confident = [1, 2] ~> 0.8
-        result = confident.push(3)
+        let confident = [1, 2] ~> 0.8
+        let result = confident.push(3)
         result
       `;
       const result = await execute(code);
@@ -240,11 +240,11 @@ describe('Array Methods as Properties', () => {
 
     it('should not mutate original array', async () => {
       const code = `
-        original = [1, 2, 3]
-        newArr = original.push(4)
-        originalLength = original.length
-        newLength = newArr.length
-        result = {original: originalLength, new: newLength}
+        let original = [1, 2, 3]
+        let newArr = original.push(4)
+        let originalLength = original.length
+        let newLength = newArr.length
+        let result = {original: originalLength, new: newLength}
         result
       `;
       const result = await execute(code);
@@ -255,47 +255,48 @@ describe('Array Methods as Properties', () => {
   });
 
   describe('Array.forEach()', () => {
-    it('should return undefined', async () => {
+    it('should return null', async () => {
       const code = `
-        arr = [1, 2, 3]
-        result = arr.forEach(x => x * 2)
+        let arr = [1, 2, 3]
+        let result = arr.forEach(x => x * 2)
         result
       `;
       const result = await execute(code);
-      expect(result).toBeInstanceOf(UndefinedValue);
+      expect(result).toBeInstanceOf(NullValue);
     });
 
     it('should work with confident arrays', async () => {
       const code = `
-        confident = [1, 2, 3] ~> 0.9
-        result = confident.forEach(x => x * 2)
+        let confident = [1, 2, 3] ~> 0.9
+        let result = confident.forEach(x => x * 2)
         result
       `;
       const result = await execute(code);
-      expect(result).toBeInstanceOf(UndefinedValue);
+      expect(result).toBeInstanceOf(ConfidenceValue);
+      expect((result as any).value).toBeInstanceOf(NullValue);
     });
 
     it('should accept functions with different arities', async () => {
       const code = `
-        arr = [1, 2, 3]
+        let arr = [1, 2, 3]
         // Single parameter function
-        r1 = arr.forEach(x => x)
+        let r1 = arr.forEach(x => x)
         // Two parameter function (with index)
-        r2 = arr.forEach((x, i) => x + i)
-        result = {first: r1, second: r2}
+        let r2 = arr.forEach((x, i) => x + i)
+        let result = {first: r1, second: r2}
         result
       `;
       const result = await execute(code);
       const obj = result as any;
-      expect(obj.value.get('first')).toBeInstanceOf(UndefinedValue);
-      expect(obj.value.get('second')).toBeInstanceOf(UndefinedValue);
+      expect(obj.value.get('first')).toBeInstanceOf(NullValue);
+      expect(obj.value.get('second')).toBeInstanceOf(NullValue);
     });
   });
 
   describe('Method chaining', () => {
     it('should chain multiple array methods', async () => {
       const code = `
-        result = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        let result = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
           .filter(x => x % 2 == 0)
           .map(x => x * x)
           .reduce((a, b) => a + b, 0)
@@ -307,13 +308,13 @@ describe('Array Methods as Properties', () => {
 
     it('should work with complex transformations', async () => {
       const code = `
-        people = [
+        let people = [
           {name: "Alice", age: 25},
           {name: "Bob", age: 30},
           {name: "Charlie", age: 35}
         ]
         
-        totalAge = people
+        let totalAge = people
           .filter(p => p.age > 25)
           .map(p => p.age)
           .reduce((sum, age) => sum + age, 0)
@@ -328,11 +329,11 @@ describe('Array Methods as Properties', () => {
   describe('Compatibility with global functions', () => {
     it('should still work with global map function', async () => {
       const code = `
-        arr = [1, 2, 3]
+        let arr = [1, 2, 3]
         // Both should work
-        method = arr.map(x => x * 2)
-        func = map(arr, x => x * 2)
-        result = {method: method, func: func}
+        let method = arr.map(x => x * 2)
+        let func = map(arr, x => x * 2)
+        let result = {method: method, func: func}
         result
       `;
       const result = await execute(code);
@@ -351,31 +352,31 @@ describe('Array Methods as Properties', () => {
   describe('Error handling', () => {
     it('should error when map is called without function', async () => {
       const code = `
-        arr = [1, 2, 3]
-        result = arr.map(42)
+        let arr = [1, 2, 3]
+        let result = arr.map(42)
       `;
       await expect(execute(code)).rejects.toThrow('Argument to map() must be a function');
     });
 
     it('should error when filter is called without function', async () => {
       const code = `
-        arr = [1, 2, 3]
-        result = arr.filter("not a function")
+        let arr = [1, 2, 3]
+        let result = arr.filter("not a function")
       `;
       await expect(execute(code)).rejects.toThrow('Argument to filter() must be a function');
     });
 
     it('should error when reduce is called without function', async () => {
       const code = `
-        arr = [1, 2, 3]
-        result = arr.reduce(123)
+        let arr = [1, 2, 3]
+        let result = arr.reduce(123)
       `;
       await expect(execute(code)).rejects.toThrow('First argument to reduce() must be a function');
     });
 
     it('should error when forEach is called without function', async () => {
       const code = `
-        arr = [1, 2, 3]
+        let arr = [1, 2, 3]
         arr.forEach(null)
       `;
       await expect(execute(code)).rejects.toThrow('Argument to forEach() must be a function');
@@ -383,8 +384,8 @@ describe('Array Methods as Properties', () => {
 
     it('should error when push is called without arguments', async () => {
       const code = `
-        arr = [1, 2, 3]
-        result = arr.push()
+        let arr = [1, 2, 3]
+        let result = arr.push()
       `;
       await expect(execute(code)).rejects.toThrow('Array.push() requires at least 1 argument');
     });

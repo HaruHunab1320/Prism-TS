@@ -260,7 +260,7 @@ const apis = new APIConfidenceExtractor()
 
 // Get sensor reading with confidence
 function readTemperature(sensorId, rawValue) {
-  result = sensors.fromSensor(rawValue, {
+  let result = sensors.fromSensor(rawValue, {
     age: getSensorAge(sensorId),
     history: getSensorHistory(sensorId),
     environment: getCurrentEnvironment()
@@ -271,9 +271,9 @@ function readTemperature(sensorId, rawValue) {
 
 // Get API data with confidence
 async function fetchWeather(location) {
-  response = await weatherAPI.get(location)
+  let response = await weatherAPI.get(location)
 
-  reliability = apis.fromAPIReliability({
+  let reliability = apis.fromAPIReliability({
     provider: "openweathermap",
     historicalAccuracy: 0.85,
     latency: response.latency
@@ -283,8 +283,8 @@ async function fetchWeather(location) {
 }
 
 // Use in uncertain control flow
-temperature = readTemperature("sensor-1", 23.5)
-weather = await fetchWeather("NYC")
+let temperature = readTemperature("sensor-1", 23.5)
+let weather = await fetchWeather("NYC")
 
 uncertain if (temperature) {
   high { logReading(temperature) }

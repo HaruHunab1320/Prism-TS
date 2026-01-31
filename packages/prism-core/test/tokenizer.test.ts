@@ -138,24 +138,25 @@ describe('Tokenizer', () => {
 
   describe('Comments and whitespace', () => {
     it('should skip single-line comments', () => {
-      const tokens = tokenize('x = 42 // this is a comment\ny = 10');
+      const tokens = tokenize('x = 42 // this is a comment\nlet y = 10');
       expect(tokens).toEqual([
         { type: TokenType.IDENTIFIER, value: 'x', line: 1, column: 0 },
         { type: TokenType.EQUAL, value: '=', line: 1, column: 2 },
         { type: TokenType.NUMBER, value: '42', line: 1, column: 4 },
-        { type: TokenType.IDENTIFIER, value: 'y', line: 2, column: 0 },
-        { type: TokenType.EQUAL, value: '=', line: 2, column: 2 },
-        { type: TokenType.NUMBER, value: '10', line: 2, column: 4 },
-        { type: TokenType.EOF, value: '', line: 2, column: 6 },
+        { type: TokenType.LET, value: 'let', line: 2, column: 0 },
+        { type: TokenType.IDENTIFIER, value: 'y', line: 2, column: 4 },
+        { type: TokenType.EQUAL, value: '=', line: 2, column: 6 },
+        { type: TokenType.NUMBER, value: '10', line: 2, column: 8 },
+        { type: TokenType.EOF, value: '', line: 2, column: 10 },
       ]);
     });
 
     it('should handle multi-line input', () => {
-      const code = `x = 10
-y = 20`;
+      const code = `let x = 10
+let y = 20`;
       const tokens = tokenize(code);
       expect(tokens[0].line).toBe(1);
-      expect(tokens[3].line).toBe(2);
+      expect(tokens[4].line).toBe(2);
     });
   });
 

@@ -5,6 +5,7 @@ Train GPT-2 + Lumina confidence head (base frozen by default).
 
 import argparse
 import json
+import random
 import sys
 from pathlib import Path
 from typing import Dict, List
@@ -50,6 +51,18 @@ def make_dataset(samples: List[Dict], tokenizer: GPT2Tokenizer, max_length: int 
     return items
 
 
+def make_prompt_batch(samples: List[Dict], tokenizer: GPT2Tokenizer, max_length: int = 256):
+    input_ids = []
+    attention_masks = []
+    for s in samples:
+        q = s["question"]
+        input_text = f"Question: {q}\nAnswer:"
+        enc = tokenizer(input_text, truncation=True, max_length=max_length, padding="max_length", return_tensors="pt")
+        input_ids.append(enc["input_ids"][0])
+        attention_masks.append(enc["attention_mask"][0])
+    return torch.stack(input_ids), torch.stack(attention_masks)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-root", type=Path, default=Path("datasets_merged"))
@@ -77,6 +90,12 @@ def main():
                         help="Penalty weight to keep confidence near 0.5")
     parser.add_argument("--ood-weight", type=float, default=1.0,
                         help="Weight for OOD (distribution_shift) loss")
+    parser.add_argument("--contrastive", action="store_true",
+                        help="Enable routing contrastive loss")
+    parser.add_argument("--contrastive-weight", type=float, default=0.5,
+                        help="Weight for contrastive routing loss")
+    parser.add_argument("--contrastive-margin", type=float, default=0.1,
+                        help="Margin for in-domain vs out-domain confidence")
     args = parser.parse_args()
 
     train_path = args.data_root / f"{args.domain}_specialist" / "train.jsonl"
@@ -84,6 +103,14 @@ def main():
 
     train_data = load_jsonl(train_path)[: args.max_train_samples]
     val_data = load_jsonl(val_path)[: args.max_val_samples]
+
+    # Build negative pool for contrastive routing
+    neg_pool = []
+    if args.contrastive:
+        other_domains = [d for d in ["general", "math", "code", "prism"] if d != args.domain]
+        for d in other_domains:
+            p = args.data_root / f"{d}_specialist" / "train.jsonl"
+            neg_pool.extend(load_jsonl(p)[: max(2000, args.max_train_samples // 4)])
 
     tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
     tokenizer.pad_token = tokenizer.eos_token
@@ -143,6 +170,17 @@ def main():
             prior = ((conf["overall"] - 0.5) ** 2).mean()
 
             loss = lm_loss + 0.3 * conf_loss + args.ood_weight * ood_loss + args.overconf_weight * overconf + args.prior_weight * prior
+
+            # Contrastive routing loss (in-domain vs out-domain prompt confidence)
+            if args.contrastive and neg_pool:
+                k = min(input_ids.shape[0], len(neg_pool))
+                neg_samples = random.sample(neg_pool, k=k)
+                neg_ids, neg_mask = make_prompt_batch(neg_samples, tokenizer)
+                neg_ids, neg_mask = neg_ids.to(device), neg_mask.to(device)
+                _, neg_conf = model(input_ids=neg_ids, attention_mask=neg_mask, labels=None)
+                margin = args.contrastive_margin
+                contrastive_loss = torch.relu(margin - (conf["overall"][:k] - neg_conf["overall"])).mean()
+                loss = loss + args.contrastive_weight * contrastive_loss
 
             opt.zero_grad()
             loss.backward()

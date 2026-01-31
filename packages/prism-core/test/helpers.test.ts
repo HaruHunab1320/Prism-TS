@@ -8,7 +8,7 @@ describe('Helper Functions', () => {
     });
 
     it('should handle confidence values', async () => {
-      const result = await runPrism('x = 42 ~> 0.9; x');
+      const result = await runPrism('let x = 42 ~> 0.9; x');
       expect(result.value.value).toBe(42);
       expect(result.confidence.value).toBe(0.9);
     });
@@ -22,9 +22,9 @@ describe('Helper Functions', () => {
 
     it('should handle complex programs', async () => {
       const code = `
-        x = 10
-        y = 20
-        result = x + y
+        let x = 10
+        let y = 20
+        let result = x + y
         result * 2
       `;
       const result = await runPrism(code);
@@ -33,9 +33,9 @@ describe('Helper Functions', () => {
 
     it('should work with arrays and loops', async () => {
       const code = `
-        nums = [1, 2, 3, 4, 5]
-        sum = 0
-        i = 0
+        let nums = [1, 2, 3, 4, 5]
+        let sum = 0
+        let i = 0
         while (i < nums.length) {
           sum = sum + nums[i]
           i = i + 1
@@ -52,7 +52,7 @@ describe('Helper Functions', () => {
       const runtime = createPrismRuntime();
 
       // Initialize counter
-      const initAst = parse('counter = 0');
+      const initAst = parse('let counter = 0');
       await runtime.execute(initAst);
 
       // First execution
@@ -79,7 +79,7 @@ describe('Helper Functions', () => {
         llmProvider: mockProvider
       });
 
-      const ast = parse('result = llm("Test prompt"); result');
+      const ast = parse('let result = llm("Test prompt"); result');
       const result = await runtime.execute(ast);
       expect(result.type).toBe('confident');
       expect(result.value.value).toBe('Test response');
@@ -92,7 +92,7 @@ describe('Helper Functions', () => {
     it('should work like old prism-uncertainty', async () => {
       // Old way
       const { runPrism } = require('../src');
-      const result = await runPrism('x = 5 ~> 0.9; x * 2');
+      const result = await runPrism('let x = 5 ~> 0.9; x * 2');
       
       expect(result.value.value).toBe(10);
       expect(result.confidence.value).toBe(0.9);

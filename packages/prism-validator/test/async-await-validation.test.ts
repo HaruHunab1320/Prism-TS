@@ -106,7 +106,7 @@ describe('Async/Await Validation', () => {
         type2 = typeof "string"
         type3 = typeof true
         type4 = typeof null
-        type5 = typeof undefined
+        type5 = typeof null
       `;
       const result = validator.validate(code);
       expect(result.valid).toBe(true);

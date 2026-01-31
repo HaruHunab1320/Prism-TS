@@ -10,17 +10,17 @@ This page demonstrates Prism's comprehensive syntax highlighting with support fo
 
 ```javascript
 // Variables and basic operations
-name = "Prism"
-version = 1.0
-isAwesome = true
+let name = "Prism"
+let version = 1.0
+let isAwesome = true
 
 // Numbers and arithmetic
-result = (42 + 8) * 2.5 / 5
-power = 2 ** 10  // 1024
+let result = (42 + 8) * 2.5 / 5
+let power = 2 ** 10  // 1024
 
 // Strings with interpolation
-greeting = "Hello, ${name} v${version}!"
-multiline = "This is a
+let greeting = "Hello, ${name} v${version}!"
+let multiline = "This is a
 multiline string"
 ```
 
@@ -30,30 +30,30 @@ Prism's unique confidence operators are highlighted with distinct colors to make
 
 ```javascript
 // Basic confidence assignment
-temperature = 72 ~> 0.95
-humidity = 65 ~> 0.87
+let temperature = 72 ~> 0.95
+let humidity = 65 ~> 0.87
 
 // Confidence extraction
-conf = temperature <~  // Extracts 0.95
+let conf = temperature <~  // Extracts 0.95
 
 // Confidence chaining
-result = data ~~ transform ~~ validate ~~ process
+let result = data ~~ transform ~~ validate ~~ process
 
 // Confidence arithmetic
-total = temperature ~+ humidity  // Confident addition
-average = total ~/ 2             // Confident division
+let total = temperature ~+ humidity  // Confident addition
+let average = total ~/ 2             // Confident division
 
 // Confidence comparison
-isHot = temperature ~> 0.9 ~>= 80  // Confident comparison
+let isHot = temperature ~> 0.9 ~>= 80  // Confident comparison
 
 // Confidence logical operations
-needsAction = isHot ~&& (humidity ~> 0.8 ~> 70)
-alternative = lowConfidence ~|| highConfidence
+let needsAction = isHot ~&& (humidity ~> 0.8 ~> 70)
+let alternative = lowConfidence ~|| highConfidence
 
 // Advanced confidence operators
-parallel = tasks ~||> processAll   // Parallel confidence
-filtered = data ~@> 0.8           // Threshold gate
-piped = input ~|> transform       // Confidence pipeline
+let parallel = tasks ~||> processAll   // Parallel confidence
+let filtered = data ~@> 0.8           // Threshold gate
+let piped = input ~|> transform       // Confidence pipeline
 ```
 
 ## Uncertainty Control Flow
@@ -100,11 +100,11 @@ Context switching and agent declarations have special highlighting:
 ```javascript
 // Context switching
 in context Medical {
-  diagnosis = analyzeSymptoms(patient)
-  confidence = assessDiagnosis(diagnosis)
+  let diagnosis = analyzeSymptoms(patient)
+  let confidence = assessDiagnosis(diagnosis)
 } shifting to Treatment {
-  plan = createTreatmentPlan(diagnosis)
-  schedule = planSchedule(plan)
+  let plan = createTreatmentPlan(diagnosis)
+  let schedule = planSchedule(plan)
 }
 
 // Agent declarations
@@ -122,8 +122,8 @@ agents {
 }
 
 // Using agents
-result = researcher.analyze(data)
-summary = writer.summarize(result)
+let result = researcher.analyze(data)
+let summary = writer.summarize(result)
 ```
 
 ## Functions and Lambdas
@@ -131,76 +131,76 @@ summary = writer.summarize(result)
 ```javascript
 // Function declarations
 function calculateRisk(value, threshold) {
-  risk = value / threshold
+  let risk = value / threshold
   return risk ~> assessConfidence(risk)
 }
 
 // Lambda expressions
-filter = (x) => x > 10
-mapper = (x) => x * 2
-reducer = (acc, val) => acc + val
+let filter = (x) => x > 10
+let mapper = (x) => x * 2
+let reducer = (acc, val) => acc + val
 
 // Higher-order functions
-results = data
+let results = data
   |> filter(_, x => x.confidence > 0.5)
   |> map(_, x => x ~> increaseConfidence(x))
   |> reduce(_, (a, b) => a ~+ b, 0)
 
 // Destructuring in lambdas
-process = ({name, value}) => "${name}: ${value}"
-extractFirst = ([first, ...rest]) => first
+let process = ({name, value}) => "${name}: ${value}"
+let extractFirst = ([first, ...rest]) => first
 ```
 
 ## Advanced Features
 
 ```javascript
 // Pipeline operator
-processed = rawData
+let processed = rawData
   |> validate(_)
   |> transform(_)
   |> optimize(_)
   |> finalize(_)
 
 // Spread operator
-combined = [...array1, ...array2, newItem]
-merged = {...defaults, ...userConfig, override: true}
+let combined = [...array1, ...array2, newItem]
+let merged = {...defaults, ...userConfig, override: true}
 
 // Nullish coalescing
-value = userInput ?? defaultValue
-safeAccess = object?.property?.nested ?? "fallback"
+let value = userInput ?? defaultValue
+let safeAccess = object?.property?.nested ?? "fallback"
 
 // Array and object destructuring
-[first, second, ...remaining] = results
-{name, age, ...details} = person
+let [first, second, ...remaining] = results
+let {name, age, ...details} = person
 
 // Complex destructuring with confidence
-[
+let [
   header ~> 0.9,
   body ~> 0.8,
   footer ~> 0.7
 ] = parseDocument(content) ~> 0.85
 
 // Placeholder usage
-doubled = map(numbers, _ * 2)
-filtered = filter(data, _ > threshold)
+let doubled = map(numbers, _ * 2)
+let filtered = filter(data, _ > threshold)
 ```
 
 ## LLM Integration
 
 ```javascript
 // Basic LLM calls
-response = llm("Analyze this text: ${input}")
-summary = llm("Summarize in 3 bullets: ${article}")
+let response = llm("Analyze this text: ${input}")
+let summary = llm("Summarize in 3 bullets: ${article}")
 
 // LLM with confidence handling
-analysis = llm("Is this safe to deploy?") ~> 0.9
+let analysis = llm("Is this safe to deploy?") ~> 0.9
 uncertain if (analysis) {
   high { approve() }
   low { reject() }
 }
 
 // Complex LLM pipeline
-result = document
+let result = document
   |> llm("Extract key points: ${_}")
   |> llm("Categorize topics: ${_}")
   |> llm("Generate summary: ${_}")
@@ -215,21 +215,21 @@ Here's a complete example showcasing many features together:
 // Content moderation system with confidence handling
 function moderateContent(content) {
   // Parallel analysis with different aspects
-  analyses = {
+  let analyses = {
     toxicity: llm("Rate toxicity level: ${content}") ~> 0.9,
     spam: llm("Is this spam? ${content}") ~> 0.85,
     quality: llm("Rate content quality: ${content}") ~> 0.8
   }
   
   // Extract confidence scores
-  confidences = {
+  let confidences = {
     toxicity: analyses.toxicity <~,
     spam: analyses.spam <~,
     quality: analyses.quality <~
   }
   
   // Calculate overall confidence
-  overallConfidence = (
+  let overallConfidence = (
     confidences.toxicity ~+ 
     confidences.spam ~+ 
     confidences.quality
@@ -247,7 +247,7 @@ function moderateContent(content) {
     }
     medium {
       // Medium confidence - needs review
-      flaggedItems = []
+      let flaggedItems = []
       
       if (confidences.toxicity < 0.7) {
         flaggedItems = [...flaggedItems, "toxicity"]
@@ -283,8 +283,8 @@ function moderateContent(content) {
 }
 
 // Usage
-content = "This is a sample post to moderate"
-result = moderateContent(content)
+let content = "This is a sample post to moderate"
+let result = moderateContent(content)
 
 console.log("Moderation result:", result)
 console.log("Decision confidence:", result.confidence <~)

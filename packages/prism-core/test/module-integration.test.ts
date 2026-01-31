@@ -7,13 +7,15 @@ describe('Module System Integration', () => {
   
   beforeEach(() => {
     fileContents = new Map();
-    moduleSystem = new ModuleSystem((path: string) => {
+    const reader = (path: string) => {
       const content = fileContents.get(path);
       if (!content) {
         throw new Error(`Module not found: ${path}`);
       }
       return content;
-    });
+    };
+    const exists = (path: string) => fileContents.has(path);
+    moduleSystem = new ModuleSystem(reader, exists);
     moduleSystem.clearCache();
   });
   
@@ -23,8 +25,8 @@ describe('Module System Integration', () => {
       export const PI = 3.14159
       export const E = 2.71828
       
-      export square = x => x * x
-      export cube = x => x * x * x
+      export const square = x => x * x
+      export const cube = x => x * x * x
       
       export function circleArea(radius) {
         return PI * square(radius)
@@ -43,19 +45,19 @@ describe('Module System Integration', () => {
     fileContents.set('/utils/stats.prism', `
       import {square} from "./math.prism"
       
-      export mean = values => {
-        sum = values.reduce((a, b) => a + b, 0)
+      export const mean = values => {
+        let sum = values.reduce((a, b) => a + b, 0)
         return sum / values.length
       }
       
-      export variance = values => {
-        m = mean(values)
-        squaredDiffs = values.map(x => square(x - m))
+      export const variance = values => {
+        let m = mean(values)
+        let squaredDiffs = values.map(x => square(x - m))
         return mean(squaredDiffs)
       }
       
-      export standardDeviation = values => {
-        v = variance(values)
+      export const standardDeviation = values => {
+        let v = variance(values)
         // Simple square root approximation for testing
         return (v ** 0.5) ~> 0.95
       }
@@ -68,15 +70,15 @@ describe('Module System Integration', () => {
       import * as stats from "./utils/stats.prism"
       
       // Use default import
-      area = math.circleArea(5)
+      let area = math.circleArea(5)
       
       // Use named imports
-      data = [1, 2, 3, 4, 5]
-      avg = mean(data)
-      sd = standardDeviation(data)
+      let data = [1, 2, 3, 4, 5]
+      let avg = mean(data)
+      let sd = standardDeviation(data)
       
       // Use namespace import
-      v = stats.variance(data)
+      let v = stats.variance(data)
       
       export {area, avg, sd, v}
     `);
@@ -108,7 +110,7 @@ describe('Module System Integration', () => {
       }
       
       export async function processData(items) {
-        results = await Promise.all(
+        let results = await Promise.all(
           items.map(id => fetchData(id))
         )
         return results
@@ -118,8 +120,8 @@ describe('Module System Integration', () => {
     fileContents.set('/main.prism', `
       import {processData} from "./api.prism"
       
-      ids = [1, 2, 3]
-      data = await processData(ids)
+      let ids = [1, 2, 3]
+      let data = await processData(ids)
       
       export default data
     `);

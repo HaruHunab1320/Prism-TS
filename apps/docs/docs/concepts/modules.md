@@ -20,8 +20,8 @@ You can export values, functions, and variables from a module:
 export const PI = 3.14159
 export const E = 2.71828
 
-export square = x => x * x
-export cube = x => x * x * x
+export const square = x => x * x
+export const cube = x => x * x * x
 
 export function circleArea(radius) {
   return PI * square(radius)
@@ -67,21 +67,21 @@ Export individual values with names:
 ```javascript
 // Direct export
 export const VERSION = "1.0.0"
-export apiKey = "secret-key" ~> 0.9
+export const apiKey = "secret-key" ~> 0.9
 
 // Export functions
-export greet = name => "Hello, " + name
+export const greet = name => "Hello, " + name
 export function calculate(x, y) {
   return x * y
 }
 
 // Export after declaration
-userId = 12345
-userName = "Alice"
+let userId = 12345
+let userName = "Alice"
 export {userId, userName}
 
 // Export with renaming
-internalFunction = () => "internal"
+let internalFunction = () => "internal"
 export {internalFunction as publicAPI}
 ```
 
@@ -187,8 +187,8 @@ Each module has its own scope:
 
 ```javascript
 // module-a.prism
-secret = "module A secret"
-export public = "module A public"
+let secret = "module A secret"
+export const public = "module A public"
 
 // module-b.prism
 import {public} from "./module-a.prism"
@@ -203,9 +203,9 @@ Modules are evaluated only once, even if imported multiple times:
 ```javascript
 // counter.prism
 console.log("Counter module loaded")
-count = 0
-export increment = () => ++count
-export getCount = () => count
+let count = 0
+export const increment = () => ++count
+export const getCount = () => count
 
 // main.prism
 import {increment, getCount} from "./counter.prism"
@@ -242,12 +242,12 @@ Confidence values are preserved through imports and exports:
 
 ```javascript
 // sensor.prism
-export temperature = 23.5 ~> 0.92
-export humidity = 65 ~> 0.88
+export const temperature = 23.5 ~> 0.92
+export const humidity = 65 ~> 0.88
 
 export async function readSensor() {
   // Simulate sensor reading
-  value = await getSensorValue()
+  let value = await getSensorValue()
   return value ~> 0.9
 }
 
@@ -257,7 +257,7 @@ import {temperature, readSensor} from "./sensor.prism"
 // Confidence is preserved
 console.log(temperature)  // 23.5 ~> 0.92
 
-reading = await readSensor()
+let reading = await readSensor()
 // Confidence flows through function calls
 ```
 
@@ -268,8 +268,8 @@ Modules can use async/await at the top level:
 ```javascript
 // data-loader.prism
 const data = await fetchData("/api/config")
-export config = data.config
-export settings = data.settings
+export const config = data.config
+export const settings = data.settings
 
 // main.prism
 import {config, settings} from "./data-loader.prism"
@@ -284,9 +284,9 @@ Keep modules focused on a single concern:
 
 ```javascript
 // Good: math-utils.prism
-export add = (a, b) => a + b
-export multiply = (a, b) => a * b
-export average = nums => nums.reduce(add, 0) / nums.length
+export const add = (a, b) => a + b
+export const multiply = (a, b) => a * b
+export const average = nums => nums.reduce(add, 0) / nums.length
 
 // Avoid: utilities.prism with mixed concerns
 ```
@@ -297,8 +297,8 @@ Be explicit about what you export:
 
 ```javascript
 // Good: Clear public API
-internal = "private implementation"
-helper = x => x * 2
+let internal = "private implementation"
+let helper = x => x * 2
 
 export function publicFunction() {
   return helper(internal)
@@ -402,10 +402,10 @@ Organize related functionality:
 
 ```javascript
 // api-service.prism
-baseUrl = "https://api.example.com"
+let baseUrl = "https://api.example.com"
 
 export async function get(endpoint) {
-  response = await fetch(baseUrl + endpoint)
+  let response = await fetch(baseUrl + endpoint)
   return response.json()
 }
 
@@ -451,7 +451,7 @@ Currently, the Prism module system has some limitations:
      
      // b.prism
      import {valueA} from "./a.prism"
-     export valueB = "B uses " + valueA  // valueA is undefined here
+     export valueB = "B uses " + valueA  // valueA is not initialized here
      ```
 3. **File System Based**: Modules must exist as files (no virtual modules)
 4. **No Import Maps**: No support for import maps or module aliasing

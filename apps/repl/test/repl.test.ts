@@ -49,7 +49,7 @@ describe('Prism REPL', () => {
   describe('Variable Management', () => {
     it('should handle variable assignment and retrieval', async () => {
       // Assign variable
-      const assignResult = await repl.evaluate('x = 42');
+      const assignResult = await repl.evaluate('let x = 42');
       expect(assignResult.success).toBe(true);
       
       // Retrieve variable
@@ -61,8 +61,8 @@ describe('Prism REPL', () => {
     });
 
     it('should persist variables across evaluations', async () => {
-      await repl.evaluate('name = "Prism"');
-      await repl.evaluate('version = 1.0');
+      await repl.evaluate('let name = "Prism"');
+      await repl.evaluate('let version = 1.0');
       
       const result = await repl.evaluate('name + " v" + version');
       expect(result.success).toBe(true);
@@ -72,8 +72,8 @@ describe('Prism REPL', () => {
     });
 
     it('should show all variables with :vars command', async () => {
-      await repl.evaluate('x = 10');
-      await repl.evaluate('y = "hello"');
+      await repl.evaluate('let x = 10');
+      await repl.evaluate('let y = "hello"');
       
       const result = await repl.evaluate(':vars');
       expect(result.success).toBe(true);
@@ -96,8 +96,8 @@ describe('Prism REPL', () => {
     });
 
     it('should show confidence propagation', async () => {
-      await repl.evaluate('x = 10 ~> 0.9');
-      await repl.evaluate('y = 20 ~> 0.8');
+      await repl.evaluate('let x = 10 ~> 0.9');
+      await repl.evaluate('let y = 20 ~> 0.8');
       
       const result = await repl.evaluate('x + y');
       expect(result.success).toBe(true);
@@ -120,7 +120,7 @@ describe('Prism REPL', () => {
     });
 
     it('should store LLM results in variables', async () => {
-      await repl.evaluate('response = llm("Test question")');
+      await repl.evaluate('let response = llm("Test question")');
       const result = await repl.evaluate('response');
       
       expect(result.success).toBe(true);
@@ -133,9 +133,9 @@ describe('Prism REPL', () => {
   describe('Control Flow', () => {
     it('should handle if statements', async () => {
       const code = `
-        result = 0
+        let result = 0
         if (true) {
-          result = 42
+          let result = 42
         }
         result
       `;
@@ -149,7 +149,7 @@ describe('Prism REPL', () => {
 
     it('should handle uncertain if statements', async () => {
       const code = `
-        outcome = 0
+        let outcome = 0
         uncertain if (100 ~> 0.95) {
           high { outcome = 1 }
           low { outcome = 2 }
@@ -179,7 +179,7 @@ describe('Prism REPL', () => {
     });
 
     it('should handle :clear command', async () => {
-      await repl.evaluate('x = 42');
+      await repl.evaluate('let x = 42');
       await repl.evaluate(':clear');
       
       const result = await repl.evaluate('x');
@@ -203,9 +203,9 @@ describe('Prism REPL', () => {
   describe('Multi-line Input', () => {
     it('should handle multi-line expressions', async () => {
       const multiLineCode = `
-        x = 10
-        y = 20
-        z = x + y
+        let x = 10
+        let y = 20
+        let z = x + y
         z * 2
       `;
       
@@ -218,7 +218,7 @@ describe('Prism REPL', () => {
 
     it('should handle complex nested structures', async () => {
       // Test simpler version first
-      await repl.evaluate('base = 10 ~> 0.9');
+      await repl.evaluate('let base = 10 ~> 0.9');
       
       const result = await repl.evaluate('base * 2');
       expect(result.success).toBe(true);
@@ -230,7 +230,7 @@ describe('Prism REPL', () => {
 
   describe('Error Handling', () => {
     it('should handle syntax errors gracefully', async () => {
-      const result = await repl.evaluate('x = ');
+      const result = await repl.evaluate('let x = ');
       
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -275,8 +275,8 @@ describe('Prism REPL', () => {
     });
 
     it('should provide session statistics', async () => {
-      await repl.evaluate('x = 10');
-      await repl.evaluate('y = 20');
+      await repl.evaluate('let x = 10');
+      await repl.evaluate('let y = 20');
       await repl.evaluate('invalid syntax');
       
       const stats = repl.getSessionStats();

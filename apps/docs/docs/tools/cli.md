@@ -159,10 +159,10 @@ PRISM_DEFAULT_LLM=claude
 
 ```javascript
 // analyze.prism
-data = "User feedback: The product is amazing but shipping was slow"
+let data = "User feedback: The product is amazing but shipping was slow"
 
-sentiment = llm("Analyze sentiment: ${data}") ~> 0.9
-entities = llm("Extract entities: ${data}") ~> 0.85
+let sentiment = llm("Analyze sentiment: ${data}") ~> 0.9
+let entities = llm("Extract entities: ${data}") ~> 0.85
 
 console.log("Sentiment:", sentiment)
 console.log("Entities:", entities)

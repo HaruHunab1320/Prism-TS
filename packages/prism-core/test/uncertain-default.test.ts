@@ -6,7 +6,7 @@ describe('Uncertain Default Branch', () => {
     it('should execute default branch when no confidence matches', async () => {
       const code = `
         // Only has high branch, but confidence is medium
-        result = ""
+        let result = ""
         uncertain if (true ~> 0.6) {
           high {
             result = "high"
@@ -28,7 +28,7 @@ describe('Uncertain Default Branch', () => {
 
     it('should not execute default when a branch matches', async () => {
       const code = `
-        result = ""
+        let result = ""
         uncertain if (true ~> 0.8) {
           high {
             result = "high"
@@ -51,9 +51,9 @@ describe('Uncertain Default Branch', () => {
   describe('Uncertain While with Default', () => {
     it('should execute default branch for confidence recalibration', async () => {
       const code = `
-        confidence = 0.6  // Medium confidence
-        attempts = 0
-        results = []
+        let confidence = 0.6  // Medium confidence
+        let attempts = 0
+        let results = []
         
         uncertain while attempts < 5 ~> confidence {
           high {
@@ -92,7 +92,7 @@ describe('Uncertain Default Branch', () => {
 
     it('should handle break in default branch', async () => {
       const code = `
-        iterations = 0
+        let iterations = 0
         uncertain while true ~> 0.55 {
           high {
             iterations = iterations + 100
@@ -117,9 +117,9 @@ describe('Uncertain Default Branch', () => {
 
     it('should handle continue in default branch', async () => {
       const code = `
-        results = []
-        i = 0
-        skipNext = true
+        let results = []
+        let i = 0
+        let skipNext = true
         
         uncertain while i < 3 ~> 0.6 {
           high {
@@ -151,10 +151,10 @@ describe('Uncertain Default Branch', () => {
   describe('Uncertain For with Default', () => {
     it('should use default for adaptive threshold adjustment', async () => {
       const code = `
-        results = []
-        threshold = 0.7
+        let results = []
+        let threshold = 0.7
         
-        uncertain for i = 0; i < 5; i = i + 1 {
+        uncertain for let i = 0; i < 5; i = i + 1 {
           high {
             results = [...results, "high"]
           }
@@ -183,12 +183,13 @@ describe('Uncertain Default Branch', () => {
 
     it('should gather more data in default branch', async () => {
       const code = `
-        data = []
-        confidences = [0.3, 0.6, 0.4, 0.8, 0.2]
+        let data = []
+        let confidences = [0.3, 0.6, 0.4, 0.8, 0.2]
+        let conf = 0
         
-        for j = 0; j < confidences.length; j = j + 1 {
+        for let j = 0; j < confidences.length; j = j + 1 {
           conf = confidences[j]
-          uncertain for i = 0; (i < 1) ~> conf; i = i + 1 {
+          uncertain for let i = 0; (i < 1) ~> conf; i = i + 1 {
             high {
               data = [...data, {action: "auto", conf: conf}]
             }
@@ -203,9 +204,9 @@ describe('Uncertain Default Branch', () => {
         }
         
         // Count actions
-        auto = 0
-        skip = 0 
-        review = 0
+        let auto = 0
+        let skip = 0 
+        let review = 0
         for item in data {
           if (item.action == "auto") auto = auto + 1
           if (item.action == "skip") skip = skip + 1
@@ -229,9 +230,9 @@ describe('Uncertain Default Branch', () => {
   describe('Edge Cases', () => {
     it('should handle empty default branch', async () => {
       const code = `
-        count = 0
-        iterations = 0
-        maxIterations = 5
+        let count = 0
+        let iterations = 0
+        let maxIterations = 5
         
         uncertain while count < 3 ~> 0.6 {
           high {
@@ -262,7 +263,7 @@ describe('Uncertain Default Branch', () => {
 
     it('should allow default as the only branch', async () => {
       const code = `
-        executions = 0
+        let executions = 0
         uncertain while executions < 3 ~> 0.5 {
           default {
             executions = executions + 1
@@ -280,7 +281,7 @@ describe('Uncertain Default Branch', () => {
 
     it('should handle nested uncertain statements with defaults', async () => {
       const code = `
-        results = []
+        let results = []
         
         uncertain if (true ~> 0.6) {
           high {

@@ -272,7 +272,6 @@ export class Validator implements PrismValidator {
       case 'StringLiteral':
       case 'BooleanLiteral':
       case 'NullLiteral':
-      case 'UndefinedLiteral':
       case 'BreakStatement':
       case 'ContinueStatement':
       case 'PlaceholderExpression':
