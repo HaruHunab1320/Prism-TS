@@ -1,5 +1,22 @@
 # @prism-lang/validator
 
+## 2.0.0
+
+### Major Changes
+
+- Major release for core language and validation updates.
+
+  - Added Rust-style `match` expressions with guards and nested patterns.
+  - Added configurable runtime confidence strategy and provenance tracking.
+  - Added built-in confidence helpers (`consensus`, `aggregate`).
+  - Removed legacy `Agent` keyword requirement inside `agents` blocks.
+  - Updated validator behavior/docs to align with current Prism syntax and confidence semantics.
+
+### Patch Changes
+
+- Updated dependencies
+  - @prism-lang/core@3.0.0
+
 ## 1.4.0
 
 ### Minor Changes

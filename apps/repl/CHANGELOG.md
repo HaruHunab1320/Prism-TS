@@ -1,5 +1,13 @@
 # @prism-lang/repl
 
+## 1.3.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @prism-lang/core@3.0.0
+  - @prism-lang/llm@1.3.1
+
 ## 1.3.0
 
 ### Minor Changes
