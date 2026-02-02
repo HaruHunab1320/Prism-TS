@@ -2,6 +2,10 @@
 
 LLM provider integrations for the Prism programming language. Supports multiple providers with automatic fallback and confidence extraction.
 
+<div align="center">
+  <img src="https://docs.prismlang.dev/img/prism-logo-v1.png" width="160" alt="Prism logo" />
+</div>
+
 📚 **[Full Documentation](https://docs.prismlang.dev/)** | 🤖 **[LLM Guide](https://docs.prismlang.dev/docs/llm-integration)** | 🔧 **[API Reference](https://docs.prismlang.dev/docs/api/llm/)**
 
 ## Installation

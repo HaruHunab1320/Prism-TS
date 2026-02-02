@@ -2,6 +2,10 @@
 
 Command-line interface for the Prism programming language.
 
+<div align="center">
+  <img src="https://docs.prismlang.dev/img/prism-logo-v1.png" width="160" alt="Prism logo" />
+</div>
+
 📚 **[Full Documentation](https://docs.prismlang.dev/)** | 🚀 **[Getting Started](https://docs.prismlang.dev/docs/intro)** | 💻 **[CLI Guide](https://docs.prismlang.dev/docs/cli)**
 
 ## Installation
@@ -31,7 +35,7 @@ prism repl
 
 ### Execute inline code
 ```bash
-prism eval "x = 5 ~> 0.9; print(x)"
+prism eval "x = 5 ~> 0.9; x"
 ```
 
 ### Send an LLM prompt
@@ -80,7 +84,7 @@ prism run --watch app.prism
 prism repl
 
 # Quick calculation with uncertainty
-prism eval "temp = 72 ~> 0.95; print('Temperature:', temp)"
+prism eval "temp = 72 ~> 0.95; <~ temp"
 ```
 
 ## Related Packages

@@ -2,6 +2,10 @@
 
 Interactive REPL (Read-Eval-Print Loop) for the Prism programming language. Provides a command-line interface for experimenting with Prism code interactively.
 
+<div align="center">
+  <img src="https://docs.prismlang.dev/img/prism-logo-v1.png" width="160" alt="Prism logo" />
+</div>
+
 📚 **[Full Documentation](https://docs.prismlang.dev/)** | 🚀 **[Getting Started](https://docs.prismlang.dev/docs/intro)** | 🖥️ **[CLI Usage](https://docs.prismlang.dev/docs/cli)**
 
 ## Installation
@@ -43,6 +47,7 @@ All REPL commands start with `:` (colon):
 | `:history` | Show command history |
 | `:stats` | Display session statistics |
 | `:llm` | Show LLM provider status |
+| `:stream <prompt>` | Stream token output from the default LLM provider |
 | `:exit` | Exit the REPL (also Ctrl+D) |
 
 ## Examples

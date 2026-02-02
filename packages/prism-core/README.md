@@ -2,6 +2,10 @@
 
 Core implementation of the Prism programming language - a language designed for expressing and managing uncertainty in computational systems.
 
+<div align="center">
+  <img src="https://docs.prismlang.dev/img/prism-logo-v1.png" width="160" alt="Prism logo" />
+</div>
+
 📚 **[Full Documentation](https://docs.prismlang.dev/)** | 🚀 **[Getting Started](https://docs.prismlang.dev/docs/intro)** | 📖 **[API Reference](https://docs.prismlang.dev/docs/api/core/parser)**
 
 ## Installation
@@ -77,6 +81,8 @@ const result = await runtime.execute(ast);
 - **Confidence Operators**: Extract (`<~`), multiply (`~*`), combine (`~||>`)
 - **Uncertain Control Flow**: `uncertain if/while/for` with high/medium/low/default branches
 - **Adaptive Confidence**: Default branches for confidence recalibration and fallback logic
+- **Pattern Matching**: Rust-style `match` expressions with guards and nested patterns
+- **Confidence Helpers**: Built-in `consensus()` and `aggregate()` helpers
 - **LLM Integration**: Built-in `llm()` function with automatic confidence
 - **Functional Programming**: Lambdas, array methods, destructuring
 - **Pipeline Operator**: Chain operations with `|>` for cleaner code
@@ -184,7 +190,7 @@ const analysis = llm("Assess rollout risk", {
 - `parse(code: string): Program` - Parse Prism code into AST
 
 ### Runtime
-- `createRuntime(options?: RuntimeOptions): Runtime` - Create a new runtime. Pass `{ moduleSystem }` to share a preconfigured module loader (custom file readers, caches) across runtimes.
+- `createRuntime(options?: RuntimeOptions): Runtime` - Create a new runtime. Pass `{ moduleSystem }` to share a preconfigured module loader (custom file readers, caches) across runtimes, and `{ confidence }` to tune confidence propagation/provenance.
 - `runtime.execute(ast: Program): Promise<Value>` - Execute AST
 - `runtime.registerLLMProvider(name: string, provider: LLMProvider)` - Register LLM provider
 - `runtime.setDefaultLLMProvider(name: string)` - Set default LLM provider
@@ -196,6 +202,13 @@ const analysis = llm("Assess rollout risk", {
 ```ts
 interface RuntimeOptions {
   moduleSystem?: ModuleSystem; // defaults to a new ModuleSystem()
+  confidence?: {
+    strategy?: {
+      combineMode?: 'average' | 'min' | 'max' | 'multiply';
+      consensus?: 'max' | 'min' | 'average';
+    };
+    trackProvenance?: boolean;
+  };
 }
 ```
 
@@ -208,6 +221,8 @@ interface RuntimeOptions {
 ### Built-in Functions
 - `llm(prompt: string, options?: LLMCallOptions)` - Make LLM calls (requires provider setup). `options` supports `{ provider, model, temperature, maxTokens, topP, timeout, structuredOutput, includeReasoning, confidenceExtractor, extractor }`.
 - `stream_llm(prompt: string, options?: LLMCallOptions)` - Return a stream handle with `next()`, `cancel()`, and `result()` helpers for incremental output.
+- `consensus(values: Array<value>, options?: { strategy?: 'max' | 'min' | 'average' })` - Pick a representative confident value from multiple candidates.
+- `aggregate(values: Array<value>, options?: { mode?: 'average' | 'min' | 'max' | 'multiply' })` - Combine confidence from multiple candidates.
 - `map(array: Array, fn: Function)` - Map over array elements
 - `filter(array: Array, fn: Function)` - Filter array elements
 - `reduce(array: Array, fn: Function, initial?: any)` - Reduce array to single value
@@ -228,7 +243,7 @@ Arrays support the following methods:
 
 ## Examples
 
-See the [examples directory](https://github.com/uncertainty-lang/prism/tree/main/examples) for more complex examples.
+See [`packages/prism-examples`](https://github.com/HaruHunab1320/Prism-TS/tree/main/packages/prism-examples) for more complex examples.
 
 ## Related Packages
 

@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="./apps/docs/static/img/prism-logo-v1.png" width="220" alt="Prism logo" />
+<img src="https://docs.prismlang.dev/img/prism-logo-v1.png" width="220" alt="Prism logo" />
 
 [![npm version](https://img.shields.io/npm/v/@prism-lang/core.svg?style=for-the-badge)](https://www.npmjs.com/package/@prism-lang/core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -239,6 +239,8 @@ const calibrated = await confidence.calibrators.security
   .calibrate(conf, { type: 'sql_injection' });
 ```
 
+Note: confidence extraction is currently heuristic for most providers (due to limited log-prob access), so treat scores as decision-support signals rather than strict probabilities.
+
 ## 🔧 Language Features
 
 ### Confidence Operators
@@ -290,7 +292,7 @@ do {
 
 ```bash
 # Clone the repository
-git clone https://github.com/cjpais/prism.git
+git clone https://github.com/HaruHunab1320/Prism-TS.git
 cd prism
 
 # Install pnpm if you don't have it
@@ -441,6 +443,9 @@ We welcome contributions! See our [Contributing Guide](./CONTRIBUTING.md) for de
 - Documentation and examples
 - Testing and benchmarks
 
+### R&D
+- Lumina — confidence-native model architecture (R&D)
+
 ## 📄 License
 
 MIT - See [LICENSE](./LICENSE) for details.
@@ -451,6 +456,6 @@ MIT - See [LICENSE](./LICENSE) for details.
 
 Built with ❤️ for the uncertain future of programming
 
-[Report Bug](https://github.com/cjpais/prism/issues) • [Request Feature](https://github.com/cjpais/prism/issues) • [Join Discussion](https://github.com/cjpais/prism/discussions)
+[Report Bug](https://github.com/HaruHunab1320/Prism-TS/issues) • [Request Feature](https://github.com/HaruHunab1320/Prism-TS/issues) • [Join Discussion](https://github.com/HaruHunab1320/Prism-TS/discussions)
 
 </div>
