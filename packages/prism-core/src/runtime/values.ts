@@ -89,12 +89,18 @@ export class NullValue extends Value {
   }
 }
 
+export interface ConfidenceProvenance {
+  rule: string;
+  inputs: number[];
+}
+
 export class ConfidenceValue extends Value {
   type = 'confident';
 
   constructor(
     public value: Value,
-    public confidence: ConfidenceLib
+    public confidence: ConfidenceLib,
+    public provenance?: ConfidenceProvenance
   ) {
     super();
   }

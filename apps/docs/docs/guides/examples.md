@@ -75,6 +75,29 @@ uncertain if (avg_confidence > 0.8) {
 }
 ```
 
+### 4. Consensus & Aggregation Helpers
+
+```javascript
+let modelA = "rain" ~> 0.7
+let modelB = "sunny" ~> 0.9
+let modelC = "cloudy" ~> 0.8
+
+// Choose the best-confidence output
+let winner = consensus([modelA, modelB, modelC])
+
+// Choose the least-confident output
+let pessimistic = consensus([modelA, modelB], { strategy: "min" })
+
+// Aggregate confidence (average by default)
+let grouped = aggregate([modelA, modelB], { strategy: "average" })
+
+// Aggregate with a custom combiner
+let combined = aggregate([modelA, modelB], {
+  strategy: "product",
+  combine: values => values[0] + values[1]
+})
+```
+
 ## Modern Language Features
 
 ### 1. Variable Declarations and Block Scoping

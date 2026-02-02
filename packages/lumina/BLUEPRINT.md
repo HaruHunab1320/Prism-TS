@@ -30,7 +30,7 @@ Exit checklist (falsifiable):
 Goal: Validate the paradigm with tiny models on a Mac.
 
 Inputs:
-- `poc/` pipeline
+- `lumina_basic/` pipeline
 
 Steps:
 1. Generate datasets (router + specialists + OOD + aggregation).
@@ -59,7 +59,7 @@ Exit checklist:
 Goal: Improve realism and test calibration at scale on local hardware.
 
 Inputs:
-- `poc/run_v2.py`
+- `lumina_basic/` v2 pipeline
 
 Steps:
 1. Generate v2 data (tokenizer-based).
@@ -144,6 +144,14 @@ Proceed to cloud training only if:
 - Confidence calibration is stable across domains
 - Routing accuracy exceeds 0.88 on mixed domain evaluation
 
+Hybrid routing readiness:
+- Hybrid routing (router + confidence) >= 0.80 on 3-way (>= 1000 samples)
+- Router-only baseline >= 0.75 on 3-way
+- Confidence-only routing >= 0.40 on 3-way (signal present)
+
+Current status (2026-01-31):
+- Hybrid 0.810, Router 0.772, Confidence 0.398 (999 samples)
+
 ---
 
 ## Artifacts To Keep Current
@@ -152,4 +160,21 @@ Proceed to cloud training only if:
 - `WHITEPAPER.md`
 - `BLUEPRINT.md`
 - `patterns/lumina_network.prism`
-- Evaluation reports under `poc/outputs*`
+- `lumina_basic/logs/training_log.md`
+- `lumina_basic/logs/milestones.md`
+- Evaluation reports under `lumina_basic/outputs*`
+
+---
+
+## Current Milestone Snapshot (Local)
+
+Date: 2026-01-31
+
+Latest results (non-gate, tracking only):
+- Routing proxy accuracy (general vs math, GPT2+confidence): 0.58 @ 200 samples
+- OOD AUROC (general): 0.50 @ 500 samples
+- Confidence MSE to target_conf (calibrated): 0.0101
+
+Interpretation:
+- Routing > chance achieved, still below Phase 1 gate (0.85).
+- OOD detection trending upward, still below Phase 1 gate (0.75).

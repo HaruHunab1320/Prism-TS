@@ -47,7 +47,7 @@ A comprehensive cheat sheet for the Prism programming language.
 | `low` | Confidence &lt; 0.5 | `low { reject() }` |
 | `default` | Fallback branch | `default { handleUnknown() }` |
 | `context` | Context block | `context analysis { ... }` |
-| `Agent` | Agent declaration | `Agent Assistant { ... }` |
+| `agents` | Agent declarations | `agents { assistant: { confidence: 0.9 } }` |
 
 ### Literals
 | Keyword | Description | Example |

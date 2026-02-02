@@ -158,7 +158,7 @@ in context Security {
 
 // Agent declarations
 agents {
-  analyzer: Agent { 
+  analyzer: { 
     confidence: 0.9,
     model: "claude"
   }

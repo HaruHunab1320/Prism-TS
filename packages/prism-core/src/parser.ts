@@ -397,7 +397,6 @@ export class Parser {
     while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
       const nameToken = this.consume(TokenType.IDENTIFIER, 'Expected agent name');
       this.consume(TokenType.COLON, "Expected ':' after agent name");
-      this.consume(TokenType.AGENT, "Expected 'Agent' keyword");
       const config = this.parseAgentConfig();
       declarations.push(new AgentDeclaration(nameToken.value, config));
 

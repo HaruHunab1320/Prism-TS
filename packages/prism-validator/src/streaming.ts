@@ -12,7 +12,6 @@ const fallbackKeywords: Record<string, TokenType> = {
   'in': TokenType.IN,
   'context': TokenType.CONTEXT,
   'agents': TokenType.AGENTS,
-  'Agent': TokenType.AGENT,
   'function': TokenType.FUNCTION,
   'return': TokenType.RETURN,
   'let': TokenType.LET,

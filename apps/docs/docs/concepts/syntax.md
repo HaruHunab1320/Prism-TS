@@ -890,14 +890,13 @@ context production shifting to staging {
 ### Agent Declarations
 
 ```javascript
-// Simple agent
-agent Assistant
-
-// Agent with configuration
-agent Expert {
-  confidence: 0.9,
-  role: "domain expert",
-  capabilities: ["analysis", "recommendation"]
+// Agent declarations
+agents {
+  Assistant: {
+    confidence: 0.9,
+    role: "domain expert",
+    capabilities: ["analysis", "recommendation"]
+  }
 }
 ```
 

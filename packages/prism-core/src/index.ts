@@ -5,6 +5,10 @@ export * from './parser';
 export { 
   createRuntime,
   Runtime,
+  RuntimeOptions,
+  ConfidenceOptions,
+  ConfidenceStrategy,
+  ConfidenceCombineMode,
   RuntimeError,
   RuntimeLLMCallOptions,
   RuntimeLLMStream,

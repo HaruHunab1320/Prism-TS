@@ -39,7 +39,16 @@ import { readFileSync } from 'fs';
 
 const code = readFileSync('hello.prism', 'utf-8');
 const ast = parse(code);
-const runtime = createRuntime();
+const runtime = createRuntime({
+  confidence: {
+    strategy: {
+      arithmetic: 'min',
+      logicalOr: 'max',
+      ternary: 'product'
+    },
+    trackProvenance: true
+  }
+});
 
 const result = await runtime.execute(ast);
 console.log(result);

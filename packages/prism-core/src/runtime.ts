@@ -65,6 +65,7 @@ import {
   ObjectValue,
   FunctionValue,
   PromiseValue,
+  ConfidenceProvenance,
 } from './runtime/values';
 import { LLMProvider, LLMRequest, LLMResponse, LLMStreamChunk, LLMOptions } from './llm-types';
 import { createLLMBuiltin } from './runtime/builtins/llm';
@@ -89,10 +90,77 @@ export class Interpreter {
   private llmProviders = new Map<string, LLMProvider>();
   private defaultLLMProvider?: string;
   private contextStack: string[] = [];
+  private confidenceStrategy: Required<ConfidenceStrategy>;
+  private trackProvenance: boolean;
 
-  constructor() {
+  constructor(options?: ConfidenceOptions) {
     this.environment = new Environment();
+    this.confidenceStrategy = {
+      arithmetic: options?.strategy?.arithmetic ?? 'min',
+      comparison: options?.strategy?.comparison ?? 'min',
+      logicalAnd: options?.strategy?.logicalAnd ?? 'min',
+      logicalOr: options?.strategy?.logicalOr ?? 'max',
+      chain: options?.strategy?.chain ?? 'min',
+      ternary: options?.strategy?.ternary ?? 'product',
+      functionCall: options?.strategy?.functionCall ?? 'product',
+      parallel: options?.strategy?.parallel ?? 'max',
+      coalesceThreshold: options?.strategy?.coalesceThreshold ?? 0.5,
+      thresholdGate: {
+        threshold: options?.strategy?.thresholdGate?.threshold ?? 0.7,
+        reduceFactor: options?.strategy?.thresholdGate?.reduceFactor ?? 0.5,
+        onFail: options?.strategy?.thresholdGate?.onFail ?? 'reduce',
+      },
+    };
+    this.trackProvenance = options?.trackProvenance ?? false;
     this.setupBuiltins();
+  }
+
+  private combineConfidence(mode: ConfidenceCombineMode, left: ConfidenceLib, right: ConfidenceLib): ConfidenceLib {
+    switch (mode) {
+      case 'max':
+        return left.value >= right.value ? left : right;
+      case 'product':
+        return new ConfidenceLib(left.value * right.value);
+      case 'average':
+        return new ConfidenceLib((left.value + right.value) / 2);
+      case 'min':
+      default:
+        return left.value <= right.value ? left : right;
+    }
+  }
+
+  private createConfidenceValue(value: Value, confidence: ConfidenceLib, rule: string, inputs: number[]): ConfidenceValue {
+    const provenance: ConfidenceProvenance | undefined = this.trackProvenance
+      ? { rule, inputs }
+      : undefined;
+    return new ConfidenceValue(value, confidence, provenance);
+  }
+
+  private confidenceModeForOperator(operator: BinaryOperator): ConfidenceCombineMode {
+    switch (operator) {
+      case '+':
+      case '-':
+      case '*':
+      case '/':
+      case '%':
+      case '**':
+        return this.confidenceStrategy.arithmetic;
+      case '==':
+      case '!=':
+      case '===':
+      case '!==':
+      case '>':
+      case '<':
+      case '>=':
+      case '<=':
+        return this.confidenceStrategy.comparison;
+      case '&&':
+        return this.confidenceStrategy.logicalAnd;
+      case '||':
+        return this.confidenceStrategy.logicalOr;
+      default:
+        return 'min';
+    }
   }
 
   private setupBuiltins(): void {
@@ -101,7 +169,12 @@ export class Interpreter {
     this.environment.define('stream_llm', new FunctionValue('stream_llm', createLLMStreamBuiltin((providerName?: string) => this.getLLMProvider(providerName))));
     registerArrayBuiltins((name, fn) => registerValue(name, fn));
     registerConsoleBuiltins(registerValue);
-    registerConfidenceBuiltins((name, fn) => registerValue(name, fn));
+    registerConfidenceBuiltins(
+      (name, fn) => registerValue(name, fn),
+      {
+        createConfidenceValue: (value, confidence, rule, inputs) => this.createConfidenceValue(value, confidence, rule, inputs),
+      }
+    );
     registerCollectionBuiltins(registerValue);
     registerAsyncBuiltins(registerValue);
 
@@ -137,7 +210,7 @@ export class Interpreter {
 
       // Return with confidence if any input had confidence
       if (maxConfidence && maxVal) {
-        return new ConfidenceValue(maxVal, maxConfidence);
+        return this.createConfidenceValue(maxVal, maxConfidence, 'max()', [maxConfidence.value]);
       }
       return maxVal!;
     }));
@@ -174,7 +247,7 @@ export class Interpreter {
 
       // Return with confidence if any input had confidence
       if (minConfidence && minVal) {
-        return new ConfidenceValue(minVal, minConfidence);
+        return this.createConfidenceValue(minVal, minConfidence, 'min()', [minConfidence.value]);
       }
       return minVal!;
     }));
@@ -685,7 +758,7 @@ export class Interpreter {
         return right; // Right value already has confidence
       }
       const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
-      return new ConfidenceValue(right, leftConf);
+      return this.createConfidenceValue(right, leftConf, '~|>', [leftConf.value]);
     }
 
     // Special handling for confidence threshold gate operator (~?>)
@@ -705,9 +778,10 @@ export class Interpreter {
     const result = this.applyBinaryOperator(operator, leftValue, rightValue, node);
 
     // Combine confidences (use minimum for most operations)
-    const combinedConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
+    const mode = this.confidenceModeForOperator(operator);
+    const combinedConfidence = this.combineConfidence(mode, leftConf, rightConf);
 
-    return new ConfidenceValue(result, combinedConfidence);
+    return this.createConfidenceValue(result, combinedConfidence, operator, [leftConf.value, rightConf.value]);
   }
 
   private applyConfidenceChaining(left: Value, right: Value, _node: BinaryExpression): Value {
@@ -721,12 +795,12 @@ export class Interpreter {
     const rightConf = right instanceof ConfidenceValue ? right.confidence : new ConfidenceLib(1.0);
     
     // Combine confidences using minimum (most conservative approach)
-    const chainedConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
+    const chainedConfidence = this.combineConfidence(this.confidenceStrategy.chain, leftConf, rightConf);
     
     // For chaining, we return the right value with the chained confidence
     const resultValue = right instanceof ConfidenceValue ? right.value : right;
     
-    return new ConfidenceValue(resultValue, chainedConfidence);
+    return this.createConfidenceValue(resultValue, chainedConfidence, '~~', [leftConf.value, rightConf.value]);
   }
 
   private applyConfidenceCoalesce(left: Value, right: Value, _node: BinaryExpression): Value {
@@ -736,7 +810,7 @@ export class Interpreter {
     const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
     
     // Define threshold for "sufficient confidence" - using medium confidence (0.5) as default
-    const SUFFICIENT_CONFIDENCE_THRESHOLD = 0.5;
+    const SUFFICIENT_CONFIDENCE_THRESHOLD = this.confidenceStrategy.coalesceThreshold;
     
     // If left value has sufficient confidence, return it
     if (leftConf.value >= SUFFICIENT_CONFIDENCE_THRESHOLD) {
@@ -765,15 +839,15 @@ export class Interpreter {
       // Confident AND: both must be true AND confident
       resultBool = leftBool && rightBool;
       // For AND, take minimum confidence (both must be confident)
-      resultConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
+      resultConfidence = this.combineConfidence(this.confidenceStrategy.logicalAnd, leftConf, rightConf);
     } else { // operator === '~||'
       // Confident OR: at least one must be true with confidence
       resultBool = leftBool || rightBool;
       // For OR, take maximum confidence (best of the two)
-      resultConfidence = leftConf.max ? leftConf.max(rightConf) : leftConf;
+      resultConfidence = this.combineConfidence(this.confidenceStrategy.logicalOr, leftConf, rightConf);
     }
     
-    return new ConfidenceValue(new BooleanValue(resultBool), resultConfidence);
+    return this.createConfidenceValue(new BooleanValue(resultBool), resultConfidence, operator, [leftConf.value, rightConf.value]);
   }
 
   private applyConfidentArithmetic(operator: '~+' | '~-' | '~*' | '~/', left: Value, right: Value, node: BinaryExpression): Value {
@@ -815,9 +889,9 @@ export class Interpreter {
     }
     
     // For arithmetic operations, use minimum confidence (error propagation principle)
-    const resultConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
+    const resultConfidence = this.combineConfidence(this.confidenceStrategy.arithmetic, leftConf, rightConf);
     
-    return new ConfidenceValue(new NumberValue(result), resultConfidence);
+    return this.createConfidenceValue(new NumberValue(result), resultConfidence, operator, [leftConf.value, rightConf.value]);
   }
 
   private applyConfidentComparison(operator: '~==' | '~!=' | '~<' | '~>=' | '~<=', left: Value, right: Value, node: BinaryExpression): Value {
@@ -864,9 +938,9 @@ export class Interpreter {
     }
     
     // For comparison operations, use minimum confidence (both values must be confident for reliable comparison)
-    const resultConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
+    const resultConfidence = this.combineConfidence(this.confidenceStrategy.comparison, leftConf, rightConf);
     
-    return new ConfidenceValue(new BooleanValue(result), resultConfidence);
+    return this.createConfidenceValue(new BooleanValue(result), resultConfidence, operator, [leftConf.value, rightConf.value]);
   }
 
   private applyParallelConfidence(left: Value, right: Value, _node: BinaryExpression): Value {
@@ -877,11 +951,10 @@ export class Interpreter {
     const rightConf = right instanceof ConfidenceValue ? right.confidence : new ConfidenceLib(1.0);
     
     // Select the value with higher confidence
-    if (leftConf.value >= rightConf.value) {
-      return left;
-    } else {
-      return right;
+    if (this.confidenceStrategy.parallel === 'min') {
+      return leftConf.value <= rightConf.value ? left : right;
     }
+    return leftConf.value >= rightConf.value ? left : right;
   }
 
   private applyThresholdGate(left: Value, right: Value, _node: BinaryExpression): Value {
@@ -891,15 +964,22 @@ export class Interpreter {
     const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
     
     // Define threshold for execution - using medium confidence (0.7) as default
-    const EXECUTION_THRESHOLD = 0.7;
+    const EXECUTION_THRESHOLD = this.confidenceStrategy.thresholdGate.threshold ?? 0.7;
     
     // If left value meets the confidence threshold, return the right value
     if (leftConf.value >= EXECUTION_THRESHOLD) {
       return right;
     } else {
-      // If threshold not met, return the left value with reduced confidence
-      const reducedConfidence = new ConfidenceLib(leftConf.value * 0.5);
-      return new ConfidenceValue(left instanceof ConfidenceValue ? left.value : left, reducedConfidence);
+      const onFail = this.confidenceStrategy.thresholdGate.onFail;
+      if (onFail === 'returnNull') {
+        return new NullValue();
+      }
+      if (onFail === 'returnLeft') {
+        return left;
+      }
+      const reduceFactor = this.confidenceStrategy.thresholdGate.reduceFactor ?? 0.5;
+      const reducedConfidence = new ConfidenceLib(leftConf.value * reduceFactor);
+      return this.createConfidenceValue(left instanceof ConfidenceValue ? left.value : left, reducedConfidence, '~@>', [leftConf.value]);
     }
   }
   
@@ -940,7 +1020,7 @@ export class Interpreter {
     // Check if confidence meets threshold
     if (leftConf.value >= threshold) {
       // Confidence meets threshold, continue with the value
-      return new ConfidenceValue(leftValue, leftConf);
+      return this.createConfidenceValue(leftValue, leftConf, '~?>', [leftConf.value]);
     } else {
       // Confidence below threshold, return default value
       return defaultValue;
@@ -1045,10 +1125,17 @@ export class Interpreter {
     if (functionConfidence) {
       // If result already has confidence, combine them
       if (result instanceof ConfidenceValue) {
-        const combinedConfidence = result.confidence.value * functionConfidence.value;
-        return new ConfidenceValue(result.value, new ConfidenceLib(combinedConfidence));
+        const combinedConfidence = this.combineConfidence(
+          this.confidenceStrategy.functionCall,
+          result.confidence,
+          functionConfidence
+        );
+        return this.createConfidenceValue(result.value, combinedConfidence, 'call', [
+          result.confidence.value,
+          functionConfidence.value,
+        ]);
       } else {
-        return new ConfidenceValue(result, functionConfidence);
+        return this.createConfidenceValue(result, functionConfidence, 'call', [functionConfidence.value]);
       }
     }
     
@@ -1092,12 +1179,17 @@ export class Interpreter {
     }
     
     // Combine confidences (multiply them)
-    const combinedConfidence = new ConfidenceLib(
-      conditionConfidence.value * branchConfidence.value
+    const combinedConfidence = this.combineConfidence(
+      this.confidenceStrategy.ternary,
+      conditionConfidence,
+      branchConfidence
     );
     
     // Return result with combined confidence
-    return new ConfidenceValue(branchValue, combinedConfidence);
+    return this.createConfidenceValue(branchValue, combinedConfidence, '~?', [
+      conditionConfidence.value,
+      branchConfidence.value,
+    ]);
   }
 
   private async interpretArrayLiteral(node: ArrayLiteral): Promise<Value> {
@@ -1190,11 +1282,17 @@ export class Interpreter {
       }
       if (value instanceof ConfidenceValue) {
         if (activeConfidence) {
-          return new ConfidenceValue(value.value, activeConfidence.multiply(value.confidence));
+          const combined = activeConfidence.multiply(value.confidence);
+          return this.createConfidenceValue(value.value, combined, 'propagate', [
+            activeConfidence.value,
+            value.confidence.value,
+          ]);
         }
         return value;
       }
-      return new ConfidenceValue(value, activeConfidence ?? new ConfidenceLib(1.0));
+      return this.createConfidenceValue(value, activeConfidence ?? new ConfidenceLib(1.0), 'propagate', [
+        activeConfidence?.value ?? 1.0,
+      ]);
     };
     const maybeWrap = (value: Value): Value => (wrapConfidence ? wrapValue(value) : value);
 
@@ -1444,7 +1542,7 @@ export class Interpreter {
         throw new RuntimeError(`Array index ${idx} out of bounds`, node);
       }
       
-      return new ConfidenceValue(innerArray.elements[idx], object.confidence);
+      return this.createConfidenceValue(innerArray.elements[idx], object.confidence, 'index', [object.confidence.value]);
     }
     
     throw new RuntimeError(`Cannot index ${object.type}`, node);
@@ -1565,7 +1663,7 @@ export class Interpreter {
     }
     
     const confidence = new ConfidenceLib(confidenceNumber);
-    return new ConfidenceValue(expression, confidence);
+    return this.createConfidenceValue(expression, confidence, '~>', [confidenceNumber]);
   }
 
   private async interpretAssignmentStatement(node: AssignmentStatement): Promise<Value> {
@@ -2177,7 +2275,7 @@ export class Interpreter {
     if (node.confidenceAnnotation) {
       const confidence = await this.interpret(node.confidenceAnnotation);
       if (confidence instanceof NumberValue) {
-        result = new ConfidenceValue(functionValue, new ConfidenceLib(confidence.value));
+        result = this.createConfidenceValue(functionValue, new ConfidenceLib(confidence.value), 'function', [confidence.value]);
       }
     }
 
@@ -2760,6 +2858,31 @@ export class Interpreter {
 
 export interface RuntimeOptions {
   moduleSystem?: ModuleSystem;
+  confidence?: ConfidenceOptions;
+}
+
+export type ConfidenceCombineMode = 'min' | 'max' | 'product' | 'average';
+
+export interface ConfidenceStrategy {
+  arithmetic?: ConfidenceCombineMode;
+  comparison?: ConfidenceCombineMode;
+  logicalAnd?: ConfidenceCombineMode;
+  logicalOr?: ConfidenceCombineMode;
+  chain?: ConfidenceCombineMode;
+  ternary?: ConfidenceCombineMode;
+  functionCall?: ConfidenceCombineMode;
+  parallel?: 'max' | 'min';
+  coalesceThreshold?: number;
+  thresholdGate?: {
+    threshold?: number;
+    reduceFactor?: number;
+    onFail?: 'reduce' | 'returnNull' | 'returnLeft';
+  };
+}
+
+export interface ConfidenceOptions {
+  strategy?: ConfidenceStrategy;
+  trackProvenance?: boolean;
 }
 
 export interface ModuleInvalidationOptions {
@@ -2782,7 +2905,7 @@ export class Runtime {
 
   constructor(options?: RuntimeOptions) {
     this.moduleSystem = options?.moduleSystem ?? new ModuleSystem();
-    this.interpreter = new Interpreter();
+    this.interpreter = new Interpreter(options?.confidence);
     (this.interpreter as any).__runtime = this;
   }
 

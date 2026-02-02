@@ -190,6 +190,15 @@ Scale gate:
 - All local metrics must pass
 - Cost estimate + training plan approved
 
+## 9.1 Local Milestone Gates (Mac-first)
+
+Before H100 training, we require these local signals:
+1) **Routing signal > chance**: confidence-based routing accuracy ≥ 0.55 on mixed-domain prompts (≥200 samples).
+2) **Confidence calibration**: post-hoc calibration reduces MSE to target_conf (NLL-derived) below 0.02.
+3) **OOD detection**: AUROC ≥ 0.70 on hard OOD for at least one domain.
+
+These gates validate the core premise: confidence is meaningful enough to support routing and abstention.
+
 ---
 
 ## 10. Risks and Mitigations

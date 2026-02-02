@@ -178,6 +178,27 @@ let option3 = calculateOption3() ~> confidence3
 let bestOption = option1 ~||> option2 ~||> option3
 ```
 
+### Consensus & Aggregation Helpers
+
+Prism also provides built-in helpers to combine multiple confident values:
+
+```javascript
+// Pick the highest-confidence value (default)
+let winner = consensus([model1, model2, model3])
+
+// Pick the lowest-confidence value
+let pessimistic = consensus([model1, model2], { strategy: "min" })
+
+// Aggregate a list into a combined confidence
+let grouped = aggregate([model1, model2], { strategy: "average" })
+
+// Aggregate with a custom combiner
+let combined = aggregate([model1, model2], {
+  strategy: "product",
+  combine: values => values[0] + values[1]
+})
+```
+
 ### Confident Ternary (`~?`)
 
 The confident ternary operator works like the regular ternary but propagates confidence from both the condition and the selected branch:

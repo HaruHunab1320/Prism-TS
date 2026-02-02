@@ -275,7 +275,11 @@ class ConfidenceValue extends Value {
   type = 'confident';
   constructor(
     public value: Value,
-    public confidence: ConfidenceLib
+    public confidence: ConfidenceLib,
+    public provenance?: {
+      rule: string;
+      inputs: number[];
+    }
   )
 }
 ```
@@ -283,6 +287,7 @@ class ConfidenceValue extends Value {
 **Properties:**
 - `value`: The wrapped value
 - `confidence`: Confidence score (0-1)
+- `provenance` (optional): Confidence derivation metadata
 
 **Equality:** Both value and confidence must match
 **Truthy:** Based on wrapped value

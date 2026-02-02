@@ -237,7 +237,7 @@ in context "analysis" {
 #### Agent Declarations
 ```typescript
 agents {
-  assistant: Agent {
+  assistant: {
     confidence: 0.9,
     role: "helpful assistant"
   }

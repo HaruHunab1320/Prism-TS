@@ -143,7 +143,27 @@ class ConfidenceCache {
 }
 ```
 
-### 2. Batch LLM Requests
+### 2. Runtime Confidence Strategy
+
+Use a centralized confidence strategy to keep behavior consistent:
+
+```typescript
+import { createRuntime } from '@prism-lang/core';
+
+const runtime = createRuntime({
+  confidence: {
+    strategy: {
+      arithmetic: 'min',
+      logicalOr: 'max',
+      ternary: 'product',
+      thresholdGate: { threshold: 0.8, reduceFactor: 0.4 }
+    },
+    trackProvenance: true
+  }
+});
+```
+
+### 3. Batch LLM Requests
 
 Optimize LLM usage with request batching:
 

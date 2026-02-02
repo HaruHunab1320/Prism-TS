@@ -109,12 +109,12 @@ in context Medical {
 
 // Agent declarations
 agents {
-  researcher: Agent {
+  researcher: {
     confidence: 0.9,
     role: "research",
     model: "claude-3"
   }
-  writer: Agent {
+  writer: {
     confidence: 0.85,
     role: "writing",
     style: "technical"

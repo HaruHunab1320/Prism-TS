@@ -227,7 +227,7 @@ describe('Runtime Extended Tests', () => {
     it('should register agents as objects', async () => {
       const program = parse(`
         agents {
-          Researcher: Agent {
+          Researcher: {
             confidence: 0.9,
             role: "analysis"
           }

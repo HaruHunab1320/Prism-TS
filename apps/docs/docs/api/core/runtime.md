@@ -101,11 +101,49 @@ function createRuntime(options?: RuntimeOptions): Runtime
 Creates a fully configured runtime.
 
 - `options.moduleSystem` (optional): Provide a preconfigured `ModuleSystem` (custom file readers, virtual files, etc.). When omitted, a new one is created automatically.
+- `options.confidence` (optional): Configure confidence combination rules and provenance tracking.
 
 ```typescript
 interface RuntimeOptions {
   moduleSystem?: ModuleSystem;
+  confidence?: {
+    strategy?: {
+      arithmetic?: 'min' | 'max' | 'product' | 'average';
+      comparison?: 'min' | 'max' | 'product' | 'average';
+      logicalAnd?: 'min' | 'max' | 'product' | 'average';
+      logicalOr?: 'min' | 'max' | 'product' | 'average';
+      chain?: 'min' | 'max' | 'product' | 'average';
+      ternary?: 'min' | 'max' | 'product' | 'average';
+      functionCall?: 'min' | 'max' | 'product' | 'average';
+      parallel?: 'min' | 'max';
+      coalesceThreshold?: number;
+      thresholdGate?: {
+        threshold?: number;
+        reduceFactor?: number;
+        onFail?: 'reduce' | 'returnNull' | 'returnLeft';
+      };
+    };
+    trackProvenance?: boolean;
+  };
 }
+```
+
+**Example: custom confidence strategy**
+
+```typescript
+import { createRuntime } from '@prism-lang/core';
+
+const runtime = createRuntime({
+  confidence: {
+    strategy: {
+      arithmetic: 'min',
+      logicalOr: 'max',
+      ternary: 'product',
+      thresholdGate: { threshold: 0.8, reduceFactor: 0.4 }
+    },
+    trackProvenance: true
+  }
+});
 ```
 
 ### Runtime Methods
