@@ -69,10 +69,12 @@ def main():
     parser.add_argument("--max-len", type=int, default=128)
     parser.add_argument("--max-samples", type=int, default=600)
     parser.add_argument("--alpha", type=float, default=0.7, help="Weight for router probs vs confidence")
+    parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
     if len(args.domains) != len(args.weights):
         raise SystemExit("domains and weights must be the same length")
+    random.seed(args.seed)
 
     per_domain = max(1, args.max_samples // max(1, len(args.domains)))
     samples = []
