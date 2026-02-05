@@ -142,7 +142,7 @@ EOF
 set -euo pipefail
 BUCKET="${BUCKET}"
 RUN_ID="${NAME}"
-cd /root/Prism-TS/packages/lumina/lumina_basic 2>/dev/null || exit 0
+cd /Prism-TS/packages/lumina/lumina_basic 2>/dev/null || exit 0
 gsutil ls "\$BUCKET" || echo "GSUTIL_BUCKET_LIST_FAILED"
 gsutil cp /var/log/lumina_startup.log "\$BUCKET/runs/\$RUN_ID/lumina_startup.log" || echo "GSUTIL_LOG_COPY_FAILED"
 gsutil -m rsync -r outputs_gen "\$BUCKET/runs/\$RUN_ID/outputs_gen" || echo "GSUTIL_SYNC_OUTPUTS_GEN_FAILED"

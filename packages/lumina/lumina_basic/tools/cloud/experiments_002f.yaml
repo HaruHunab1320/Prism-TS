@@ -1,0 +1,10 @@
+project: argos-434718
+zone: us-west1-b
+machine_type: a3-megagpu-8g
+bucket: gs://lumina-checkpoints-argos-2026
+repo_url: https://github.com/HaruHunab1320/Prism-TS.git
+experiments:
+  - name: lumina-pilot-002f
+    commands:
+      - TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 bash tools/train_generator_math_24k.sh
+      - TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 bash tools/run_aggregator_1000.sh
