@@ -74,7 +74,7 @@ export HF_HOME=/root/.cache/huggingface
 export HF_HUB_DISABLE_TELEMETRY=1
 
 # Ensure output dirs exist for gsutil rsync
-mkdir -p outputs_gen outputs_router logs
+mkdir -p outputs_gen outputs_router outputs_gpt2 logs
 
 # Pull prepared datasets from GCS
 echo ">>> checking bucket access"
@@ -123,6 +123,21 @@ gsutil -m rsync -r "\$BUCKET/datasets_hq/" datasets_hq/
 hq_status=\$?
 set -e
 echo ">>> datasets_hq sync exit status: \$hq_status"
+
+# Pull confidence + router weights (required for aggregator)
+echo ">>> syncing outputs_gpt2 from GCS"
+set +e
+gsutil -m rsync -r "\$BUCKET/outputs_gpt2/" outputs_gpt2/
+gpt2_status=\$?
+set -e
+echo ">>> outputs_gpt2 sync exit status: \$gpt2_status"
+
+echo ">>> syncing outputs_router from GCS"
+set +e
+gsutil -m rsync -r "\$BUCKET/outputs_router/" outputs_router/
+router_status=\$?
+set -e
+echo ">>> outputs_router sync exit status: \$router_status"
 
 cat <<'CMDS' > "$COMMANDS_FILE"
 $(printf "%s\n" "$COMMANDS")
