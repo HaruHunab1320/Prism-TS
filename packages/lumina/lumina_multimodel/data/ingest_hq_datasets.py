@@ -150,6 +150,7 @@ def main():
     p.add_argument("--numinamath-limit", type=int, default=100000)
     p.add_argument("--codealpaca-limit", type=int, default=100000)
     p.add_argument("--min-words", type=int, default=2)
+    p.add_argument("--min-words-math", type=int, default=1)
     p.add_argument("--max-words", type=int, default=40)
     p.add_argument("--max-chars", type=int, default=300)
     p.add_argument("--with-squad", action="store_true")
@@ -172,13 +173,14 @@ def main():
 
     # Math: GSM8K (+ optional NuminaMath subset)
     gsm8k = try_load(["openai/gsm8k", "epfl-dlab/gsm8k"])
-    math_train = gsm8k_rows(gsm8k["train"], args.min_words, args.max_words, args.max_chars)
-    math_val = gsm8k_rows(gsm8k["test"], args.min_words, args.max_words, args.max_chars)
+    math_min_words = args.min_words_math
+    math_train = gsm8k_rows(gsm8k["train"], math_min_words, args.max_words, args.max_chars)
+    math_val = gsm8k_rows(gsm8k["test"], math_min_words, args.max_words, args.max_chars)
     if args.with_numinamath:
         try:
             numina = try_load(["numina/NuminaMath", "NuminaMath", "numina/numinamath"])
             math_train += numinamath_rows(numina["train"], args.numinamath_limit,
-                                          args.min_words, args.max_words, args.max_chars)
+                                          math_min_words, args.max_words, args.max_chars)
         except Exception as exc:
             print(f"NuminaMath unavailable; skipping. ({exc})")
     write_jsonl(out_root / "math_specialist" / "train.jsonl", math_train)
