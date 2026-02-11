@@ -53,14 +53,18 @@ sudo apt-get install -y google-cloud-cli
 if [ ! -d Prism-TS ]; then
   git clone "\$REPO_URL"
 fi
-cd Prism-TS/packages/lumina/lumina_basic
+cd Prism-TS/packages/lumina/lumina_multimodel
 
 python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
-grep -v '^mlx' requirements.txt > /tmp/requirements.linux.txt
-pip install -r /tmp/requirements.linux.txt
-pip install numpy transformers sentencepiece safetensors tokenizers
+if [ -f requirements.txt ]; then
+  grep -v '^mlx' requirements.txt > /tmp/requirements.linux.txt
+  pip install -r /tmp/requirements.linux.txt
+else
+  echo "requirements.txt missing; installing minimal deps"
+fi
+pip install numpy transformers sentencepiece safetensors tokenizers datasets
 pip install torch --index-url https://download.pytorch.org/whl/cu121
 
 # Allow downloads in cloud (local scripts default to offline for Mac).
@@ -111,6 +115,15 @@ if [ "\$ds_status" -ne 0 ]; then
   exit \$ds_status
 fi
 
+# Optional HQ datasets for H100 pilots
+echo ">>> syncing datasets_hq from GCS (optional)"
+mkdir -p datasets_hq
+set +e
+gsutil -m rsync -r "\$BUCKET/datasets_hq/" datasets_hq/
+hq_status=\$?
+set -e
+echo ">>> datasets_hq sync exit status: \$hq_status"
+
 cat <<'CMDS' > "$COMMANDS_FILE"
 $(printf "%s\n" "$COMMANDS")
 CMDS
@@ -142,7 +155,7 @@ EOF
 set -euo pipefail
 BUCKET="${BUCKET}"
 RUN_ID="${NAME}"
-cd /Prism-TS/packages/lumina/lumina_basic 2>/dev/null || exit 0
+cd /Prism-TS/packages/lumina/lumina_multimodel 2>/dev/null || exit 0
 gsutil ls "\$BUCKET" || echo "GSUTIL_BUCKET_LIST_FAILED"
 gsutil cp /var/log/lumina_startup.log "\$BUCKET/runs/\$RUN_ID/lumina_startup.log" || echo "GSUTIL_LOG_COPY_FAILED"
 gsutil -m rsync -r outputs_gen "\$BUCKET/runs/\$RUN_ID/outputs_gen" || echo "GSUTIL_SYNC_OUTPUTS_GEN_FAILED"

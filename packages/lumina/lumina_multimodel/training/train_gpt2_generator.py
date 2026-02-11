@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Train a domain generator (GPT-2) for answer quality.
+Supports merged or real-only datasets.
 """
 
 import argparse
@@ -53,22 +54,55 @@ class QADataset(Dataset):
         return ids, attn, labels
 
 
+def sample_quality(question: str, answer: str) -> float:
+    q = normalize_text(question)
+    a = normalize_text(answer)
+    if not a or not q:
+        return 0.2
+    if a == q:
+        return 0.1
+    if "question:" in a or "answer:" in a:
+        return 0.2
+    words = a.split()
+    if len(words) < 2:
+        return 0.3
+    if len(words) > 60:
+        return 0.6
+    return 1.0
+
+
+def normalize_text(text: str) -> str:
+    return " ".join(text.strip().lower().split())
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--data-root", type=Path, default=Path("datasets_merged"))
+    p.add_argument("--real-root", type=Path, default=Path("datasets_real"))
+    p.add_argument("--data-source", type=str, default="merged", choices=["merged", "real"])
     p.add_argument("--domain", type=str, required=True)
     p.add_argument("--epochs", type=int, default=1)
     p.add_argument("--batch-size", type=int, default=4)
     p.add_argument("--lr", type=float, default=2e-5)
     p.add_argument("--max-len", type=int, default=256)
+    p.add_argument("--answer-max-tokens", type=int, default=0,
+                   help="If >0, cap answer tokens used for loss to this many tokens.")
     p.add_argument("--max-train-samples", type=int, default=20000)
     p.add_argument("--max-val-samples", type=int, default=1000)
     p.add_argument("--unfreeze-n", type=int, default=2)
     p.add_argument("--output-dir", type=Path, default=Path("outputs_gen"))
+    p.add_argument("--quality-weighting", action="store_true",
+                   help="Weight per-sample loss by a simple answer quality heuristic.")
     args = p.parse_args()
 
-    train_rows = load_jsonl(args.data_root / f"{args.domain}_specialist" / "train.jsonl")[: args.max_train_samples]
-    val_rows = load_jsonl(args.data_root / f"{args.domain}_specialist" / "val.jsonl")[: args.max_val_samples]
+    base_root = args.data_root if args.data_source == "merged" else args.real_root
+    if args.data_source == "real" and (base_root / args.domain / "train.jsonl").exists():
+        subdir = args.domain
+    else:
+        subdir = f"{args.domain}_specialist"
+
+    train_rows = load_jsonl(base_root / subdir / "train.jsonl")[: args.max_train_samples]
+    val_rows = load_jsonl(base_root / subdir / "val.jsonl")[: args.max_val_samples]
     if not train_rows:
         raise SystemExit("No train data found.")
 
@@ -99,8 +133,35 @@ def main():
         total = 0.0
         for ids, attn, labels in train_loader:
             ids, attn, labels = ids.to(device), attn.to(device), labels.to(device)
+            if args.answer_max_tokens > 0:
+                # Mask loss beyond the first N answer tokens.
+                # Labels are already masked for prompt tokens; we only need to
+                # cap the remaining answer span.
+                for i in range(labels.size(0)):
+                    answer_idx = (labels[i] != -100).nonzero(as_tuple=False).squeeze(-1)
+                    if answer_idx.numel() > args.answer_max_tokens:
+                        labels[i, answer_idx[args.answer_max_tokens:]] = -100
             out = model(input_ids=ids, attention_mask=attn, labels=labels)
             loss = out.loss
+            if args.quality_weighting:
+                # Compute per-sample quality weights on CPU for determinism.
+                batch_q = []
+                batch_a = []
+                for i in range(ids.size(0)):
+                    # Reconstruct prompt/answer text for weighting.
+                    text = tok.decode(ids[i], skip_special_tokens=True)
+                    if "Answer:" in text:
+                        parts = text.split("Answer:", 1)
+                        q = parts[0].replace("Question:", "").strip()
+                        a = parts[1].strip()
+                    else:
+                        q = ""
+                        a = text
+                    batch_q.append(q)
+                    batch_a.append(a)
+                weights = torch.tensor([sample_quality(q, a) for q, a in zip(batch_q, batch_a)],
+                                       dtype=loss.dtype, device=loss.device)
+                loss = (loss * weights.mean())
             opt.zero_grad()
             loss.backward()
             opt.step()
@@ -112,6 +173,11 @@ def main():
         with torch.no_grad():
             for ids, attn, labels in val_loader:
                 ids, attn, labels = ids.to(device), attn.to(device), labels.to(device)
+                if args.answer_max_tokens > 0:
+                    for i in range(labels.size(0)):
+                        answer_idx = (labels[i] != -100).nonzero(as_tuple=False).squeeze(-1)
+                        if answer_idx.numel() > args.answer_max_tokens:
+                            labels[i, answer_idx[args.answer_max_tokens:]] = -100
                 out = model(input_ids=ids, attention_mask=attn, labels=labels)
                 vtotal += float(out.loss.item())
         val_loss = vtotal / max(1, len(val_loader))

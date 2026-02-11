@@ -97,17 +97,26 @@ def load_generator_model(model_ref: str):
         return GPT2LMHeadModel.from_pretrained(model_ref)
 
 
-def prompt_conf(model, tokenizer, question, device):
+def apply_calibration(conf: float, calib: dict | None) -> float:
+    if not calib:
+        return conf
+    a = float(calib.get("a", 1.0))
+    b = float(calib.get("b", 0.0))
+    return float(max(0.0, min(1.0, a * conf + b)))
+
+
+def prompt_conf(model, tokenizer, question, device, calib: dict | None = None):
     input_text = f"Question: {question}\nAnswer:"
     enc = tokenizer(input_text, truncation=True, max_length=256, return_tensors="pt")
     input_ids = enc["input_ids"].to(device)
     mask = enc["attention_mask"].to(device)
     with torch.no_grad():
         _, conf = model(input_ids=input_ids, attention_mask=mask, labels=None)
-    return float(conf["overall"].mean().item())
+    raw = float(conf["overall"].mean().item())
+    return apply_calibration(raw, calib)
 
 
-def generate_answer(gen_model, conf_model, tokenizer, question, device, max_new_tokens=48):
+def generate_answer(gen_model, conf_model, tokenizer, question, device, max_new_tokens=48, calib: dict | None = None):
     input_text = f"Question: {question}\nAnswer:"
     enc = tokenizer(input_text, truncation=True, max_length=256, return_tensors="pt")
     input_ids = enc["input_ids"].to(device)
@@ -126,7 +135,8 @@ def generate_answer(gen_model, conf_model, tokenizer, question, device, max_new_
 
     text = tokenizer.decode(gen[0], skip_special_tokens=True)
     answer = extract_answer(text)
-    return answer, float(conf["overall"].mean().item())
+    raw = float(conf["overall"].mean().item())
+    return answer, apply_calibration(raw, calib)
 
 
 def target_conf(model, tokenizer, question, answer, device):
@@ -178,6 +188,8 @@ def main():
                         help="Optional path to write per-sample debug JSONL.")
     parser.add_argument("--debug-limit", type=int, default=20)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--conf-calibration", type=Path, default=None,
+                        help="Optional JSON file mapping domain -> {a,b} for confidence calibration.")
     args = parser.parse_args()
 
     if len(args.domains) != len(args.weights):
@@ -235,12 +247,21 @@ def main():
     agreed = 0
     debug_rows = []
 
+    calib_map = None
+    if args.conf_calibration:
+        with args.conf_calibration.open() as f:
+            calib_map = json.load(f)
+
     for true_domain, sample in samples:
         q = sample["question"]
         gold = sample["answer"]
 
         # Hybrid route scores
-        confs = [prompt_conf(m, tokenizer, q, device) for m in experts]
+        confs = []
+        for i, m in enumerate(experts):
+            dom = args.domains[i]
+            calib = calib_map.get(dom) if calib_map else None
+            confs.append(prompt_conf(m, tokenizer, q, device, calib))
         enc = tokenizer(q, truncation=True, max_length=128, padding="max_length", return_tensors="pt")
         with torch.no_grad():
             probs = torch.softmax(router(enc["input_ids"].to(device), enc["attention_mask"].to(device)), dim=-1)[0].cpu().tolist()
@@ -255,8 +276,10 @@ def main():
         # Query top-k experts
         candidates = []
         for idx in top:
+            dom = args.domains[idx]
+            calib = calib_map.get(dom) if calib_map else None
             answer, ans_conf = generate_answer(
-                generators[idx], experts[idx], tokenizer, q, device, max_new_tokens=args.max_new_tokens
+                generators[idx], experts[idx], tokenizer, q, device, max_new_tokens=args.max_new_tokens, calib=calib
             )
             oracle_tc = target_conf(experts[idx], tokenizer, q, gold, device)
             candidates.append({

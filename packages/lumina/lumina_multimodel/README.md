@@ -17,5 +17,5 @@ lumina_multimodel/
 ```
 
 Notes:
-- We kept the original generated datasets in `lumina_basic/` for now. If you want them removed, say the word and I'll delete them.
+- We kept the original generated datasets in `lumina_multimodel/` for now. If you want them removed, say the word and I'll delete them.
 - We should add router/aggregator training scripts here and a unified evaluation harness.
