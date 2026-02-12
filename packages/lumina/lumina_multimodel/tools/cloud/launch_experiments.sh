@@ -30,7 +30,8 @@ for NAME in $(yq -r '.experiments[].name' "$CONFIG_PATH"); do
 set -euo pipefail
 set -x
 
-exec > >(tee /var/log/lumina_startup.log) 2>&1
+# Avoid emitting huge progress lines to the metadata script runner (token too long).
+exec > /var/log/lumina_startup.log 2>&1
 
 BUCKET="${BUCKET}"
 RUN_ID="${NAME}"
@@ -72,6 +73,9 @@ export TRANSFORMERS_OFFLINE=0
 export HF_DATASETS_OFFLINE=0
 export HF_HOME=/root/.cache/huggingface
 export HF_HUB_DISABLE_TELEMETRY=1
+export HF_HUB_DISABLE_PROGRESS_BARS=1
+export HF_DATASETS_DISABLE_PROGRESS_BARS=1
+export TQDM_DISABLE=1
 
 # Ensure output dirs exist for gsutil rsync
 mkdir -p outputs_gen outputs_router outputs_gpt2 logs
