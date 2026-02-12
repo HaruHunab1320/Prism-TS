@@ -1,0 +1,11 @@
+project: argos-434718
+zone: us-west1-b
+machine_type: a3-megagpu-8g
+bucket: gs://lumina-checkpoints-argos-2026
+repo_url: https://github.com/HaruHunab1320/Prism-TS.git
+
+experiments:
+  - name: lumina-hq-med-001
+    commands:
+      - "TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 MODEL_NAME=gpt2-medium bash tools/train_generators_hq.sh"
+      - "TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 GENERATOR_MODEL=gpt2-medium bash tools/run_aggregator_best_5000.sh"

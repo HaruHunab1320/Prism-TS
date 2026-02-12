@@ -19,11 +19,11 @@ def load_jsonl(path: Path) -> List[Dict]:
         return [json.loads(line) for line in f if line.strip()]
 
 
-def get_tokenizer():
+def get_tokenizer(model_name: str):
     try:
-        tok = GPT2Tokenizer.from_pretrained("gpt2", local_files_only=True)
+        tok = GPT2Tokenizer.from_pretrained(model_name, local_files_only=True)
     except Exception:
-        tok = GPT2Tokenizer.from_pretrained("gpt2")
+        tok = GPT2Tokenizer.from_pretrained(model_name)
     tok.pad_token = tok.eos_token
     return tok
 
@@ -91,6 +91,7 @@ def main():
     p.add_argument("--max-val-samples", type=int, default=1000)
     p.add_argument("--unfreeze-n", type=int, default=2)
     p.add_argument("--output-dir", type=Path, default=Path("outputs_gen"))
+    p.add_argument("--model-name", type=str, default="gpt2")
     p.add_argument("--quality-weighting", action="store_true",
                    help="Weight per-sample loss by a simple answer quality heuristic.")
     args = p.parse_args()
@@ -106,8 +107,8 @@ def main():
     if not train_rows:
         raise SystemExit("No train data found.")
 
-    tok = get_tokenizer()
-    model = GPT2LMHeadModel.from_pretrained("gpt2")
+    tok = get_tokenizer(args.model_name)
+    model = GPT2LMHeadModel.from_pretrained(args.model_name)
     model.config.pad_token_id = tok.eos_token_id
 
     # Freeze base first, then unfreeze last n blocks + lm_head.
@@ -183,7 +184,8 @@ def main():
         val_loss = vtotal / max(1, len(val_loader))
         print(f"Epoch {epoch}/{args.epochs} train_loss={train_loss:.4f} val_loss={val_loss:.4f}")
 
-    out_dir = args.output_dir / f"{args.domain}_gpt2_gen"
+    safe_model = args.model_name.replace("/", "_")
+    out_dir = args.output_dir / f"{args.domain}_{safe_model}_gen"
     out_dir.mkdir(parents=True, exist_ok=True)
     model.save_pretrained(out_dir)
     tok.save_pretrained(out_dir)

@@ -6,6 +6,8 @@ cd "$ROOT_DIR"
 WEIGHT_GENERAL="outputs_gpt2/general_gpt2_confidence.pt"
 WEIGHT_MATH="outputs_gpt2/math_gpt2_confidence.pt"
 WEIGHT_CODE="outputs_gpt2/code_gpt2_confidence.pt"
+GEN_MODEL="${GENERATOR_MODEL:-gpt2}"
+GEN_MODEL_TAG="${GEN_MODEL//\//_}"
 
 if [ ! -f "$WEIGHT_GENERAL" ] || [ ! -f "$WEIGHT_MATH" ] || [ ! -f "$WEIGHT_CODE" ]; then
   BUCKET_PATH="${LUMINA_BUCKET:-${BUCKET:-}}"
@@ -25,7 +27,10 @@ TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m evaluation.eval_aggregato
   --data-root datasets_merged \
   --domains general math code \
   --weights "$WEIGHT_GENERAL" "$WEIGHT_MATH" "$WEIGHT_CODE" \
-  --generator-domain-weights outputs_gen/general_gpt2_gen outputs_gen/math_gpt2_gen outputs_gen/code_gpt2_gen \
+  --generator-domain-weights \
+    "outputs_gen/general_${GEN_MODEL_TAG}_gen" \
+    "outputs_gen/math_${GEN_MODEL_TAG}_gen" \
+    "outputs_gen/code_${GEN_MODEL_TAG}_gen" \
   --router-weights outputs_router/router.pt \
   --router-labels outputs_router/labels.json \
   --max-samples 5000 \
