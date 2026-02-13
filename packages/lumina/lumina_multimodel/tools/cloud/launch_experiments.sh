@@ -76,6 +76,7 @@ export HF_HUB_DISABLE_TELEMETRY=1
 export HF_HUB_DISABLE_PROGRESS_BARS=1
 export HF_DATASETS_DISABLE_PROGRESS_BARS=1
 export TQDM_DISABLE=1
+export REQUIRE_CUDA=1
 
 # Ensure output dirs exist for gsutil rsync
 mkdir -p outputs_gen outputs_router outputs_gpt2 logs
@@ -127,6 +128,15 @@ gsutil -m rsync -r "\$BUCKET/datasets_hq/" datasets_hq/
 hq_status=\$?
 set -e
 echo ">>> datasets_hq sync exit status: \$hq_status"
+
+# Optional medium HQ datasets for Stage A
+echo ">>> syncing datasets_hq_med from GCS (optional)"
+mkdir -p datasets_hq_med
+set +e
+gsutil -m rsync -r "\$BUCKET/datasets_hq_med/" datasets_hq_med/
+hq_med_status=\$?
+set -e
+echo ">>> datasets_hq_med sync exit status: \$hq_med_status"
 
 # Pull confidence + router weights (required for aggregator)
 echo ">>> syncing outputs_gpt2 from GCS"

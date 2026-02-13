@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader
 from transformers import GPT2Tokenizer
 
 from training.train_router import RouterDataset, TinyRouterClassifier, load_jsonl
+import os
 
 
 def get_tokenizer():
@@ -57,10 +58,18 @@ def main():
     ds = RouterDataset(rows, tokenizer, label_map, args.max_len)
     loader = DataLoader(ds, batch_size=args.batch_size)
 
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    # Prefer CUDA on Linux GPUs, fallback to MPS (Mac), then CPU.
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
     model = TinyRouterClassifier(len(tokenizer), args.hidden_size, len(label_map), 0.1).to(device)
     model.load_state_dict(torch.load(args.weights, map_location="cpu"))
     model.eval()
+    if os.environ.get("REQUIRE_CUDA") == "1" and device.type != "cuda":
+        raise SystemExit("CUDA required but not available")
 
     correct = 0
     total = 0

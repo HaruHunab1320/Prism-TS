@@ -15,6 +15,7 @@ import torch
 from transformers import GPT2Tokenizer
 
 from models.gpt2_confidence import GPT2WithConfidence
+import os
 
 
 def load_jsonl(path: Path):
@@ -87,7 +88,15 @@ def main():
     random.shuffle(samples)
 
     tokenizer = get_tokenizer()
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    # Prefer CUDA on Linux GPUs, fallback to MPS (Mac), then CPU.
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+    if os.environ.get("REQUIRE_CUDA") == "1" and device.type != "cuda":
+        raise SystemExit("CUDA required but not available")
 
     model_a = GPT2WithConfidence("gpt2")
     model_b = GPT2WithConfidence("gpt2")

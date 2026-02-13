@@ -19,6 +19,7 @@ from transformers import GPT2Tokenizer, GPT2LMHeadModel
 
 from models.gpt2_confidence import GPT2WithConfidence
 from training.train_router import TinyRouterClassifier, load_jsonl
+import os
 
 
 def normalize_text(text: str) -> str:
@@ -206,7 +207,15 @@ def main():
     random.shuffle(samples)
 
     tokenizer = get_tokenizer()
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    # Prefer CUDA on Linux GPUs, fallback to MPS (Mac), then CPU.
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+    if os.environ.get("REQUIRE_CUDA") == "1" and device.type != "cuda":
+        raise SystemExit("CUDA required but not available")
 
     # Load experts
     experts = []

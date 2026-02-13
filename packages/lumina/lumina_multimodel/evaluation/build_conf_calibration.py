@@ -16,6 +16,7 @@ from transformers import GPT2Tokenizer
 from models.gpt2_confidence import GPT2WithConfidence
 from evaluation.eval_aggregator_minimal import prompt_conf, target_conf
 from training.train_router import load_jsonl
+import os
 
 
 def fit_linear(xs, ys):
@@ -42,7 +43,15 @@ def main():
 
     tok = GPT2Tokenizer.from_pretrained("gpt2")
     tok.pad_token = tok.eos_token
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    # Prefer CUDA on Linux GPUs, fallback to MPS (Mac), then CPU.
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+    if os.environ.get("REQUIRE_CUDA") == "1" and device.type != "cuda":
+        raise SystemExit("CUDA required but not available")
 
     out = {}
     for domain, w in zip(args.domains, args.weights):

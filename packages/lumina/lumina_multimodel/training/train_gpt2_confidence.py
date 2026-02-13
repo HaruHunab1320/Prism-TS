@@ -16,6 +16,7 @@ from transformers import GPT2Tokenizer
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from models.gpt2_confidence import GPT2WithConfidence
+import os
 
 
 def load_jsonl(path: Path) -> List[Dict]:
@@ -131,8 +132,16 @@ def main():
     train_loader = DataLoader(train_items, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_items, batch_size=args.batch_size)
 
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    # Prefer CUDA on Linux GPUs, fallback to MPS (Mac), then CPU.
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
     model.to(device)
+    if os.environ.get("REQUIRE_CUDA") == "1" and device.type != "cuda":
+        raise SystemExit("CUDA required but not available")
 
     opt = torch.optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr)
 

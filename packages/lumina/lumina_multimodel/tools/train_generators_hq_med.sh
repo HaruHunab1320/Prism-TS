@@ -3,14 +3,15 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-DATA_ROOT="${DATA_ROOT:-datasets_hq}"
+# Stage A: medium-large HQ dataset
+DATA_ROOT="${DATA_ROOT:-datasets_hq_med}"
 MAX_VAL="${MAX_VAL:-5000}"
-MAX_GEN="${MAX_GEN:-300000}"
+MAX_GEN="${MAX_GEN:-200000}"
 MAX_MATH="${MAX_MATH:-100000}"
 MAX_CODE="${MAX_CODE:-100000}"
 EPOCHS="${EPOCHS:-1}"
 BATCH_SIZE="${BATCH_SIZE:-8}"
-MODEL_NAME="${MODEL_NAME:-gpt2}"
+MODEL_NAME="${MODEL_NAME:-gpt2-medium}"
 QUALITY_WEIGHTING="${QUALITY_WEIGHTING:-0}"
 
 QUALITY_FLAG=()

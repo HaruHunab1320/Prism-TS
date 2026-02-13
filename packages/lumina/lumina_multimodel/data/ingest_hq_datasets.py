@@ -12,6 +12,7 @@ Domains:
 import argparse
 import json
 import re
+import random
 from pathlib import Path
 
 from datasets import load_dataset
@@ -143,6 +144,14 @@ def try_load(names, *args, **kwargs):
     raise last
 
 
+def limit_rows(rows, limit, rng: random.Random):
+    if not limit or limit <= 0 or len(rows) <= limit:
+        return rows
+    rows = list(rows)
+    rng.shuffle(rows)
+    return rows[:limit]
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--out", default="datasets_hq")
@@ -156,9 +165,15 @@ def main():
     p.add_argument("--with-squad", action="store_true")
     p.add_argument("--with-numinamath", action="store_true")
     p.add_argument("--with-codealpaca", action="store_true")
+    p.add_argument("--max-train-per-domain", type=int, default=0,
+                   help="If >0, cap train rows per domain after ingestion.")
+    p.add_argument("--max-val-per-domain", type=int, default=0,
+                   help="If >0, cap val rows per domain after ingestion.")
+    p.add_argument("--seed", type=int, default=42)
     args = p.parse_args()
 
     out_root = Path(__file__).parent.parent / args.out
+    rng = random.Random(args.seed)
 
     # General: TriviaQA
     trivia = try_load(["trivia_qa", "mandarjoshi/trivia_qa"], "rc")
@@ -168,6 +183,8 @@ def main():
         squad = try_load(["rajpurkar/squad_v2", "GEM/squad_v2"])
         train_rows += squad_rows(squad["train"], args.min_words, args.max_words, args.max_chars)
         val_rows += squad_rows(squad["validation"], args.min_words, args.max_words, args.max_chars)
+    train_rows = limit_rows(train_rows, args.max_train_per_domain, rng)
+    val_rows = limit_rows(val_rows, args.max_val_per_domain, rng)
     write_jsonl(out_root / "general_specialist" / "train.jsonl", train_rows)
     write_jsonl(out_root / "general_specialist" / "val.jsonl", val_rows)
 
@@ -178,11 +195,27 @@ def main():
     math_val = gsm8k_rows(gsm8k["test"], math_min_words, args.max_words, args.max_chars)
     if args.with_numinamath:
         try:
-            numina = try_load(["numina/NuminaMath", "NuminaMath", "numina/numinamath"])
-            math_train += numinamath_rows(numina["train"], args.numinamath_limit,
+            numina = try_load([
+                "AI-MO/NuminaMath-CoT",
+                "yentinglin/NuminaMath-1.5-Verifiable",
+                "weijiezz/NuminaMath-full",
+                "weijiezz/NuminaMath-100k",
+                "numina/NuminaMath",
+                "NuminaMath",
+                "numina/numinamath",
+            ])
+            if "train" in numina:
+                numina_split = numina["train"]
+            else:
+                # Fallback: use the first available split.
+                first_key = list(numina.keys())[0]
+                numina_split = numina[first_key]
+            math_train += numinamath_rows(numina_split, args.numinamath_limit,
                                           math_min_words, args.max_words, args.max_chars)
         except Exception as exc:
             print(f"NuminaMath unavailable; skipping. ({exc})")
+    math_train = limit_rows(math_train, args.max_train_per_domain, rng)
+    math_val = limit_rows(math_val, args.max_val_per_domain, rng)
     write_jsonl(out_root / "math_specialist" / "train.jsonl", math_train)
     write_jsonl(out_root / "math_specialist" / "val.jsonl", math_val)
 
@@ -212,6 +245,8 @@ def main():
         code_train += codealpaca_rows(alpaca["train"], args.codealpaca_limit,
                                       args.min_words, args.max_words, args.max_chars)
 
+    code_train = limit_rows(code_train, args.max_train_per_domain, rng)
+    code_val = limit_rows(code_val, args.max_val_per_domain, rng)
     write_jsonl(out_root / "code_specialist" / "train.jsonl", code_train)
     write_jsonl(out_root / "code_specialist" / "val.jsonl", code_val)
 
