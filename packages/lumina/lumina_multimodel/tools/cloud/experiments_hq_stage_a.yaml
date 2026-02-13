@@ -4,6 +4,8 @@ machine_type: a3-megagpu-8g
 preemptible: true
 bucket: gs://lumina-checkpoints-argos-2026
 repo_url: https://github.com/HaruHunab1320/Prism-TS.git
+image_family: pytorch-latest-gpu
+image_project: deeplearning-platform-release
 
 experiments:
   - name: lumina-hq-stagea-001

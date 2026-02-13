@@ -15,6 +15,8 @@ ZONE="$(yq -r '.zone' "$CONFIG_PATH")"
 MACHINE="$(yq -r '.machine_type' "$CONFIG_PATH")"
 BUCKET="$(yq -r '.bucket' "$CONFIG_PATH")"
 REPO="$(yq -r '.repo_url' "$CONFIG_PATH")"
+IMAGE_FAMILY="$(yq -r '.image_family // \"ubuntu-2204-lts\"' "$CONFIG_PATH")"
+IMAGE_PROJECT="$(yq -r '.image_project // \"ubuntu-os-cloud\"' "$CONFIG_PATH")"
 PROJECT_NUMBER="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
 SERVICE_ACCOUNT="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 
@@ -203,8 +205,8 @@ EOF
     --maintenance-policy TERMINATE \
     --restart-on-failure \
     --boot-disk-size 200GB \
-    --image-family ubuntu-2204-lts \
-    --image-project ubuntu-os-cloud \
+    --image-family "$IMAGE_FAMILY" \
+    --image-project "$IMAGE_PROJECT" \
     --metadata-from-file startup-script="$STARTUP_FILE",shutdown-script="$SHUTDOWN_FILE"
 
   INDEX=$((INDEX+1))
