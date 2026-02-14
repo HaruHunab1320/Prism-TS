@@ -98,6 +98,38 @@ def load_generator_model(model_ref: str):
         return GPT2LMHeadModel.from_pretrained(model_ref)
 
 
+def expected_gpt2_config(model_name: str):
+    # Minimal sanity map to prevent gpt2 vs gpt2-medium mismatch.
+    table = {
+        "gpt2": (12, 768, 12),
+        "gpt2-medium": (24, 1024, 16),
+        "gpt2-large": (36, 1280, 20),
+        "distilgpt2": (6, 768, 12),
+    }
+    return table.get(model_name)
+
+
+def infer_model_name_from_path(path_str: str):
+    for name in ("gpt2-medium", "gpt2-large", "distilgpt2", "gpt2"):
+        if name in path_str:
+            return name
+    return None
+
+
+def assert_generator_matches(model, expected_name: str, source: str):
+    exp = expected_gpt2_config(expected_name)
+    if exp is None:
+        return
+    n_layer, n_embd, n_head = exp
+    cfg = model.config
+    if (getattr(cfg, "n_layer", None), getattr(cfg, "n_embd", None), getattr(cfg, "n_head", None)) != exp:
+        raise SystemExit(
+            f"Generator config mismatch for {source}: expected {expected_name} "
+            f"(n_layer={n_layer}, n_embd={n_embd}, n_head={n_head}) but got "
+            f"(n_layer={getattr(cfg, 'n_layer', None)}, n_embd={getattr(cfg, 'n_embd', None)}, n_head={getattr(cfg, 'n_head', None)})"
+        )
+
+
 def apply_calibration(conf: float, calib: dict | None) -> float:
     if not calib:
         return conf
@@ -232,10 +264,14 @@ def main():
             raise SystemExit("generator-domain-weights must match domains length")
         for gw in args.generator_domain_weights:
             g = load_generator_model(gw)
+            inferred = infer_model_name_from_path(str(gw))
+            expected = inferred or args.generator_model
+            assert_generator_matches(g, expected, gw)
             g.eval().to(device)
             generators.append(g)
     else:
         shared = load_generator_model(args.generator_model)
+        assert_generator_matches(shared, args.generator_model, args.generator_model)
         shared.eval().to(device)
         generators = [shared for _ in args.domains]
 

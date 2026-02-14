@@ -34,6 +34,7 @@ TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m evaluation.eval_aggregato
   --data-root "$DATA_ROOT" \
   --domains general math code \
   --weights "$WEIGHT_GENERAL" "$WEIGHT_MATH" "$WEIGHT_CODE" \
+  --generator-model "$GEN_MODEL" \
   --generator-domain-weights \
     "outputs_gen/general_${GEN_MODEL_TAG}_gen" \
     "outputs_gen/math_${GEN_MODEL_TAG}_gen" \
