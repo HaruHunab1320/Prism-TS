@@ -83,10 +83,17 @@ def domain_score(pred: str, gold: str, domain: str) -> float:
 
 
 def get_tokenizer(ref: str = "gpt2"):
-    tok = AutoTokenizer.from_pretrained(ref, local_files_only=True)
-    # Some local fine-tune folders contain a truncated tokenizer; router expects GPT-2 vocab size.
+    # Prefer normal HF resolution; local-only fallback is for offline/local workflows.
+    try:
+        tok = AutoTokenizer.from_pretrained(ref, local_files_only=False)
+    except Exception:
+        tok = AutoTokenizer.from_pretrained(ref, local_files_only=True)
+    # Router weights expect GPT-2 vocab size, so reject tiny/truncated tokenizer states.
     if len(tok) <= 2:
-        tok = AutoTokenizer.from_pretrained("gpt2", local_files_only=True)
+        try:
+            tok = AutoTokenizer.from_pretrained("gpt2", local_files_only=False)
+        except Exception:
+            tok = AutoTokenizer.from_pretrained("gpt2", local_files_only=True)
     tok.pad_token = tok.eos_token
     return tok
 
