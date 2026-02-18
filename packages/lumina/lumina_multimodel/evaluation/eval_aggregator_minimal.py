@@ -83,8 +83,10 @@ def domain_score(pred: str, gold: str, domain: str) -> float:
 
 
 def get_tokenizer(ref: str = "gpt2"):
-    # Use AutoTokenizer to support tokenizer.json-only local dirs.
     tok = AutoTokenizer.from_pretrained(ref, local_files_only=True)
+    # Some local fine-tune folders contain a truncated tokenizer; router expects GPT-2 vocab size.
+    if len(tok) <= 2:
+        tok = AutoTokenizer.from_pretrained("gpt2", local_files_only=True)
     tok.pad_token = tok.eos_token
     return tok
 
@@ -233,12 +235,7 @@ def main():
             samples.append((d, r))
     random.shuffle(samples)
 
-    tok_ref = "gpt2"
-    if args.generator_domain_weights:
-        tok_ref = str(args.generator_domain_weights[0])
-    elif args.generator_model:
-        tok_ref = args.generator_model
-    tokenizer = get_tokenizer(tok_ref)
+    tokenizer = get_tokenizer("gpt2")
     # Prefer CUDA on Linux GPUs, fallback to MPS (Mac), then CPU.
     if torch.cuda.is_available():
         device = torch.device("cuda")
