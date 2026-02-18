@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 import torch
-from transformers import GPT2Tokenizer, GPT2LMHeadModel
+from transformers import AutoTokenizer, GPT2Tokenizer, GPT2LMHeadModel
 
 from models.gpt2_confidence import GPT2WithConfidence
 from training.train_router import TinyRouterClassifier, load_jsonl
@@ -82,20 +82,15 @@ def domain_score(pred: str, gold: str, domain: str) -> float:
     return base
 
 
-def get_tokenizer():
-    try:
-        tok = GPT2Tokenizer.from_pretrained("gpt2", local_files_only=True)
-    except Exception:
-        tok = GPT2Tokenizer.from_pretrained("gpt2")
+def get_tokenizer(ref: str = "gpt2"):
+    # Use AutoTokenizer to support tokenizer.json-only local dirs.
+    tok = AutoTokenizer.from_pretrained(ref, local_files_only=True)
     tok.pad_token = tok.eos_token
     return tok
 
 
 def load_generator_model(model_ref: str):
-    try:
-        return GPT2LMHeadModel.from_pretrained(model_ref, local_files_only=True)
-    except Exception:
-        return GPT2LMHeadModel.from_pretrained(model_ref)
+    return GPT2LMHeadModel.from_pretrained(model_ref, local_files_only=True)
 
 
 def expected_gpt2_config(model_name: str):
@@ -238,7 +233,12 @@ def main():
             samples.append((d, r))
     random.shuffle(samples)
 
-    tokenizer = get_tokenizer()
+    tok_ref = "gpt2"
+    if args.generator_domain_weights:
+        tok_ref = str(args.generator_domain_weights[0])
+    elif args.generator_model:
+        tok_ref = args.generator_model
+    tokenizer = get_tokenizer(tok_ref)
     # Prefer CUDA on Linux GPUs, fallback to MPS (Mac), then CPU.
     if torch.cuda.is_available():
         device = torch.device("cuda")
