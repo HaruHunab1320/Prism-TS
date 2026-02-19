@@ -1,0 +1,15 @@
+project: argos-434718
+zone: us-central1-a
+machine_type: a2-highgpu-1g
+bucket: gs://lumina-checkpoints-argos-2026
+repo_url: https://github.com/HaruHunab1320/Prism-TS.git
+image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
+image_project: deeplearning-platform-release
+
+experiments:
+  - name: lumina-hq-eval-ab-a100-001
+    commands:
+      - chmod +x tools/run_hq_med_generator_ab.sh
+      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-pilot-001e/outputs_gen/ outputs_gen_filtered/
+      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-hq-stagea-001/outputs_gen/ outputs_gen_stagea/
+      - TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 MAX_SAMPLES=5000 BASE_GEN_DIR=outputs_gen_filtered CAND_GEN_DIR=outputs_gen_stagea BASE_LABEL=filtered CAND_LABEL=hq_stagea bash tools/run_hq_med_generator_ab.sh
