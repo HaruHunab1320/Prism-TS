@@ -7,6 +7,15 @@ cd /Users/jakobgrant/Workspaces/Prism-TS/packages/lumina/lumina_multimodel
 source .venv/bin/activate
 ```
 
+## Put heavy data on ROCKET-nano (recommended)
+
+```bash
+export LUMINA_NVME_ROOT="/Volumes/ROCKET-nano/lumina_multimodel"
+mkdir -p "$LUMINA_NVME_ROOT"/{datasets_hq_med,outputs_gen,outputs_gpt2,outputs_router,logs,hf_cache}
+```
+
+All local scripts below will use `LUMINA_NVME_ROOT` automatically when set.
+
 ## Calibration (HQ-med)
 
 ```bash

@@ -3,14 +3,25 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+NVME_ROOT="${LUMINA_NVME_ROOT:-}"
+DATA_ROOT="${DATA_ROOT:-${NVME_ROOT:+$NVME_ROOT/datasets_hq_med}}"
 DATA_ROOT="${DATA_ROOT:-datasets_hq_med}"
-WEIGHT_GENERAL="outputs_gpt2/general_gpt2_confidence.pt"
-WEIGHT_MATH="outputs_gpt2/math_gpt2_confidence.pt"
-WEIGHT_CODE="outputs_gpt2/code_gpt2_confidence.pt"
+OUTPUTS_GPT2_DIR="${OUTPUTS_GPT2_DIR:-${NVME_ROOT:+$NVME_ROOT/outputs_gpt2}}"
+OUTPUTS_GPT2_DIR="${OUTPUTS_GPT2_DIR:-outputs_gpt2}"
+OUTPUTS_GEN_DIR="${OUTPUTS_GEN_DIR:-${NVME_ROOT:+$NVME_ROOT/outputs_gen}}"
+OUTPUTS_GEN_DIR="${OUTPUTS_GEN_DIR:-outputs_gen}"
+OUTPUTS_ROUTER_DIR="${OUTPUTS_ROUTER_DIR:-${NVME_ROOT:+$NVME_ROOT/outputs_router}}"
+OUTPUTS_ROUTER_DIR="${OUTPUTS_ROUTER_DIR:-outputs_router}"
+LOG_DIR="${LOG_DIR:-${NVME_ROOT:+$NVME_ROOT/logs}}"
+LOG_DIR="${LOG_DIR:-logs}"
+
+WEIGHT_GENERAL="$OUTPUTS_GPT2_DIR/general_gpt2_confidence.pt"
+WEIGHT_MATH="$OUTPUTS_GPT2_DIR/math_gpt2_confidence.pt"
+WEIGHT_CODE="$OUTPUTS_GPT2_DIR/code_gpt2_confidence.pt"
 GEN_MODEL="${GENERATOR_MODEL:-gpt2-medium}"
 GEN_MODEL_TAG="${GEN_MODEL//\//_}"
-CONF_CALIB="${CONF_CALIB:-outputs_gpt2/conf_calibration_hq_med.json}"
-LOG_PATH="${LOG_PATH:-logs/agg_hq_med_5000_gpu.txt}"
+CONF_CALIB="${CONF_CALIB:-$OUTPUTS_GPT2_DIR/conf_calibration_hq_med.json}"
+LOG_PATH="${LOG_PATH:-$LOG_DIR/agg_hq_med_5000_gpu.txt}"
 SYNC_INTERVAL_SEC="${SYNC_INTERVAL_SEC:-60}"
 BUCKET_PATH="${LUMINA_BUCKET:-${BUCKET:-}}"
 REMOTE_RESULTS_PATH=""
@@ -21,13 +32,13 @@ HF_DATASETS_OFFLINE_VALUE="${HF_DATASETS_OFFLINE:-0}"
 if [ ! -f "$WEIGHT_GENERAL" ] || [ ! -f "$WEIGHT_MATH" ] || [ ! -f "$WEIGHT_CODE" ]; then
   if [ -n "$BUCKET_PATH" ]; then
     echo "Missing confidence weights; attempting to sync from $BUCKET_PATH/outputs_gpt2"
-    mkdir -p outputs_gpt2
-    gsutil -m rsync -r "$BUCKET_PATH/outputs_gpt2" outputs_gpt2 || true
+    mkdir -p "$OUTPUTS_GPT2_DIR"
+    gsutil -m rsync -r "$BUCKET_PATH/outputs_gpt2" "$OUTPUTS_GPT2_DIR" || true
   fi
 fi
 
 if [ ! -f "$WEIGHT_GENERAL" ] || [ ! -f "$WEIGHT_MATH" ] || [ ! -f "$WEIGHT_CODE" ]; then
-  echo "Missing confidence weights in outputs_gpt2; skipping aggregator run."
+  echo "Missing confidence weights in $OUTPUTS_GPT2_DIR; skipping aggregator run."
   exit 0
 fi
 
@@ -70,11 +81,11 @@ COMMON_ARGS=(
   --weights "$WEIGHT_GENERAL" "$WEIGHT_MATH" "$WEIGHT_CODE"
   --generator-model "$GEN_MODEL"
   --generator-domain-weights
-    "outputs_gen/general_${GEN_MODEL_TAG}_gen"
-    "outputs_gen/math_${GEN_MODEL_TAG}_gen"
-    "outputs_gen/code_${GEN_MODEL_TAG}_gen"
-  --router-weights outputs_router/router.pt
-  --router-labels outputs_router/labels.json
+    "$OUTPUTS_GEN_DIR/general_${GEN_MODEL_TAG}_gen"
+    "$OUTPUTS_GEN_DIR/math_${GEN_MODEL_TAG}_gen"
+    "$OUTPUTS_GEN_DIR/code_${GEN_MODEL_TAG}_gen"
+  --router-weights "$OUTPUTS_ROUTER_DIR/router.pt"
+  --router-labels "$OUTPUTS_ROUTER_DIR/labels.json"
   --max-samples 5000
   --max-new-tokens 40
   --alpha 0.5

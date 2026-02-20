@@ -21,6 +21,7 @@ Use these as canonical entry points:
 - `scripts/run_eval_hq_med_5000_local.sh`
 
 Run these from this directory (`lumina_multimodel/`), ideally inside `.venv`.
+For external NVMe storage (ROCKET-nano), set `LUMINA_NVME_ROOT` (see `scripts/README.md`).
 
 ## Experiment tracking
 

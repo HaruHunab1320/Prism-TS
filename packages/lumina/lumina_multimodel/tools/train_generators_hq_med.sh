@@ -3,8 +3,13 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+NVME_ROOT="${LUMINA_NVME_ROOT:-}"
+
 # Stage A: medium-large HQ dataset
+DATA_ROOT="${DATA_ROOT:-${NVME_ROOT:+$NVME_ROOT/datasets_hq_med}}"
 DATA_ROOT="${DATA_ROOT:-datasets_hq_med}"
+OUTPUTS_GEN_DIR="${OUTPUTS_GEN_DIR:-${NVME_ROOT:+$NVME_ROOT/outputs_gen}}"
+OUTPUTS_GEN_DIR="${OUTPUTS_GEN_DIR:-outputs_gen}"
 MAX_VAL="${MAX_VAL:-5000}"
 MAX_GEN="${MAX_GEN:-200000}"
 MAX_MATH="${MAX_MATH:-100000}"
@@ -23,16 +28,19 @@ python -m training.train_gpt2_generator \
   --data-root "$DATA_ROOT" --domain general --epochs "$EPOCHS" --batch-size "$BATCH_SIZE" \
   --max-train-samples "$MAX_GEN" --max-val-samples "$MAX_VAL" \
   --model-name "$MODEL_NAME" \
+  --output-dir "$OUTPUTS_GEN_DIR" \
   "${QUALITY_FLAG[@]}"
 
 python -m training.train_gpt2_generator \
   --data-root "$DATA_ROOT" --domain math --epochs "$EPOCHS" --batch-size "$BATCH_SIZE" \
   --max-train-samples "$MAX_MATH" --max-val-samples "$MAX_VAL" \
   --model-name "$MODEL_NAME" \
+  --output-dir "$OUTPUTS_GEN_DIR" \
   "${QUALITY_FLAG[@]}"
 
 python -m training.train_gpt2_generator \
   --data-root "$DATA_ROOT" --domain code --epochs "$EPOCHS" --batch-size "$BATCH_SIZE" \
   --max-train-samples "$MAX_CODE" --max-val-samples "$MAX_VAL" \
   --model-name "$MODEL_NAME" \
+  --output-dir "$OUTPUTS_GEN_DIR" \
   "${QUALITY_FLAG[@]}"
