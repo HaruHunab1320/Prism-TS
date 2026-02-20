@@ -1,6 +1,6 @@
-# Lumina Cloud Pilot (One VM per Experiment)
+# Lumina Cloud Experiments
 
-This folder provides a minimal GCP launcher that spins up **one VM per experiment**, runs your commands, syncs artifacts to GCS, and **stops** the VM on completion or failure.
+This folder contains the GCP launcher for multimodel experiments.
 
 ## Prereqs
 - `gcloud` installed and authenticated
@@ -13,28 +13,25 @@ export CLOUDSDK_CONFIG=/tmp/gcloud
 gcloud auth login
 ```
 
-## Bucket
-Create the bucket once (name must be globally unique):
+## Active specs
 
-```bash
-gcloud storage buckets create \
-  gs://lumina-checkpoints-jakob-2026 \
-  --location=us-west1 \
-  --uniform-bucket-level-access
-```
+- `experiments_hq_stage_a.yaml` (generator training/calibration/eval flow)
+- `experiments_hq_eval_ab_a100.yaml` (A/B eval flow)
 
-Update the bucket name in `experiments.yaml` if you choose a different name.
+Legacy specs were moved to `../../archive/legacy_2026-02/tools/cloud/`.
 
 ## Configure experiments
-Edit `experiments.yaml`:
+Edit one of the active yaml files:
 - `project`, `zone`, `machine_type`, `bucket`, `repo_url`
-- Add experiments with `name` and `commands`
+- experiment entries and command sequence
 
 ## Launch
 From this folder:
 
 ```bash
-bash launch_experiments.sh
+bash launch_experiments.sh experiments_hq_stage_a.yaml
+# or
+bash launch_experiments.sh experiments_hq_eval_ab_a100.yaml
 ```
 
 Each VM:
@@ -43,9 +40,9 @@ Each VM:
 - syncs `outputs_gen`, `outputs_router`, `logs` to GCS
 - stops itself (`shutdown -h now`)
 
-## Stop all pilot VMs (optional)
+## Stop matching experiment VMs (optional)
 ```bash
-gcloud compute instances list --filter="name~'lumina-pilot-'" --format="value(name,zone)" | \
+gcloud compute instances list --filter="name~'lumina-'" --format="value(name,zone)" | \
 while read -r name zone; do
   gcloud compute instances stop "$name" --zone "$zone"
 done

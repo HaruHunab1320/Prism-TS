@@ -21,3 +21,22 @@
   - Interpretation: lift holds and slightly improves at larger sample size.
   - 4998 samples: F1 0.277, task 0.413, success@0.7 0.385, abstain 0.105.
   - Interpretation: lift holds at larger scale (slight regression vs 2k, still above baseline).
+
+
+## 2026-02-19 to 2026-02-20
+- Isolated Lumina environment at `lumina_multimodel/.venv` to avoid global dependency conflicts.
+  - Verified: transformers 4.57.1, huggingface_hub 0.36.2, torch 2.10.0.
+- Local hybrid routing check (isolated env, 859 samples, alpha=0.5):
+  - Confidence-only: 0.473
+  - Router-only: 0.448
+  - Hybrid: 0.647
+  - Interpretation: routing fusion still works; hybrid is materially better than either signal alone.
+- HQ-med A/B eval (cloud A100 run, 3178 samples):
+  - Arm A (`filtered_gpt2`): route 0.700, F1 0.018, task 0.037, abstain 0.209.
+  - Arm B (`hq_stagea_gpt2_medium`): route 0.700, F1 0.032, task 0.048, abstain 0.070, agreement 0.680.
+  - Interpretation: routing is stable, but generator answer quality remains the bottleneck.
+
+### Current working thesis
+1. Hybrid routing signal is valid and consistently improves routing proxy accuracy.
+2. End-task quality is now constrained mainly by generator quality/calibration, not routing.
+3. Priority is generator quality lift (data mix + training objective + decoding), then re-evaluate full aggregator.
