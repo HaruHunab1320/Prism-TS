@@ -40,3 +40,19 @@
 1. Hybrid routing signal is valid and consistently improves routing proxy accuracy.
 2. End-task quality is now constrained mainly by generator quality/calibration, not routing.
 3. Priority is generator quality lift (data mix + training objective + decoding), then re-evaluate full aggregator.
+
+## 2026-02-22
+- Stage A v2 local training on NVMe (`outputs_gen_stagea_v2`, `gpt2-medium`, 2 epochs, quality weighting):
+  - general: train 3.0871 -> 2.7189, val 2.7529 -> 2.6980
+  - math: train 0.9063 -> 0.7851, val 2.6110 -> 2.5659
+  - code: train 1.4706 -> 1.3062, val 1.5511 -> 1.4970
+- Candidate-only eval (`hq_stagea_v2`, 3178 samples):
+  - Route 0.512, F1 0.022, task 0.039, success@0.7 0.012, abstain 0.061.
+- Corrected local A/B run (`filtered gpt2` vs `hq_stagea_v2 gpt2-medium`, 3178 samples):
+  - filtered: F1 0.017, task 0.031, success@0.7 0.009, abstain 0.076.
+  - hq_stagea_v2: F1 0.022, task 0.039, success@0.7 0.012, abstain 0.061.
+  - Interpretation: candidate improves over filtered baseline, but absolute quality remains low.
+- Infra fixes added:
+  - explicit `BASE_GENERATOR_MODEL` / `CAND_GENERATOR_MODEL` support in A/B script.
+  - `DEVICE` selection with fail-fast (`mps`/`cuda`/`cpu`) in train + eval entry points.
+  - local eval script defaults to `DEVICE=mps` and NVMe-rooted paths.

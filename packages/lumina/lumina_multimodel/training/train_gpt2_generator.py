@@ -76,6 +76,28 @@ def normalize_text(text: str) -> str:
     return " ".join(text.strip().lower().split())
 
 
+def resolve_device() -> torch.device:
+    requested = os.environ.get("DEVICE", "").strip().lower()
+    if requested:
+        if requested == "cuda":
+            if not torch.cuda.is_available():
+                raise SystemExit("DEVICE=cuda requested but CUDA is not available.")
+            return torch.device("cuda")
+        if requested == "mps":
+            if not torch.backends.mps.is_available():
+                raise SystemExit("DEVICE=mps requested but MPS is not available.")
+            return torch.device("mps")
+        if requested == "cpu":
+            return torch.device("cpu")
+        raise SystemExit(f"Unsupported DEVICE value: {requested}")
+    # Auto-detect when DEVICE is not specified.
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--data-root", type=Path, default=Path("datasets_merged"))
@@ -126,13 +148,7 @@ def main():
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False)
 
-    # Prefer CUDA on Linux GPUs, fallback to MPS (Mac), then CPU.
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-    elif torch.backends.mps.is_available():
-        device = torch.device("mps")
-    else:
-        device = torch.device("cpu")
+    device = resolve_device()
     model = model.to(device)
     opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=args.lr)
     if os.environ.get("REQUIRE_CUDA") == "1" and device.type != "cuda":

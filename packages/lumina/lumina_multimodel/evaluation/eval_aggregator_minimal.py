@@ -196,6 +196,27 @@ def target_conf(model, tokenizer, question, answer, device):
         return float(torch.exp(-nll).item())
 
 
+def resolve_device() -> torch.device:
+    requested = os.environ.get("DEVICE", "").strip().lower()
+    if requested:
+        if requested == "cuda":
+            if not torch.cuda.is_available():
+                raise SystemExit("DEVICE=cuda requested but CUDA is not available.")
+            return torch.device("cuda")
+        if requested == "mps":
+            if not torch.backends.mps.is_available():
+                raise SystemExit("DEVICE=mps requested but MPS is not available.")
+            return torch.device("mps")
+        if requested == "cpu":
+            return torch.device("cpu")
+        raise SystemExit(f"Unsupported DEVICE value: {requested}")
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-root", type=Path, default=Path("datasets_merged"))
@@ -243,13 +264,7 @@ def main():
     random.shuffle(samples)
 
     tokenizer = get_tokenizer("gpt2")
-    # Prefer CUDA on Linux GPUs, fallback to MPS (Mac), then CPU.
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-    elif torch.backends.mps.is_available():
-        device = torch.device("mps")
-    else:
-        device = torch.device("cpu")
+    device = resolve_device()
     if os.environ.get("REQUIRE_CUDA") == "1" and device.type != "cuda":
         raise SystemExit("CUDA required but not available")
 

@@ -15,6 +15,8 @@ LOG_DIR="${LOG_DIR:-${NVME_ROOT:+$NVME_ROOT/logs}}"
 LOG_DIR="${LOG_DIR:-logs}"
 MAX_SAMPLES="${MAX_SAMPLES:-5000}"
 GEN_MODEL="${GENERATOR_MODEL:-gpt2-medium}"
+BASE_GENERATOR_MODEL="${BASE_GENERATOR_MODEL:-$GEN_MODEL}"
+CAND_GENERATOR_MODEL="${CAND_GENERATOR_MODEL:-$GEN_MODEL}"
 CONF_CALIB="${CONF_CALIB:-$OUTPUTS_GPT2_DIR/conf_calibration_hq_med.json}"
 WEIGHT_GENERAL="${WEIGHT_GENERAL:-$OUTPUTS_GPT2_DIR/general_gpt2_confidence.pt}"
 WEIGHT_MATH="${WEIGHT_MATH:-$OUTPUTS_GPT2_DIR/math_gpt2_confidence.pt}"
@@ -53,6 +55,8 @@ fi
 run_eval() {
   local label="$1"
   local gen_dir="$2"
+  local gen_model="$3"
+  local gen_model_tag="${gen_model//\//_}"
   local out="$LOG_DIR/agg_hq_med_ab_${label}.txt"
 
   if [ ! -d "$gen_dir" ]; then
@@ -64,16 +68,16 @@ run_eval() {
   TRANSFORMERS_OFFLINE="$TRANSFORMERS_OFFLINE_VALUE" HF_DATASETS_OFFLINE="$HF_DATASETS_OFFLINE_VALUE" \
     python -u -m evaluation.eval_aggregator_minimal \
       "${COMMON_ARGS[@]}" \
-      --generator-model "$GEN_MODEL" \
+      --generator-model "$gen_model" \
       --generator-domain-weights \
-        "$gen_dir/general_${GEN_MODEL}_gen" \
-        "$gen_dir/math_${GEN_MODEL}_gen" \
-        "$gen_dir/code_${GEN_MODEL}_gen" \
+        "$gen_dir/general_${gen_model_tag}_gen" \
+        "$gen_dir/math_${gen_model_tag}_gen" \
+        "$gen_dir/code_${gen_model_tag}_gen" \
       2>&1 | tee -a "$out"
 }
 
-run_eval "$BASE_LABEL" "$BASE_GEN_DIR"
-run_eval "$CAND_LABEL" "$CAND_GEN_DIR"
+run_eval "$BASE_LABEL" "$BASE_GEN_DIR" "$BASE_GENERATOR_MODEL"
+run_eval "$CAND_LABEL" "$CAND_GEN_DIR" "$CAND_GENERATOR_MODEL"
 
 echo
 echo "=== Summary ==="

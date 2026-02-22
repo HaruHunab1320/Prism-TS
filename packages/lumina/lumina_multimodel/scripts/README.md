@@ -31,6 +31,13 @@ TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 \
 bash scripts/run_eval_hq_med_5000_local.sh
 ```
 
+By default this script sets `DEVICE=mps` and fails fast if MPS is unavailable.
+Override explicitly if needed:
+
+```bash
+DEVICE=cpu bash scripts/run_eval_hq_med_5000_local.sh
+```
+
 Strict offline mode (only if cache is already present):
 
 ```bash
