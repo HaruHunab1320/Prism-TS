@@ -56,3 +56,23 @@
   - explicit `BASE_GENERATOR_MODEL` / `CAND_GENERATOR_MODEL` support in A/B script.
   - `DEVICE` selection with fail-fast (`mps`/`cuda`/`cpu`) in train + eval entry points.
   - local eval script defaults to `DEVICE=mps` and NVMe-rooted paths.
+
+## 2026-02-23 to 2026-02-24
+- Fast recipe sweep on MPS (all using `datasets_hq_med` unless noted), evaluated on 859 samples:
+  - `stagea_v3` (answer cap=24, quality weighting on, max_new_tokens=40): F1 0.026, task 0.073, abstain 0.095.
+  - `stagea_v3` with max_new_tokens=80: F1 0.017, task 0.055, abstain 0.095 (worse).
+  - `stagea_v4` (removed answer cap, quality weighting on, t=40): F1 0.026, task 0.071, abstain 0.095.
+  - `stagea_v5` (removed quality weighting, no answer cap, t=40): F1 0.026, task 0.068, abstain 0.092.
+- Data-composition test (`datasets_hq_med_clean_v1`, dedupe + stricter answer filters):
+  - `stagea_v6` @859: F1 0.031, task 0.072, abstain 0.130 (F1 up, abstain up).
+- Threshold sweep on `stagea_v6` (`abstain in {0.45,0.50,0.55}`, `margin in {0.03,0.05,0.07}`):
+  - For abstain 0.45/0.50: identical metrics at 859: F1 0.029, task 0.074, abstain 0.042.
+  - For abstain 0.55: F1 0.030-0.031, task 0.072, abstain 0.125-0.130.
+- Larger confirm run (target 5000; effective 3178 due split size):
+  - `a=0.45,m=0.05`: F1 0.023, task 0.040, abstain 0.047.
+  - `a=0.55,m=0.05`: F1 0.023, task 0.039, abstain 0.104.
+- Decision:
+  - Keep lower abstain (0.45) for coverage when quality is equal.
+  - Do not spend more cycles on decode/threshold tweaks alone.
+  - Next phase is data enrichment/distillation and domain-balance improvements.
+
