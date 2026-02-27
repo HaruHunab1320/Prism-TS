@@ -79,6 +79,13 @@
 
 ## 2026-02-27
 - Curated HQ v2 dataset audit and freeze:
+- Stage A v9 cloud run (`lumina-hq-v2-stagea-002`, quality weighting OFF, same curated dataset and eval thresholds):
+  - Samples 3210, route 0.577, F1 0.047, task 0.092, success@0.7 0.013, abstain 0.018, agreement 0.001.
+  - Comparison vs stagea-001 (quality weighting ON):
+    - F1 0.048 -> 0.047 (slight down)
+    - task 0.087 -> 0.092 (up)
+    - abstain 0.111 -> 0.018 (large coverage gain)
+  - Decision: prefer quality weighting OFF for current curated-HQ-v2 training recipe.
 - Threshold sweep on H100 checkpoint (`outputs_gen_stagea_v8_h100`, 3210 samples):
   - `abstain=0.35, margin=0.03`: F1 0.047, task 0.090, abstain 0.023.
   - `abstain=0.35, margin=0.05`: F1 0.047, task 0.090, abstain 0.023.
