@@ -23,6 +23,11 @@ GEN_MODEL_TAG="${GEN_MODEL//\//_}"
 CONF_CALIB="${CONF_CALIB:-$OUTPUTS_GPT2_DIR/conf_calibration_hq_med.json}"
 LOG_PATH="${LOG_PATH:-$LOG_DIR/agg_hq_med_5000_gpu.txt}"
 SYNC_INTERVAL_SEC="${SYNC_INTERVAL_SEC:-60}"
+MAX_SAMPLES="${MAX_SAMPLES:-5000}"
+ABSTAIN_THRESHOLD="${ABSTAIN_THRESHOLD:-0.55}"
+CONFLICT_MARGIN="${CONFLICT_MARGIN:-0.05}"
+ALPHA="${ALPHA:-0.5}"
+TOP_K="${TOP_K:-2}"
 BUCKET_PATH="${LUMINA_BUCKET:-${BUCKET:-}}"
 REMOTE_RESULTS_PATH=""
 SYNC_PID=""
@@ -86,12 +91,12 @@ COMMON_ARGS=(
     "$OUTPUTS_GEN_DIR/code_${GEN_MODEL_TAG}_gen"
   --router-weights "$OUTPUTS_ROUTER_DIR/router.pt"
   --router-labels "$OUTPUTS_ROUTER_DIR/labels.json"
-  --max-samples 5000
+  --max-samples "$MAX_SAMPLES"
   --max-new-tokens 40
-  --alpha 0.5
-  --top-k 2
-  --abstain-threshold 0.55
-  --conflict-margin 0.05
+  --alpha "$ALPHA"
+  --top-k "$TOP_K"
+  --abstain-threshold "$ABSTAIN_THRESHOLD"
+  --conflict-margin "$CONFLICT_MARGIN"
 )
 
 TRANSFORMERS_OFFLINE="$TRANSFORMERS_OFFLINE_VALUE" HF_DATASETS_OFFLINE="$HF_DATASETS_OFFLINE_VALUE" python -m evaluation.eval_aggregator_minimal \
