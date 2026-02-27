@@ -76,3 +76,25 @@
   - Do not spend more cycles on decode/threshold tweaks alone.
   - Next phase is data enrichment/distillation and domain-balance improvements.
 
+
+## 2026-02-27
+- Curated HQ v2 dataset audit and freeze:
+- Threshold sweep on H100 checkpoint (`outputs_gen_stagea_v8_h100`, 3210 samples):
+  - `abstain=0.35, margin=0.03`: F1 0.047, task 0.090, abstain 0.023.
+  - `abstain=0.35, margin=0.05`: F1 0.047, task 0.090, abstain 0.023.
+  - `abstain=0.45, margin=0.03`: F1 0.047, task 0.090, abstain 0.023.
+  - `abstain=0.45, margin=0.05`: F1 0.047, task 0.090, abstain 0.023.
+  - `abstain=0.55, margin=0.03`: F1 0.048, task 0.088, abstain 0.097.
+  - `abstain=0.55, margin=0.05`: F1 0.048, task 0.087, abstain 0.111.
+  - Decision: prefer `abstain=0.45`, `margin=0.03` for this checkpoint (best task score with low abstention).
+  - `datasets_hq_v2_curated` counts:
+    - general train 120000 / val 5000 (`trivia_qa` 70168 train, `squad_v2` 49832 train)
+    - math train 10433 / val 549 (`gsm8k` 7005 train, `metamathqa` 3428 train)
+    - code train 18918 / val 995 (`codealpaca` 17853 train, `mbpp` 908 train, `humaneval` 157 train)
+  - Interpretation: source provenance added; prior math corruption removed; math is now usable.
+- H100 Stage A run (`lumina-hq-v2-stagea-001`, `gpt2-medium`, 2 epochs, quality weighting, `datasets_hq_v2_curated`):
+  - Calibration: general `a=0.241 b=0.906`, math `a=-0.001 b=1.001`, code `a=8.865 b=-3.616`.
+  - Aggregator eval (effective 3210 samples): route 0.577, F1 0.048, task 0.087, success@0.7 0.014, abstain 0.111, agreement 0.001.
+  - Interpretation: materially better than recent local curated runs; data quality improvements are moving the stack.
+- Current next step:
+  - run a bounded threshold sweep on the H100-trained checkpoint before changing data or training recipe again.
