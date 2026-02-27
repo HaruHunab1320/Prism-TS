@@ -140,6 +140,15 @@ hq_med_status=\$?
 set -e
 echo ">>> datasets_hq_med sync exit status: \$hq_med_status"
 
+# Optional curated HQ v2 datasets for Stage A
+echo ">>> syncing datasets_hq_v2_curated from GCS (optional)"
+mkdir -p datasets_hq_v2_curated
+set +e
+gsutil -m rsync -r "\$BUCKET/datasets_hq_v2_curated/" datasets_hq_v2_curated/
+hq_v2_curated_status=\$?
+set -e
+echo ">>> datasets_hq_v2_curated sync exit status: \$hq_v2_curated_status"
+
 # Pull confidence + router weights (required for aggregator)
 echo ">>> syncing outputs_gpt2 from GCS"
 set +e

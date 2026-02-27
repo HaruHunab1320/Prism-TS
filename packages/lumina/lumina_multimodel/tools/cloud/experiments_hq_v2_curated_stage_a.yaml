@@ -1,0 +1,15 @@
+project: argos-434718
+zone: us-west1-b
+machine_type: a3-megagpu-8g
+preemptible: true
+bucket: gs://lumina-checkpoints-argos-2026
+repo_url: https://github.com/HaruHunab1320/Prism-TS.git
+image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
+image_project: deeplearning-platform-release
+
+experiments:
+  - name: lumina-hq-v2-stagea-001
+    commands:
+      - DATA_ROOT=datasets_hq_v2_curated MODEL_NAME=gpt2-medium EPOCHS=2 BATCH_SIZE=8 MAX_VAL=5000 MAX_GEN=120000 MAX_MATH=10433 MAX_CODE=18918 QUALITY_WEIGHTING=1 OUTPUTS_GEN_DIR=outputs_gen bash tools/train_generators_hq_med.sh
+      - DATA_ROOT=datasets_hq_v2_curated MAX_SAMPLES=5000 OUT_PATH=outputs_gpt2/conf_calibration_hq_v2_curated.json bash tools/build_conf_calibration_hq_med.sh
+      - DATA_ROOT=datasets_hq_v2_curated GENERATOR_MODEL=gpt2-medium CONF_CALIB=outputs_gpt2/conf_calibration_hq_v2_curated.json LOG_PATH=logs/agg_hq_v2_curated_stagea_5000.txt bash tools/run_aggregator_hq_med_5000.sh
