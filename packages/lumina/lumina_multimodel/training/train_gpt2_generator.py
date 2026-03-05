@@ -6,12 +6,13 @@ Supports merged or real-only datasets.
 
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import List, Dict
 
 import torch
 from torch.utils.data import Dataset, DataLoader
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import os
 
 
@@ -22,25 +23,41 @@ def load_jsonl(path: Path) -> List[Dict]:
 
 def get_tokenizer(model_name: str):
     try:
-        tok = GPT2Tokenizer.from_pretrained(model_name, local_files_only=True)
+        tok = AutoTokenizer.from_pretrained(model_name, local_files_only=True)
     except Exception:
-        tok = GPT2Tokenizer.from_pretrained(model_name)
+        tok = AutoTokenizer.from_pretrained(model_name)
     tok.pad_token = tok.eos_token
     return tok
 
 
 class QADataset(Dataset):
-    def __init__(self, rows: List[Dict], tokenizer: GPT2Tokenizer, max_len: int = 256):
+    def __init__(
+        self,
+        rows: List[Dict],
+        tokenizer,
+        max_len: int = 256,
+        strict_answer: bool = False,
+        domain: str = "general",
+    ):
         self.rows = rows
         self.tok = tokenizer
         self.max_len = max_len
+        self.strict_answer = strict_answer
+        self.domain = domain
+
+    def _prompt(self, question: str) -> str:
+        if self.strict_answer:
+            if self.domain == "math":
+                return f"Question: {question}\nAnswer (single number only):"
+            return f"Question: {question}\nAnswer (short):"
+        return f"Question: {question}\nAnswer:"
 
     def __len__(self):
         return len(self.rows)
 
     def __getitem__(self, idx):
         r = self.rows[idx]
-        prompt = f"Question: {r['question']}\nAnswer:"
+        prompt = self._prompt(r["question"])
         full = f"{prompt} {r['answer']}"
 
         enc = self.tok(full, truncation=True, max_length=self.max_len + 1, padding="max_length", return_tensors="pt")
@@ -55,7 +72,7 @@ class QADataset(Dataset):
         return ids, attn, labels
 
 
-def sample_quality(question: str, answer: str) -> float:
+def sample_quality(domain: str, question: str, answer: str) -> float:
     q = normalize_text(question)
     a = normalize_text(answer)
     if not a or not q:
@@ -65,6 +82,15 @@ def sample_quality(question: str, answer: str) -> float:
     if "question:" in a or "answer:" in a:
         return 0.2
     words = a.split()
+    if domain == "math":
+        # Math answers are often short numeric strings; do not downweight them.
+        if re.fullmatch(r"[-+]?\d+(?:\.\d+)?", a):
+            return 1.0
+        if len(words) <= 3:
+            return 0.9
+        if len(words) > 24:
+            return 0.5
+        return 0.8
     if len(words) < 2:
         return 0.3
     if len(words) > 60:
@@ -74,6 +100,25 @@ def sample_quality(question: str, answer: str) -> float:
 
 def normalize_text(text: str) -> str:
     return " ".join(text.strip().lower().split())
+
+
+def canonicalize_math_answer(answer: str) -> str:
+    s = (answer or "").strip()
+    if not s:
+        return s
+    # Prefer explicit final-answer patterns.
+    m = re.search(r"(?:final answer|answer)\s*[:=]\s*([^\n]+)", s, flags=re.IGNORECASE)
+    if m:
+        s = m.group(1).strip()
+    # Prefer a terminal numeric token when present.
+    nums = re.findall(r"[-+]?\d+(?:\.\d+)?", s)
+    if nums:
+        return nums[-1]
+    # Otherwise keep short tail span.
+    parts = re.split(r"[.;\n]", s)
+    s = parts[0].strip() if parts else s
+    words = s.split()
+    return " ".join(words[:8]).strip()
 
 
 def resolve_device() -> torch.device:
@@ -98,6 +143,19 @@ def resolve_device() -> torch.device:
     return torch.device("cpu")
 
 
+def get_decoder_blocks(model):
+    # GPT2-style
+    if hasattr(model, "transformer") and hasattr(model.transformer, "h"):
+        return model.transformer.h
+    # Qwen/LLaMA-style
+    if hasattr(model, "model") and hasattr(model.model, "layers"):
+        return model.model.layers
+    # Some architectures expose layers at top-level
+    if hasattr(model, "layers"):
+        return model.layers
+    return []
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--data-root", type=Path, default=Path("datasets_merged"))
@@ -117,6 +175,10 @@ def main():
     p.add_argument("--model-name", type=str, default="gpt2")
     p.add_argument("--quality-weighting", action="store_true",
                    help="Weight per-sample loss by a simple answer quality heuristic.")
+    p.add_argument("--strict-answer", action="store_true",
+                   help="Use a stricter prompt: 'Answer (short):' to bias short direct outputs.")
+    p.add_argument("--math-canonical-targets", action="store_true",
+                   help="For math domain, train on canonical short answers (prefer numeric final answer).")
     args = p.parse_args()
 
     base_root = args.data_root if args.data_source == "merged" else args.real_root
@@ -127,24 +189,37 @@ def main():
 
     train_rows = load_jsonl(base_root / subdir / "train.jsonl")[: args.max_train_samples]
     val_rows = load_jsonl(base_root / subdir / "val.jsonl")[: args.max_val_samples]
+    if args.math_canonical_targets and args.domain == "math":
+        for rows in (train_rows, val_rows):
+            for r in rows:
+                r["answer"] = canonicalize_math_answer(str(r.get("answer", "")))
     if not train_rows:
         raise SystemExit("No train data found.")
 
     tok = get_tokenizer(args.model_name)
-    model = GPT2LMHeadModel.from_pretrained(args.model_name)
+    model = AutoModelForCausalLM.from_pretrained(args.model_name)
     model.config.pad_token_id = tok.eos_token_id
 
-    # Freeze base first, then unfreeze last n blocks + lm_head.
+    # Freeze base first, then unfreeze last n decoder blocks + lm_head.
     for param in model.parameters():
         param.requires_grad = False
-    for block in model.transformer.h[-args.unfreeze_n:]:
-        for param in block.parameters():
+    blocks = get_decoder_blocks(model)
+    if blocks:
+        for block in blocks[-args.unfreeze_n:]:
+            for param in block.parameters():
+                param.requires_grad = True
+    if hasattr(model, "lm_head"):
+        for param in model.lm_head.parameters():
             param.requires_grad = True
-    for param in model.lm_head.parameters():
-        param.requires_grad = True
+    if not any(p.requires_grad for p in model.parameters()):
+        raise SystemExit("No trainable parameters were selected.")
 
-    train_ds = QADataset(train_rows, tok, args.max_len)
-    val_ds = QADataset(val_rows, tok, args.max_len)
+    train_ds = QADataset(
+        train_rows, tok, args.max_len, strict_answer=args.strict_answer, domain=args.domain
+    )
+    val_ds = QADataset(
+        val_rows, tok, args.max_len, strict_answer=args.strict_answer, domain=args.domain
+    )
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False)
 
@@ -176,7 +251,11 @@ def main():
                 for i in range(ids.size(0)):
                     # Reconstruct prompt/answer text for weighting.
                     text = tok.decode(ids[i], skip_special_tokens=True)
-                    if "Answer:" in text:
+                    if "Answer (short):" in text:
+                        parts = text.split("Answer (short):", 1)
+                        q = parts[0].replace("Question:", "").strip()
+                        a = parts[1].strip()
+                    elif "Answer:" in text:
                         parts = text.split("Answer:", 1)
                         q = parts[0].replace("Question:", "").strip()
                         a = parts[1].strip()
@@ -185,7 +264,7 @@ def main():
                         a = text
                     batch_q.append(q)
                     batch_a.append(a)
-                weights = torch.tensor([sample_quality(q, a) for q, a in zip(batch_q, batch_a)],
+                weights = torch.tensor([sample_quality(args.domain, q, a) for q, a in zip(batch_q, batch_a)],
                                        dtype=loss.dtype, device=loss.device)
                 loss = (loss * weights.mean())
             opt.zero_grad()

@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 import torch
-from transformers import AutoTokenizer, GPT2Tokenizer, GPT2LMHeadModel
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from models.gpt2_confidence import GPT2WithConfidence
 from training.train_router import TinyRouterClassifier, load_jsonl
@@ -99,7 +99,14 @@ def get_tokenizer(ref: str = "gpt2"):
 
 
 def load_generator_model(model_ref: str):
-    return GPT2LMHeadModel.from_pretrained(model_ref, local_files_only=True)
+    return AutoModelForCausalLM.from_pretrained(model_ref, local_files_only=True)
+
+
+def load_generator_tokenizer(model_ref: str):
+    tok = AutoTokenizer.from_pretrained(model_ref, local_files_only=True)
+    if tok.pad_token is None:
+        tok.pad_token = tok.eos_token
+    return tok
 
 
 def expected_gpt2_config(model_name: str):
@@ -153,9 +160,18 @@ def prompt_conf(model, tokenizer, question, device, calib: dict | None = None):
     return apply_calibration(raw, calib)
 
 
-def generate_answer(gen_model, conf_model, tokenizer, question, device, max_new_tokens=48, calib: dict | None = None):
+def generate_answer(
+    gen_model,
+    gen_tokenizer,
+    conf_model,
+    conf_tokenizer,
+    question,
+    device,
+    max_new_tokens=48,
+    calib: dict | None = None,
+):
     input_text = f"Question: {question}\nAnswer:"
-    enc = tokenizer(input_text, truncation=True, max_length=256, return_tensors="pt")
+    enc = gen_tokenizer(input_text, truncation=True, max_length=256, return_tensors="pt")
     input_ids = enc["input_ids"].to(device)
     mask = enc["attention_mask"].to(device)
 
@@ -165,12 +181,16 @@ def generate_answer(gen_model, conf_model, tokenizer, question, device, max_new_
             attention_mask=mask,
             max_new_tokens=max_new_tokens,
             do_sample=False,
-            pad_token_id=tokenizer.eos_token_id,
+            pad_token_id=gen_tokenizer.eos_token_id,
         )
-        outputs, conf = conf_model(input_ids=gen, attention_mask=torch.ones_like(gen), labels=None)
-        _ = outputs  # keep API parity
+        # Keep confidence signal on the GPT-2 confidence model/tokenizer path.
+        _, conf = conf_model(
+            input_ids=conf_tokenizer(input_text, truncation=True, max_length=256, return_tensors="pt")["input_ids"].to(device),
+            attention_mask=conf_tokenizer(input_text, truncation=True, max_length=256, return_tensors="pt")["attention_mask"].to(device),
+            labels=None,
+        )
 
-    text = tokenizer.decode(gen[0], skip_special_tokens=True)
+    text = gen_tokenizer.decode(gen[0], skip_special_tokens=True)
     answer = extract_answer(text)
     raw = float(conf["overall"].mean().item())
     return answer, apply_calibration(raw, calib)
@@ -278,21 +298,26 @@ def main():
 
     # Load generation models (kept separate from confidence experts).
     generators = []
+    generator_tokenizers = []
     if args.generator_domain_weights is not None:
         if len(args.generator_domain_weights) != len(args.domains):
             raise SystemExit("generator-domain-weights must match domains length")
         for gw in args.generator_domain_weights:
             g = load_generator_model(gw)
+            gt = load_generator_tokenizer(gw)
             inferred = infer_model_name_from_path(str(gw))
             expected = inferred or args.generator_model
             assert_generator_matches(g, expected, gw)
             g.eval().to(device)
             generators.append(g)
+            generator_tokenizers.append(gt)
     else:
         shared = load_generator_model(args.generator_model)
+        shared_tok = load_generator_tokenizer(args.generator_model)
         assert_generator_matches(shared, args.generator_model, args.generator_model)
         shared.eval().to(device)
         generators = [shared for _ in args.domains]
+        generator_tokenizers = [shared_tok for _ in args.domains]
 
     # Load router
     with args.router_labels.open() as f:
@@ -343,7 +368,8 @@ def main():
             dom = args.domains[idx]
             calib = calib_map.get(dom) if calib_map else None
             answer, ans_conf = generate_answer(
-                generators[idx], experts[idx], tokenizer, q, device, max_new_tokens=args.max_new_tokens, calib=calib
+                generators[idx], generator_tokenizers[idx], experts[idx], tokenizer, q, device,
+                max_new_tokens=args.max_new_tokens, calib=calib
             )
             oracle_tc = target_conf(experts[idx], tokenizer, q, gold, device)
             candidates.append({
