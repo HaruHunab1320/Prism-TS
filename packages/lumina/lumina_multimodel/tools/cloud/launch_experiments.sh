@@ -56,6 +56,12 @@ sudo apt-get install -y google-cloud-cli
 if [ ! -d Prism-TS ]; then
   git clone "\$REPO_URL"
 fi
+
+# Force repo to the latest remote main so startup scripts use current files.
+git -C Prism-TS fetch --all --prune
+git -C Prism-TS checkout main
+git -C Prism-TS reset --hard origin/main
+
 cd Prism-TS/packages/lumina/lumina_multimodel
 
 python3 -m venv .venv
