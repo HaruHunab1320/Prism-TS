@@ -680,6 +680,14 @@ let person = {
 let name1 = person.name      // Dot notation
 let name2 = person["name"]   // Bracket notation
 
+// Dynamic/computed property access
+let key = "city"
+let city = person[key]
+
+// Index type rules
+// - arrays require numeric indices: arr[0]
+// - objects require string indices: obj["name"] or obj[key]
+
 // Nested objects
 let data = {
   user: {

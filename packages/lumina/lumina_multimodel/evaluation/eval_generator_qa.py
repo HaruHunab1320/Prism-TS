@@ -123,7 +123,12 @@ def main() -> None:
     if not rows:
         raise SystemExit("No rows found.")
 
-    tok = AutoTokenizer.from_pretrained(args.model_path)
+    # Some locally saved tokenizers can trip fast-tokenizer init across versions.
+    # Fall back to the slow tokenizer for robustness in eval scripts.
+    try:
+        tok = AutoTokenizer.from_pretrained(args.model_path)
+    except Exception:
+        tok = AutoTokenizer.from_pretrained(args.model_path, use_fast=False)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
     model = AutoModelForCausalLM.from_pretrained(args.model_path)

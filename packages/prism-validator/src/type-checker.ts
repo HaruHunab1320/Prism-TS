@@ -207,11 +207,53 @@ export class TypeAnalyzer implements TypeChecker {
         return { type: 'any' };
 
       case 'IndexAccess':
-        const arrType = this.inferType(n.object);
-        this.inferType(n.index);
-        if (arrType.type === 'array' && arrType.elementType) {
-          return { type: arrType.elementType };
+        const targetType = this.inferType(n.object);
+        const indexType = this.inferType(n.index);
+
+        if (targetType.type === 'array') {
+          if (!this.isCompatibleType(indexType, 'number') && indexType.type !== 'unknown') {
+            this.errors.push({
+              ...this.getLocation(n),
+              message: 'Array index must be a number',
+              code: 'INVALID_INDEX_TYPE',
+              expectedType: 'number',
+              actualType: indexType.type
+            });
+          }
+          if (targetType.elementType) {
+            return { type: targetType.elementType };
+          }
+          return { type: 'any' };
         }
+
+        if (targetType.type === 'object') {
+          if (!this.isCompatibleType(indexType, 'string') && indexType.type !== 'unknown') {
+            this.errors.push({
+              ...this.getLocation(n),
+              message: 'Object index must be a string',
+              code: 'INVALID_INDEX_TYPE',
+              expectedType: 'string',
+              actualType: indexType.type
+            });
+            return { type: 'unknown' };
+          }
+
+          if (n.index?.type === 'StringLiteral' && targetType.properties) {
+            const propType = targetType.properties[n.index.value];
+            if (!propType) {
+              this.errors.push({
+                ...this.getLocation(n),
+                message: `Property '${n.index.value}' does not exist on object`,
+                code: 'UNDEFINED_PROPERTY'
+              });
+              return { type: 'unknown' };
+            }
+            return propType;
+          }
+
+          return { type: 'any' };
+        }
+
         return { type: 'any' };
 
       case 'CallExpression':

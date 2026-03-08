@@ -199,6 +199,38 @@ describe('Arrays and Lists', () => {
       
       await expect(runtime.execute(ast)).rejects.toThrow('Array index must be a number');
     });
+
+    test('dynamic object key index access', async () => {
+      const source = `
+        let weights = { bg: 0.7, fg: 0.3 }
+        let bgChannel = "bg"
+        weights[bgChannel]
+      `;
+      const tokens = tokenize(source);
+      const parser = new Parser(tokens, source);
+      const ast = parser.parse();
+      const result = await runtime.execute(ast);
+
+      expect(result).toBeInstanceOf(NumberValue);
+      expect((result as NumberValue).value).toBeCloseTo(0.7);
+    });
+
+    test('dynamic object key index access with confident object', async () => {
+      const source = `
+        let weights = { bg: 0.7, fg: 0.3 } ~> 0.9
+        let channel = "fg"
+        weights[channel]
+      `;
+      const tokens = tokenize(source);
+      const parser = new Parser(tokens, source);
+      const ast = parser.parse();
+      const result = await runtime.execute(ast);
+
+      expect(result).toBeInstanceOf(ConfidenceValue);
+      const confident = result as ConfidenceValue;
+      expect((confident.value as NumberValue).value).toBeCloseTo(0.3);
+      expect(confident.confidence.value).toBeCloseTo(0.9);
+    });
   });
 
   describe('Object Literals', () => {

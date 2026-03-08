@@ -164,6 +164,7 @@ A comprehensive cheat sheet for the Prism programming language.
 |----------|-------------|---------|
 | `\|>` | Pipeline | `x \|> fn1 \|> fn2` |
 | `?.` | Optional chaining | `obj?.prop?.nested` |
+| `[]` | Index access | `arr[0]`, `obj["name"]`, `obj[key]` |
 | `...` | Spread/rest | `[...arr]` or `...params` |
 | `? :` | Ternary | `cond ? a : b` |
 | `->` | Context shift | `context a -> b { }` |

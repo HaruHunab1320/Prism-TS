@@ -145,6 +145,16 @@ describe('Runtime Error Handling', () => {
       const program = parse('let x = 5\nx[0]');
       await expect(runtime.execute(program)).rejects.toThrow('Cannot index number');
     });
+
+    it('should throw error for non-string object index', async () => {
+      const program = parse('let obj = {a: 1}\nobj[0]');
+      await expect(runtime.execute(program)).rejects.toThrow('Object index must be a string');
+    });
+
+    it('should throw error for missing object property by index', async () => {
+      const program = parse('let obj = {a: 1}\nobj["b"]');
+      await expect(runtime.execute(program)).rejects.toThrow("Property 'b' does not exist");
+    });
   });
 
   describe('Built-in Function Errors', () => {

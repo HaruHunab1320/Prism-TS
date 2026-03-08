@@ -1,5 +1,30 @@
 # @prism-lang/validator
 
+## 2.0.1
+
+### Patch Changes
+
+- Add dynamic object bracket access support (`object[key]`) to Prism runtime index evaluation, including confident object propagation.
+
+  Improve validator `IndexAccess` type analysis to:
+
+  - validate numeric indices for arrays,
+  - validate string indices for objects,
+  - report missing object properties for string-literal keys,
+  - support dynamic string-key object indexing.
+
+  Update core/validator changelogs and docs to document object index access syntax and behavior.
+
+- Updated dependencies
+  - @prism-lang/core@3.0.1
+
+## Unreleased
+
+### Fixed
+
+- Improved `IndexAccess` type analysis to validate array index type (`number`) and object index type (`string`).
+- Added object bracket-access checks for missing string-literal keys and inference for dynamic string keys.
+
 ## 2.0.0
 
 ### Major Changes

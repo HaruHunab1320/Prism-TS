@@ -1528,6 +1528,19 @@ export class Interpreter {
       
       return object.elements[idx];
     }
+
+    if (object instanceof ObjectValue) {
+      if (!(index instanceof StringValue)) {
+        throw new RuntimeError('Object index must be a string', node);
+      }
+
+      const value = object.properties.get(index.value);
+      if (!value) {
+        throw new RuntimeError(`Property '${index.value}' does not exist`, node);
+      }
+
+      return value;
+    }
     
     // Handle confidence values
     if (object instanceof ConfidenceValue && object.value instanceof ArrayValue) {
@@ -1543,6 +1556,20 @@ export class Interpreter {
       }
       
       return this.createConfidenceValue(innerArray.elements[idx], object.confidence, 'index', [object.confidence.value]);
+    }
+
+    if (object instanceof ConfidenceValue && object.value instanceof ObjectValue) {
+      if (!(index instanceof StringValue)) {
+        throw new RuntimeError('Object index must be a string', node);
+      }
+
+      const innerObject = object.value as ObjectValue;
+      const value = innerObject.properties.get(index.value);
+      if (!value) {
+        throw new RuntimeError(`Property '${index.value}' does not exist`, node);
+      }
+
+      return this.createConfidenceValue(value, object.confidence, 'index', [object.confidence.value]);
     }
     
     throw new RuntimeError(`Cannot index ${object.type}`, node);

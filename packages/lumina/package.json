@@ -1,6 +1,6 @@
 {
   "name": "@prism-lang/lumina",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Lumina: A superposition-native LLM architecture for Prism",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -1,5 +1,14 @@
 # @prism-lang/cli
 
+## 1.3.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @prism-lang/core@3.0.1
+  - @prism-lang/repl@1.3.2
+  - @prism-lang/llm@1.3.2
+
 ## 1.3.1
 
 ### Patch Changes

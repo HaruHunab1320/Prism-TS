@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.0.1
+
+### Patch Changes
+
+- Add dynamic object bracket access support (`object[key]`) to Prism runtime index evaluation, including confident object propagation.
+
+  Improve validator `IndexAccess` type analysis to:
+
+  - validate numeric indices for arrays,
+  - validate string indices for objects,
+  - report missing object properties for string-literal keys,
+  - support dynamic string-key object indexing.
+
+  Update core/validator changelogs and docs to document object index access syntax and behavior.
+
+  - @prism-lang/llm@1.3.2
+
+## Unreleased
+
+### Fixed
+
+- Added support for dynamic object index access with string keys (`object[key]`) in runtime `IndexAccess`.
+- Added support for confident object index access so container confidence propagates through `object[key]`.
+
 ## 3.0.0
 
 ### Major Changes

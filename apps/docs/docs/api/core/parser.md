@@ -132,7 +132,7 @@ Found: '{' (LEFT_BRACE)
 - Arrays: `[1, 2, 3]`, `[...arr, 4]`
 - Objects: `{x: 10, y: 20}`, `{...obj, z: 30}`
 - Property access: `obj.prop`, `obj?.prop`, `obj~.prop`
-- Index access: `arr[0]`
+- Index access: `arr[0]`, `obj["name"]`, `obj[key]`
 - Function calls: `fn(arg1, arg2)`
 - Lambda expressions: `x => x * 2`, `(x, y) => x + y`
 - Ternary: `condition ? true : false`

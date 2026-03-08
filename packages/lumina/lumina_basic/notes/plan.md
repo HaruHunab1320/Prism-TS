@@ -7,11 +7,13 @@ Validate the single-model architecture with confidence heads and branching:
 - measure accuracy and abstention behavior
 
 ## Phase 1 — Minimal multi-head confidence prototype
-1) Implement a small GPT-2 wrapper with N confidence heads.
-2) Define a branching policy:
+Status: complete (prototype).
+
+1) Implement a small GPT-2 wrapper with N confidence heads. ✅
+2) Define a branching policy. ✅
    - if max conf < threshold → abstain
    - if top-2 disagree and both high conf → escalate
-3) Add a smoke eval that compares:
+3) Add a smoke eval that compares. ✅
    - single head vs multi-head
    - with/without branching
 
@@ -25,3 +27,13 @@ Validate the single-model architecture with confidence heads and branching:
 1) Single-model inference loop with branching.
 2) Log decisions (prune/escalate/answer).
 3) Compare against multi-model baseline.
+
+## Current smoke command
+```bash
+bash lumina_basic/tools/run_basic_smoke.sh
+```
+
+## Disagreement signal test
+```bash
+bash lumina_basic/tools/run_disagreement_signal.sh
+```
