@@ -105,3 +105,44 @@
   - Interpretation: materially better than recent local curated runs; data quality improvements are moving the stack.
 - Current next step:
   - run a bounded threshold sweep on the H100-trained checkpoint before changing data or training recipe again.
+
+## 2026-03-05 to 2026-03-07
+- Cloud launch reliability fixes:
+  - `tools/cloud/launch_experiments.sh` now force-syncs repo to `origin/main` on startup (`fetch`, `checkout main`, `reset --hard`).
+  - Fixed cloud gate workflow by creating missing local sync target (`outputs_gen_overfit`) before `gsutil rsync`.
+- General-teacher Stage A run (`lumina-general-teacher-001`, `g2-standard-24`, us-central1-a):
+  - Built general clean teacher slice: `train=39994`, `val=1000` (`datasets_general_clean_v2_teacher`).
+  - Trained general generator (`Qwen/Qwen2.5-0.5B-Instruct`, 2 epochs):
+    - Epoch 1: `train_loss=1.6914`, `val_loss=1.7202`
+    - Epoch 2: `train_loss=1.5162`, `val_loss=1.7037`
+  - General QA eval on teacher-clean val (300 samples):
+    - `EM=0.003`, `F1=0.327`
+- Cloud gate + aggregator follow-up (`lumina-general-v4-gate-001`):
+  - Domain QA gate on `datasets_hq_med` with new general + existing math/code specialists:
+    - general: `EM=0.000`, `F1=0.069` (300)
+    - math: `EM=0.117`, `F1=0.117` (300)
+    - code: `EM=0.000`, `F1=0.264` (193)
+  - Gate criterion (`general F1 >= 0.10`): **FAIL**
+  - Aggregator step skipped by policy (`run_agg_gate_if_pass.sh`).
+- Interpretation:
+  - The new general model scores well on its own teacher-clean validation, but does not transfer enough to the mixed HQ-med gate set.
+  - Math and code remain stable; general-domain robustness is still the dominant blocker.
+
+## 2026-03-08 to 2026-03-09
+- General-only ablation set (cloud, `g2-standard-24`, eval on `datasets_hq_med`, val 300):
+  - `A clean-only` (`lumina-general-ablate-a-clean-001`):
+    - `EM=0.020`, `F1=0.115` (**best in ablation set**)
+  - `B teacher-heavy` (`lumina-general-ablate-b-teacher-001`):
+    - `EM=0.000`, `F1=0.084`
+  - `C mixed` (`lumina-general-ablate-c-mixed-001`):
+    - `EM=0.000`, `F1=0.085`
+- Follow-up gate+agg run with A model (`lumina-general-aclean-gate-001`):
+  - Domain gate metrics:
+    - general: `EM=0.000`, `F1=0.064` (300)
+    - math: `EM=0.117`, `F1=0.117` (300)
+    - code: `EM=0.000`, `F1=0.264` (193)
+  - Gate: **FAIL** (`general F1 < 0.10`)
+  - Aggregator skipped by policy.
+- Key observation:
+  - The ablation eval command for general used strict short-answer postprocessing, but `run_domain_qa_gate.sh` currently evaluates general without that strict postprocessing.
+  - This metric mismatch can explain why the same general checkpoint scores `0.115` in ablation eval and `0.064` in gate eval.

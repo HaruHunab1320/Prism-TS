@@ -15,6 +15,9 @@ GENERAL_SAMPLES="${GENERAL_SAMPLES:-300}"
 MATH_SAMPLES="${MATH_SAMPLES:-300}"
 CODE_SAMPLES="${CODE_SAMPLES:-193}"
 MAX_NEW_TOKENS="${MAX_NEW_TOKENS:-24}"
+GENERAL_STRICT_ANSWER="${GENERAL_STRICT_ANSWER:-1}"
+GENERAL_CONSTRAINED_POSTPROCESS="${GENERAL_CONSTRAINED_POSTPROCESS:-1}"
+GENERAL_MAX_ANSWER_WORDS="${GENERAL_MAX_ANSWER_WORDS:-12}"
 
 GENERAL_TARGET_F1="${GENERAL_TARGET_F1:-0.10}"
 OUT_JSON="${OUT_JSON:-/tmp/lumina_domain_qa_gate.json}"
@@ -71,7 +74,14 @@ run_eval() {
 }
 
 echo "domain\tsamples\tem\tf1"
-gen_line="$(run_eval general "$GENERAL_MODEL" "$GENERAL_SAMPLES")"
+general_extra=()
+if [[ "$GENERAL_STRICT_ANSWER" == "1" ]]; then
+  general_extra+=(--strict-answer)
+fi
+if [[ "$GENERAL_CONSTRAINED_POSTPROCESS" == "1" ]]; then
+  general_extra+=(--constrained-postprocess --max-answer-words "$GENERAL_MAX_ANSWER_WORDS")
+fi
+gen_line="$(run_eval general "$GENERAL_MODEL" "$GENERAL_SAMPLES" "${general_extra[@]}")"
 math_line="$(run_eval math "$MATH_MODEL" "$MATH_SAMPLES" --strict-answer --constrained-postprocess --max-answer-words 8 --math-canonical-metric)"
 code_line="$(run_eval code "$CODE_MODEL" "$CODE_SAMPLES")"
 echo "$gen_line"
