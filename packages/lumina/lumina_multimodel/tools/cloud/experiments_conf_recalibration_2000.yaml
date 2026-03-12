@@ -1,0 +1,29 @@
+project: argos-434718
+zone: us-west1-b
+machine_type: g2-standard-8
+preemptible: true
+bucket: gs://lumina-checkpoints-argos-2026
+repo_url: https://github.com/HaruHunab1320/Prism-TS.git
+image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
+image_project: deeplearning-platform-release
+
+experiments:
+  - name: lumina-conf-recal-2000-001
+    commands:
+      - mkdir -p outputs_gen_tx_general outputs_gen_tx_math outputs_gen_overfit
+      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-general-uplift-tx-001/outputs_gen/ outputs_gen_tx_general/
+      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-math-uplift-tx-001/outputs_gen/ outputs_gen_tx_math/
+      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/outputs_gen_overfit/ outputs_gen_overfit/
+      - python -u scripts/build_router_dataset.py --data-root datasets_hq_med --max-train-per-domain 30000 --max-val-per-domain 3000 | tee logs/conf_recal_build_router_dataset.txt
+      - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m training.train_router --data-root datasets_hq_med --epochs 8 --batch-size 64 --max-len 128 --hidden-size 256 --dropout 0.1 --lr 3e-4 --output-dir outputs_router_recal 2>&1 | tee logs/conf_recal_train_router.txt
+      - echo '=== baseline hybrid with existing confidence heads ===' | tee logs/conf_recal_baseline_hybrid_2000.txt
+      - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m evaluation.eval_aggregator_minimal --data-root datasets_hq_med --domains general math code --weights outputs_gpt2/general_gpt2_confidence.pt outputs_gpt2/math_gpt2_confidence.pt outputs_gpt2/code_gpt2_confidence.pt --generator-domain-weights outputs_gen_tx_general/general_Qwen_Qwen2.5-1.5B-Instruct_gen outputs_gen_tx_math/math_Qwen_Qwen2.5-Math-1.5B-Instruct_gen outputs_gen_overfit/code_Qwen_Qwen2.5-0.5B-Instruct_gen --generator-model Qwen/Qwen2.5-1.5B-Instruct --router-weights outputs_router_recal/router.pt --router-labels outputs_router_recal/labels.json --max-samples 2000 --max-new-tokens 24 --alpha 0.5 --top-k 2 --abstain-threshold 0.55 --conflict-margin 0.05 --seed 7 --conf-calibration outputs_gpt2/conf_calibration_mixed_qwen.json --debug-dump logs/conf_recal_baseline_hybrid_debug_2000.jsonl --debug-limit 100000 2>&1 | tee -a logs/conf_recal_baseline_hybrid_2000.txt
+      - python -c "import json,collections; p='logs/conf_recal_baseline_hybrid_debug_2000.jsonl'; rows=[json.loads(x) for x in open(p) if x.strip()]; rt=collections.Counter(r['routed_domain'] for r in rows); td=collections.Counter(r['true_domain'] for r in rows); pair=collections.Counter((r['true_domain'],r['routed_domain']) for r in rows); print('debug_rows=',len(rows)); print('routed=',dict(rt)); print('true=',dict(td)); print('true_to_routed=',dict(pair))" | tee logs/conf_recal_baseline_hybrid_routes_2000.txt
+      - mkdir -p outputs_gpt2_recal
+      - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m training.train_gpt2_confidence --data-root datasets_hq_med --domain general --epochs 2 --batch-size 8 --max-train-samples 30000 --max-val-samples 3000 --freeze-base --output outputs_gpt2_recal 2>&1 | tee logs/conf_recal_train_general_conf.txt
+      - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m training.train_gpt2_confidence --data-root datasets_hq_med --domain math --epochs 2 --batch-size 8 --max-train-samples 11164 --max-val-samples 1319 --freeze-base --output outputs_gpt2_recal 2>&1 | tee logs/conf_recal_train_math_conf.txt
+      - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m training.train_gpt2_confidence --data-root datasets_hq_med --domain code --epochs 2 --batch-size 8 --max-train-samples 15710 --max-val-samples 193 --freeze-base --output outputs_gpt2_recal 2>&1 | tee logs/conf_recal_train_code_conf.txt
+      - DATA_ROOT=datasets_hq_med OUTPUTS_GPT2_DIR=outputs_gpt2_recal MAX_SAMPLES=5000 OUT_PATH=outputs_gpt2_recal/conf_calibration_hq_med_recal.json bash tools/build_conf_calibration_hq_med.sh | tee logs/conf_recal_build_calibration.txt
+      - echo '=== hybrid with recalibrated confidence heads ===' | tee logs/conf_recal_new_hybrid_2000.txt
+      - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m evaluation.eval_aggregator_minimal --data-root datasets_hq_med --domains general math code --weights outputs_gpt2_recal/general_gpt2_confidence.pt outputs_gpt2_recal/math_gpt2_confidence.pt outputs_gpt2_recal/code_gpt2_confidence.pt --generator-domain-weights outputs_gen_tx_general/general_Qwen_Qwen2.5-1.5B-Instruct_gen outputs_gen_tx_math/math_Qwen_Qwen2.5-Math-1.5B-Instruct_gen outputs_gen_overfit/code_Qwen_Qwen2.5-0.5B-Instruct_gen --generator-model Qwen/Qwen2.5-1.5B-Instruct --router-weights outputs_router_recal/router.pt --router-labels outputs_router_recal/labels.json --max-samples 2000 --max-new-tokens 24 --alpha 0.5 --top-k 2 --abstain-threshold 0.55 --conflict-margin 0.05 --seed 7 --conf-calibration outputs_gpt2_recal/conf_calibration_hq_med_recal.json --debug-dump logs/conf_recal_new_hybrid_debug_2000.jsonl --debug-limit 100000 2>&1 | tee -a logs/conf_recal_new_hybrid_2000.txt
+      - python -c "import json,collections; p='logs/conf_recal_new_hybrid_debug_2000.jsonl'; rows=[json.loads(x) for x in open(p) if x.strip()]; rt=collections.Counter(r['routed_domain'] for r in rows); td=collections.Counter(r['true_domain'] for r in rows); pair=collections.Counter((r['true_domain'],r['routed_domain']) for r in rows); print('debug_rows=',len(rows)); print('routed=',dict(rt)); print('true=',dict(td)); print('true_to_routed=',dict(pair))" | tee logs/conf_recal_new_hybrid_routes_2000.txt

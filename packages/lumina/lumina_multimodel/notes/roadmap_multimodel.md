@@ -1,19 +1,21 @@
 # Lumina Multimodel Roadmap (Falsifiable)
 
-Last updated: 2026-02-23
+Last updated: 2026-03-12
 
 ## Current state
 
 ### Proven
-- Hybrid routing signal (confidence + router) is consistently better than either alone on routing proxy.
+- Router collapse was the dominant blocker in recent low-quality runs.
+- Rebuilt/retrained router on `datasets_hq_med` reaches near-perfect routing on eval (`~0.991` route accuracy in-stack).
+- Pipeline is reproducible (isolated env, cloud launcher, run logs in GCS + notes).
 - Pipeline is reproducible (isolated env, NVMe-backed paths, active scripts reduced/archived).
-- Routing is not the main bottleneck in current end-task metrics.
 
 ### Not proven
-- A generator training recipe that gives reliable, material end-task gains at scale.
+- A generator recipe that gives reliable, material end-task gains now that routing is fixed.
+- Confidence blending (`alpha<1`) that consistently beats router-only in this regime.
 
 ## Objective
-Find and lock a generator recipe that improves aggregator quality enough to transfer into `lumina_basic`.
+With routing stabilized, find and lock a generator recipe that materially lifts end-task quality and transfers into `lumina_basic`.
 
 ## Phases
 
@@ -66,7 +68,7 @@ Success gate:
   - decision (keep/drop)
 
 ## Immediate next actions
-1. Finish current `stagea_v4` run and log results.
-2. Decide pass/fail against `stagea_v3`.
-3. If pass: run 5000 confirm.
-4. If fail: next variable is data-mix rebalance (especially code/math), not decoding tweaks.
+1. Promote operating mode to router-dominant (`alpha=1.0`) in canonical eval scripts.
+2. Run code-generator uplift A/B (control vs treatment) with fixed router mode.
+3. Run combined uplift confirm (`general+math+code`) at larger sample count (target 5000, report effective n).
+4. If gains hold, freeze a production candidate config and start transfer checks in `lumina_basic`.

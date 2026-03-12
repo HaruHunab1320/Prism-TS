@@ -188,3 +188,38 @@
 - Interpretation:
   - With routing fixed, stronger general generator improved end-to-end quality (`F1 +0.009`, `task +0.009`) while route accuracy stayed flat.
   - This supports the thesis that generator quality is still a primary bottleneck after routing/calibration stabilization.
+
+## 2026-03-11 to 2026-03-12 (math attribution + router refresh + confidence recal)
+- Math uplift attribution at larger eval (`lumina-math-attr-control-2000-001` vs `lumina-math-attr-treatment-2000-001`):
+  - Both runs (effective `1525` samples) were nearly identical:
+    - control: route `0.354`, F1 `0.069`, task `0.107`, abstain `0.144`
+    - treatment: route `0.354`, F1 `0.069`, task `0.108`, abstain `0.142`
+  - Router attribution showed severe collapse:
+    - true math -> routed code: `573`
+    - true math -> routed math: `9`
+  - Decision: generator math uplift cannot express while routing is collapsed; router must be fixed first.
+
+- Router refresh (`lumina-router-refresh-2000-002`, new router dataset build + retrain):
+  - Router dataset built from `datasets_hq_med`:
+    - train `56,874`, val `4,512`
+  - Router training finished with high val accuracy (`~0.989-0.994`).
+  - Old-router hybrid reference (effective `1525`): route `0.354`, F1 `0.069`, task `0.108`, abstain `0.142`.
+  - New-router router-only (effective `1525`): route `0.991`, F1 `0.091`, task `0.162`, abstain `0.001`.
+  - Routing attribution with new router:
+    - true math -> routed math: `664` (vs `9` before)
+    - true general -> routed general: `654`
+    - true code -> routed code: `192`
+  - Interpretation: routing collapse was the dominant blocker; routing is now fixed in this regime.
+
+- Missing hybrid completion filled (`lumina-router-new-hybrid-only-001`):
+  - New-router hybrid (`alpha=0.5`, effective `1525`): route `0.991`, F1 `0.091`, task `0.162`, abstain `0.003`.
+  - Effectively tied with new-router router-only in end metrics.
+
+- Confidence recalibration (`lumina-conf-recal-2000-001`):
+  - Baseline hybrid w/ existing confidence heads: route `0.991`, F1 `0.091`, task `0.163`, abstain `0.001`.
+  - Hybrid w/ recalibrated confidence heads: route `0.994`, F1 `0.091`, task `0.162`, abstain `0.002`.
+  - Interpretation: recalibrating confidence heads did not improve end-task quality on current stack.
+
+- Operating decision:
+  - Lock operating mode to router-dominant (`alpha=1.0`) for production experiments.
+  - Keep confidence heads for abstain/diagnostics while generator quality is improved.
