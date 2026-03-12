@@ -146,3 +146,45 @@
 - Key observation:
   - The ablation eval command for general used strict short-answer postprocessing, but `run_domain_qa_gate.sh` currently evaluates general without that strict postprocessing.
   - This metric mismatch can explain why the same general checkpoint scores `0.115` in ablation eval and `0.064` in gate eval.
+
+## 2026-03-09 (gate alignment fix + full pass)
+- Gate script alignment:
+  - Updated `scripts/run_domain_qa_gate.sh` so general uses strict-answer + constrained postprocess by default (matching ablation eval settings).
+- Re-run (`lumina-general-aclean-gate-001`, corrected config):
+  - Domain gate metrics:
+    - general: `EM=0.020`, `F1=0.115`
+    - math: `EM=0.117`, `F1=0.117`
+    - code: `EM=0.000`, `F1=0.264`
+  - Gate result: **PASS**
+- Aggregator executed (300 samples):
+  - Route accuracy: `0.443`
+  - Aggregation EM (answered): `0.004`
+  - Aggregation F1 (answered): `0.060`
+  - Aggregation task score (answered): `0.128`
+  - Task success@0.7 (answered): `0.029`
+  - Abstain rate: `0.093`
+  - Agreement rate (top-2): `0.020`
+- Interpretation:
+  - We now have metric-consistent gating and a complete gate→aggregator run.
+  - General gate quality improved enough to pass, but overall stack quality is still low.
+  - Immediate suspect is router/calibration mismatch (route accuracy collapse to `0.443`).
+
+## 2026-03-10 (routing isolation + general generator uplift)
+- Routing/calibration isolation sweep (`lumina-routing-isolation-001`, 300 samples):
+  - `router_only` (`alpha=1.0`, base calib): route `0.477`, F1 `0.062`, task `0.125`, abstain `0.213`
+  - `conf_only` (`alpha=0.0`, base calib): route `0.337`, F1 `0.031`, task `0.111`, abstain `0.003`
+  - `hybrid_base_calib` (`alpha=0.5`, base calib): route `0.443`, F1 `0.060`, task `0.128`, abstain `0.093`
+  - `hybrid_mixed_calib` (`alpha=0.5`, mixed qwen calib): route `0.477`, F1 `0.098`, task `0.167`, abstain `0.130`
+- Interpretation:
+  - Router signal is stronger than confidence-only routing.
+  - Calibration choice materially changes end-task quality.
+  - New working baseline promoted to `hybrid + conf_calibration_mixed_qwen`.
+
+- General uplift A/B (`experiments_general_generator_uplift.yaml`, 300 samples):
+  - Control (`lumina-general-uplift-control-001`, baseline stack): route `0.477`, F1 `0.098`, task `0.167`, abstain `0.130`
+  - Treatment (`lumina-general-uplift-tx-001`, retrained general `Qwen/Qwen2.5-1.5B-Instruct`):
+    - General QA gate probe: `EM=0.127`, `F1=0.255` (300)
+    - Aggregator: route `0.477`, F1 `0.107`, task `0.176`, abstain `0.137`
+- Interpretation:
+  - With routing fixed, stronger general generator improved end-to-end quality (`F1 +0.009`, `task +0.009`) while route accuracy stayed flat.
+  - This supports the thesis that generator quality is still a primary bottleneck after routing/calibration stabilization.

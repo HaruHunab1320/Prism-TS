@@ -1,0 +1,27 @@
+project: argos-434718
+zone: us-central1-a
+machine_type: g2-standard-24
+preemptible: true
+bucket: gs://lumina-checkpoints-argos-2026
+repo_url: https://github.com/HaruHunab1320/Prism-TS.git
+image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
+image_project: deeplearning-platform-release
+
+experiments:
+  - name: lumina-general-ablate-a-clean-001
+    commands:
+      - python data/build_general_clean_slice.py --in-root datasets_hq_v2_curated --out-root datasets_general_ablate_a_clean --max-train 20000 --max-val 1000 --min-words 1 --max-words 12
+      - DATA_ROOT=datasets_general_ablate_a_clean OUTPUT_DIR=outputs_gen MODEL_NAME=Qwen/Qwen2.5-0.5B-Instruct EPOCHS=1 UNFREEZE_N=4 MAX_TRAIN_SAMPLES=20000 MAX_VAL_SAMPLES=1000 LR=1e-5 ANSWER_MAX_TOKENS=10 DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 bash scripts/train_general_v2.sh
+      - DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m evaluation.eval_generator_qa --model-path outputs_gen/general_Qwen_Qwen2.5-0.5B-Instruct_gen --data-root datasets_hq_med --domain general --split val --max-samples 300 --max-new-tokens 24 --strict-answer --constrained-postprocess --max-answer-words 12 | tee logs/general_ablate_a_clean_qa_300.txt
+
+  - name: lumina-general-ablate-b-teacher-001
+    commands:
+      - python data/build_general_clean_slice.py --in-root datasets_hq_v2_curated --out-root datasets_general_ablate_b_teacher --max-train 20000 --max-val 1000 --min-words 1 --max-words 12 --teacher-model Qwen/Qwen2.5-3B-Instruct --teacher-device cuda --teacher-limit-train 5000 --teacher-limit-val 500
+      - DATA_ROOT=datasets_general_ablate_b_teacher OUTPUT_DIR=outputs_gen MODEL_NAME=Qwen/Qwen2.5-0.5B-Instruct EPOCHS=1 UNFREEZE_N=4 MAX_TRAIN_SAMPLES=20000 MAX_VAL_SAMPLES=1000 LR=1e-5 ANSWER_MAX_TOKENS=10 DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 bash scripts/train_general_v2.sh
+      - DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m evaluation.eval_generator_qa --model-path outputs_gen/general_Qwen_Qwen2.5-0.5B-Instruct_gen --data-root datasets_hq_med --domain general --split val --max-samples 300 --max-new-tokens 24 --strict-answer --constrained-postprocess --max-answer-words 12 | tee logs/general_ablate_b_teacher_qa_300.txt
+
+  - name: lumina-general-ablate-c-mixed-001
+    commands:
+      - python data/build_general_clean_slice.py --in-root datasets_hq_v2_curated --out-root datasets_general_ablate_c_mixed --max-train 20000 --max-val 1000 --min-words 1 --max-words 12 --teacher-model Qwen/Qwen2.5-3B-Instruct --teacher-device cuda --teacher-limit-train 10000 --teacher-limit-val 500
+      - DATA_ROOT=datasets_general_ablate_c_mixed OUTPUT_DIR=outputs_gen MODEL_NAME=Qwen/Qwen2.5-0.5B-Instruct EPOCHS=1 UNFREEZE_N=4 MAX_TRAIN_SAMPLES=20000 MAX_VAL_SAMPLES=1000 LR=1e-5 ANSWER_MAX_TOKENS=10 DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 bash scripts/train_general_v2.sh
+      - DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m evaluation.eval_generator_qa --model-path outputs_gen/general_Qwen_Qwen2.5-0.5B-Instruct_gen --data-root datasets_hq_med --domain general --split val --max-samples 300 --max-new-tokens 24 --strict-answer --constrained-postprocess --max-answer-words 12 | tee logs/general_ablate_c_mixed_qa_300.txt
