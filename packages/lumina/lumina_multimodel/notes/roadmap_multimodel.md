@@ -1,16 +1,17 @@
 # Lumina Multimodel Roadmap (Falsifiable)
 
-Last updated: 2026-03-12
+Last updated: 2026-03-13
 
 ## Current state
 
 ### Proven
 - Router collapse was the dominant blocker in recent low-quality runs.
-- Rebuilt/retrained router on `datasets_hq_med` reaches near-perfect routing on eval (`~0.991` route accuracy in-stack).
+- Rebuilt/retrained router on `datasets_hq_med` can reach near-perfect routing on a narrower eval slice (`~0.991` route accuracy in-stack).
 - Pipeline is reproducible (isolated env, cloud launcher, run logs in GCS + notes).
 - Pipeline is reproducible (isolated env, NVMe-backed paths, active scripts reduced/archived).
 
 ### Not proven
+- Router robustness on a broader mixed-domain confirm set.
 - A generator recipe that gives reliable, material end-task gains now that routing is fixed.
 - Confidence blending (`alpha<1`) that consistently beats router-only in this regime.
 
@@ -34,6 +35,11 @@ Pass gate:
 
 Fail signal:
 - Material drift between reruns means the benchmark is not trustworthy yet.
+
+Current status:
+- `lumina-router-refresh-2000-002` passed on a narrower slice (`route 0.991`, `F1 0.091`, `task 0.162`).
+- `lumina-combined-confirm-5000-002` failed broad confirm (`effective n=3178`, `route 0.505`, `F1 0.063`, `task 0.087`), with math mostly collapsing into general.
+- Stage 0 is therefore still open.
 
 ### Stage 1: Generator quality discovery
 Claim S1:
@@ -120,6 +126,13 @@ Fail signal:
   - `pass` if stable and >= `0.95` route accuracy
   - `fail` if unstable or materially below prior router-refresh result
 
+### Matrix A1: Router robustness
+- Experiment: router-only confirm on broad mixed-domain eval with shuffled/stratified sampling, plus per-domain confusion dump
+- Purpose: determine whether router-refresh quality generalizes beyond the narrow slice
+- Decision:
+  - `pass` if overall route accuracy >= `0.90`, math recall >= `0.80`, and rerun variance <= `0.03`
+  - `fail` if broad eval still collapses math into general/code
+
 ### Matrix B: Domain uplift
 - Experiment: per-domain control vs treatment under fixed router mode
 - Purpose: identify which specialist upgrades actually move end metrics
@@ -152,7 +165,7 @@ Fail signal:
   - decision (keep/drop)
 
 ## Immediate next actions
-1. Wait for `lumina-combined-confirm-5000-002` to finish and freeze the strongest plain baseline.
-2. Compare combined confirm against current router-refresh reference and decide whether the current best generator stack is worth freezing.
-3. If combined confirm is good enough, move to confidence-utility experiments at matched coverage instead of more blind hybrid blending.
-4. If combined confirm is still weak, continue specialist recipe discovery before reintroducing more Lumina-specific behavior.
+1. Run Matrix A1: broad router-only robustness confirm with shuffled/stratified sampling and per-domain confusion outputs.
+2. If Matrix A1 passes, freeze the router-dominant baseline and then resume generator discovery under that stable baseline.
+3. If Matrix A1 fails, rebuild router training/eval splits before any more generator or confidence work.
+4. Do not resume confidence-utility experiments until Stage 0 is actually frozen on the broad confirm set.

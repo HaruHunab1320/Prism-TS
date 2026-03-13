@@ -234,3 +234,21 @@
 - Interpretation:
   - Code treatment gives a small but consistent end-to-end uplift (`F1 +0.001`, `task +0.002`) and lower abstain.
   - Gains are materially smaller than routing-fix gains; generator quality remains limiting but improvements are incremental.
+
+## 2026-03-13 (combined confirm broad-slice failure)
+- Combined confirm (`lumina-combined-confirm-5000-002`, router-dominant `alpha=1.0`, effective `3178` samples):
+  - route `0.505`, F1 `0.063`, task `0.087`, abstain `0.137`
+  - routed domain counts:
+    - general `2062`
+    - code `375`
+    - math `305`
+  - true domain counts:
+    - general `1558`
+    - math `1048`
+    - code `136`
+  - notable confusion:
+    - math -> general `764`
+    - math -> math `140`
+- Interpretation:
+  - The smaller router-refresh win did not generalize to the broader mixed-domain confirm.
+  - Stage 0 is not frozen yet; the immediate next gate is router robustness under shuffled/stratified broad eval, not more generator or confidence iteration.

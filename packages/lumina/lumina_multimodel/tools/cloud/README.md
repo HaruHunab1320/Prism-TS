@@ -26,6 +26,7 @@ gcloud auth login
 - `experiments_routing_isolation_300.yaml`
 - `experiments_math_attribution_2000.yaml`
 - `experiments_router_refresh_2000.yaml`
+- `experiments_router_robustness_5000.yaml`
 - `experiments_router_new_hybrid_only.yaml`
 - `experiments_conf_recalibration_2000.yaml`
 
