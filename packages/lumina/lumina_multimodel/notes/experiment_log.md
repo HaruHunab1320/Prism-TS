@@ -223,3 +223,14 @@
 - Operating decision:
   - Lock operating mode to router-dominant (`alpha=1.0`) for production experiments.
   - Keep confidence heads for abstain/diagnostics while generator quality is improved.
+
+## 2026-03-12 (code uplift A/B under router-dominant mode)
+- Code uplift control vs treatment (`experiments_code_generator_uplift.yaml`, effective `1525` samples):
+  - Control (`lumina-code-uplift-control-001`):
+    - route `0.485`, F1 `0.064`, task `0.094`, success@0.7 `0.032`, abstain `0.184`
+  - Treatment (`lumina-code-uplift-tx-001`, code `Qwen/Qwen2.5-1.5B-Instruct`):
+    - code QA probe (val 193): `EM=0.000`, `F1=0.282`
+    - aggregator: route `0.485`, F1 `0.065`, task `0.096`, success@0.7 `0.035`, abstain `0.163`
+- Interpretation:
+  - Code treatment gives a small but consistent end-to-end uplift (`F1 +0.001`, `task +0.002`) and lower abstain.
+  - Gains are materially smaller than routing-fix gains; generator quality remains limiting but improvements are incremental.
