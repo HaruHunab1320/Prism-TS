@@ -1,6 +1,6 @@
 project: argos-434718
-zone: us-west1-b
-machine_type: g2-standard-8
+zone: us-east1-c
+machine_type: g2-standard-12
 preemptible: true
 bucket: gs://lumina-checkpoints-argos-2026
 repo_url: https://github.com/HaruHunab1320/Prism-TS.git
