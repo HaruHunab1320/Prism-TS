@@ -1,6 +1,6 @@
 # Lumina Cloud Experiments
 
-This folder contains the GCP launcher for multimodel experiments.
+This folder contains the GCP launcher and the current multimodel cloud experiment specs.
 
 ## Prereqs
 - `gcloud` installed and authenticated
@@ -13,15 +13,32 @@ export CLOUDSDK_CONFIG=/tmp/gcloud
 gcloud auth login
 ```
 
-## Active specs
+## Current canonical specs
 
-- `experiments_hq_stage_a.yaml` (generator training/calibration/eval flow)
-- `experiments_hq_eval_ab_a100.yaml` (A/B eval flow)
+### Generator and gate path
+- `experiments_general_ablation.yaml`
+- `experiments_general_aclean_gate_agg.yaml`
+- `experiments_general_generator_uplift.yaml`
+- `experiments_math_generator_uplift.yaml`
+- `experiments_code_generator_uplift.yaml`
 
-Legacy specs were moved to `../../archive/legacy_2026-02/tools/cloud/`.
+### Routing and confidence path
+- `experiments_routing_isolation_300.yaml`
+- `experiments_math_attribution_2000.yaml`
+- `experiments_router_refresh_2000.yaml`
+- `experiments_router_new_hybrid_only.yaml`
+- `experiments_conf_recalibration_2000.yaml`
+
+### Larger confirm
+- `experiments_combined_confirm_5000.yaml`
+
+Superseded stage-a / stage-b specs were moved to:
+
+- `../../archive/legacy_2026-02/`
+- `../../archive/legacy_2026-03/`
 
 ## Configure experiments
-Edit one of the active yaml files:
+Edit one of the current yaml files:
 - `project`, `zone`, `machine_type`, `bucket`, `repo_url`
 - experiment entries and command sequence
 
@@ -29,9 +46,7 @@ Edit one of the active yaml files:
 From this folder:
 
 ```bash
-bash launch_experiments.sh experiments_hq_stage_a.yaml
-# or
-bash launch_experiments.sh experiments_hq_eval_ab_a100.yaml
+bash launch_experiments.sh experiments_combined_confirm_5000.yaml
 ```
 
 Each VM:

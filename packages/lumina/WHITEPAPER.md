@@ -1,7 +1,7 @@
 # Lumina Specialist Network: Theory, Training, and Evaluation (Whitepaper)
 
 ## Abstract
-This paper defines the Lumina specialist network architecture, its uncertainty decomposition, and a falsifiable experimental program to test whether a network of small, calibrated models can match or exceed a larger monolithic model on targeted domains. We specify interfaces, training objectives, datasets, and evaluation protocols from local Mac PoC to H100-scale training.
+This paper defines the Lumina specialist network architecture, its uncertainty-aware control signals, and a falsifiable experimental program to test whether a network of small, calibrated models can match or exceed a larger monolithic model on targeted domains. We specify interfaces, training objectives, datasets, and evaluation protocols from local Mac PoC to H100-scale training.
 
 ---
 
@@ -9,12 +9,12 @@ This paper defines the Lumina specialist network architecture, its uncertainty d
 Large monolithic language models are expensive to train and calibrate. In domain-specific tasks, they often exhibit confident errors and weak out-of-distribution (OOD) detection. We propose a modular alternative:
 
 - Train small specialist models per domain.
-- Route queries based on predicted confidence, not only domain labels.
-- Aggregate responses with explicit confidence policy.
+- Route queries based on predicted control signals, not only domain labels.
+- Aggregate responses with explicit uncertainty-aware policy.
 - Use Prism to encode routing and aggregation logic as testable programs.
 
 **Primary question (falsifiable):**
-Can a network of calibrated specialists + routing policy match or exceed a monolithic model on targeted domains, with lower cost and improved confidence calibration?
+Can a network of calibrated specialists + uncertainty-aware control policy match or exceed a monolithic model on targeted domains, with lower cost and better decision quality?
 
 ---
 
@@ -37,7 +37,7 @@ The router predicts a distribution over specialists:
 
 r(i | x)
 
-Routing uses confidence-aware policy:
+Routing uses control-aware policy:
 
 If max_i r(i|x) >= tau_high: call argmax i
 If tau_med <= max_i r(i|x) < tau_high: call top-K i
@@ -55,7 +55,16 @@ Baseline aggregation policy:
 
 ## 3. Uncertainty and Calibration
 
-We treat confidence as a calibrated probability of correctness:
+We do not treat `confidence` as one undifferentiated scalar. Lumina needs several distinct decision signals:
+
+- routing confidence
+- answer confidence
+- escalation value
+- disagreement significance
+
+The current implementation may expose a simpler confidence contract, but the theory should separate these roles. See `CONFIDENCE_DEFINITIONS.md`.
+
+For answer confidence specifically, we treat confidence as a calibrated probability of correctness:
 
 P(y_i correct | c_i = p) ~= p
 
@@ -96,6 +105,14 @@ H4: OOD detection is better with specialists.
 H5: Aggregation reduces confident errors under disagreement.
 - Null: Aggregation does not reduce false confident rate.
 - Test: Error rate on disagreement subsets with and without aggregator.
+
+H6: Confidence utility exceeds routing-only baseline.
+- Null: confidence-informed reranking or abstention does not beat router-only at matched coverage.
+- Test: compare router-only vs confidence-enabled modes under equal answer-rate budgets.
+
+H7: High-confidence disagreement is useful signal.
+- Null: escalation on disagreement does not improve hard-case performance.
+- Test: compare direct-answer vs escalate-on-disagreement on the disagreement subset.
 
 ---
 

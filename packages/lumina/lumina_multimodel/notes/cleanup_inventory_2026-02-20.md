@@ -1,5 +1,9 @@
 # Lumina Multimodel Cleanup Inventory (2026-02-20)
 
+Superseded by the current synthesis and roadmap:
+- `notes/learning_synthesis_2026-03-13.md`
+- `notes/roadmap_multimodel.md`
+
 ## Goal
 Reduce script sprawl while preserving a reproducible path for the active multimodel architecture.
 

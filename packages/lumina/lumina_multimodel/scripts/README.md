@@ -16,13 +16,15 @@ mkdir -p "$LUMINA_NVME_ROOT"/{datasets_hq_med,outputs_gen,outputs_gpt2,outputs_r
 
 All local scripts below will use `LUMINA_NVME_ROOT` automatically when set.
 
-## Calibration (HQ-med)
+## Active local helpers
+
+### Calibration (HQ-med)
 
 ```bash
 bash scripts/build_conf_calibration_hq_med_local.sh
 ```
 
-## Aggregator eval (HQ-med, 5k)
+### Aggregator eval (HQ-med, 5k)
 
 Online HF fetch if needed:
 
@@ -44,3 +46,23 @@ Strict offline mode (only if cache is already present):
 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1 \
 bash scripts/run_eval_hq_med_5000_local.sh
 ```
+
+### Router dataset rebuild
+
+```bash
+python scripts/build_router_dataset.py --data-root datasets_hq_med \
+  --max-train-per-domain 30000 --max-val-per-domain 3000
+```
+
+### Gate helpers
+
+- `scripts/run_domain_qa_gate.sh`
+- `scripts/run_agg_gate_if_pass.sh`
+
+### General uplift trainer
+
+- `scripts/train_general_v2.sh`
+
+## Archived local probes
+
+Older distill/oracle probe wrappers were moved to `archive/legacy_2026-03/scripts/`.

@@ -11,7 +11,15 @@ This document is the canonical system architecture and interface contract.
 A network of small, well-calibrated specialist models, routed and aggregated by explicit confidence policy, can match or exceed a single larger general model on targeted domains while reducing cost and improving calibration.
 
 ## Core Thesis (What Must Be True)
-Lumina’s novelty hinges on **calibrated, reliable confidence/uncertainty signals**. Routing, branching, and aggregation are only valuable if the system’s confidence estimates correlate with correctness and reflect uncertainty type (epistemic vs aleatoric vs OOD). If confidence is uncalibrated, the architecture collapses into either perpetual abstention or overconfident errors. Therefore, confidence calibration is the primary research bottleneck and must be validated before scaling.
+Lumina’s novelty hinges on **useful uncertainty-aware control signals**, not on a single scalar named `confidence`. Routing, branching, abstention, and aggregation are only valuable if the system emits decision signals that improve control flow beyond a strong plain baseline.
+
+In particular, Lumina should distinguish:
+- routing confidence
+- answer confidence
+- escalation value
+- disagreement significance
+
+If these signals are uncalibrated or conflated, the architecture collapses into either perpetual abstention, overconfident errors, or unnecessary branching. See `CONFIDENCE_DEFINITIONS.md` for the stricter theory.
 
 ---
 
@@ -29,6 +37,8 @@ Query -> Router -> Specialists -> Aggregator/Policy -> Final response + confiden
 ---
 
 ## Component Interfaces (Confidence Contract)
+
+The current contract still exposes one `confidence` object for implementation simplicity, but the theory should treat it as an approximation to a richer family of control signals. Over time this contract should evolve toward the definitions in `CONFIDENCE_DEFINITIONS.md`.
 
 All components emit a common structure:
 
@@ -55,6 +65,7 @@ Invariants:
 - overall decreases when any uncertainty channel increases (monotonic policy).
 - distribution_shift is specialist-specific (OOD relative to that specialist).
 - overall is calibrated: P(correct | overall ~= p) ~= p.
+- router-side and answer-side confidence must not be treated as interchangeable in evaluation.
 
 ---
 
@@ -79,6 +90,10 @@ Routing Policy (high-level):
 - If router confidence >= high threshold: call 1 specialist.
 - If between high/medium: call top-K specialists.
 - If below medium: call all specialists and aggregate.
+
+Note:
+- router confidence answers "who should answer?"
+- it does not answer "is the returned answer correct?"
 
 ---
 
@@ -108,6 +123,10 @@ Aggregation policy (baseline):
 - If high agreement and high confidence: choose best response.
 - If disagreement above threshold: synthesize or abstain.
 - If all confidence low: abstain or request context.
+
+Longer term Lumina target:
+- disagreement should trigger extra computation only when disagreement significance is high enough to justify it
+- this must be validated empirically, not assumed
 
 ---
 
