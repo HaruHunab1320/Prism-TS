@@ -8,12 +8,12 @@ image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
 image_project: deeplearning-platform-release
 
 experiments:
-  - name: lumina-combined-confirm-5000-001
+  - name: lumina-combined-confirm-5000-002
     commands:
       - mkdir -p outputs_gen_tx_general outputs_gen_tx_math outputs_gen_tx_code outputs_router_fixed
-      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-general-uplift-tx-001/outputs_gen/ outputs_gen_tx_general/
-      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-math-uplift-tx-001/outputs_gen/ outputs_gen_tx_math/
-      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-code-uplift-tx-001/outputs_gen/ outputs_gen_tx_code/
-      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-router-refresh-2000-002/outputs_router/ outputs_router_fixed/
+      - set -o pipefail; gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-general-uplift-tx-001/outputs_gen/ outputs_gen_tx_general/ 2>&1 | tee logs/combined_confirm_sync_general.txt
+      - set -o pipefail; gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-math-uplift-tx-001/outputs_gen/ outputs_gen_tx_math/ 2>&1 | tee logs/combined_confirm_sync_math.txt
+      - set -o pipefail; gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-code-uplift-tx-001/outputs_gen/ outputs_gen_tx_code/ 2>&1 | tee logs/combined_confirm_sync_code.txt
+      - set -o pipefail; gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-router-refresh-2000-002/outputs_router/ outputs_router_fixed/ 2>&1 | tee logs/combined_confirm_sync_router.txt
       - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m evaluation.eval_aggregator_minimal --data-root datasets_hq_med --domains general math code --weights outputs_gpt2/general_gpt2_confidence.pt outputs_gpt2/math_gpt2_confidence.pt outputs_gpt2/code_gpt2_confidence.pt --generator-domain-weights outputs_gen_tx_general/general_Qwen_Qwen2.5-1.5B-Instruct_gen outputs_gen_tx_math/math_Qwen_Qwen2.5-Math-1.5B-Instruct_gen outputs_gen_tx_code/code_Qwen_Qwen2.5-1.5B-Instruct_gen --generator-model Qwen/Qwen2.5-1.5B-Instruct --router-weights outputs_router_fixed/router.pt --router-labels outputs_router_fixed/labels.json --max-samples 5000 --max-new-tokens 24 --alpha 1.0 --top-k 2 --abstain-threshold 0.55 --conflict-margin 0.05 --seed 7 --conf-calibration outputs_gpt2/conf_calibration_mixed_qwen.json --debug-dump logs/combined_confirm_debug_5000.jsonl --debug-limit 100000 2>&1 | tee logs/combined_confirm_agg_5000.txt
       - python -c "import json,collections; p='logs/combined_confirm_debug_5000.jsonl'; rows=[json.loads(x) for x in open(p) if x.strip()]; rt=collections.Counter(r['routed_domain'] for r in rows); td=collections.Counter(r['true_domain'] for r in rows); pair=collections.Counter((r['true_domain'],r['routed_domain']) for r in rows); print('debug_rows=',len(rows)); print('routed=',dict(rt)); print('true=',dict(td)); print('true_to_routed=',dict(pair))" | tee logs/combined_confirm_routes_5000.txt
