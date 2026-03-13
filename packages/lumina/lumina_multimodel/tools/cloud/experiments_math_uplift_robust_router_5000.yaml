@@ -1,0 +1,34 @@
+project: argos-434718
+zone: us-east1-c
+machine_type: g2-standard-8
+preemptible: true
+bucket: gs://lumina-checkpoints-argos-2026
+repo_url: https://github.com/HaruHunab1320/Prism-TS.git
+image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
+image_project: deeplearning-platform-release
+
+experiments:
+  - name: lumina-math-uplift-robust-control-5000-001
+    commands:
+      - mkdir -p outputs_gen_tx_general outputs_gen_tx_code outputs_gen_overfit
+      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-general-uplift-tx-001/outputs_gen/ outputs_gen_tx_general/
+      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-code-uplift-tx-001/outputs_gen/ outputs_gen_tx_code/
+      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/outputs_gen_overfit/ outputs_gen_overfit/
+      - python -u scripts/build_router_dataset.py --data-root datasets_hq_med --max-train-per-domain 30000 --max-val-per-domain 3000 | tee logs/math_uplift_robust_control_build_router.txt
+      - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m training.train_router --data-root datasets_hq_med --epochs 8 --batch-size 64 --max-len 128 --hidden-size 256 --dropout 0.1 --lr 3e-4 --output-dir outputs_router_robust 2>&1 | tee logs/math_uplift_robust_control_train_router.txt
+      - echo '=== robust control math uplift ===' | tee logs/math_uplift_robust_control_agg_5000.txt
+      - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m evaluation.eval_aggregator_minimal --data-root datasets_hq_med --domains general math code --weights outputs_gpt2/general_gpt2_confidence.pt outputs_gpt2/math_gpt2_confidence.pt outputs_gpt2/code_gpt2_confidence.pt --generator-domain-weights outputs_gen_tx_general/general_Qwen_Qwen2.5-1.5B-Instruct_gen outputs_gen_overfit/math_Qwen_Qwen2.5-Math-1.5B-Instruct_gen outputs_gen_tx_code/code_Qwen_Qwen2.5-1.5B-Instruct_gen --generator-model Qwen/Qwen2.5-1.5B-Instruct --router-weights outputs_router_robust/router.pt --router-labels outputs_router_robust/labels.json --max-samples 5000 --max-new-tokens 24 --alpha 1.0 --top-k 2 --abstain-threshold 0.55 --conflict-margin 0.05 --seed 7 --conf-calibration outputs_gpt2/conf_calibration_mixed_qwen.json --debug-dump logs/math_uplift_robust_control_debug_5000.jsonl --debug-limit 100000 2>&1 | tee -a logs/math_uplift_robust_control_agg_5000.txt
+      - python -c "import json,collections; p='logs/math_uplift_robust_control_debug_5000.jsonl'; rows=[json.loads(x) for x in open(p) if x.strip()]; pair=collections.Counter((r['true_domain'],r['routed_domain']) for r in rows); print('debug_rows=',len(rows)); print('true_to_routed=',dict(pair))" | tee logs/math_uplift_robust_control_routes_5000.txt
+
+  - name: lumina-math-uplift-robust-tx-5000-001
+    commands:
+      - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m training.train_gpt2_generator --data-root datasets_hq_v2_curated --domain math --model-name Qwen/Qwen2.5-Math-1.5B-Instruct --epochs 1 --batch-size 2 --lr 8e-6 --max-len 192 --answer-max-tokens 8 --max-train-samples 10000 --max-val-samples 500 --unfreeze-n 2 --output-dir outputs_gen --strict-answer --math-canonical-targets 2>&1 | tee logs/math_uplift_robust_treatment_train_math.txt
+      - DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m evaluation.eval_generator_qa --model-path outputs_gen/math_Qwen_Qwen2.5-Math-1.5B-Instruct_gen --data-root datasets_hq_med --domain math --split val --max-samples 500 --max-new-tokens 24 --strict-answer --constrained-postprocess --max-answer-words 8 --math-canonical-metric | tee logs/math_uplift_robust_treatment_qa_500.txt
+      - mkdir -p outputs_gen_tx_general outputs_gen_tx_code
+      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-general-uplift-tx-001/outputs_gen/ outputs_gen_tx_general/
+      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-code-uplift-tx-001/outputs_gen/ outputs_gen_tx_code/
+      - python -u scripts/build_router_dataset.py --data-root datasets_hq_med --max-train-per-domain 30000 --max-val-per-domain 3000 | tee logs/math_uplift_robust_treatment_build_router.txt
+      - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m training.train_router --data-root datasets_hq_med --epochs 8 --batch-size 64 --max-len 128 --hidden-size 256 --dropout 0.1 --lr 3e-4 --output-dir outputs_router_robust 2>&1 | tee logs/math_uplift_robust_treatment_train_router.txt
+      - echo '=== robust treatment math uplift ===' | tee logs/math_uplift_robust_treatment_agg_5000.txt
+      - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m evaluation.eval_aggregator_minimal --data-root datasets_hq_med --domains general math code --weights outputs_gpt2/general_gpt2_confidence.pt outputs_gpt2/math_gpt2_confidence.pt outputs_gpt2/code_gpt2_confidence.pt --generator-domain-weights outputs_gen_tx_general/general_Qwen_Qwen2.5-1.5B-Instruct_gen outputs_gen/math_Qwen_Qwen2.5-Math-1.5B-Instruct_gen outputs_gen_tx_code/code_Qwen_Qwen2.5-1.5B-Instruct_gen --generator-model Qwen/Qwen2.5-1.5B-Instruct --router-weights outputs_router_robust/router.pt --router-labels outputs_router_robust/labels.json --max-samples 5000 --max-new-tokens 24 --alpha 1.0 --top-k 2 --abstain-threshold 0.55 --conflict-margin 0.05 --seed 7 --conf-calibration outputs_gpt2/conf_calibration_mixed_qwen.json --debug-dump logs/math_uplift_robust_treatment_debug_5000.jsonl --debug-limit 100000 2>&1 | tee -a logs/math_uplift_robust_treatment_agg_5000.txt
+      - python -c "import json,collections; p='logs/math_uplift_robust_treatment_debug_5000.jsonl'; rows=[json.loads(x) for x in open(p) if x.strip()]; pair=collections.Counter((r['true_domain'],r['routed_domain']) for r in rows); print('debug_rows=',len(rows)); print('true_to_routed=',dict(pair))" | tee logs/math_uplift_robust_treatment_routes_5000.txt

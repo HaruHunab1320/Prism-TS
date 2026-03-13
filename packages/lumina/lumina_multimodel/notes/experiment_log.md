@@ -252,3 +252,24 @@
 - Interpretation:
   - The smaller router-refresh win did not generalize to the broader mixed-domain confirm.
   - Stage 0 is not frozen yet; the immediate next gate is router robustness under shuffled/stratified broad eval, not more generator or confidence iteration.
+
+## 2026-03-13 (router robustness broad confirm)
+- Router robustness broad confirm (`lumina-router-robustness-5000-001`):
+  - Router retrain on `datasets_hq_med/router`: val accuracy `0.988-0.994`
+  - Seed `7` (effective `3178`):
+    - route `0.993`, F1 `0.080`, task `0.139`, abstain `0.005`
+  - Seed `11` (effective `3178`):
+    - route `0.994`, F1 `0.078`, task `0.137`, abstain `0.005`
+  - Seed `19` (effective `3178`):
+    - route `0.992`, F1 `0.082`, task `0.142`, abstain `0.004`
+  - Per-domain routing stayed clean across all seeds:
+    - math -> math: `1317 / 1319`
+    - general -> general: `1632-1636 / ~1650`
+    - code -> code: `191 / 193`
+- Interpretation:
+  - Router robustness on the broad mixed-domain eval is now established.
+  - The stable router-dominant baseline is roughly:
+    - route `0.993 +/- 0.001`
+    - F1 `0.080 +/- 0.002`
+    - task `0.139 +/- 0.003`
+  - Routing is no longer the main blocker; specialist answer quality is the next lever again.

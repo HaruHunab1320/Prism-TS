@@ -11,7 +11,6 @@ Last updated: 2026-03-13
 - Pipeline is reproducible (isolated env, NVMe-backed paths, active scripts reduced/archived).
 
 ### Not proven
-- Router robustness on a broader mixed-domain confirm set.
 - A generator recipe that gives reliable, material end-task gains now that routing is fixed.
 - Confidence blending (`alpha<1`) that consistently beats router-only in this regime.
 
@@ -37,9 +36,11 @@ Fail signal:
 - Material drift between reruns means the benchmark is not trustworthy yet.
 
 Current status:
-- `lumina-router-refresh-2000-002` passed on a narrower slice (`route 0.991`, `F1 0.091`, `task 0.162`).
-- `lumina-combined-confirm-5000-002` failed broad confirm (`effective n=3178`, `route 0.505`, `F1 0.063`, `task 0.087`), with math mostly collapsing into general.
-- Stage 0 is therefore still open.
+- `lumina-router-robustness-5000-001` passed broad confirm across three seeds:
+  - route `0.992-0.994`
+  - F1 `0.078-0.082`
+  - task `0.137-0.142`
+- Stage 0 is now satisfied for routing stability.
 
 ### Stage 1: Generator quality discovery
 Claim S1:
@@ -133,6 +134,9 @@ Fail signal:
   - `pass` if overall route accuracy >= `0.90`, math recall >= `0.80`, and rerun variance <= `0.03`
   - `fail` if broad eval still collapses math into general/code
 
+Status:
+- `pass` on `lumina-router-robustness-5000-001`
+
 ### Matrix B: Domain uplift
 - Experiment: per-domain control vs treatment under fixed router mode
 - Purpose: identify which specialist upgrades actually move end metrics
@@ -165,7 +169,7 @@ Fail signal:
   - decision (keep/drop)
 
 ## Immediate next actions
-1. Run Matrix A1: broad router-only robustness confirm with shuffled/stratified sampling and per-domain confusion outputs.
-2. If Matrix A1 passes, freeze the router-dominant baseline and then resume generator discovery under that stable baseline.
-3. If Matrix A1 fails, rebuild router training/eval splits before any more generator or confidence work.
-4. Do not resume confidence-utility experiments until Stage 0 is actually frozen on the broad confirm set.
+1. Freeze the router-dominant baseline from `lumina-router-robustness-5000-001`.
+2. Re-run math uplift under the stable robust-router regime; earlier math results were confounded by routing collapse.
+3. Promote only materially positive domain treatments into the next combined confirm.
+4. Keep confidence work paused until Stage 1 produces a stronger plain baseline.
