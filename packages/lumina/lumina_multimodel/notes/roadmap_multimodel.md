@@ -173,3 +173,16 @@ Status:
 2. Re-run math uplift under the stable robust-router regime; earlier math results were confounded by routing collapse.
 3. Promote only materially positive domain treatments into the next combined confirm.
 4. Keep confidence work paused until Stage 1 produces a stronger plain baseline.
+
+Current Stage 1 keeps:
+- `general` uplift: keep
+- `math` uplift: keep
+- `code` uplift: tentative keep (small but positive)
+
+Immediate next experiment:
+- combined confirm with:
+  - robust router from `lumina-router-robustness-5000-001`
+  - general uplift
+  - math uplift
+  - code uplift
+  - `alpha=1.0`

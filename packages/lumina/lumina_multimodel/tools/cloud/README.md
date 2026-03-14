@@ -33,6 +33,7 @@ gcloud auth login
 
 ### Larger confirm
 - `experiments_combined_confirm_5000.yaml`
+- `experiments_combined_confirm_robust_router_5000.yaml`
 
 Superseded stage-a / stage-b specs were moved to:
 

@@ -273,3 +273,20 @@
     - F1 `0.080 +/- 0.002`
     - task `0.139 +/- 0.003`
   - Routing is no longer the main blocker; specialist answer quality is the next lever again.
+
+## 2026-03-13 (math uplift under robust router baseline)
+- Robust math uplift A/B (`lumina-math-uplift-robust-control-5000-002` vs `lumina-math-uplift-robust-tx-5000-002`):
+  - Control (effective `3178`):
+    - route `0.992`, F1 `0.079`, task `0.125`, success@0.7 `0.080`, abstain `0.007`
+  - Treatment (effective `3178`):
+    - route `0.992`, F1 `0.081`, task `0.140`, success@0.7 `0.101`, abstain `0.004`
+  - Math QA probe (`500` val):
+    - `EM=0.206`, `F1=0.206`
+  - Routing stayed clean in both runs:
+    - control math -> math `1317`
+    - treatment math -> math `1311`
+- Decision: **KEEP**
+- Interpretation:
+  - Under a stable robust router, math uplift finally propagates into end-task quality.
+  - Earlier math “no effect” results were confounded by routing collapse.
+  - The biggest gain is in task success / task score, which matters more than the small raw F1 change.
