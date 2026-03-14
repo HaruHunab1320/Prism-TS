@@ -1536,7 +1536,7 @@ export class Interpreter {
 
       const value = object.properties.get(index.value);
       if (!value) {
-        throw new RuntimeError(`Property '${index.value}' does not exist`, node);
+        return new NullValue();
       }
 
       return value;
@@ -1566,7 +1566,7 @@ export class Interpreter {
       const innerObject = object.value as ObjectValue;
       const value = innerObject.properties.get(index.value);
       if (!value) {
-        throw new RuntimeError(`Property '${index.value}' does not exist`, node);
+        return this.createConfidenceValue(new NullValue(), object.confidence, 'index', [object.confidence.value]);
       }
 
       return this.createConfidenceValue(value, object.confidence, 'index', [object.confidence.value]);

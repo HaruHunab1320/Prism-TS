@@ -23,6 +23,7 @@
 
 - Added support for dynamic object index access with string keys (`object[key]`) in runtime `IndexAccess`.
 - Added support for confident object index access so container confidence propagates through `object[key]`.
+- Bracket access on objects with missing keys (e.g. `obj[""]` or `obj[missingVar]`) now returns `null` instead of throwing `Property '' does not exist`, matching JS-like semantics.
 
 ## 3.0.0
 

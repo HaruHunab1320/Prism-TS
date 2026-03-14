@@ -1,6 +1,7 @@
 import { createRuntime } from '../src/runtime';
 import { parse } from '../src/parser';
 import { RuntimeError } from '../src/runtime';
+import { NullValue } from '../src/runtime/values';
 
 describe('Runtime Error Handling', () => {
   let runtime: ReturnType<typeof createRuntime>;
@@ -151,9 +152,10 @@ describe('Runtime Error Handling', () => {
       await expect(runtime.execute(program)).rejects.toThrow('Object index must be a string');
     });
 
-    it('should throw error for missing object property by index', async () => {
+    it('should return null for missing object property by index', async () => {
       const program = parse('let obj = {a: 1}\nobj["b"]');
-      await expect(runtime.execute(program)).rejects.toThrow("Property 'b' does not exist");
+      const result = await runtime.execute(program);
+      expect(result).toBeInstanceOf(NullValue);
     });
   });
 
