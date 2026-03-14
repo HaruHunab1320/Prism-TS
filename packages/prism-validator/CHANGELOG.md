@@ -1,5 +1,12 @@
 # @prism-lang/validator
 
+## 2.0.2
+
+### Patch Changes
+
+- Updated dependencies [f207dbb]
+  - @prism-lang/core@3.0.2
+
 ## 2.0.1
 
 ### Patch Changes

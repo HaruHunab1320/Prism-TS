@@ -1,5 +1,11 @@
 # @prism-lang/lumina
 
+## 0.1.3
+
+### Patch Changes
+
+- @prism-lang/confidence@1.2.7
+
 ## 0.1.2
 
 ### Patch Changes

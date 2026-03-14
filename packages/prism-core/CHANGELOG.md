@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.2
+
+### Patch Changes
+
+- f207dbb: Bracket access on objects with missing keys now returns null instead of throwing, matching JS-like semantics for dynamic property lookups.
+  - @prism-lang/llm@1.3.3
+
 ## 3.0.1
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @prism-lang/repl
 
+## 1.3.3
+
+### Patch Changes
+
+- Updated dependencies [f207dbb]
+  - @prism-lang/core@3.0.2
+  - @prism-lang/llm@1.3.3
+
 ## 1.3.2
 
 ### Patch Changes
