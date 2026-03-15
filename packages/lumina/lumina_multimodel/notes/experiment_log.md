@@ -303,3 +303,20 @@
   - So the combined confirm was not actually using the robust router checkpoint; it fell back to the stale router artifact in GCS.
 - Decision:
   - Patch combined confirm to rebuild/train the router inline before eval instead of syncing a stale artifact.
+
+## 2026-03-13 (combined confirm robust router fixed)
+- Corrected combined confirm (`lumina-combined-confirm-robust-router-5000-002`) succeeded:
+  - route `0.992`
+  - F1 `0.081`
+  - task `0.140`
+  - success@0.7 `0.102`
+  - abstain `0.004`
+- Routing summary:
+  - general -> general `1633`
+  - math -> math `1317`
+  - code -> code `190`
+- Decision: **FREEZE AS CURRENT PLAIN BASELINE**
+- Interpretation:
+  - The promoted general+math+code stack now holds under a correctly rebuilt robust router.
+  - The previous failure was implementation error, not a regression in the stack itself.
+  - This is the first stable combined baseline strong enough for the next Lumina-specific gate.

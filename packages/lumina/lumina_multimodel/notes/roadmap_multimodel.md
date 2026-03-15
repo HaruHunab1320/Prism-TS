@@ -174,15 +174,21 @@ Status:
 3. Promote only materially positive domain treatments into the next combined confirm.
 4. Keep confidence work paused until Stage 1 produces a stronger plain baseline.
 
+Current frozen plain baseline:
+- combined confirm `lumina-combined-confirm-robust-router-5000-002`
+  - route `0.992`
+  - F1 `0.081`
+  - task `0.140`
+  - success@0.7 `0.102`
+  - abstain `0.004`
+
 Current Stage 1 keeps:
 - `general` uplift: keep
 - `math` uplift: keep
 - `code` uplift: tentative keep (small but positive)
 
 Immediate next experiment:
-- combined confirm with:
-  - robust router from `lumina-router-robustness-5000-001`
-  - general uplift
-  - math uplift
-  - code uplift
-  - `alpha=1.0`
+- Matrix C: confidence utility on top of the frozen combined baseline
+  - router-only baseline (`alpha=1.0`)
+  - hybrid with current confidence heads
+  - hybrid with retrained/recalibrated confidence heads
