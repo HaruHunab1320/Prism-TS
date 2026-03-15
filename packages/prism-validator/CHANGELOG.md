@@ -1,5 +1,16 @@
 # @prism-lang/validator
 
+## 3.0.0
+
+### Major Changes
+
+- ddfe397: Add `fn` as a reserved keyword alias for `function` in function declarations. This is a breaking change — any code using `fn` as a variable or identifier name will need to be renamed.
+
+### Patch Changes
+
+- Updated dependencies [ddfe397]
+  - @prism-lang/core@4.0.0
+
 ## Unreleased
 
 ### Breaking Changes

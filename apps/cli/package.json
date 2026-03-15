@@ -1,6 +1,6 @@
 {
   "name": "@prism-lang/cli",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "Command-line interface for Prism language",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

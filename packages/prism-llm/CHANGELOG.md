@@ -1,5 +1,13 @@
 # @prism-lang/llm
 
+## 1.3.4
+
+### Patch Changes
+
+- Updated dependencies [ddfe397]
+  - @prism-lang/core@4.0.0
+  - @prism-lang/confidence@1.2.8
+
 ## 1.3.3
 
 ### Patch Changes

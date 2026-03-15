@@ -1,5 +1,15 @@
 # Changelog
 
+## 4.0.0
+
+### Major Changes
+
+- ddfe397: Add `fn` as a reserved keyword alias for `function` in function declarations. This is a breaking change — any code using `fn` as a variable or identifier name will need to be renamed.
+
+### Patch Changes
+
+- @prism-lang/llm@1.3.4
+
 ## Unreleased
 
 ### Breaking Changes
