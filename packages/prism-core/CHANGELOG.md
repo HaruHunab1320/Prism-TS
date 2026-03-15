@@ -10,16 +10,6 @@
 
 - @prism-lang/llm@1.3.4
 
-## Unreleased
-
-### Breaking Changes
-
-- `fn` is now a reserved keyword (alias for `function`). Code using `fn` as a variable or identifier name will need to be renamed.
-
-### Added
-
-- `fn` keyword support for function declarations (e.g. `fn foo(x) { return x + 1 }`), as an alias for `function`.
-
 ## 3.0.2
 
 ### Patch Changes

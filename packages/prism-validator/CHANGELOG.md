@@ -11,16 +11,6 @@
 - Updated dependencies [ddfe397]
   - @prism-lang/core@4.0.0
 
-## Unreleased
-
-### Breaking Changes
-
-- `fn` is now a reserved keyword in the streaming tokenizer. Code using `fn` as a variable or identifier name will fail validation.
-
-### Added
-
-- `fn` keyword support in streaming tokenizer, matching core's `function` keyword alias.
-
 ## 2.0.2
 
 ### Patch Changes
