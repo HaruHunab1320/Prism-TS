@@ -76,12 +76,12 @@ describe('Rest Parameters', () => {
 
     it('should require parentheses for rest parameters', async () => {
       // Rest parameters require parentheses - single param syntax not allowed
-      expect(() => parse(`let fn = ...args => args.length`)).toThrow();
+      expect(() => parse(`let func = ...args => args.length`)).toThrow();
     });
 
     it('should error on rest parameter not at end', async () => {
       // Rest parameter must be last
-      expect(() => parse(`let fn = (...args, other) => args`)).toThrow(/Rest parameter must be last/);
+      expect(() => parse(`let func = (...args, other) => args`)).toThrow(/Rest parameter must be last/);
     });
 
     it('should work with destructuring in rest parameters', async () => {

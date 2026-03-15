@@ -316,19 +316,19 @@ describe('Runtime Error Handling', () => {
 
   describe('Lambda Expression Errors', () => {
     it('should throw error for lambda with too few arguments', async () => {
-      const program = parse('let fn = (a, b) => a + b\nfn(1)');
+      const program = parse('let func = (a, b) => a + b\nfunc(1)');
       await expect(runtime.execute(program)).rejects.toThrow('Lambda expects 2 arguments, got 1');
     });
 
     it('should throw error for lambda with too many arguments (no rest)', async () => {
-      const program = parse('let fn = (a, b) => a + b\nfn(1, 2, 3)');
+      const program = parse('let func = (a, b) => a + b\nfunc(1, 2, 3)');
       await expect(runtime.execute(program)).rejects.toThrow('Lambda expects 2 arguments, got 3');
     });
   });
 
   describe('Spread Operator Errors', () => {
     it('should throw error for spreading non-array in call', async () => {
-      const program = parse('let fn = (a, b) => a + b\nfn(...5)');
+      const program = parse('let func = (a, b) => a + b\nfunc(...5)');
       await expect(runtime.execute(program)).rejects.toThrow('Cannot spread non-array value: number');
     });
 
@@ -427,7 +427,7 @@ describe('Runtime Error Handling', () => {
     });
 
     it('should throw error for instanceof with function (not yet supported)', async () => {
-      const program = parse('let fn = x => x\n5 instanceof fn');
+      const program = parse('let func = x => x\n5 instanceof func');
       await expect(runtime.execute(program)).rejects.toThrow('instanceof with constructor functions not yet supported');
     });
 
@@ -513,8 +513,8 @@ describe('Runtime Error Handling', () => {
     it('should handle complex error scenarios', async () => {
       const program = parse(`
         let arr = [1, 2, 3]
-        let fn = x => x / 0
-        arr.map(fn)
+        let func = x => x / 0
+        arr.map(func)
       `);
       await expect(runtime.execute(program)).rejects.toThrow('Division by zero');
     });
@@ -534,9 +534,9 @@ describe('Runtime Error Handling', () => {
 
     it('should handle errors in spread operations', async () => {
       const program = parse(`
-        let fn = (a, b, c) => a + b + c
+        let func = (a, b, c) => a + b + c
         let badValue = "not an array"
-        fn(...badValue)
+        func(...badValue)
       `);
       await expect(runtime.execute(program)).rejects.toThrow('Cannot spread non-array value');
     });
