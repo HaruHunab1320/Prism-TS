@@ -290,3 +290,16 @@
   - Under a stable robust router, math uplift finally propagates into end-task quality.
   - Earlier math “no effect” results were confounded by routing collapse.
   - The biggest gain is in task success / task score, which matters more than the small raw F1 change.
+
+## 2026-03-13 (combined confirm robust router failure diagnosis)
+- Combined confirm with promoted general/math/code treatments (`lumina-combined-confirm-robust-router-5000-001`) failed:
+  - route `0.505`, F1 `0.064`, task `0.089`
+  - same collapse pattern as earlier failed combined confirm:
+    - math -> general `761`
+    - math -> code `144`
+    - math -> math `140`
+- Root cause:
+  - The combined confirm synced `outputs_router/` from the prior robustness run, but the robustness experiment had trained into `outputs_router_robust/` and only evaluated locally.
+  - So the combined confirm was not actually using the robust router checkpoint; it fell back to the stale router artifact in GCS.
+- Decision:
+  - Patch combined confirm to rebuild/train the router inline before eval instead of syncing a stale artifact.
