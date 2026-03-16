@@ -192,3 +192,14 @@ Immediate next experiment:
   - router-only baseline (`alpha=1.0`)
   - hybrid with current confidence heads
   - hybrid with retrained/recalibrated confidence heads
+
+Matrix C result:
+- `drop` for active control use in current regime
+- confidence heads are tied with router-only and do not justify blend complexity
+
+Next experiment:
+- Matrix D: disagreement utility
+  - direct-answer baseline (`top-k=1`)
+  - top-2 current aggregation
+  - top-2 oracle diagnostic upper-bound
+  - analyze only the subset where top-2 answers disagree and both answers have high confidence

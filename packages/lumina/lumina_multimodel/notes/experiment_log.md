@@ -320,3 +320,17 @@
   - The promoted general+math+code stack now holds under a correctly rebuilt robust router.
   - The previous failure was implementation error, not a regression in the stack itself.
   - This is the first stable combined baseline strong enough for the next Lumina-specific gate.
+
+## 2026-03-13 (confidence utility gate)
+- Confidence utility gate (`lumina-confidence-utility-5000-001`):
+  - Router-only baseline:
+    - route `0.992`, F1 `0.081`, task `0.140`, success@0.7 `0.101`, abstain `0.004`
+  - Hybrid with current confidence heads:
+    - route `0.991`, F1 `0.081`, task `0.140`, success@0.7 `0.102`, abstain `0.007`
+  - Hybrid with recalibrated confidence heads:
+    - route `0.992`, F1 `0.081`, task `0.140`, success@0.7 `0.101`, abstain `0.003`
+- Decision: **DROP** for current control use
+- Interpretation:
+  - Current confidence heads do not add decision value beyond the frozen router-dominant baseline.
+  - Confidence remains useful as a diagnostic quantity, but not as an active routing blend term in this regime.
+  - Next gate is disagreement utility, not further confidence blending.
