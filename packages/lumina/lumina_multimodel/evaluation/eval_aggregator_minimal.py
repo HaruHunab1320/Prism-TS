@@ -344,6 +344,7 @@ def main():
     for true_domain, sample in samples:
         q = sample["question"]
         gold = sample["answer"]
+        gold_n = normalize_text(gold)
 
         # Hybrid route scores
         confs = []
@@ -413,7 +414,6 @@ def main():
                     final = max(candidates, key=lambda c: (c["score"] + 0.10 * c["quality"]))
 
         pred = normalize_text(final["answer"])
-        gold_n = normalize_text(gold)
         em += 1 if pred == gold_n else 0
         f1_total += token_f1(pred, gold_n)
         ds = domain_score(final["answer"], gold, true_domain)

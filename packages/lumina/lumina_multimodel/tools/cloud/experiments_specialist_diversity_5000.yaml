@@ -8,7 +8,7 @@ image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
 image_project: deeplearning-platform-release
 
 experiments:
-  - name: lumina-specialist-diversity-5000-002
+  - name: lumina-specialist-diversity-5000-003
     commands:
       - mkdir -p outputs_gen_tx_general outputs_gen_tx_math outputs_gen_tx_code outputs_router_fixed logs
       - echo 'specialist diversity start' | tee logs/specialist_diversity_start.txt
