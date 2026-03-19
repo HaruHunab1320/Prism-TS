@@ -334,3 +334,20 @@
   - Current confidence heads do not add decision value beyond the frozen router-dominant baseline.
   - Confidence remains useful as a diagnostic quantity, but not as an active routing blend term in this regime.
   - Next gate is disagreement utility, not further confidence blending.
+
+## 2026-03-18 (disagreement utility gate)
+- Disagreement utility gate (`lumina-disagreement-utility-5000-003`):
+  - Direct-answer baseline (`top-k=1`):
+    - route `0.993`, F1 `0.081`, task `0.140`, success@0.7 `0.102`, abstain `0.000`
+  - Top-2 current aggregation:
+    - route `0.993`, F1 `0.081`, task `0.141`, success@0.7 `0.102`, abstain `0.005`
+  - Top-2 oracle diagnostic:
+    - route `0.993`, F1 `0.081`, task `0.141`, success@0.7 `0.102`, abstain `0.005`
+  - Disagreement subset analysis:
+    - `subset_size=0`
+    - thresholds: `min_ans_conf=0.4`, `max_overlap=0.3`
+- Decision: **DROP** for current regime
+- Interpretation:
+  - There are no high-confidence, low-overlap top-2 answer pairs in the current stack.
+  - The core Lumina disagreement signal is not present yet.
+  - This does not falsify the disagreement thesis in general; it shows the current specialists are not strong/diverse enough to generate the required signal.

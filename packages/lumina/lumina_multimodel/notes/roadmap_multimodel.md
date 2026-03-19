@@ -203,3 +203,17 @@ Next experiment:
   - top-2 current aggregation
   - top-2 oracle diagnostic upper-bound
   - analyze only the subset where top-2 answers disagree and both answers have high confidence
+
+Matrix D result:
+- `drop` for current regime
+- no high-confidence disagreement subset exists in the current stack (`subset_size=0`)
+
+Where this leaves us:
+- routing: validated
+- generator uplift: incremental but real
+- confidence utility: not validated
+- disagreement utility: not validated because the prerequisite signal does not yet exist
+
+Next strategic focus:
+- create stronger and more diverse specialists so the system can produce meaningful disagreement
+- only after that does the original Lumina arbitration thesis become testable again
