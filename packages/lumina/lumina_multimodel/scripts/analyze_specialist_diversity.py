@@ -46,44 +46,55 @@ def main() -> None:
 
     selected_scores: list[float] = []
     oracle_scores: list[float] = []
+    selected_success: list[float] = []
+    oracle_success: list[float] = []
     alt_lifts: list[float] = []
     overlaps: list[float] = []
     better_second = 0
     disagreeing_pairs = 0
-    high_quality_disagree = 0
+    useful_disagree = 0
+    high_conf_disagree = 0
 
     for row in rows:
-        selected_scores.append(row["domain_score"])
+        selected_task = float(row.get("domain_score", row.get("selected", {}).get("task_score", 0.0)))
+        selected_scores.append(selected_task)
+        selected_success.append(1.0 if selected_task >= 0.7 else 0.0)
         candidates = row.get("candidates", [])
         if not candidates:
-            oracle_scores.append(row["domain_score"])
+            oracle_scores.append(selected_task)
+            oracle_success.append(1.0 if selected_task >= 0.7 else 0.0)
             continue
-        best = max(candidates, key=lambda c: c.get("oracle_target_conf", 0.0))
-        # Also track best by realized task score proxy if present via selected row only.
-        oracle_scores.append(max(row["domain_score"], max(c.get("quality", 0.0) for c in candidates)))
+        best_task = max(float(c.get("task_score", 0.0)) for c in candidates)
+        oracle_scores.append(best_task)
+        oracle_success.append(1.0 if best_task >= 0.7 else 0.0)
         if len(candidates) >= 2:
             c0, c1 = candidates[0], candidates[1]
             overlap = token_f1(c0["answer"], c1["answer"])
             overlaps.append(overlap)
             if overlap < 0.3:
                 disagreeing_pairs += 1
-                if c0.get("quality", 0.0) >= 0.4 and c1.get("quality", 0.0) >= 0.4:
-                    high_quality_disagree += 1
-            # Compare second candidate proxy against first candidate proxy.
-            first_proxy = c0.get("quality", 0.0) + 0.05 * c0.get("ans_conf", 0.0)
-            second_proxy = c1.get("quality", 0.0) + 0.05 * c1.get("ans_conf", 0.0)
-            if second_proxy > first_proxy:
+                if c0.get("ans_conf", 0.0) >= 0.4 and c1.get("ans_conf", 0.0) >= 0.4:
+                    high_conf_disagree += 1
+                if max(float(c0.get("task_score", 0.0)), float(c1.get("task_score", 0.0))) > selected_task:
+                    useful_disagree += 1
+            first_task = float(c0.get("task_score", 0.0))
+            second_task = float(c1.get("task_score", 0.0))
+            if second_task > first_task:
                 better_second += 1
-                alt_lifts.append(second_proxy - first_proxy)
+                alt_lifts.append(second_task - first_task)
 
     print(f"rows={len(rows)}")
-    print(f"selected_task_proxy={mean(selected_scores):.3f}")
-    print(f"oracle_task_proxy={mean(oracle_scores):.3f}")
-    print(f"proxy_oracle_lift={mean(oracle_scores) - mean(selected_scores):.3f}")
+    print(f"selected_task={mean(selected_scores):.3f}")
+    print(f"oracle_task={mean(oracle_scores):.3f}")
+    print(f"oracle_task_lift={mean(oracle_scores) - mean(selected_scores):.3f}")
+    print(f"selected_success_at_0.7={mean(selected_success):.3f}")
+    print(f"oracle_success_at_0.7={mean(oracle_success):.3f}")
+    print(f"oracle_success_lift={mean(oracle_success) - mean(selected_success):.3f}")
     print(f"avg_answer_overlap_top2={mean(overlaps):.3f}")
     print(f"disagreeing_pairs={disagreeing_pairs}")
-    print(f"high_quality_disagree={high_quality_disagree}")
-    print(f"second_better_by_proxy={better_second}")
+    print(f"high_conf_disagree={high_conf_disagree}")
+    print(f"useful_disagree={useful_disagree}")
+    print(f"second_better_by_task={better_second}")
     print(f"avg_second_lift_when_better={mean(alt_lifts):.3f}")
 
 

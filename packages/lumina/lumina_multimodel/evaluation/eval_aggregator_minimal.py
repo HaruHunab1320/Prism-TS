@@ -372,6 +372,10 @@ def main():
                 max_new_tokens=args.max_new_tokens, calib=calib
             )
             oracle_tc = target_conf(experts[idx], tokenizer, q, gold, device)
+            cand_pred = normalize_text(answer)
+            cand_em = 1 if cand_pred == gold_n else 0
+            cand_f1 = token_f1(cand_pred, gold_n)
+            cand_task = domain_score(answer, gold, true_domain)
             candidates.append({
                 "idx": idx,
                 "domain": args.domains[idx],
@@ -380,6 +384,9 @@ def main():
                 "ans_conf": ans_conf,
                 "quality": answer_quality(answer, q),
                 "oracle_target_conf": oracle_tc,
+                "exact_match": cand_em,
+                "f1_to_gold": cand_f1,
+                "task_score": cand_task,
             })
 
         # Minimal aggregator: agreement-aware selection
