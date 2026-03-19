@@ -1,0 +1,128 @@
+# Specialist Next Phase
+
+Last updated: 2026-03-18
+
+## Why the next phase changes
+
+The multimodel stack is now stable enough to measure.
+
+What is established:
+- routing is strong and reproducible (`~0.992-0.994`)
+- the current combined plain baseline is stable (`F1 ~0.081`, `task ~0.140`)
+- confidence blending does not improve over router-only
+- disagreement utility is not present in the current regime (`subset_size=0`)
+
+What this means:
+- the active problem is no longer routing or calibration
+- the active problem is specialist construction
+
+The current specialists are still too weak and too homogeneous to create the signal Lumina needs.
+
+## Objective
+
+Create specialists that are:
+- stronger within-domain
+- more diverse in failure modes
+- sufficiently different that `oracle@2` and disagreement subsets become non-trivial
+
+Only then does Lumina-specific arbitration become meaningfully testable.
+
+## Working diagnosis
+
+Most likely current failure mode:
+- same-family or near-same-family specialists
+- overlapping data mixtures
+- similar output schemas
+- similar decoding behavior
+- therefore correlated errors
+
+Symptoms already observed:
+- top-2 current ~= top-1 direct answer
+- top-2 oracle ~= top-2 current
+- no high-confidence disagreement subset
+
+## Immediate research questions
+
+1. Are specialists mostly weak, mostly homogeneous, or both?
+2. Does `oracle@2` reveal hidden complementarity that current selection fails to exploit?
+3. If not, can heterogeneous bases or more structured data create that complementarity?
+
+## Next experiments
+
+### 1. Specialist diversity diagnostic
+
+Purpose:
+- measure whether top-2 expert sets contain real hidden upside
+
+Metrics:
+- `oracle@2`
+- average alternate-candidate lift over selected answer
+- answer overlap between candidate 0 and candidate 1
+- domain score distribution by candidate rank
+
+Pass signal:
+- `oracle@2` exceeds selected top-2 score by meaningful margin (`>= +0.02 task`)
+
+Fail signal:
+- `oracle@2` is nearly tied with selected top-2
+- this means the current experts are not just poorly selected; they are not diverse enough
+
+### 2. Same-backbone adapter trio
+
+Purpose:
+- establish the strongest controlled baseline with one shared base and three domain adapters
+
+Recommended pattern:
+- one strong 7B–8B open base
+- separate adapters for general / math / code
+- same tokenizer, same backbone, different domain SFT data
+
+Expected value:
+- should improve plain baseline quality
+- likely modest gains in diversity
+
+### 3. Heterogeneous-base trio
+
+Purpose:
+- deliberately create complementary experts
+
+Recommended pattern:
+- general: strong open instruct generalist
+- math: math-specialized family
+- code: code-specialized family
+
+Expected value:
+- highest chance of non-trivial `oracle@2`
+- highest chance of meaningful disagreement emerging later
+
+## Data recommendations
+
+### General
+- high-quality open instruction mixtures
+- grounded / verified QA where possible
+- avoid dumping one synthetic teacher style everywhere
+
+### Math
+- verifiable exact-answer data
+- structured solution/check formats
+- mix arithmetic, algebra, symbolic, and word-problem slices
+
+### Code
+- executable/testable tasks
+- synthesis + bug-fix + edit + explanation buckets
+- prioritize datasets aligned with execution or unit-test signals
+
+## What not to do next
+
+- more router tuning
+- more confidence blending sweeps
+- more post-hoc calibration work
+- more disagreement heuristics on the current specialist pool
+
+Those are downstream mechanisms. The current blocker is upstream expert quality/diversity.
+
+## Immediate runnable order
+
+1. Run the specialist diversity diagnostic on the frozen combined baseline
+2. If `oracle@2` is still flat, prioritize heterogeneous-base specialists
+3. If `oracle@2` has hidden headroom, build a better selector/correctness model before changing architecture
