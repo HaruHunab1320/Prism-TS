@@ -1,14 +1,14 @@
 project: argos-434718
 zone: us-central1-a
 machine_type: a2-highgpu-1g
-preemptible: true
+preemptible: false
 bucket: gs://lumina-checkpoints-argos-2026
 repo_url: https://github.com/HaruHunab1320/Prism-TS.git
 image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
 image_project: deeplearning-platform-release
 
 experiments:
-  - name: lumina-disagreement-utility-5000-002
+  - name: lumina-disagreement-utility-5000-003
     commands:
       - mkdir -p outputs_gen_tx_general outputs_gen_tx_math outputs_gen_tx_code outputs_router_fixed logs
       - echo 'disagreement utility start' | tee logs/disagreement_utility_start.txt

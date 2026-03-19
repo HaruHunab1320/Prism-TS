@@ -13,6 +13,7 @@ fi
 PROJECT="$(yq -r '.project' "$CONFIG_PATH")"
 ZONE="$(yq -r '.zone' "$CONFIG_PATH")"
 MACHINE="$(yq -r '.machine_type' "$CONFIG_PATH")"
+PREEMPTIBLE="$(yq -r '.preemptible // true' "$CONFIG_PATH")"
 BUCKET="$(yq -r '.bucket' "$CONFIG_PATH")"
 REPO="$(yq -r '.repo_url' "$CONFIG_PATH")"
 IMAGE_FAMILY="$(yq -r '.image_family // "ubuntu-2204-lts"' "$CONFIG_PATH")"
@@ -209,20 +210,28 @@ gsutil -m rsync -r outputs_router "\$BUCKET/runs/\$RUN_ID/outputs_router" || ech
 gsutil -m rsync -r logs "\$BUCKET/runs/\$RUN_ID/logs" || echo "GSUTIL_SYNC_LOGS_FAILED"
 EOF
 
-  gcloud compute instances create "$NAME" \
-    --project "$PROJECT" \
-    --zone "$ZONE" \
-    --machine-type "$MACHINE" \
-    --service-account "$SERVICE_ACCOUNT" \
-    --scopes=https://www.googleapis.com/auth/cloud-platform \
-    --provisioning-model=SPOT \
-    --instance-termination-action=STOP \
-    --maintenance-policy TERMINATE \
-    --restart-on-failure \
-    --boot-disk-size 200GB \
-    --image-family "$IMAGE_FAMILY" \
-    --image-project "$IMAGE_PROJECT" \
+  GCLOUD_ARGS=(
+    compute instances create "$NAME"
+    --project "$PROJECT"
+    --zone "$ZONE"
+    --machine-type "$MACHINE"
+    --service-account "$SERVICE_ACCOUNT"
+    --scopes=https://www.googleapis.com/auth/cloud-platform
+    --maintenance-policy TERMINATE
+    --restart-on-failure
+    --boot-disk-size 200GB
+    --image-family "$IMAGE_FAMILY"
+    --image-project "$IMAGE_PROJECT"
     --metadata-from-file startup-script="$STARTUP_FILE",shutdown-script="$SHUTDOWN_FILE"
+  )
+
+  if [ "$PREEMPTIBLE" = "true" ]; then
+    GCLOUD_ARGS+=(--provisioning-model=SPOT --instance-termination-action=STOP)
+  else
+    GCLOUD_ARGS+=(--provisioning-model=STANDARD)
+  fi
+
+  gcloud "${GCLOUD_ARGS[@]}"
 
   INDEX=$((INDEX+1))
 done
