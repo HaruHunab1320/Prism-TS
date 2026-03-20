@@ -351,3 +351,29 @@
   - There are no high-confidence, low-overlap top-2 answer pairs in the current stack.
   - The core Lumina disagreement signal is not present yet.
   - This does not falsify the disagreement thesis in general; it shows the current specialists are not strong/diverse enough to generate the required signal.
+
+## 2026-03-19 (specialist diversity diagnostic)
+- Specialist diversity diagnostic (`lumina-specialist-diversity-5000-003`):
+  - Top-2 current aggregation:
+    - route `0.992`, F1 `0.081`, task `0.140`, success@0.7 `0.102`, abstain `0.005`
+    - agreement rate `0.051`
+  - Diversity analysis from `specialist_diversity_top2_current_debug.jsonl`:
+    - rows `3163`
+    - selected task `0.140`
+    - oracle task `0.161`
+    - oracle task lift `+0.021`
+    - selected success@0.7 `0.102`
+    - oracle success@0.7 `0.118`
+    - oracle success lift `+0.015`
+    - avg answer overlap `0.236`
+    - disagreeing pairs `2238`
+    - useful disagree `226`
+    - second better by task `342`
+    - avg second lift when better `0.191`
+    - high-conf disagree `0`
+- Decision: **KEEP DIAGNOSIS / NEXT GATE = SELECTOR**
+- Interpretation:
+  - There is real but modest latent top-2 upside in the current specialist pool.
+  - The specialists are not identical; disagreement is common and sometimes useful.
+  - The current chooser/confidence path cannot surface that useful disagreement.
+  - The next bounded experiment is an explicit top-2 selector / correctness model, not more router or confidence blending work.

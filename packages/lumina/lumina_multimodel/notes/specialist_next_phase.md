@@ -38,7 +38,7 @@ Most likely current failure mode:
 
 Symptoms already observed:
 - top-2 current ~= top-1 direct answer
-- top-2 oracle ~= top-2 current
+- oracle@2 hidden upside now measured at roughly `+0.021 task` / `+0.015 success@0.7`
 - no high-confidence disagreement subset
 
 ## Immediate research questions
@@ -66,6 +66,11 @@ Pass signal:
 Fail signal:
 - `oracle@2` is nearly tied with selected top-2
 - this means the current experts are not just poorly selected; they are not diverse enough
+
+Status:
+- pass
+- current stack has modest but real hidden top-2 upside
+- next bounded step is a selector/correctness model that tries to recover that upside
 
 ### 2. Same-backbone adapter trio
 
@@ -123,6 +128,6 @@ Those are downstream mechanisms. The current blocker is upstream expert quality/
 
 ## Immediate runnable order
 
-1. Run the specialist diversity diagnostic on the frozen combined baseline
-2. If `oracle@2` is still flat, prioritize heterogeneous-base specialists
-3. If `oracle@2` has hidden headroom, build a better selector/correctness model before changing architecture
+1. Train/evaluate a top-2 selector on frozen candidate dumps
+2. If selector cannot recover a meaningful share of oracle lift, prioritize heterogeneous-base specialists
+3. If selector works, keep it as the first post-router control mechanism before revisiting disagreement escalation

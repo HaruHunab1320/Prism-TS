@@ -215,5 +215,16 @@ Where this leaves us:
 - disagreement utility: not validated because the prerequisite signal does not yet exist
 
 Next strategic focus:
-- create stronger and more diverse specialists so the system can produce meaningful disagreement
-- only after that does the original Lumina arbitration thesis become testable again
+- specialist diversity diagnostic shows modest hidden top-2 upside:
+  - selected task `0.140`
+  - oracle task `0.161`
+  - oracle lift `+0.021`
+  - useful disagreement exists, but `high_conf_disagree=0`
+- immediate next gate is an explicit top-2 selector/correctness model
+- stronger and more heterogeneous specialists remain the parallel next-phase track once selector headroom is measured
+
+Next experiment:
+- Matrix E: top-2 selector utility
+  - train a chooser on frozen top-2 candidate metadata/debug dumps
+  - compare current top-2 selection vs selector-chosen candidate vs oracle@2 on held-out seed
+  - keep only if selector recovers a meaningful share of the observed oracle lift
