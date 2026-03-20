@@ -135,3 +135,7 @@ Those are downstream mechanisms. The current blocker is upstream expert quality/
 Current status:
 - selector gate failed
 - next concrete experiment is a code-native family uplift under the frozen robust-router baseline
+- dataset audit indicates code is the weakest supervision path:
+  - `~94%` of code train is `CodeAlpaca`
+  - current recipe caps answer loss at `24` tokens, which is likely too short for code targets
+  - next concrete rebuild is a filtered `datasets_code_exec_v1` slice plus longer code targets
