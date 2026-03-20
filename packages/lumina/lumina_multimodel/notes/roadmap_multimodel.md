@@ -228,3 +228,13 @@ Next experiment:
   - train a chooser on frozen top-2 candidate metadata/debug dumps
   - compare current top-2 selection vs selector-chosen candidate vs oracle@2 on held-out seed
   - keep only if selector recovers a meaningful share of the observed oracle lift
+
+Matrix E result:
+- `drop` for the simple metadata-only selector
+- latent top-2 upside is real (`oracle task lift ~ +0.022`), but it is not recoverable from the current shallow chooser features
+
+Next experiment:
+- Matrix F: heterogeneous specialist uplift
+  - replace the weakest least-specialized expert with a genuinely different family
+  - first target: code specialist using a code-native base rather than the general instruct family
+  - compare against the frozen combined baseline under the robust router

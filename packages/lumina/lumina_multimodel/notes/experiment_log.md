@@ -377,3 +377,26 @@
   - The specialists are not identical; disagreement is common and sometimes useful.
   - The current chooser/confidence path cannot surface that useful disagreement.
   - The next bounded experiment is an explicit top-2 selector / correctness model, not more router or confidence blending work.
+
+## 2026-03-20 (top-2 selector utility)
+- Top-2 selector gate (`lumina-top2-selector-5000-001`):
+  - Held-out seed 11 top-2 baseline:
+    - route `0.995`, F1 `0.078`, task `0.137`, success@0.7 `0.100`, abstain `0.004`
+  - Selector evaluation:
+    - selected task `0.137`
+    - selector task `0.134`
+    - oracle task `0.159`
+    - selector task lift `-0.003`
+    - oracle task lift `+0.022`
+    - selected success@0.7 `0.100`
+    - selector success@0.7 `0.096`
+    - oracle success@0.7 `0.118`
+    - selector success lift `-0.004`
+    - pair accuracy `0.746`
+    - recoverable rows `373`
+    - recovered oracle share `0.667`
+- Decision: **DROP** for the simple metadata-only selector
+- Interpretation:
+  - There is still real latent top-2 headroom.
+  - A lightweight chooser over current metadata does not recover it and slightly regresses held-out quality.
+  - Next step should move upstream again: stronger and more heterogeneous specialists, not more tuning of this simple selector.

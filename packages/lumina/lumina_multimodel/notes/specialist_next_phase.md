@@ -130,4 +130,8 @@ Those are downstream mechanisms. The current blocker is upstream expert quality/
 
 1. Train/evaluate a top-2 selector on frozen candidate dumps
 2. If selector cannot recover a meaningful share of oracle lift, prioritize heterogeneous-base specialists
-3. If selector works, keep it as the first post-router control mechanism before revisiting disagreement escalation
+3. First heterogeneous target should be the code specialist, because it still uses the least domain-native base in the current promoted stack
+
+Current status:
+- selector gate failed
+- next concrete experiment is a code-native family uplift under the frozen robust-router baseline

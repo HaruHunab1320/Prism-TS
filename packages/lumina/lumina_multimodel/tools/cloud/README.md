@@ -22,6 +22,7 @@ gcloud auth login
 - `experiments_math_generator_uplift.yaml`
 - `experiments_math_uplift_robust_router_5000.yaml`
 - `experiments_code_generator_uplift.yaml`
+- `experiments_code_heterogeneous_uplift_5000.yaml`
 
 ### Routing and confidence path
 - `experiments_routing_isolation_300.yaml`
