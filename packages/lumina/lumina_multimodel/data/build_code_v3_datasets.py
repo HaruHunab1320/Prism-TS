@@ -239,6 +239,42 @@ def collect_local_benchmarks(in_root: Path) -> tuple[List[Dict], List[Dict]]:
     return dedupe(train), dedupe(val)
 
 
+def keep_local_codealpaca(row: Dict) -> bool:
+    question = normalize_text(str(row.get("question", "")))
+    answer = str(row.get("answer", ""))
+    if not keep_question(question, min_words=4, max_chars=1600):
+        return False
+    if not keep_answer(answer, max_chars=1400):
+        return False
+    prose_only_markers = (
+        "how do you",
+        "what is the difference",
+        "explain ",
+        "describe ",
+        "why ",
+        "when would you",
+    )
+    if any(marker in question for marker in prose_only_markers):
+        return False
+    return True
+
+
+def collect_local_codealpaca(
+    in_root: Path, train_cap: int, val_cap: int, rng: random.Random
+) -> tuple[List[Dict], List[Dict]]:
+    train_in = load_jsonl(in_root / "code_specialist" / "train.jsonl")
+    val_in = load_jsonl(in_root / "code_specialist" / "val.jsonl")
+    train_rows = [r for r in train_in if r.get("source") == "codealpaca" and keep_local_codealpaca(r)]
+    val_rows = [r for r in val_in if r.get("source") == "codealpaca" and keep_local_codealpaca(r)]
+    rng.shuffle(train_rows)
+    rng.shuffle(val_rows)
+    train_rows = dedupe(train_rows[:train_cap])
+    val_rows = dedupe(val_rows[:val_cap])
+    for row in train_rows + val_rows:
+        row["bucket"] = "synthesis"
+    return train_rows, val_rows
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--in-root", type=Path, required=True,
@@ -250,15 +286,31 @@ def main() -> None:
     p.add_argument("--min-opencode-score", type=float, default=0.6)
     p.add_argument("--commitpack-train-per-lang", type=int, default=1000)
     p.add_argument("--commitpack-val-per-lang", type=int, default=60)
+    p.add_argument("--fallback-codealpaca-train", type=int, default=6000)
+    p.add_argument("--fallback-codealpaca-val", type=int, default=300)
     args = p.parse_args()
 
     rng = random.Random(args.seed)
     train_rows: List[Dict] = []
     val_rows: List[Dict] = []
 
+    print("loading local benchmarks", flush=True)
     local_train, local_val = collect_local_benchmarks(args.in_root)
+    print("loading OpenCodeInstruct", flush=True)
     oc_train, oc_val = collect_opencode(args, rng)
-    cp_train, cp_val = collect_commitpackft(args, rng)
+    cp_train: List[Dict] = []
+    cp_val: List[Dict] = []
+    try:
+        print("loading CommitPackFT", flush=True)
+        cp_train, cp_val = collect_commitpackft(args, rng)
+    except Exception as exc:
+        print(f"warning: CommitPackFT unavailable, falling back to local CodeAlpaca slice: {exc}", flush=True)
+        cp_train, cp_val = collect_local_codealpaca(
+            args.in_root,
+            args.fallback_codealpaca_train,
+            args.fallback_codealpaca_val,
+            rng,
+        )
 
     train_rows.extend(local_train)
     train_rows.extend(oc_train)

@@ -25,7 +25,7 @@ experiments:
       - echo 'code v3 treatment start' | tee logs/code_v3_treatment_start.txt
       - set -o pipefail; gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-general-uplift-tx-001/outputs_gen/ outputs_gen_tx_general/ 2>&1 | tee logs/code_v3_treatment_sync_general.txt
       - set -o pipefail; gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-math-uplift-robust-tx-5000-002/outputs_gen/ outputs_gen_tx_math/ 2>&1 | tee logs/code_v3_treatment_sync_math.txt
-      - python -u data/build_code_v3_datasets.py --in-root datasets_hq_v2_curated --out-root datasets_code_v3 | tee logs/code_v3_treatment_build_dataset.txt
+      - set -o pipefail; python -u data/build_code_v3_datasets.py --in-root datasets_hq_v2_curated --out-root datasets_code_v3 2>&1 | tee logs/code_v3_treatment_build_dataset.txt
       - python -u scripts/build_router_dataset.py --data-root datasets_hq_med --max-train-per-domain 30000 --max-val-per-domain 3000 | tee logs/code_v3_treatment_build_router.txt
       - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m training.train_router --data-root datasets_hq_med --epochs 8 --batch-size 64 --max-len 128 --hidden-size 256 --dropout 0.1 --lr 3e-4 --output-dir outputs_router_fixed 2>&1 | tee logs/code_v3_treatment_train_router.txt
       - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m training.train_gpt2_generator --data-root datasets_code_v3 --domain code --model-name Qwen/Qwen2.5-Coder-1.5B-Instruct --epochs 1 --batch-size 2 --lr 8e-6 --max-len 384 --answer-max-tokens 128 --max-train-samples 25000 --max-val-samples 2000 --unfreeze-n 2 --output-dir outputs_gen 2>&1 | tee logs/code_v3_treatment_train.txt
