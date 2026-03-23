@@ -139,3 +139,7 @@ Current status:
   - `~94%` of code train is `CodeAlpaca`
   - current recipe caps answer loss at `24` tokens, which is likely too short for code targets
   - next concrete rebuild is a filtered `datasets_code_exec_v1` slice plus longer code targets
+- next best lift experiment after code remains math:
+  - use the full exact-answer math set
+  - stop over-canonicalizing symbolic targets during training
+  - widen math target budget modestly (`answer-max-tokens 16`, `max-len 256`)
