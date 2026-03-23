@@ -143,3 +143,7 @@ Current status:
   - use the full exact-answer math set
   - stop over-canonicalizing symbolic targets during training
   - widen math target budget modestly (`answer-max-tokens 16`, `max-len 256`)
+- latest direction change:
+  - small recipe fixes on the current code set only gave weak positives
+  - next code step is a real `code_v3` rebuild using stronger open sources (`OpenCodeInstruct`, `CommitPackFT`, plus MBPP/HumanEval carry-over)
+  - success criterion is no longer "better code QA only"; it must move the frozen 5000-sample combined baseline materially
