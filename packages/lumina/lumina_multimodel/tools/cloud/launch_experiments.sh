@@ -13,7 +13,10 @@ fi
 PROJECT="$(yq -r '.project' "$CONFIG_PATH")"
 ZONE="$(yq -r '.zone' "$CONFIG_PATH")"
 MACHINE="$(yq -r '.machine_type' "$CONFIG_PATH")"
-PREEMPTIBLE="$(yq -r '.preemptible // true' "$CONFIG_PATH")"
+PREEMPTIBLE="$(yq -r '.preemptible' "$CONFIG_PATH")"
+if [ "$PREEMPTIBLE" = "null" ] || [ -z "$PREEMPTIBLE" ]; then
+  PREEMPTIBLE="true"
+fi
 BUCKET="$(yq -r '.bucket' "$CONFIG_PATH")"
 REPO="$(yq -r '.repo_url' "$CONFIG_PATH")"
 IMAGE_FAMILY="$(yq -r '.image_family // "ubuntu-2204-lts"' "$CONFIG_PATH")"
