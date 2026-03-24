@@ -400,3 +400,29 @@
   - There is still real latent top-2 headroom.
   - A lightweight chooser over current metadata does not recover it and slightly regresses held-out quality.
   - Next step should move upstream again: stronger and more heterogeneous specialists, not more tuning of this simple selector.
+
+## 2026-03-23 (training audit + code_v3)
+- Training audit captured in `lumina_multimodel/notes/training_audit_2026-03-23.md`
+  - main findings:
+    - generator prompt mismatch between training / QA eval / aggregator
+    - uniform `max_new_tokens=24` budget is a poor fit for code
+    - code eval is still lexical, not execution-aware
+    - current specialist training is shallow last-block adaptation, not a strong specialist recipe
+- `code_v3` dataset experiment:
+  - control (`lumina-code-v3-control-5000-001`):
+    - route `0.994`, F1 `0.081`, task `0.140`, success@0.7 `0.102`, abstain `0.004`
+  - treatment rerun (`lumina-code-v3-tx-5000-002`):
+    - dataset mix:
+      - `opencodeinstruct 11999`
+      - `codealpaca 6000` (fallback after `CommitPackFT` loader failure)
+      - `mbpp 915`
+      - `humaneval 146`
+    - code QA:
+      - `EM 0.000`, `F1 0.240`
+    - end-to-end:
+      - route `0.993`, F1 `0.079`, task `0.137`, success@0.7 `0.101`, abstain `0.000`
+- Decision: **DROP**
+- Interpretation:
+  - this `code_v3` rebuild regressed versus the frozen baseline
+  - because it relied on a fallback mix, it is not a clean validation of the intended `CommitPackFT`-augmented hypothesis
+  - the next correct move is to fix deterministic training/eval contract mismatches before more dataset churn

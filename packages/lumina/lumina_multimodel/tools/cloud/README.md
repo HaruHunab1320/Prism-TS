@@ -38,6 +38,7 @@ gcloud auth login
 - `experiments_disagreement_utility_5000.yaml`
 - `experiments_specialist_diversity_5000.yaml`
 - `experiments_top2_selector_5000.yaml`
+- `experiments_prompt_contract_5000.yaml`
 
 ### Larger confirm
 - `experiments_combined_confirm_5000.yaml`

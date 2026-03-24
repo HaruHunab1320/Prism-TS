@@ -149,6 +149,14 @@ def apply_calibration(conf: float, calib: dict | None) -> float:
     return float(max(0.0, min(1.0, a * conf + b)))
 
 
+def build_answer_prompt(question: str, domain: str, mode: str) -> str:
+    if mode == "strict_math":
+        return f"Question: {question}\nAnswer (single number only):"
+    if mode == "strict_short":
+        return f"Question: {question}\nAnswer (short):"
+    return f"Question: {question}\nAnswer:"
+
+
 def prompt_conf(model, tokenizer, question, device, calib: dict | None = None):
     input_text = f"Question: {question}\nAnswer:"
     enc = tokenizer(input_text, truncation=True, max_length=256, return_tensors="pt")
@@ -166,11 +174,13 @@ def generate_answer(
     conf_model,
     conf_tokenizer,
     question,
+    domain,
     device,
     max_new_tokens=48,
     calib: dict | None = None,
+    prompt_mode: str = "standard",
 ):
-    input_text = f"Question: {question}\nAnswer:"
+    input_text = build_answer_prompt(question, domain, prompt_mode)
     enc = gen_tokenizer(input_text, truncation=True, max_length=256, return_tensors="pt")
     input_ids = enc["input_ids"].to(device)
     mask = enc["attention_mask"].to(device)
@@ -268,10 +278,14 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--conf-calibration", type=Path, default=None,
                         help="Optional JSON file mapping domain -> {a,b} for confidence calibration.")
+    parser.add_argument("--generator-prompt-modes", nargs="+", default=None,
+                        help="Optional per-domain generator prompt modes in domain order: standard, strict_short, strict_math.")
     args = parser.parse_args()
 
     if len(args.domains) != len(args.weights):
         raise SystemExit("domains and weights must be the same length")
+    if args.generator_prompt_modes is not None and len(args.generator_prompt_modes) != len(args.domains):
+        raise SystemExit("generator-prompt-modes must match domains length")
     random.seed(args.seed)
 
     per_domain = max(1, args.max_samples // len(args.domains))
@@ -340,6 +354,10 @@ def main():
     if args.conf_calibration:
         with args.conf_calibration.open() as f:
             calib_map = json.load(f)
+    prompt_modes = {
+        dom: (args.generator_prompt_modes[i] if args.generator_prompt_modes is not None else "standard")
+        for i, dom in enumerate(args.domains)
+    }
 
     for true_domain, sample in samples:
         q = sample["question"]
@@ -369,8 +387,8 @@ def main():
             dom = args.domains[idx]
             calib = calib_map.get(dom) if calib_map else None
             answer, ans_conf = generate_answer(
-                generators[idx], generator_tokenizers[idx], experts[idx], tokenizer, q, device,
-                max_new_tokens=args.max_new_tokens, calib=calib
+                generators[idx], generator_tokenizers[idx], experts[idx], tokenizer, q, dom, device,
+                max_new_tokens=args.max_new_tokens, calib=calib, prompt_mode=prompt_modes[dom]
             )
             oracle_tc = target_conf(experts[idx], tokenizer, q, gold, device)
             cand_pred = normalize_text(answer)

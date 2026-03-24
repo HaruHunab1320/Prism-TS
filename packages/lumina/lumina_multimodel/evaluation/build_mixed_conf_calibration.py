@@ -89,6 +89,7 @@ def main() -> None:
                 experts[i],
                 conf_tok,
                 q,
+                domain,
                 device,
                 max_new_tokens=args.max_new_tokens,
                 calib=None,
