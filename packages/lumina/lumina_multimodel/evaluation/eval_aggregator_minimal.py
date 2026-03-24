@@ -157,6 +157,14 @@ def build_answer_prompt(question: str, domain: str, mode: str) -> str:
     return f"Question: {question}\nAnswer:"
 
 
+def resolve_generation_budget(domains: List[str], default_budget: int, per_domain: List[int] | None) -> Dict[str, int]:
+    if per_domain is None:
+        return {dom: default_budget for dom in domains}
+    if len(per_domain) != len(domains):
+        raise SystemExit("generator-max-new-tokens-per-domain must match domains length")
+    return {dom: int(per_domain[i]) for i, dom in enumerate(domains)}
+
+
 def prompt_conf(model, tokenizer, question, device, calib: dict | None = None):
     input_text = f"Question: {question}\nAnswer:"
     enc = tokenizer(input_text, truncation=True, max_length=256, return_tensors="pt")
@@ -280,6 +288,8 @@ def main():
                         help="Optional JSON file mapping domain -> {a,b} for confidence calibration.")
     parser.add_argument("--generator-prompt-modes", nargs="+", default=None,
                         help="Optional per-domain generator prompt modes in domain order: standard, strict_short, strict_math.")
+    parser.add_argument("--generator-max-new-tokens-per-domain", nargs="+", type=int, default=None,
+                        help="Optional per-domain generation budgets in domain order.")
     args = parser.parse_args()
 
     if len(args.domains) != len(args.weights):
@@ -358,6 +368,9 @@ def main():
         dom: (args.generator_prompt_modes[i] if args.generator_prompt_modes is not None else "standard")
         for i, dom in enumerate(args.domains)
     }
+    domain_budgets = resolve_generation_budget(
+        args.domains, args.max_new_tokens, args.generator_max_new_tokens_per_domain
+    )
 
     for true_domain, sample in samples:
         q = sample["question"]
@@ -388,7 +401,7 @@ def main():
             calib = calib_map.get(dom) if calib_map else None
             answer, ans_conf = generate_answer(
                 generators[idx], generator_tokenizers[idx], experts[idx], tokenizer, q, dom, device,
-                max_new_tokens=args.max_new_tokens, calib=calib, prompt_mode=prompt_modes[dom]
+                max_new_tokens=domain_budgets[dom], calib=calib, prompt_mode=prompt_modes[dom]
             )
             oracle_tc = target_conf(experts[idx], tokenizer, q, gold, device)
             cand_pred = normalize_text(answer)

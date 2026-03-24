@@ -426,3 +426,15 @@
   - this `code_v3` rebuild regressed versus the frozen baseline
   - because it relied on a fallback mix, it is not a clean validation of the intended `CommitPackFT`-augmented hypothesis
   - the next correct move is to fix deterministic training/eval contract mismatches before more dataset churn
+
+## 2026-03-24 (prompt-contract ablation)
+- Prompt-contract ablation:
+  - control (`lumina-prompt-contract-control-5000-002`):
+    - route `0.993`, F1 `0.081`, task `0.140`, success@0.7 `0.102`, abstain `0.006`
+  - treatment (`lumina-prompt-contract-tx-5000-002`) with per-domain prompt alignment:
+    - route `0.995`, F1 `0.066`, task `0.127`, success@0.7 `0.074`, abstain `0.230`
+- Decision: **DROP**
+- Interpretation:
+  - simply aligning generator prompts inside the aggregator is not a valid fix
+  - the current control stack is tuned around the existing `Answer:` inference path
+  - prompt changes at inference without retraining the rest of the stack materially worsen answer quality and abstention behavior
