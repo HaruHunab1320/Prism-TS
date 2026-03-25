@@ -25,7 +25,6 @@ from pathlib import Path
 from typing import Dict, List
 
 import torch
-from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
@@ -86,44 +85,17 @@ def generate_code(model, tokenizer, question: str, device: torch.device, max_new
     return extract_answer(tokenizer.decode(gen_ids, skip_special_tokens=True))
 
 
-def load_mbpp_rows(max_samples: int) -> List[Dict]:
-    ds = load_dataset("Muennighoff/mbpp", split="test")
-    rows = []
-    for ex in ds:
-        rows.append(
-            {
-                "benchmark": "mbpp",
-                "task_id": str(ex.get("task_id")),
-                "question": ex.get("text") or ex.get("prompt") or "",
-                "prompt": "",
-                "reference": ex.get("code") or "",
-                "test_setup_code": ex.get("test_setup_code") or "",
-                "tests": list(ex.get("test_list") or []),
-            }
-        )
-        if len(rows) >= max_samples:
-            break
-    return rows
+def load_jsonl(path: Path) -> List[Dict]:
+    with path.open() as f:
+        return [json.loads(line) for line in f if line.strip()]
 
 
-def load_humaneval_rows(max_samples: int) -> List[Dict]:
-    ds = load_dataset("openai/openai_humaneval", split="test")
-    rows = []
-    for ex in ds:
-        rows.append(
-            {
-                "benchmark": "humaneval",
-                "task_id": str(ex.get("task_id")),
-                "question": ex.get("prompt") or "",
-                "prompt": ex.get("prompt") or "",
-                "reference": ex.get("canonical_solution") or "",
-                "test": ex.get("test") or "",
-                "entry_point": ex.get("entry_point") or "",
-            }
-        )
-        if len(rows) >= max_samples:
-            break
-    return rows
+def load_mbpp_rows(fixture_root: Path, max_samples: int) -> List[Dict]:
+    return load_jsonl(fixture_root / "mbpp_test.jsonl")[:max_samples]
+
+
+def load_humaneval_rows(fixture_root: Path, max_samples: int) -> List[Dict]:
+    return load_jsonl(fixture_root / "humaneval_test.jsonl")[:max_samples]
 
 
 def syntax_valid(code: str) -> bool:
@@ -184,6 +156,7 @@ def main() -> None:
     p.add_argument("--timeout-sec", type=float, default=4.0)
     p.add_argument("--device", default="")
     p.add_argument("--debug-limit", type=int, default=10)
+    p.add_argument("--fixture-root", type=Path, default=Path("benchmarks/code_exec"))
     args = p.parse_args()
 
     device = resolve_device(args.device)
@@ -192,9 +165,9 @@ def main() -> None:
 
     rows: List[Dict] = []
     if args.benchmark in {"mbpp", "both"}:
-        rows.extend(load_mbpp_rows(args.max_samples if args.benchmark == "mbpp" else max(1, args.max_samples // 2)))
+        rows.extend(load_mbpp_rows(args.fixture_root, args.max_samples if args.benchmark == "mbpp" else max(1, args.max_samples // 2)))
     if args.benchmark in {"humaneval", "both"}:
-        rows.extend(load_humaneval_rows(args.max_samples if args.benchmark == "humaneval" else max(1, args.max_samples // 2)))
+        rows.extend(load_humaneval_rows(args.fixture_root, args.max_samples if args.benchmark == "humaneval" else max(1, args.max_samples // 2)))
 
     total = len(rows)
     syntax_ok = 0
