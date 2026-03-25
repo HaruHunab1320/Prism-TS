@@ -40,6 +40,7 @@ gcloud auth login
 - `experiments_top2_selector_5000.yaml`
 - `experiments_prompt_contract_5000.yaml`
 - `experiments_code_decode_budget_5000.yaml`
+- `experiments_code_exec_benchmark_eval.yaml`
 
 ### Larger confirm
 - `experiments_combined_confirm_5000.yaml`
