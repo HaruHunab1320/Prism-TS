@@ -13,13 +13,12 @@ import json
 from pathlib import Path
 
 from datasets import load_dataset
-from huggingface_hub import hf_hub_download
+from huggingface_hub import HfApi, hf_hub_download
 
 
 MBPP_REPO = "Muennighoff/mbpp"
-MBPP_FILE = "sanitized/mbpp-test.parquet"
 HUMANEVAL_REPO = "openai/openai_humaneval"
-HUMANEVAL_FILE = "openai_humaneval/test-00000-of-00001.parquet"
+API = HfApi()
 
 
 def write_jsonl(path: Path, rows) -> None:
@@ -29,10 +28,35 @@ def write_jsonl(path: Path, rows) -> None:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
+def resolve_repo_parquet(repo_id: str, required_terms: list[str]) -> str:
+    files = API.list_repo_files(repo_id=repo_id, repo_type="dataset")
+    parquet_files = [f for f in files if f.endswith(".parquet")]
+    if not parquet_files:
+        raise RuntimeError(f"No parquet files found in dataset repo {repo_id}")
+
+    lowered_terms = [t.lower() for t in required_terms]
+    ranked = []
+    for path in parquet_files:
+        score = 0
+        lowered = path.lower()
+        for term in lowered_terms:
+            if term in lowered:
+                score += 1
+        ranked.append((score, path))
+    ranked.sort(key=lambda x: (-x[0], x[1]))
+    best_score, best_path = ranked[0]
+    if best_score == 0:
+        raise RuntimeError(
+            f"Could not resolve parquet path in {repo_id}; parquet files were: {parquet_files}"
+        )
+    return best_path
+
+
 def export_mbpp(out_root: Path) -> int:
+    parquet_file = resolve_repo_parquet(MBPP_REPO, ["mbpp", "test"])
     parquet_path = hf_hub_download(
         repo_id=MBPP_REPO,
-        filename=MBPP_FILE,
+        filename=parquet_file,
         repo_type="dataset",
     )
     ds = load_dataset("parquet", data_files=parquet_path, split="train")
@@ -54,9 +78,10 @@ def export_mbpp(out_root: Path) -> int:
 
 
 def export_humaneval(out_root: Path) -> int:
+    parquet_file = resolve_repo_parquet(HUMANEVAL_REPO, ["test", "humaneval"])
     parquet_path = hf_hub_download(
         repo_id=HUMANEVAL_REPO,
-        filename=HUMANEVAL_FILE,
+        filename=parquet_file,
         repo_type="dataset",
     )
     ds = load_dataset("parquet", data_files=parquet_path, split="train")
