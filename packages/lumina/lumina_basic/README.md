@@ -4,7 +4,8 @@ This directory is for the original Lumina architecture:
 - A single model with confidence heads
 - Confidence-based branching / pruning / escalation
 
-Status: prototype implemented.
+Status: prototype implemented; active research plan reset to a stricter
+single-model confidence validation path.
 
 ## Run smoke eval
 From `packages/lumina/`:
@@ -33,3 +34,4 @@ Optional environment overrides:
 - `evaluation/eval_disagreement_signal.py`: tests whether high-confidence disagreement is useful signal
 
 See `notes/plan.md` for next phase gates.
+See `notes/reset_plan_2026-03-27.md` for the current reset plan.

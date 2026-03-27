@@ -1,39 +1,68 @@
 # Lumina Basic Plan (Single-Model Confidence-Head)
 
+## Status
+
+Prototype exists, but the research plan has been reset.
+
+Active direction:
+
+- validate confidence as a useful control signal in a single-model setting
+- postpone multimodel branching claims until that is proven
+
+See:
+
+- `lumina_basic/notes/reset_plan_2026-03-27.md`
+
 ## Goal
-Validate the single-model architecture with confidence heads and branching:
-- prune low-confidence paths
-- escalate on high-confidence disagreement
-- measure accuracy and abstention behavior
 
-## Phase 1 — Minimal multi-head confidence prototype
-Status: complete (prototype).
+Test the original Lumina question in the smallest defensible form:
 
-1) Implement a small GPT-2 wrapper with N confidence heads. ✅
-2) Define a branching policy. ✅
-   - if max conf < threshold → abstain
-   - if top-2 disagree and both high conf → escalate
-3) Add a smoke eval that compares. ✅
-   - single head vs multi-head
-   - with/without branching
+- can a model produce a signal that predicts answer correctness well enough to
+  improve abstain or escalate decisions?
 
-## Phase 2 — Calibration + disagreement handling
-1) Calibrate confidence heads on val data.
-2) Test if calibration improves:
-   - abstention accuracy
-   - disagreement resolution
+## Completed prototype work
 
-## Phase 3 — End-to-end demo
-1) Single-model inference loop with branching.
-2) Log decisions (prune/escalate/answer).
-3) Compare against multi-model baseline.
+1) Implemented a small confidence-head wrapper. ✅
+2) Implemented a branching policy prototype. ✅
+3) Added smoke/disagreement checks. ✅
 
-## Current smoke command
+These are useful scaffolding, not proof.
+
+## Active phases
+
+### Phase A — Single-model confidence baseline
+
+1) Freeze one domain and one canonical eval contract.
+2) Train/evaluate answer-confidence or correctness signal.
+3) Measure:
+   - accuracy / EM / F1
+   - ECE / Brier
+   - AUROC vs correctness
+   - risk-coverage
+
+### Phase B — Control-action validation
+
+1) Compare:
+   - always answer
+   - abstain below threshold
+   - escalate below threshold
+2) Require confidence to improve a real decision, not just metadata quality.
+
+### Phase C — Branching only if A/B pass
+
+Only revisit branching or disagreement if confidence has already shown value in
+single-model form.
+
+## Existing prototype commands
+
+Smoke:
+
 ```bash
 bash lumina_basic/tools/run_basic_smoke.sh
 ```
 
-## Disagreement signal test
+Disagreement probe:
+
 ```bash
 bash lumina_basic/tools/run_disagreement_signal.sh
 ```
