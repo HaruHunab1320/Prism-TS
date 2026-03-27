@@ -2,8 +2,9 @@
 """
 Export stable local JSONL fixtures for code execution benchmarks.
 
-This avoids deprecated Hugging Face dataset-script loaders by downloading
-known parquet files directly from dataset repos.
+Preferred source is the local Hugging Face dataset cache, which is stable and
+avoids dataset-script/parquet repo drift. Remote parquet download remains as a
+fallback for environments where the cache is unavailable.
 """
 
 from __future__ import annotations
@@ -19,6 +20,8 @@ from huggingface_hub import HfApi, hf_hub_download
 MBPP_REPO = "Muennighoff/mbpp"
 HUMANEVAL_REPO = "openai/openai_humaneval"
 API = HfApi()
+LOCAL_MBPP_ARROW = Path.home() / ".cache/huggingface/datasets/Muennighoff___mbpp/full/1.0.0/96ea6fd86d7c288cc4e1983d030d02a1159753a4dbb9891d5cb3cd5b502e929c/mbpp-test.arrow"
+LOCAL_HUMANEVAL_ARROW = Path.home() / ".cache/huggingface/datasets/openai_humaneval/openai_humaneval/0.0.0/cef7a031cbe4ef77/openai_humaneval-test.arrow"
 
 
 def write_jsonl(path: Path, rows) -> None:
@@ -52,14 +55,23 @@ def resolve_repo_parquet(repo_id: str, required_terms: list[str]) -> str:
     return best_path
 
 
-def export_mbpp(out_root: Path) -> int:
-    parquet_file = resolve_repo_parquet(MBPP_REPO, ["mbpp", "test"])
+def load_arrow_or_parquet(local_arrow: Path, repo_id: str, required_terms: list[str]):
+    if local_arrow.exists():
+        from datasets import Dataset
+
+        return Dataset.from_file(str(local_arrow))
+
+    parquet_file = resolve_repo_parquet(repo_id, required_terms)
     parquet_path = hf_hub_download(
-        repo_id=MBPP_REPO,
+        repo_id=repo_id,
         filename=parquet_file,
         repo_type="dataset",
     )
-    ds = load_dataset("parquet", data_files=parquet_path, split="train")
+    return load_dataset("parquet", data_files=parquet_path, split="train")
+
+
+def export_mbpp(out_root: Path) -> int:
+    ds = load_arrow_or_parquet(LOCAL_MBPP_ARROW, MBPP_REPO, ["mbpp", "test"])
     rows = []
     for ex in ds:
         rows.append(
@@ -78,13 +90,7 @@ def export_mbpp(out_root: Path) -> int:
 
 
 def export_humaneval(out_root: Path) -> int:
-    parquet_file = resolve_repo_parquet(HUMANEVAL_REPO, ["test", "humaneval"])
-    parquet_path = hf_hub_download(
-        repo_id=HUMANEVAL_REPO,
-        filename=parquet_file,
-        repo_type="dataset",
-    )
-    ds = load_dataset("parquet", data_files=parquet_path, split="train")
+    ds = load_arrow_or_parquet(LOCAL_HUMANEVAL_ARROW, HUMANEVAL_REPO, ["test", "humaneval"])
     rows = []
     for ex in ds:
         rows.append(
