@@ -54,11 +54,25 @@ class LuminaBasicModel:
     ) -> None:
         self.model_name = model_name
         self.num_conf_heads = num_conf_heads
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.tokenizer = self._load_tokenizer(model_name)
         self.tokenizer.pad_token = self.tokenizer.eos_token
-        self.model = AutoModelForCausalLM.from_pretrained(model_name)
+        self.model = self._load_model(model_name)
         self.device = torch.device(device) if device else self._auto_device()
         self.model.to(self.device).eval()
+
+    @staticmethod
+    def _load_tokenizer(model_name: str):
+        try:
+            return AutoTokenizer.from_pretrained(model_name, local_files_only=True)
+        except Exception:
+            return AutoTokenizer.from_pretrained(model_name)
+
+    @staticmethod
+    def _load_model(model_name: str):
+        try:
+            return AutoModelForCausalLM.from_pretrained(model_name, local_files_only=True)
+        except Exception:
+            return AutoModelForCausalLM.from_pretrained(model_name)
 
     @staticmethod
     def _auto_device() -> torch.device:

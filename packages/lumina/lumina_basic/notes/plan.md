@@ -12,6 +12,7 @@ Active direction:
 See:
 
 - `lumina_basic/notes/reset_plan_2026-03-27.md`
+- `lumina_basic/notes/math_confidence_contract.md`
 
 ## Goal
 
