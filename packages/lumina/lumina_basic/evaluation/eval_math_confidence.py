@@ -145,6 +145,10 @@ def risk_coverage(rows: List[Dict], coverages: List[float]) -> List[Dict[str, fl
     return out
 
 
+def threshold_sweep(rows: List[Dict], thresholds: List[float]) -> List[Dict[str, float]]:
+    return [coverage_metrics(rows, t) for t in thresholds]
+
+
 @dataclass
 class PolicyMetrics:
     answered: int
@@ -272,12 +276,14 @@ def main() -> None:
             "ece": ece(base_rows),
             "auroc": auroc(base_rows),
             "abstain_policy": asdict(evaluate_policy(base_rows, args.answer_conf_threshold)),
+            "threshold_sweep": threshold_sweep(base_rows, [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.50]),
             "risk_coverage": risk_coverage(base_rows, [0.25, 0.5, 0.75, 1.0]),
         },
         "escalation_policy": {
             "escalate_threshold": args.escalate_threshold,
             "always_answer_accuracy": escalated_acc,
             "abstain_policy": asdict(evaluate_policy(escalate_rows, args.answer_conf_threshold)),
+            "threshold_sweep": threshold_sweep(escalate_rows, [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.50]),
         },
         "debug": debug_rows,
     }
