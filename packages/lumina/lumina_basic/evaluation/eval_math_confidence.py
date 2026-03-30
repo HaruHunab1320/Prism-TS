@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from lumina_basic.models.confidence_model import LuminaBasicModel
+from lumina_basic.models.confidence_probe import load_probe
 
 
 DEFAULT_DATA = Path("lumina_multimodel/datasets_hq_v2_curated/math_specialist/val.jsonl")
@@ -174,12 +175,14 @@ def main() -> None:
     p.add_argument("--max-new-tokens", type=int, default=24)
     p.add_argument("--answer-conf-threshold", type=float, default=0.50)
     p.add_argument("--escalate-threshold", type=float, default=0.35)
+    p.add_argument("--confidence-head", type=Path, default=None)
     p.add_argument("--debug-limit", type=int, default=20)
     p.add_argument("--output-json", type=Path, default=None)
     args = p.parse_args()
 
     rows = load_jsonl(args.data_path)[: args.max_samples]
     model = LuminaBasicModel(model_name=args.model, num_conf_heads=args.num_conf_heads)
+    probe_bundle = load_probe(args.confidence_head) if args.confidence_head else None
 
     base_rows: List[Dict] = []
     escalate_rows: List[Dict] = []
@@ -192,6 +195,8 @@ def main() -> None:
             seed=args.seed + i,
             branch_id="base",
         )
+        if probe_bundle:
+            base.confidence = probe_bundle.predict_prob(base.feature_vector)
         base_correct = int(is_correct(base.answer, row["answer"]))
         base_record = {
             "question": row["question"],
@@ -213,6 +218,8 @@ def main() -> None:
                 seed=args.seed + 10000 + i,
                 branch_id="escalate",
             )
+            if probe_bundle:
+                escalated.confidence = probe_bundle.predict_prob(escalated.feature_vector)
             escalated_correct = int(is_correct(escalated.answer, row["answer"]))
             chosen = escalated if escalated.confidence >= base.confidence else base
             chosen_correct = escalated_correct if chosen is escalated else base_correct
@@ -251,6 +258,7 @@ def main() -> None:
 
     payload = {
         "model": args.model,
+        "confidence_head": str(args.confidence_head) if args.confidence_head else None,
         "data_path": str(args.data_path),
         "samples": len(base_rows),
         "contract": {

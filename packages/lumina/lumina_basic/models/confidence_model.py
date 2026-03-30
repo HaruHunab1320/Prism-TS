@@ -35,6 +35,7 @@ class Candidate:
     head_confidences: List[float]
     confidence: float
     branch_id: str
+    feature_vector: List[float]
 
 
 class LuminaBasicModel:
@@ -102,6 +103,26 @@ class LuminaBasicModel:
         conf = 1.0 / (1.0 + math.exp(-raw))
         return _clamp01(conf)
 
+    @staticmethod
+    def _feature_vector(answer: str, stats: GenerationStats, head_confidences: List[float]) -> List[float]:
+        has_digit = 1.0 if re.search(r"\d", answer or "") else 0.0
+        char_len = float(len((answer or "").strip()))
+        mean_conf = float(sum(head_confidences) / max(len(head_confidences), 1))
+        if len(head_confidences) > 1:
+            variance = sum((c - mean_conf) ** 2 for c in head_confidences) / len(head_confidences)
+            std_conf = math.sqrt(variance)
+        else:
+            std_conf = 0.0
+        return [
+            float(stats.avg_logprob),
+            float(stats.avg_entropy),
+            float(stats.answer_len),
+            char_len,
+            has_digit,
+            mean_conf,
+            std_conf,
+        ]
+
     def generate_candidate(
         self,
         prompt: str,
@@ -142,8 +163,7 @@ class LuminaBasicModel:
             for step_scores, tok_id in zip(out.scores, generated_ids):
                 step_log_probs = torch.log_softmax(step_scores[0], dim=-1)
                 tok_lp = step_log_probs[tok_id].item()
-                step_probs = torch.softmax(step_scores[0], dim=-1)
-                entropy = -(step_probs * step_log_probs).sum().item()
+                entropy = torch.distributions.Categorical(logits=step_scores[0]).entropy().item()
                 logprobs.append(tok_lp)
                 entropies.append(entropy)
             stats = GenerationStats(
@@ -154,10 +174,12 @@ class LuminaBasicModel:
 
         head_confidences = [self._head_confidence(stats, i) for i in range(self.num_conf_heads)]
         confidence = float(sum(head_confidences) / max(len(head_confidences), 1))
+        feature_vector = self._feature_vector(answer, stats, head_confidences)
         return Candidate(
             answer=answer,
             stats=stats,
             head_confidences=head_confidences,
             confidence=confidence,
             branch_id=branch_id,
+            feature_vector=feature_vector,
         )

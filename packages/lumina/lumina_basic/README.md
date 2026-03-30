@@ -26,6 +26,16 @@ Math confidence contract baseline:
 bash lumina_basic/tools/run_math_confidence.sh
 ```
 
+This path should use a math-capable model family. The script defaults to:
+
+- `Qwen/Qwen2.5-Math-1.5B-Instruct`
+
+Train learned math confidence head:
+
+```bash
+bash lumina_basic/tools/run_train_math_confidence_head.sh
+```
+
 Optional environment overrides:
 - `LUMINA_BASIC_MODEL` (default `distilgpt2`)
 - `LUMINA_BASIC_CONF_HEADS` (default `3`)
@@ -39,6 +49,7 @@ Optional environment overrides:
 - `evaluation/smoke_eval.py`: baseline vs branching A/B on a tiny QA set
 - `evaluation/eval_disagreement_signal.py`: tests whether high-confidence disagreement is useful signal
 - `evaluation/eval_math_confidence.py`: math-only confidence contract baseline
+- `training/train_math_confidence_head.py`: learned correctness/confidence probe for the math contract
 
 See `notes/plan.md` for next phase gates.
 See `notes/reset_plan_2026-03-27.md` for the current reset plan.

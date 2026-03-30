@@ -7,7 +7,7 @@ PKG_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${PKG_DIR}/.."
 
 python -m lumina_basic.evaluation.eval_math_confidence \
-  --model "${LUMINA_BASIC_MODEL:-distilgpt2}" \
+  --model "${LUMINA_BASIC_MODEL:-Qwen/Qwen2.5-Math-1.5B-Instruct}" \
   --num-conf-heads "${LUMINA_BASIC_CONF_HEADS:-3}" \
   --data-path "${LUMINA_BASIC_MATH_DATA:-lumina_multimodel/datasets_hq_v2_curated/math_specialist/val.jsonl}" \
   --max-samples "${LUMINA_BASIC_MAX_SAMPLES:-100}" \
