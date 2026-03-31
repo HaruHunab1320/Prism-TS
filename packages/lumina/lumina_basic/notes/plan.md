@@ -62,6 +62,23 @@ Current status:
 - next step is threshold calibration and policy locking for selective answering,
   then redesign escalation separately
 
+Current operating-point recommendation:
+
+- conservative production-style point:
+  - threshold `0.25`
+  - coverage `~0.25`
+  - selective accuracy `~0.208`
+- more aggressive research point:
+  - threshold `0.30`
+  - coverage `~0.13`
+  - selective accuracy `~0.234`
+
+Immediate next work:
+
+1) lock one threshold policy for math
+2) measure that policy repeatedly on fixed seeds/sample slices
+3) only then attempt a new escalation design
+
 ### Phase C — Branching only if A/B pass
 
 Only revisit branching or disagreement if confidence has already shown value in

@@ -36,6 +36,12 @@ Train learned math confidence head:
 bash lumina_basic/tools/run_train_math_confidence_head.sh
 ```
 
+Select an operating threshold from the latest math eval:
+
+```bash
+bash lumina_basic/tools/select_math_confidence_policy.sh
+```
+
 Optional environment overrides:
 - `LUMINA_BASIC_MODEL` (default `distilgpt2`)
 - `LUMINA_BASIC_CONF_HEADS` (default `3`)
@@ -49,6 +55,7 @@ Optional environment overrides:
 - `evaluation/smoke_eval.py`: baseline vs branching A/B on a tiny QA set
 - `evaluation/eval_disagreement_signal.py`: tests whether high-confidence disagreement is useful signal
 - `evaluation/eval_math_confidence.py`: math-only confidence contract baseline
+- `evaluation/select_math_confidence_policy.py`: choose a thresholded selective-answer policy from sweep results
 - `training/train_math_confidence_head.py`: learned correctness/confidence probe for the math contract
 
 See `notes/plan.md` for next phase gates.

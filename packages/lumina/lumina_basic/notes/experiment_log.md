@@ -773,3 +773,23 @@ Decision:
 - Keep the learned confidence head path.
 - Promote selective answering as the active control behavior.
 - Treat escalation as an open problem, not a validated mechanism.
+
+Policy selection from the 500-sample cloud sweep:
+
+- baseline selective policy is the winner
+- best threshold with `min_coverage >= 0.25` and `gain >= 0.02`:
+  - `threshold = 0.25`
+  - coverage: `0.250`
+  - selective accuracy: `0.208`
+  - gain vs always-answer: `+0.064`
+- if we allow lower coverage (`>= 0.10`), the highest-gain baseline point is:
+  - `threshold = 0.30`
+  - coverage: `0.128`
+  - selective accuracy: `0.234`
+  - gain vs always-answer: `+0.090`
+- escalation policy did not meet the same gain target at useful coverage
+
+Operational conclusion:
+
+- use baseline selective answering as the active math-confidence policy
+- do not promote the current escalation policy
