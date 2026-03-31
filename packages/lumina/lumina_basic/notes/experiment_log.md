@@ -714,3 +714,62 @@ Post-gate action:
 Ops note:
 
 - Script defaults were updated to prefer MPS when available, but auto-fallback to CPU when MPS is unavailable on host OS.
+
+## 2026-03-30 — Lumina Basic math confidence probe (cloud, Qwen Math 1.5B)
+
+Cloud run:
+
+```bash
+cd lumina_multimodel/tools/cloud
+bash launch_experiments.sh experiments_lumina_basic_math_confidence.yaml
+```
+
+Run:
+
+- `lumina-basic-math-confidence-002`
+
+Probe training (`1000` train / `200` val):
+
+- model: `Qwen/Qwen2.5-Math-1.5B-Instruct`
+- val `AUROC`: `0.683`
+- val `ECE`: `0.031`
+- val `Brier`: `0.119`
+
+Math confidence contract eval (`500` val):
+
+- always-answer accuracy: `0.144`
+- baseline `AUROC`: `0.635`
+- baseline `ECE`: `0.053`
+
+Selective-answer threshold sweep:
+
+- `thr=0.05`
+  - coverage: `0.862`
+  - selective accuracy: `0.165`
+- `thr=0.10`
+  - coverage: `0.702`
+  - selective accuracy: `0.185`
+- `thr=0.25`
+  - coverage: `0.250`
+  - selective accuracy: `0.208`
+- `thr=0.30`
+  - coverage: `0.128`
+  - selective accuracy: `0.234`
+
+Escalation policy:
+
+- always-answer accuracy under current escalation path: `0.150`
+- current escalation sweep underperforms the baseline selective-answer policy
+
+Interpretation:
+
+- This is the first real positive result for `lumina_basic`.
+- Learned answer-confidence carries usable signal for selective answering.
+- The fixed `0.50` threshold was wrong; useful operating range is much lower.
+- Current escalation design is not validated and should not be treated as a win.
+
+Decision:
+
+- Keep the learned confidence head path.
+- Promote selective answering as the active control behavior.
+- Treat escalation as an open problem, not a validated mechanism.

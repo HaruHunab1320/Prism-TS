@@ -41,6 +41,12 @@ These are useful scaffolding, not proof.
    - AUROC vs correctness
    - risk-coverage
 
+Current status:
+
+- initial positive result achieved on the math contract
+- learned confidence improves selective answering over always-answer
+- current best observed useful threshold region is roughly `0.10–0.30`
+
 ### Phase B — Control-action validation
 
 1) Compare:
@@ -48,6 +54,13 @@ These are useful scaffolding, not proof.
    - abstain below threshold
    - escalate below threshold
 2) Require confidence to improve a real decision, not just metadata quality.
+
+Current status:
+
+- selective-answer / abstain behavior is the active positive result
+- current escalation policy is not yet good enough
+- next step is threshold calibration and policy locking for selective answering,
+  then redesign escalation separately
 
 ### Phase C — Branching only if A/B pass
 
