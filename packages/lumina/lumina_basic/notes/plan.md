@@ -64,20 +64,20 @@ Current status:
 
 Current operating-point recommendation:
 
-- conservative production-style point:
+- default math selective-answer policy:
   - threshold `0.25`
-  - coverage `~0.25`
-  - selective accuracy `~0.208`
-- more aggressive research point:
+  - coverage mean `0.250` across seeds
+  - selective accuracy mean `0.209`
+- stricter research point:
   - threshold `0.30`
-  - coverage `~0.13`
-  - selective accuracy `~0.234`
+  - coverage mean `0.139` across seeds
+  - selective accuracy mean `0.257`
 
 Immediate next work:
 
-1) lock one threshold policy for math
-2) measure that policy repeatedly on fixed seeds/sample slices
-3) only then attempt a new escalation design
+1) freeze `0.25` as the default math selective-answer policy
+2) test a structured verification-style escalation design against that fixed baseline
+3) only revisit thresholds if the escalation design shows real lift
 
 ### Phase C — Branching only if A/B pass
 

@@ -793,3 +793,54 @@ Operational conclusion:
 
 - use baseline selective answering as the active math-confidence policy
 - do not promote the current escalation policy
+
+
+## 2026-04-01 — Math confidence policy stability (cloud, 3 seeds)
+
+Cloud run:
+
+```bash
+cd lumina_multimodel/tools/cloud
+bash launch_experiments.sh experiments_lumina_basic_math_policy_stability.yaml
+```
+
+Run:
+
+- `lumina-basic-math-policy-stability-001`
+
+Probe training (`1000` train / `200` val):
+
+- model: `Qwen/Qwen2.5-Math-1.5B-Instruct`
+- val `AUROC`: `0.683`
+- val `ECE`: `0.031`
+- val `Brier`: `0.119`
+
+Fixed-policy stability summary over seeds `7`, `11`, `19`:
+
+`threshold = 0.25`
+
+- coverage mean: `0.250` (`0.226` to `0.274`)
+- selective accuracy mean: `0.209` (`0.190` to `0.230`)
+- gain vs always-answer mean: `+0.070`
+- always-answer accuracy mean: `0.139`
+
+`threshold = 0.30`
+
+- coverage mean: `0.139` (`0.120` to `0.168`)
+- selective accuracy mean: `0.257` (`0.234` to `0.300`)
+- gain vs always-answer mean: `+0.118`
+- always-answer accuracy mean: `0.139`
+
+Interpretation:
+
+- The selective-answer lift is stable across seeds.
+- `0.25` remains the practical operating point.
+- `0.30` remains the higher-precision research point with much lower coverage.
+- This validates selective answering as the current `lumina_basic` baseline control behavior.
+
+Decision:
+
+- Freeze `threshold = 0.25` as the default math selective-answer policy.
+- Keep `threshold = 0.30` as the stricter research policy.
+- Do not revisit threshold tuning before testing a stronger escalation design.
+- Next experiment is a structured verification-style escalation pass, not another sweep.
