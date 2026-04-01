@@ -42,6 +42,7 @@ gcloud auth login
 - `experiments_code_decode_budget_5000.yaml`
 - `experiments_code_exec_benchmark_eval.yaml`
 - `experiments_lumina_basic_math_confidence.yaml`
+- `experiments_lumina_basic_math_policy_stability.yaml`
 
 ### Larger confirm
 - `experiments_combined_confirm_5000.yaml`
