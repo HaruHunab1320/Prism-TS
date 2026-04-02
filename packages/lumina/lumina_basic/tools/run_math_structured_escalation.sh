@@ -14,6 +14,6 @@ python -m lumina_basic.evaluation.eval_math_confidence_structured_escalation \
   --seed "${LUMINA_BASIC_SEED:-7}" \
   --max-new-tokens "${LUMINA_BASIC_MAX_NEW_TOKENS:-24}" \
   --verification-max-new-tokens "${LUMINA_BASIC_VERIFY_MAX_NEW_TOKENS:-48}" \
-  --answer-conf-threshold "${LUMINA_BASIC_POLICY_THRESHOLD:-0.25}" \
+  --answer-conf-threshold "${LUMINA_BASIC_POLICY_THRESHOLD:-0.15}" \
   --escalate-threshold "${LUMINA_BASIC_ESCALATE_THRESHOLD:-0.35}" \
   --output-json "${LUMINA_BASIC_OUTPUT_JSON:-lumina_basic/notes/math_structured_escalation_latest.json}"

@@ -48,6 +48,11 @@ Select a threshold from the scaled-probe eval:
 bash lumina_basic/tools/select_math_confidence_policy_scaled.sh
 ```
 
+Current scaled-probe operating points:
+
+- default selective policy: `0.15`
+- stricter research point: `0.20`
+
 Evaluate one fixed policy point directly:
 
 ```bash

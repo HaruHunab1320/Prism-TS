@@ -42,7 +42,7 @@ def main() -> None:
     p.add_argument("--seed", type=int, default=7)
     p.add_argument("--max-new-tokens", type=int, default=24)
     p.add_argument("--verification-max-new-tokens", type=int, default=48)
-    p.add_argument("--answer-conf-threshold", type=float, default=0.25)
+    p.add_argument("--answer-conf-threshold", type=float, default=0.15)
     p.add_argument("--escalate-threshold", type=float, default=0.35)
     p.add_argument("--confidence-head", type=Path, default=None)
     p.add_argument("--debug-limit", type=int, default=20)

@@ -21,7 +21,7 @@ def main() -> None:
     p = argparse.ArgumentParser(description="Evaluate a fixed Lumina Basic math confidence policy.")
     p.add_argument("--eval-json", type=Path, default=Path("lumina_basic/notes/math_confidence_latest.json"))
     p.add_argument("--mode", choices=["baseline", "escalation"], default="baseline")
-    p.add_argument("--threshold", type=float, default=0.25)
+    p.add_argument("--threshold", type=float, default=0.15)
     p.add_argument("--output-json", type=Path, default=None)
     args = p.parse_args()
 

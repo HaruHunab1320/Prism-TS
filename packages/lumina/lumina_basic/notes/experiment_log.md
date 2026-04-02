@@ -967,3 +967,25 @@ Decision:
 - Promote the larger probe as the new math-confidence head.
 - Drop the old fixed thresholds.
 - Re-select the operating threshold on the scaled probe before any further escalation work.
+
+Threshold re-selection on the scaled probe:
+
+- with `min_coverage >= 0.25` and `min_gain >= 0.02`, the new recommended policy is:
+  - `mode = baseline_selective`
+  - `threshold = 0.15`
+  - coverage: `0.354`
+  - selective accuracy: `0.243`
+  - overall accuracy: `0.086`
+  - gain vs always-answer: `+0.099`
+- stricter research point:
+  - `threshold = 0.20`
+  - coverage: `0.124`
+  - selective accuracy: `0.306`
+  - overall accuracy: `0.038`
+  - gain vs always-answer: `+0.162`
+
+Operational conclusion:
+
+- freeze `0.15` as the new default math selective-answer policy
+- keep `0.20` as the stricter research point
+- do not revisit escalation until it is evaluated against this stronger baseline

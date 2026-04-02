@@ -64,16 +64,21 @@ Current status:
 
 Current operating-point recommendation:
 
-- old thresholds `0.25` / `0.30` are no longer valid after probe scaling
-- likely new candidate operating band:
-  - `0.10` for broader coverage
-  - `0.15` for default selective answering
-  - `0.20` as a stricter research point
+- default scaled-probe selective-answer policy:
+  - threshold `0.15`
+  - coverage `0.354`
+  - selective accuracy `0.243`
+  - gain vs always-answer `+0.099`
+- stricter research point:
+  - threshold `0.20`
+  - coverage `0.124`
+  - selective accuracy `0.306`
+  - gain vs always-answer `+0.162`
 
 Immediate next work:
 
-1) re-select the math policy threshold on the scaled probe
-2) freeze one new default operating point from that sweep
+1) freeze `0.15` as the default math selective-answer policy
+2) keep `0.20` as the stricter research point
 3) only then revisit escalation against the stronger baseline
 
 ### Phase C — Branching only if A/B pass
