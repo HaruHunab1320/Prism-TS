@@ -42,6 +42,12 @@ Select an operating threshold from the latest math eval:
 bash lumina_basic/tools/select_math_confidence_policy.sh
 ```
 
+Select a threshold from the scaled-probe eval:
+
+```bash
+bash lumina_basic/tools/select_math_confidence_policy_scaled.sh
+```
+
 Evaluate one fixed policy point directly:
 
 ```bash

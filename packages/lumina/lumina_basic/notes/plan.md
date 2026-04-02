@@ -59,24 +59,22 @@ Current status:
 
 - selective-answer / abstain behavior is the active positive result
 - structured verification-style escalation was tested and dropped
-- next step is to strengthen the confidence signal itself before trying escalation again
+- larger probe training improved confidence quality materially
+- next step is threshold re-selection on the stronger probe
 
 Current operating-point recommendation:
 
-- default math selective-answer policy:
-  - threshold `0.25`
-  - coverage mean `0.250` across seeds
-  - selective accuracy mean `0.209`
-- stricter research point:
-  - threshold `0.30`
-  - coverage mean `0.139` across seeds
-  - selective accuracy mean `0.257`
+- old thresholds `0.25` / `0.30` are no longer valid after probe scaling
+- likely new candidate operating band:
+  - `0.10` for broader coverage
+  - `0.15` for default selective answering
+  - `0.20` as a stricter research point
 
 Immediate next work:
 
-1) keep `0.25` as the default math selective-answer policy
-2) scale the confidence probe training set (`4000/500`) and check whether AUROC moves materially above `~0.68`
-3) only revisit escalation after the stronger probe result is in
+1) re-select the math policy threshold on the scaled probe
+2) freeze one new default operating point from that sweep
+3) only then revisit escalation against the stronger baseline
 
 ### Phase C — Branching only if A/B pass
 

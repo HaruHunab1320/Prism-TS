@@ -892,3 +892,78 @@ Decision:
 - Keep the fixed selective-answer baseline.
 - Drop this structured escalation design.
 - Next step is upstream: increase probe signal with a larger train/val build before changing escalation again.
+
+
+## 2026-04-02 — Larger math confidence probe (cloud, 4000/500)
+
+Cloud run:
+
+```bash
+cd lumina_multimodel/tools/cloud
+bash launch_experiments.sh experiments_lumina_basic_math_probe_scale.yaml
+```
+
+Run:
+
+- `lumina-basic-math-probe-scale-001`
+
+Probe training (`4000` train / `500` val):
+
+- model: `Qwen/Qwen2.5-Math-1.5B-Instruct`
+- val `AUROC`: `0.720`
+- val `ECE`: `0.027`
+- val `Brier`: `0.111`
+
+Compared with the earlier `1000/200` probe:
+
+- val `AUROC`: `0.683 -> 0.720`
+- val `ECE`: `0.031 -> 0.027`
+- val `Brier`: `0.119 -> 0.111`
+
+Math confidence contract eval (`500` val):
+
+- always-answer accuracy: `0.144`
+- baseline `AUROC`: `0.724`
+- baseline `ECE`: `0.041`
+
+Important calibration shift:
+
+- the stronger probe moved confidence scale downward
+- the previously frozen thresholds no longer behave the same way
+
+Fixed policy points under the scaled probe:
+
+`threshold = 0.25`
+
+- coverage: `0.016`
+- selective accuracy: `0.250`
+- overall accuracy: `0.004`
+
+`threshold = 0.30`
+
+- coverage: `0.000`
+- selective accuracy: `0.000`
+
+More relevant sweep points now are:
+
+- `thr=0.10`
+  - coverage: `0.602`
+  - selective accuracy: `0.219`
+- `thr=0.15`
+  - coverage: `0.354`
+  - selective accuracy: `0.243`
+- `thr=0.20`
+  - coverage: `0.124`
+  - selective accuracy: `0.306`
+
+Interpretation:
+
+- Scaling the probe was a real win.
+- Confidence ranking quality improved materially.
+- The active problem is now threshold recalibration, not lack of signal.
+
+Decision:
+
+- Promote the larger probe as the new math-confidence head.
+- Drop the old fixed thresholds.
+- Re-select the operating threshold on the scaled probe before any further escalation work.
