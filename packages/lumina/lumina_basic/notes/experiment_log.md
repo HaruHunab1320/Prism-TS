@@ -844,3 +844,51 @@ Decision:
 - Keep `threshold = 0.30` as the stricter research policy.
 - Do not revisit threshold tuning before testing a stronger escalation design.
 - Next experiment is a structured verification-style escalation pass, not another sweep.
+
+
+## 2026-04-01 — Structured verification-style escalation (cloud)
+
+Cloud run:
+
+```bash
+cd lumina_multimodel/tools/cloud
+bash launch_experiments.sh experiments_lumina_basic_structured_escalation.yaml
+```
+
+Run:
+
+- `lumina-basic-structured-escalation-001`
+
+Probe training stayed unchanged:
+
+- model: `Qwen/Qwen2.5-Math-1.5B-Instruct`
+- val `AUROC`: `0.683`
+- val `ECE`: `0.031`
+- val `Brier`: `0.119`
+
+Baseline selective policy (`threshold = 0.25`):
+
+- coverage: `0.250`
+- selective accuracy: `0.208`
+- overall accuracy: `0.052`
+- always-answer accuracy: `0.144`
+
+Structured escalation result:
+
+- always-answer accuracy: `0.146`
+- at `threshold = 0.25`:
+  - coverage: `0.250`
+  - selective accuracy: `0.208`
+  - overall accuracy: `0.052`
+
+Interpretation:
+
+- This prompt-level structured verification pass does not produce a meaningful gain.
+- The system usually falls back to the base answer, and when it changes answer it is rarely better.
+- Prompt-only escalation variants should not be the active path.
+
+Decision:
+
+- Keep the fixed selective-answer baseline.
+- Drop this structured escalation design.
+- Next step is upstream: increase probe signal with a larger train/val build before changing escalation again.

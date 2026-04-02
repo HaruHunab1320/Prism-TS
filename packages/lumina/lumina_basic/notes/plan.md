@@ -58,9 +58,8 @@ Current status:
 Current status:
 
 - selective-answer / abstain behavior is the active positive result
-- current escalation policy is not yet good enough
-- next step is threshold calibration and policy locking for selective answering,
-  then redesign escalation separately
+- structured verification-style escalation was tested and dropped
+- next step is to strengthen the confidence signal itself before trying escalation again
 
 Current operating-point recommendation:
 
@@ -75,9 +74,9 @@ Current operating-point recommendation:
 
 Immediate next work:
 
-1) freeze `0.25` as the default math selective-answer policy
-2) test a structured verification-style escalation design against that fixed baseline
-3) only revisit thresholds if the escalation design shows real lift
+1) keep `0.25` as the default math selective-answer policy
+2) scale the confidence probe training set (`4000/500`) and check whether AUROC moves materially above `~0.68`
+3) only revisit escalation after the stronger probe result is in
 
 ### Phase C — Branching only if A/B pass
 
