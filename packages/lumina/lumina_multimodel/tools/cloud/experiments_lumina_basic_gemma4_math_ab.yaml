@@ -9,18 +9,20 @@ image_project: deeplearning-platform-release
 
 experiments:
   - name: lumina-basic-math-ab-qwen-002
+    preflight_commands:
+      - set -o pipefail; cd .. && python -u -m lumina_basic.evaluation.preflight_math_confidence 2>&1 | tee lumina_multimodel/logs/lumina_basic_math_ab_qwen_preflight.txt
     commands:
       - mkdir -p logs outputs_gen
       - echo 'lumina_basic qwen math ab start' | tee logs/lumina_basic_math_ab_qwen_start.txt
-      - set -o pipefail; cd .. && python -u -m lumina_basic.evaluation.preflight_math_confidence 2>&1 | tee lumina_multimodel/logs/lumina_basic_math_ab_qwen_preflight.txt
       - set -o pipefail; cd .. && DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m lumina_basic.training.train_math_confidence_head --model Qwen/Qwen2.5-Math-1.5B-Instruct --train-data lumina_multimodel/datasets_hq_v2_curated/math_specialist/train.jsonl --val-data lumina_multimodel/datasets_hq_v2_curated/math_specialist/val.jsonl --max-train-samples 4000 --max-val-samples 500 --max-new-tokens 24 --epochs 20 --batch-size 64 --lr 1e-3 --output lumina_multimodel/outputs_gen/lumina_basic_math_ab_qwen_probe.pt --metrics-json lumina_multimodel/logs/lumina_basic_math_ab_qwen_train.json 2>&1 | tee lumina_multimodel/logs/lumina_basic_math_ab_qwen_train.txt
       - set -o pipefail; cd .. && DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m lumina_basic.evaluation.eval_math_confidence --model Qwen/Qwen2.5-Math-1.5B-Instruct --confidence-head lumina_multimodel/outputs_gen/lumina_basic_math_ab_qwen_probe.pt --data-path lumina_multimodel/datasets_hq_v2_curated/math_specialist/val.jsonl --max-samples 500 --seed 7 --max-new-tokens 24 --answer-conf-threshold 0.15 --escalate-threshold 0.35 --output-json lumina_multimodel/logs/lumina_basic_math_ab_qwen_eval.json 2>&1 | tee lumina_multimodel/logs/lumina_basic_math_ab_qwen_eval.txt
       - set -o pipefail; cd .. && python -u -m lumina_basic.evaluation.select_math_confidence_policy --eval-json lumina_multimodel/logs/lumina_basic_math_ab_qwen_eval.json --min-coverage 0.25 --min-gain 0.02 --output-json lumina_multimodel/logs/lumina_basic_math_ab_qwen_policy.json 2>&1 | tee lumina_multimodel/logs/lumina_basic_math_ab_qwen_policy.txt
   - name: lumina-basic-math-ab-gemma4-002
+    preflight_commands:
+      - set -o pipefail; cd .. && python -u -m lumina_basic.evaluation.preflight_math_confidence 2>&1 | tee lumina_multimodel/logs/lumina_basic_math_ab_gemma4_preflight.txt
     commands:
       - mkdir -p logs outputs_gen
       - echo 'lumina_basic gemma4 math ab start' | tee logs/lumina_basic_math_ab_gemma4_start.txt
-      - set -o pipefail; cd .. && python -u -m lumina_basic.evaluation.preflight_math_confidence 2>&1 | tee lumina_multimodel/logs/lumina_basic_math_ab_gemma4_preflight.txt
       - set -o pipefail; cd .. && DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m lumina_basic.training.train_math_confidence_head --model google/gemma-4-E4B-it --train-data lumina_multimodel/datasets_hq_v2_curated/math_specialist/train.jsonl --val-data lumina_multimodel/datasets_hq_v2_curated/math_specialist/val.jsonl --max-train-samples 4000 --max-val-samples 500 --max-new-tokens 24 --epochs 20 --batch-size 64 --lr 1e-3 --output lumina_multimodel/outputs_gen/lumina_basic_math_ab_gemma4_probe.pt --metrics-json lumina_multimodel/logs/lumina_basic_math_ab_gemma4_train.json 2>&1 | tee lumina_multimodel/logs/lumina_basic_math_ab_gemma4_train.txt
       - set -o pipefail; cd .. && DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m lumina_basic.evaluation.eval_math_confidence --model google/gemma-4-E4B-it --confidence-head lumina_multimodel/outputs_gen/lumina_basic_math_ab_gemma4_probe.pt --data-path lumina_multimodel/datasets_hq_v2_curated/math_specialist/val.jsonl --max-samples 500 --seed 7 --max-new-tokens 24 --answer-conf-threshold 0.15 --escalate-threshold 0.35 --output-json lumina_multimodel/logs/lumina_basic_math_ab_gemma4_eval.json 2>&1 | tee lumina_multimodel/logs/lumina_basic_math_ab_gemma4_eval.txt
       - set -o pipefail; cd .. && python -u -m lumina_basic.evaluation.select_math_confidence_policy --eval-json lumina_multimodel/logs/lumina_basic_math_ab_gemma4_eval.json --min-coverage 0.25 --min-gain 0.02 --output-json lumina_multimodel/logs/lumina_basic_math_ab_gemma4_policy.json 2>&1 | tee lumina_multimodel/logs/lumina_basic_math_ab_gemma4_policy.txt

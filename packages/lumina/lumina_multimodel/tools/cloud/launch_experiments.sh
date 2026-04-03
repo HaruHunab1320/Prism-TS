@@ -27,9 +27,11 @@ SERVICE_ACCOUNT="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 INDEX=0
 for NAME in $(yq -r '.experiments[].name' "$CONFIG_PATH"); do
   STARTUP_FILE="/tmp/${NAME}_startup.sh"
+  PREFLIGHT_COMMANDS="$(yq -r ".experiments[$INDEX].preflight_commands[]?" "$CONFIG_PATH")"
   COMMANDS=$(yq -r ".experiments[$INDEX].commands[]" "$CONFIG_PATH")
 
   SHUTDOWN_FILE="/tmp/${NAME}_shutdown.sh"
+  PREFLIGHT_FILE="/tmp/${NAME}_preflight_commands.txt"
   COMMANDS_FILE="/tmp/${NAME}_commands.txt"
   cat <<EOF > "$STARTUP_FILE"
 #!/usr/bin/env bash
@@ -177,6 +179,28 @@ echo ">>> outputs_router sync exit status: \$router_status"
 cat <<'CMDS' > "$COMMANDS_FILE"
 $(printf "%s\n" "$COMMANDS")
 CMDS
+
+cat <<'PREFLIGHT' > "$PREFLIGHT_FILE"
+$(printf "%s\n" "$PREFLIGHT_COMMANDS")
+PREFLIGHT
+
+while IFS= read -r cmd; do
+  [ -z "\$cmd" ] && continue
+  echo ">>> [preflight] \$cmd"
+  set +e
+  bash -lc "\$cmd"
+  status=\$?
+  set -e
+  echo ">>> [preflight] command exit status: \$status"
+  if [ "\$status" -ne 0 ]; then
+    echo ">>> preflight failed; syncing before exit"
+    gsutil -m rsync -r outputs_gen "\$BUCKET/runs/\$RUN_ID/outputs_gen" || true
+    gsutil -m rsync -r outputs_router "\$BUCKET/runs/\$RUN_ID/outputs_router" || true
+    gsutil -m rsync -r logs "\$BUCKET/runs/\$RUN_ID/logs" || true
+    exit \$status
+  fi
+  gsutil -m rsync -r logs "\$BUCKET/runs/\$RUN_ID/logs" || echo "GSUTIL_SYNC_LOGS_FAILED"
+done < "$PREFLIGHT_FILE"
 
 while IFS= read -r cmd; do
   [ -z "\$cmd" ] && continue

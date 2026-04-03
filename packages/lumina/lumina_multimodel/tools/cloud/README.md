@@ -60,6 +60,7 @@ Superseded stage-a / stage-b specs were moved to:
 Edit one of the current yaml files:
 - `project`, `zone`, `machine_type`, `bucket`, `repo_url`
 - experiment entries and command sequence
+- optional `preflight_commands` per experiment for cheap fail-fast validation before long training
 
 ## Launch
 From this folder:
