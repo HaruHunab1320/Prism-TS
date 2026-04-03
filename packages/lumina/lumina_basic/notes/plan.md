@@ -81,6 +81,14 @@ Immediate next work:
 2) keep `0.20` as the stricter research point
 3) only then revisit escalation against the stronger baseline
 
+Current next experiment:
+
+- Qwen-only math uplift A/B under the same contract
+  - control: base `Qwen/Qwen2.5-Math-1.5B-Instruct`
+  - treatment: lightly fine-tuned Qwen math checkpoint on
+    `datasets_hq_v2_curated/math_specialist`
+  - compare always-answer accuracy first, then probe quality and selected policy
+
 ### Phase C — Branching only if A/B pass
 
 Only revisit branching or disagreement if confidence has already shown value in
