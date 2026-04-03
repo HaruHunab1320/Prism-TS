@@ -35,11 +35,20 @@ def extract_math_final_answer(text: str) -> str:
     s = (text or "").strip()
     if not s:
         return ""
-    s = re.sub(r"```[A-Za-z0-9_+-]*", "", s).replace("```", "")
-    m = re.search(r"(?:final answer|answer)\s*[:=]\s*([^\n]+)", s, flags=re.IGNORECASE)
+    s = re.sub(r"```[A-Za-z0-9_+-]*", "", s).replace("```", "").strip()
+    if not s:
+        return ""
+    m = re.search(r"(?:final answer|answer)\s*[:=]\s*([^\n]*)", s, flags=re.IGNORECASE)
     if m:
         s = m.group(1).strip()
-    first_line = s.splitlines()[0].strip()
+    if not s:
+        return ""
+    lines = s.splitlines()
+    if not lines:
+        return ""
+    first_line = lines[0].strip()
+    if not first_line:
+        return ""
     number_like = re.findall(r"[-+]?\d+(?:,\d{3})*(?:\.\d+)?(?:/\d+(?:\.\d+)?)?", first_line)
     if number_like:
         return canonicalize_number(number_like[-1])
