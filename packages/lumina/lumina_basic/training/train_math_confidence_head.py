@@ -16,6 +16,7 @@ from lumina_basic.evaluation.eval_math_confidence import (
     ece,
     is_correct,
     load_jsonl,
+    math_contract_features,
     math_prompt,
 )
 from lumina_basic.models.confidence_model import LuminaBasicModel
@@ -30,6 +31,7 @@ def collect_rows(
     rows: List[Dict],
     max_new_tokens: int,
     seed: int,
+    use_math_contract_features: bool,
 ) -> List[Dict]:
     out = []
     for i, row in enumerate(rows):
@@ -41,7 +43,11 @@ def collect_rows(
         )
         out.append(
             {
-                "feature_vector": cand.feature_vector,
+                "feature_vector": (
+                    list(cand.feature_vector) + math_contract_features(cand.answer)
+                    if use_math_contract_features
+                    else list(cand.feature_vector)
+                ),
                 "correct": int(is_correct(cand.answer, row["answer"])),
                 "heuristic_confidence": cand.confidence,
             }
@@ -87,6 +93,7 @@ def main() -> None:
     p.add_argument("--batch-size", type=int, default=64)
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--hidden-dim", type=int, default=16)
+    p.add_argument("--math-contract-features", action="store_true")
     p.add_argument("--output", type=Path, default=Path("lumina_basic/outputs/math_confidence_probe.pt"))
     p.add_argument("--metrics-json", type=Path, default=Path("lumina_basic/notes/math_confidence_probe_latest.json"))
     args = p.parse_args()
@@ -95,8 +102,8 @@ def main() -> None:
     val_rows = load_jsonl(args.val_data)[: args.max_val_samples]
 
     model = LuminaBasicModel(model_name=args.model, num_conf_heads=args.num_conf_heads)
-    train_examples = collect_rows(model, train_rows, args.max_new_tokens, args.seed)
-    val_examples = collect_rows(model, val_rows, args.max_new_tokens, args.seed + 50000)
+    train_examples = collect_rows(model, train_rows, args.max_new_tokens, args.seed, args.math_contract_features)
+    val_examples = collect_rows(model, val_rows, args.max_new_tokens, args.seed + 50000, args.math_contract_features)
 
     x_train, y_train = rows_to_tensors(train_examples)
     x_val, y_val = rows_to_tensors(val_examples)
@@ -146,6 +153,7 @@ def main() -> None:
             "train_samples": len(train_examples),
             "val_samples": len(val_examples),
             "max_new_tokens": args.max_new_tokens,
+            "math_contract_features": bool(args.math_contract_features),
         },
     )
 
@@ -154,6 +162,7 @@ def main() -> None:
         "train_samples": len(train_examples),
         "val_samples": len(val_examples),
         "feature_dim": int(x_train.shape[1]),
+        "math_contract_features": bool(args.math_contract_features),
         "final": history[-1] if history else {},
         "history_tail": history[-5:],
         "output": str(args.output),

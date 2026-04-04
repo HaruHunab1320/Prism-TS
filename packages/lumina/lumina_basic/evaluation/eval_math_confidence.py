@@ -86,6 +86,30 @@ def is_correct(pred: str, gold: str) -> bool:
     return extract_math_final_answer(pred) == extract_math_final_answer(gold)
 
 
+def math_contract_features(raw_answer: str) -> List[float]:
+    raw = (raw_answer or "").strip()
+    extracted = extract_math_final_answer(raw)
+    raw_lower = raw.lower()
+    extracted_is_numeric = 0.0
+    if extracted:
+        try:
+            float(extracted)
+            extracted_is_numeric = 1.0
+        except Exception:
+            extracted_is_numeric = 0.0
+    raw_words = raw.split()
+    return [
+        1.0 if extracted else 0.0,
+        extracted_is_numeric,
+        1.0 if re.search(r"\d", raw) else 0.0,
+        1.0 if ("answer:" in raw_lower or "final answer" in raw_lower) else 0.0,
+        1.0 if re.match(r"^\s*[-+]?\d", raw) else 0.0,
+        float(len(raw_words)),
+        float(len(extracted)),
+        1.0 if len(raw_words) <= 4 and extracted_is_numeric else 0.0,
+    ]
+
+
 def brier_score(rows: List[Dict]) -> float:
     if not rows:
         return 0.0
@@ -189,6 +213,7 @@ def main() -> None:
     p.add_argument("--answer-conf-threshold", type=float, default=0.50)
     p.add_argument("--escalate-threshold", type=float, default=0.35)
     p.add_argument("--confidence-head", type=Path, default=None)
+    p.add_argument("--math-contract-features", action="store_true")
     p.add_argument("--debug-limit", type=int, default=20)
     p.add_argument("--output-json", type=Path, default=None)
     args = p.parse_args()
@@ -209,7 +234,10 @@ def main() -> None:
             branch_id="base",
         )
         if probe_bundle:
-            base.confidence = probe_bundle.predict_prob(base.feature_vector)
+            feature_vector = list(base.feature_vector)
+            if args.math_contract_features:
+                feature_vector += math_contract_features(base.answer)
+            base.confidence = probe_bundle.predict_prob(feature_vector)
         base_correct = int(is_correct(base.answer, row["answer"]))
         base_record = {
             "question": row["question"],
@@ -232,7 +260,10 @@ def main() -> None:
                 branch_id="escalate",
             )
             if probe_bundle:
-                escalated.confidence = probe_bundle.predict_prob(escalated.feature_vector)
+                feature_vector = list(escalated.feature_vector)
+                if args.math_contract_features:
+                    feature_vector += math_contract_features(escalated.answer)
+                escalated.confidence = probe_bundle.predict_prob(feature_vector)
             escalated_correct = int(is_correct(escalated.answer, row["answer"]))
             chosen = escalated if escalated.confidence >= base.confidence else base
             chosen_correct = escalated_correct if chosen is escalated else base_correct
@@ -278,6 +309,7 @@ def main() -> None:
             "domain": "math",
             "confidence_definition": "P(final answer is correct | prompt, model state, produced answer)",
             "correctness": "exact normalized final-answer match",
+            "math_contract_features": bool(args.math_contract_features),
         },
         "baseline": {
             "always_answer_accuracy": always_answer_acc,

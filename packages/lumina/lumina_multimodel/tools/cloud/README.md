@@ -48,6 +48,7 @@ gcloud auth login
 - `experiments_lumina_basic_gemma4_math_ab.yaml`
 - `experiments_lumina_basic_qwen_math_uplift.yaml`
 - `experiments_lumina_basic_qwen_math_uplift_stability.yaml`
+- `experiments_lumina_basic_qwen_math_probe_v2.yaml`
 
 ### Larger confirm
 - `experiments_combined_confirm_5000.yaml`

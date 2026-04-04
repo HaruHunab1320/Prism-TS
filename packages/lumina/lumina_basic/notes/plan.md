@@ -96,6 +96,14 @@ Current read:
 - Next step is to measure confidence stability on the fine-tuned model before
   promoting it as the new active baseline.
 
+Current confidence redesign hypothesis:
+
+- The fine-tuned model needs contract-aware confidence features, not just the
+  original 7 generation stats.
+- Next probe experiment adds math-contract answer features on top of the
+  existing feature vector and compares that probe against the current one on
+  the same fine-tuned checkpoint.
+
 ### Phase C — Branching only if A/B pass
 
 Only revisit branching or disagreement if confidence has already shown value in
