@@ -89,6 +89,13 @@ Current next experiment:
     `datasets_hq_v2_curated/math_specialist`
   - compare always-answer accuracy first, then probe quality and selected policy
 
+Current read:
+
+- The fine-tuned Qwen math checkpoint improves always-answer accuracy.
+- The confidence probe weakens on top of that checkpoint.
+- Next step is to measure confidence stability on the fine-tuned model before
+  promoting it as the new active baseline.
+
 ### Phase C — Branching only if A/B pass
 
 Only revisit branching or disagreement if confidence has already shown value in

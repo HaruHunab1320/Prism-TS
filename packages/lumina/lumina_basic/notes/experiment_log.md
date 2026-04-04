@@ -989,3 +989,50 @@ Operational conclusion:
 - freeze `0.15` as the new default math selective-answer policy
 - keep `0.20` as the stricter research point
 - do not revisit escalation until it is evaluated against this stronger baseline
+
+## 2026-04-03 — Qwen math uplift A/B under the `lumina_basic` contract
+
+Cloud spec:
+
+```bash
+bash launch_experiments.sh experiments_lumina_basic_qwen_math_uplift.yaml
+```
+
+Control (`Qwen/Qwen2.5-Math-1.5B-Instruct`):
+
+- probe val `AUROC`: `0.720`
+- probe val `ECE`: `0.027`
+- probe val `Brier`: `0.111`
+- always-answer accuracy: `0.144`
+- recommended policy:
+  - `mode = baseline_selective`
+  - `threshold = 0.15`
+  - coverage: `0.354`
+  - selective accuracy: `0.243`
+  - overall accuracy: `0.086`
+  - gain vs always-answer: `+0.099`
+
+Treatment (lightly fine-tuned Qwen math checkpoint):
+
+- probe val `AUROC`: `0.604`
+- probe val `ECE`: `0.031`
+- probe val `Brier`: `0.169`
+- always-answer accuracy: `0.196`
+- recommended policy:
+  - `mode = escalation_selective`
+  - `threshold = 0.20`
+  - coverage: `0.864`
+  - selective accuracy: `0.229`
+  - overall accuracy: `0.198`
+  - gain vs always-answer: `+0.033`
+
+Interpretation:
+
+- The fine-tuned Qwen math checkpoint materially improves raw answer quality.
+- The current confidence probe degrades on top of that checkpoint.
+- This is a mixed result:
+  - better base math model
+  - worse confidence ranking
+- Do not promote the treatment as a new confidence baseline yet.
+- Next step is a fine-tuned-model-only confidence stability run, focusing on
+  baseline-selective behavior before revisiting escalation.
