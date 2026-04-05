@@ -104,6 +104,12 @@ Current confidence redesign hypothesis:
   existing feature vector and compares that probe against the current one on
   the same fine-tuned checkpoint.
 
+Current read on that redesign:
+
+- `probe v2` improves confidence quality on the fine-tuned model.
+- The best policy still comes through `escalation_selective`.
+- Next gate is stability across seeds before any promotion decision.
+
 ### Phase C — Branching only if A/B pass
 
 Only revisit branching or disagreement if confidence has already shown value in

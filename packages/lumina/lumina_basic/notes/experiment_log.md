@@ -1036,3 +1036,56 @@ Interpretation:
 - Do not promote the treatment as a new confidence baseline yet.
 - Next step is a fine-tuned-model-only confidence stability run, focusing on
   baseline-selective behavior before revisiting escalation.
+
+## 2026-04-05 — Fine-tuned Qwen math probe v2
+
+Cloud spec:
+
+```bash
+bash launch_experiments.sh experiments_lumina_basic_qwen_math_probe_v2.yaml
+```
+
+Setup:
+
+- answer model: fine-tuned `Qwen/Qwen2.5-Math-1.5B-Instruct`
+- compare:
+  - `probe v1`: original 7 generation features
+  - `probe v2`: original features + math-contract answer features
+
+`probe v1` on the fine-tuned model:
+
+- val `AUROC`: `0.599`
+- val `ECE`: `0.026`
+- val `Brier`: `0.161`
+- always-answer accuracy: `0.192`
+- recommended policy:
+  - `mode = escalation_selective`
+  - `threshold = 0.25`
+  - coverage: `0.256`
+  - selective accuracy: `0.258`
+  - overall accuracy: `0.066`
+  - gain vs always-answer: `+0.066`
+
+`probe v2` on the fine-tuned model:
+
+- val `AUROC`: `0.610`
+- val `ECE`: `0.018`
+- val `Brier`: `0.160`
+- always-answer accuracy: `0.192`
+- recommended policy:
+  - `mode = escalation_selective`
+  - `threshold = 0.20`
+  - coverage: `0.834`
+  - selective accuracy: `0.252`
+  - overall accuracy: `0.210`
+  - gain vs always-answer: `+0.060`
+
+Interpretation:
+
+- Contract-aware answer features improve confidence behavior on the fine-tuned
+  model.
+- This is the first meaningful confidence-side recovery on top of the stronger
+  answer model.
+- The result still depends on `escalation_selective`, not `baseline_selective`,
+  so it is not ready for promotion yet.
+- Next step is a stability run for `probe v2` across seeds.
