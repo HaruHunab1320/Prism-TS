@@ -8,6 +8,6 @@ cd "${PKG_DIR}/.."
 
 python -m lumina_basic.evaluation.eval_math_confidence_policy \
   --eval-json "${LUMINA_BASIC_EVAL_JSON:-lumina_basic/notes/math_confidence_latest.json}" \
-  --mode "${LUMINA_BASIC_POLICY_MODE:-baseline}" \
-  --threshold "${LUMINA_BASIC_POLICY_THRESHOLD:-0.15}" \
+  --mode "${LUMINA_BASIC_POLICY_MODE:-escalation}" \
+  --threshold "${LUMINA_BASIC_POLICY_THRESHOLD:-0.20}" \
   --output-json "${LUMINA_BASIC_POLICY_OUTPUT_JSON:-lumina_basic/notes/math_confidence_policy_eval_latest.json}"

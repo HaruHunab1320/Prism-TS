@@ -110,6 +110,20 @@ Current read on that redesign:
 - The best policy still comes through `escalation_selective`.
 - Next gate is stability across seeds before any promotion decision.
 
+Current promoted math baseline:
+
+- answer model: fine-tuned `Qwen/Qwen2.5-Math-1.5B-Instruct`
+- confidence head: `probe v2` with math-contract features
+- operating mode: `escalation`
+- threshold: `0.20`
+
+Current stability summary:
+
+- coverage mean: `0.853`
+- selective accuracy mean: `0.256`
+- overall accuracy mean: `0.218`
+- gain vs always-answer mean: `+0.056`
+
 ### Phase C — Branching only if A/B pass
 
 Only revisit branching or disagreement if confidence has already shown value in

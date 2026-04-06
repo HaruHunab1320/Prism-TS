@@ -1089,3 +1089,40 @@ Interpretation:
 - The result still depends on `escalation_selective`, not `baseline_selective`,
   so it is not ready for promotion yet.
 - Next step is a stability run for `probe v2` across seeds.
+
+## 2026-04-06 — Fine-tuned Qwen math `probe v2` stability
+
+Cloud spec:
+
+```bash
+bash launch_experiments.sh experiments_lumina_basic_qwen_math_probe_v2_stability.yaml
+```
+
+Probe training:
+
+- val `AUROC`: `0.614`
+- val `ECE`: `0.031`
+- val `Brier`: `0.166`
+
+Fixed policy:
+
+- `mode = escalation`
+- `threshold = 0.20`
+
+Stability across seeds `7 / 11 / 19`:
+
+- coverage mean: `0.853`
+- selective accuracy mean: `0.256`
+- overall accuracy mean: `0.218`
+- gain vs always-answer mean: `+0.056`
+- always-answer accuracy mean: `0.199`
+
+Decision:
+
+- Promote the fine-tuned Qwen math model + `probe v2` as the active
+  `lumina_basic` math path.
+- Active policy:
+  - `mode = escalation`
+  - `threshold = 0.20`
+- The older unfine-tuned Qwen selective-answer baseline remains useful as a
+  simpler reference, but it is no longer the active path.
