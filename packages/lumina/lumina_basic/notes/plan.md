@@ -124,6 +124,15 @@ Current stability summary:
 - overall accuracy mean: `0.218`
 - gain vs always-answer mean: `+0.056`
 
+Next domain after math:
+
+- code under an execution-aware confidence contract
+- keep the same principle:
+  - answer quality first
+  - learned correctness estimate second
+  - control behavior third
+- see `lumina_basic/notes/code_confidence_next_steps.md`
+
 ### Phase C — Branching only if A/B pass
 
 Only revisit branching or disagreement if confidence has already shown value in

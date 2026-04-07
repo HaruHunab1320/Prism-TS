@@ -114,3 +114,5 @@ Current promotion status:
 See `notes/plan.md` for next phase gates.
 See `notes/reset_plan_2026-03-27.md` for the current reset plan.
 See `notes/prism_confidence_metadata_contract.md` for the Prism-facing metadata contract.
+See `notes/prism_language_note.md` for the language/runtime separation.
+See `notes/code_confidence_next_steps.md` for the next code-domain path.
