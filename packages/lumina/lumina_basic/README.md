@@ -76,6 +76,13 @@ LUMINA_BASIC_QUESTION="If 2x = 10, what is x?" \
 bash lumina_basic/tools/run_math_with_metadata.sh
 ```
 
+Run the first execution-aware code confidence baseline:
+
+```bash
+LUMINA_BASIC_CODE_MODEL="path-or-hf-model" \
+bash lumina_basic/tools/run_code_confidence.sh
+```
+
 Run the structured verification-style escalation experiment locally:
 
 ```bash
@@ -98,6 +105,7 @@ Optional environment overrides:
 - `evaluation/eval_math_confidence.py`: math-only confidence contract baseline
 - `evaluation/eval_math_confidence_policy.py`: evaluate one fixed thresholded policy point
 - `evaluation/eval_math_confidence_structured_escalation.py`: structured verification-style escalation check
+- `evaluation/eval_code_confidence.py`: first execution-aware code confidence baseline
 - `evaluation/select_math_confidence_policy.py`: choose a thresholded selective-answer policy from sweep results
 - `inference/math_runtime.py`: promoted math runtime with Prism-facing metadata output
 - `training/train_math_confidence_head.py`: learned correctness/confidence probe for the math contract

@@ -133,6 +133,15 @@ Next domain after math:
   - control behavior third
 - see `lumina_basic/notes/code_confidence_next_steps.md`
 
+Immediate code tasks now completed:
+
+- `code_confidence_contract.md`
+- `eval_code_confidence.py`
+
+Next code step:
+
+- run one execution-aware single-model code confidence baseline
+
 ### Phase C — Branching only if A/B pass
 
 Only revisit branching or disagreement if confidence has already shown value in
