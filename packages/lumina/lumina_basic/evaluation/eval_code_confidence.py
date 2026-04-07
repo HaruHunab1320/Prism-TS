@@ -62,6 +62,55 @@ def extract_answer(text: str) -> str:
     return strip_code_fences(text)
 
 
+def trim_to_code_region(text: str) -> str:
+    lines = (text or "").splitlines()
+    if not lines:
+        return ""
+    start = 0
+    code_start = re.compile(r"^\s*(def |class |from |import |@|if __name__ ==|[A-Za-z_][A-Za-z0-9_]*\s*=)")
+    for i, line in enumerate(lines):
+        if code_start.search(line):
+            start = i
+            break
+    kept: List[str] = []
+    stop_markers = (
+        "Explanation:",
+        "Output:",
+        "Example usage",
+        "This Python code",
+        "The program",
+        "# Example usage",
+    )
+    for line in lines[start:]:
+        if any(marker in line for marker in stop_markers):
+            break
+        kept.append(line)
+    return "\n".join(kept).strip()
+
+
+def longest_compilable_prefix(text: str) -> str:
+    lines = [line.rstrip() for line in (text or "").splitlines()]
+    for end in range(len(lines), 0, -1):
+        candidate = "\n".join(lines[:end]).strip()
+        if not candidate:
+            continue
+        try:
+            compile(candidate, "<candidate>", "exec")
+            return candidate
+        except Exception:
+            continue
+    return text.strip()
+
+
+def extract_python_answer(text: str, strict_contract: bool) -> str:
+    s = extract_answer(text)
+    if not strict_contract:
+        return s
+    s = trim_to_code_region(s)
+    s = longest_compilable_prefix(s)
+    return s.strip()
+
+
 def syntax_valid(code: str) -> bool:
     try:
         compile(code, "<candidate>", "exec")
@@ -125,7 +174,13 @@ def load_model(model_name_or_path: str):
     return model, tok
 
 
-def code_prompt(question: str) -> str:
+def code_prompt(question: str, strict_contract: bool) -> str:
+    if strict_contract:
+        return (
+            "You are a Python coding assistant. Return only valid Python code that solves the task. "
+            "Do not include explanations, markdown fences, example usage, or extra text.\n"
+            f"Question: {question}\nAnswer:"
+        )
     return f"Question: {question}\nAnswer:"
 
 
@@ -138,8 +193,9 @@ def generate_code(
     do_sample: bool,
     temperature: float,
     top_p: float,
+    strict_contract: bool,
 ) -> tuple[str, float, float]:
-    prompt = code_prompt(question)
+    prompt = code_prompt(question, strict_contract=strict_contract)
     enc = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
     input_ids = enc["input_ids"].to(device)
     attention_mask = enc["attention_mask"].to(device)
@@ -158,7 +214,7 @@ def generate_code(
         )
 
     gen_ids = out.sequences[0, input_ids.shape[1]:]
-    text = extract_answer(tokenizer.decode(gen_ids, skip_special_tokens=True))
+    text = extract_python_answer(tokenizer.decode(gen_ids, skip_special_tokens=True), strict_contract=strict_contract)
 
     if len(out.scores) == 0:
         return text, -10.0, 10.0
@@ -268,6 +324,7 @@ def main() -> None:
     p.add_argument("--do-sample", action="store_true")
     p.add_argument("--temperature", type=float, default=0.8)
     p.add_argument("--top-p", type=float, default=0.95)
+    p.add_argument("--strict-code-contract", action="store_true")
     p.add_argument("--debug-limit", type=int, default=10)
     p.add_argument("--output-json", type=Path, default=None)
     args = p.parse_args()
@@ -291,6 +348,7 @@ def main() -> None:
             do_sample=args.do_sample,
             temperature=args.temperature,
             top_p=args.top_p,
+            strict_contract=args.strict_code_contract,
         )
         candidate = assemble_candidate(row, pred)
         syntactic = syntax_valid(candidate)
@@ -340,6 +398,7 @@ def main() -> None:
             "task_contract": "code_python_synthesis_v1",
             "confidence_definition": "P(submitted code passes the benchmark tests | prompt, model state, produced code)",
             "benchmark": args.benchmark,
+            "strict_code_contract": bool(args.strict_code_contract),
         },
         "samples": total,
         "syntax_valid_rate": syntax_valid_rate,

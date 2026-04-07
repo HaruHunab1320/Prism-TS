@@ -1,0 +1,27 @@
+project: argos-434718
+zone: us-central1-a
+machine_type: a2-highgpu-1g
+preemptible: false
+bucket: gs://lumina-checkpoints-argos-2026
+repo_url: https://github.com/HaruHunab1320/Prism-TS.git
+image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
+image_project: deeplearning-platform-release
+
+experiments:
+  - name: lumina-basic-code-contract-control-001
+    preflight_commands:
+      - set -o pipefail; cd .. && test -f lumina_multimodel/benchmarks/code_exec/mbpp_test.jsonl && test -f lumina_multimodel/benchmarks/code_exec/humaneval_test.jsonl && echo ok 2>&1 | tee lumina_multimodel/logs/lumina_basic_code_contract_control_preflight.txt
+    commands:
+      - mkdir -p logs outputs_gen_base
+      - echo 'lumina_basic code contract control start' | tee logs/lumina_basic_code_contract_control_start.txt
+      - set -o pipefail; gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-code-uplift-tx-001/outputs_gen/ outputs_gen_base/ 2>&1 | tee logs/lumina_basic_code_contract_control_sync_base.txt
+      - set -o pipefail; cd .. && DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m lumina_basic.evaluation.eval_code_confidence --model lumina_multimodel/outputs_gen_base/code_Qwen_Qwen2.5-1.5B-Instruct_gen --benchmark both --fixture-root lumina_multimodel/benchmarks/code_exec --max-samples 100 --max-new-tokens 128 --timeout-sec 4.0 --output-json lumina_multimodel/logs/lumina_basic_code_contract_control.json 2>&1 | tee lumina_multimodel/logs/lumina_basic_code_contract_control.txt
+
+  - name: lumina-basic-code-contract-tx-001
+    preflight_commands:
+      - set -o pipefail; cd .. && test -f lumina_multimodel/benchmarks/code_exec/mbpp_test.jsonl && test -f lumina_multimodel/benchmarks/code_exec/humaneval_test.jsonl && echo ok 2>&1 | tee lumina_multimodel/logs/lumina_basic_code_contract_tx_preflight.txt
+    commands:
+      - mkdir -p logs outputs_gen_base
+      - echo 'lumina_basic code contract treatment start' | tee logs/lumina_basic_code_contract_tx_start.txt
+      - set -o pipefail; gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-code-uplift-tx-001/outputs_gen/ outputs_gen_base/ 2>&1 | tee logs/lumina_basic_code_contract_tx_sync_base.txt
+      - set -o pipefail; cd .. && DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m lumina_basic.evaluation.eval_code_confidence --model lumina_multimodel/outputs_gen_base/code_Qwen_Qwen2.5-1.5B-Instruct_gen --benchmark both --fixture-root lumina_multimodel/benchmarks/code_exec --max-samples 100 --max-new-tokens 128 --timeout-sec 4.0 --strict-code-contract --output-json lumina_multimodel/logs/lumina_basic_code_contract_tx.json 2>&1 | tee lumina_multimodel/logs/lumina_basic_code_contract_tx.txt
