@@ -1,6 +1,6 @@
 project: argos-434718
 zone: us-central1-a
-machine_type: g2-standard-8
+machine_type: a2-highgpu-1g
 preemptible: false
 bucket: gs://lumina-checkpoints-argos-2026
 repo_url: https://github.com/HaruHunab1320/Prism-TS.git
