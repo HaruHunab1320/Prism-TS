@@ -121,6 +121,67 @@ def trim_to_code_region(text: str) -> str:
     return "\n".join(kept).strip()
 
 
+def expand_inline_body(body: str) -> List[str]:
+    body = (body or "").strip()
+    if not body:
+        return ["pass"]
+    chunks: List[str] = []
+    while body:
+        body = body.strip()
+        if not body:
+            break
+        if body.startswith(("import ", "from ")):
+            return_idx = body.find(" return ")
+            if return_idx > 0:
+                maybe_import = body[:return_idx].strip()
+                if maybe_import.startswith(("import ", "from ")):
+                    chunks.append(maybe_import)
+                    body = body[return_idx + 1 :].strip()
+                    continue
+        import_match = re.match(
+            r"^(from\s+[A-Za-z0-9_.]+\s+import\s+[A-Za-z0-9_, *]+|import\s+[A-Za-z0-9_, ]+)(?:\s+|$)(.*)$",
+            body,
+        )
+        if import_match:
+            stmt = import_match.group(1).strip()
+            rest = import_match.group(2).strip()
+            chunks.append(stmt)
+            body = rest
+            continue
+        return_idx = body.find(" return ")
+        if return_idx > 0:
+            prefix = body[:return_idx].strip()
+            if prefix:
+                chunks.append(prefix)
+            body = body[return_idx + 1 :].strip()
+            continue
+        chunks.append(body)
+        break
+    out: List[str] = []
+    for chunk in chunks:
+        out.extend([part.strip() for part in chunk.split(";") if part.strip()])
+    return out or ["pass"]
+
+
+def normalize_compact_function_bodies(text: str) -> str:
+    lines = (text or "").splitlines()
+    if not lines:
+        return ""
+    out: List[str] = []
+    pat = re.compile(r"^(\s*)def\s+([A-Za-z_][A-Za-z0-9_]*)\s*(\([^)]*\))\s*:\s*(.+)$")
+    for line in lines:
+        m = pat.match(line.rstrip())
+        if not m:
+            out.append(line)
+            continue
+        indent, name, sig, body = m.groups()
+        out.append(f"{indent}def {name}{sig}:")
+        stmt_indent = indent + "    "
+        for stmt in expand_inline_body(body):
+            out.append(f"{stmt_indent}{stmt}")
+    return "\n".join(out).strip()
+
+
 def longest_compilable_prefix(text: str) -> str:
     lines = [line.rstrip() for line in (text or "").splitlines()]
     for end in range(len(lines), 0, -1):
@@ -140,6 +201,7 @@ def extract_python_answer(text: str, strict_contract: bool) -> str:
     if not strict_contract:
         return s
     s = trim_to_code_region(s)
+    s = normalize_compact_function_bodies(s)
     s = longest_compilable_prefix(s)
     return s.strip()
 
@@ -234,6 +296,8 @@ def code_prompt(row: Dict, strict_contract: bool) -> str:
         return (
             "You are a Python coding assistant. "
             f"{contract} "
+            "Write standard multi-line Python with normal indentation. "
+            "Do not compress multiple statements onto one line. "
             "Do not include explanations, markdown fences, example usage, or extra text.\n"
             f"Question: {question}\nAnswer:"
         )

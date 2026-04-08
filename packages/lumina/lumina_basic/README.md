@@ -124,6 +124,7 @@ Current promotion status:
 - active code decode contract:
   - strict code-only prompt and extraction
   - benchmark-aware callable-name alignment
+  - multiline function-body cleanup for compact malformed outputs
 
 See `notes/plan.md` for next phase gates.
 See `notes/reset_plan_2026-03-27.md` for the current reset plan.

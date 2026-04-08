@@ -145,15 +145,17 @@ Current code read:
   - syntax-valid `0.37 -> 0.97`
   - pass rate `0.10 -> 0.19`
   - `AUROC 0.46 -> 0.58`
-- the dominant remaining failure mode is benchmark contract mismatch,
-  especially wrong callable names on MBPP-style tasks
+- benchmark-aware callable alignment then improved pass rate again:
+  - pass rate `0.19 -> 0.28`
+- the dominant remaining failure mode is MBPP output shape / semantics,
+  especially compact malformed one-line function bodies
 
 Next code step:
 
-- promote the strict code contract
-- add benchmark-specific function-name alignment
-- rerun the same execution-aware baseline before building a learned code
-  confidence probe
+- preserve strict code-only prompting + callable alignment
+- force more standard multiline function bodies
+- rerun the execution-aware baseline before building a learned code confidence
+  probe
 
 ### Phase C — Branching only if A/B pass
 

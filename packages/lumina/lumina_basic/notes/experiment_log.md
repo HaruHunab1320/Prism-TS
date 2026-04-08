@@ -1167,3 +1167,35 @@ Interpretation:
   mismatch, especially wrong callable names on MBPP-style tasks.
 - Next step is benchmark-specific function-name alignment, then a rerun of the
   same execution baseline before adding a learned code confidence probe.
+
+## 2026-04-08 — Code contract aligned baseline
+
+Cloud spec:
+
+```bash
+bash launch_experiments.sh experiments_lumina_basic_code_contract_aligned.yaml
+```
+
+Aligned strict contract:
+
+- syntax-valid rate: `0.87`
+- pass rate: `0.28`
+- `AUROC`: `0.520`
+- `ECE`: `0.441`
+- `Brier`: `0.396`
+
+Per benchmark:
+
+- `HumanEval`
+  - pass rate: `0.34`
+  - syntax-valid rate: `1.00`
+- `MBPP`
+  - pass rate: `0.22`
+  - syntax-valid rate: `0.74`
+
+Interpretation:
+
+- Benchmark-aware callable alignment is a keep.
+- The remaining blocker is mostly MBPP output shape and semantics.
+- Next step is output-shape cleanup for compact malformed function bodies,
+  then another rerun of the same execution baseline.
