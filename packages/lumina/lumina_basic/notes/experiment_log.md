@@ -1126,3 +1126,44 @@ Decision:
   - `threshold = 0.20`
 - The older unfine-tuned Qwen selective-answer baseline remains useful as a
   simpler reference, but it is no longer the active path.
+
+## 2026-04-07 — Code contract tightening A/B
+
+Cloud spec:
+
+```bash
+bash launch_experiments.sh experiments_lumina_basic_code_contract_tighten.yaml
+```
+
+Control:
+
+- syntax-valid rate: `0.37`
+- pass rate: `0.10`
+- `AUROC`: `0.462`
+- `ECE`: `0.483`
+- `Brier`: `0.339`
+
+Treatment: strict code-only contract
+
+- syntax-valid rate: `0.97`
+- pass rate: `0.19`
+- `AUROC`: `0.576`
+- `ECE`: `0.495`
+- `Brier`: `0.394`
+
+Per benchmark:
+
+- `HumanEval`
+  - pass rate: `0.18 -> 0.34`
+  - syntax-valid rate: `0.60 -> 0.94`
+- `MBPP`
+  - pass rate: `0.02 -> 0.04`
+  - syntax-valid rate: `0.14 -> 1.00`
+
+Interpretation:
+
+- The strict code contract is a keep and becomes the default code path.
+- The main blocker is no longer invalid Python; it is benchmark-contract
+  mismatch, especially wrong callable names on MBPP-style tasks.
+- Next step is benchmark-specific function-name alignment, then a rerun of the
+  same execution baseline before adding a learned code confidence probe.

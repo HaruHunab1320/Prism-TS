@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import math
 import re
@@ -60,6 +61,38 @@ def extract_answer(text: str) -> str:
         text = text.split("Answer:", 1)[-1]
     text = re.split(r"\n(?:Question:|Q:|User:|Assistant:)", text, maxsplit=1)[0]
     return strip_code_fences(text)
+
+
+def expected_entry_point(row: Dict) -> str:
+    if row["benchmark"] == "humaneval":
+        return (row.get("entry_point") or "").strip()
+    tests = row.get("tests") or []
+    for test in tests:
+        m = re.search(r"assert\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(", test)
+        if m:
+            return m.group(1)
+    reference = row.get("reference") or ""
+    matches = re.findall(r"^\s*def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(", reference, flags=re.M)
+    return matches[-1] if matches else ""
+
+
+def expected_signature_hint(row: Dict) -> str:
+    expected = expected_entry_point(row)
+    if not expected:
+        return ""
+    reference = row.get("reference") or ""
+    for line in reference.splitlines():
+        if re.search(rf"^\s*def\s+{re.escape(expected)}\s*\(", line):
+            return line.strip()
+    return f"def {expected}(...)"
+
+
+def top_level_function_names(code: str) -> List[str]:
+    try:
+        tree = ast.parse(code)
+    except Exception:
+        return []
+    return [node.name for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
 
 
 def trim_to_code_region(text: str) -> str:
@@ -124,9 +157,23 @@ def assemble_candidate(row: Dict, pred: str) -> str:
     if row["benchmark"] == "humaneval":
         entry = row.get("entry_point") or ""
         if entry and f"def {entry}" in pred:
-            return pred
-        return f"{row['prompt']}{pred}".strip()
-    return pred
+            candidate = pred
+        else:
+            candidate = f"{row['prompt']}{pred}".strip()
+    else:
+        candidate = pred
+
+    expected = expected_entry_point(row)
+    if not expected or not candidate.strip():
+        return candidate
+    defined = top_level_function_names(candidate)
+    if expected in defined or len(defined) != 1:
+        return candidate
+    actual = defined[0]
+    if actual == expected:
+        return candidate
+    # Preserve the generated implementation and expose the benchmark-expected symbol.
+    return f"{candidate}\n\n{expected} = {actual}\n"
 
 
 def build_test_script(row: Dict, candidate_code: str) -> str:
@@ -174,10 +221,19 @@ def load_model(model_name_or_path: str):
     return model, tok
 
 
-def code_prompt(question: str, strict_contract: bool) -> str:
+def code_prompt(row: Dict, strict_contract: bool) -> str:
+    question = row["question"]
     if strict_contract:
+        expected = expected_entry_point(row)
+        sig = expected_signature_hint(row)
+        contract = "Return only valid Python code that solves the task."
+        if expected:
+            contract += f" Define the top-level callable exactly as `{expected}`."
+        if sig:
+            contract += f" Use this signature when applicable: `{sig}`."
         return (
-            "You are a Python coding assistant. Return only valid Python code that solves the task. "
+            "You are a Python coding assistant. "
+            f"{contract} "
             "Do not include explanations, markdown fences, example usage, or extra text.\n"
             f"Question: {question}\nAnswer:"
         )
@@ -187,7 +243,7 @@ def code_prompt(question: str, strict_contract: bool) -> str:
 def generate_code(
     model,
     tokenizer,
-    question: str,
+    row: Dict,
     device: torch.device,
     max_new_tokens: int,
     do_sample: bool,
@@ -195,7 +251,7 @@ def generate_code(
     top_p: float,
     strict_contract: bool,
 ) -> tuple[str, float, float]:
-    prompt = code_prompt(question, strict_contract=strict_contract)
+    prompt = code_prompt(row, strict_contract=strict_contract)
     enc = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
     input_ids = enc["input_ids"].to(device)
     attention_mask = enc["attention_mask"].to(device)
@@ -342,7 +398,7 @@ def main() -> None:
         pred, avg_logprob, avg_entropy = generate_code(
             model=model,
             tokenizer=tokenizer,
-            question=row["question"],
+            row=row,
             device=device,
             max_new_tokens=args.max_new_tokens,
             do_sample=args.do_sample,

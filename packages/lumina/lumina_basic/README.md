@@ -83,6 +83,9 @@ LUMINA_BASIC_CODE_MODEL="path-or-hf-model" \
 bash lumina_basic/tools/run_code_confidence.sh
 ```
 
+This now defaults to the promoted strict code contract unless
+`LUMINA_BASIC_STRICT_CODE_CONTRACT=0` is set.
+
 Run the structured verification-style escalation experiment locally:
 
 ```bash
@@ -118,6 +121,9 @@ Current promotion status:
   - escalation policy at `threshold 0.20`
 - archived as prior baseline:
   - unfine-tuned Qwen selective-answer policy at `threshold 0.15`
+- active code decode contract:
+  - strict code-only prompt and extraction
+  - benchmark-aware callable-name alignment
 
 See `notes/plan.md` for next phase gates.
 See `notes/reset_plan_2026-03-27.md` for the current reset plan.

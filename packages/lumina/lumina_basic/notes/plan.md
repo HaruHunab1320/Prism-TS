@@ -138,9 +138,22 @@ Immediate code tasks now completed:
 - `code_confidence_contract.md`
 - `eval_code_confidence.py`
 
+Current code read:
+
+- the original loose code path was blocked mostly by bad output contract
+- strict code-only prompting + extraction materially improved execution:
+  - syntax-valid `0.37 -> 0.97`
+  - pass rate `0.10 -> 0.19`
+  - `AUROC 0.46 -> 0.58`
+- the dominant remaining failure mode is benchmark contract mismatch,
+  especially wrong callable names on MBPP-style tasks
+
 Next code step:
 
-- run one execution-aware single-model code confidence baseline
+- promote the strict code contract
+- add benchmark-specific function-name alignment
+- rerun the same execution-aware baseline before building a learned code
+  confidence probe
 
 ### Phase C — Branching only if A/B pass
 

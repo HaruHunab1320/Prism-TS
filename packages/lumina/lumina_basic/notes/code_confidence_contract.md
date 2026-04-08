@@ -27,6 +27,8 @@ Core question:
 - output:
   - Python code only
   - ideally a function body or complete function depending on benchmark task
+  - when the benchmark expects a named callable, the output contract includes
+    that exact symbol name
 - correctness:
   - benchmark tests pass
 
@@ -62,6 +64,12 @@ The first baseline should be narrow and simple:
 - execution-aware evaluation
 - no multimodel routing
 - no patch / edit tasks
+
+Current promoted decode contract:
+
+- strict code-only prompt
+- benchmark-aware function-name alignment
+- code-region extraction before execution
 
 ## Required metrics
 
