@@ -1230,3 +1230,36 @@ Interpretation:
 - Remaining errors are mostly semantic, not formatting.
 - Next step is a cleaner answer-model change under the frozen strict contract,
   not more output-shape tweaking.
+
+## 2026-04-09 — Code uplift audit
+
+Audit of `lumina-basic-code-model-uplift-tx-001`:
+
+- training loss looked normal:
+  - `train_loss=0.6826`
+  - `val_loss=0.6531`
+- but the runtime result collapsed:
+  - pass rate `0.04`
+  - `MBPP` pass rate `0.00`
+
+Root causes:
+
+- dataset mismatch:
+  - `datasets_code_exec_v1` was `88.3%` `CodeAlpaca`
+  - only `11.7%` MBPP/HumanEval-style rows
+  - `CodeAlpaca` includes mixed-language tasks (e.g. JavaScript), while the
+    runtime contract is Python-only
+- prompt mismatch:
+  - training used the generic `Question: ... / Answer:` path
+  - runtime used the strict Python-only contract with callable expectations
+- task-shape mismatch:
+  - generic QA fine-tuning was not conditioned on benchmark entry points or
+    function-name requirements
+
+Decision:
+
+- drop the generic code uplift treatment
+- next run must use:
+  - a Python-only dataset
+  - benchmark-shaped rows
+  - the same strict contract prompt used at runtime

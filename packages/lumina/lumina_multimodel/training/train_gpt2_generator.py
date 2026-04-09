@@ -37,15 +37,24 @@ class QADataset(Dataset):
         tokenizer,
         max_len: int = 256,
         strict_answer: bool = False,
+        strict_code_contract: bool = False,
         domain: str = "general",
     ):
         self.rows = rows
         self.tok = tokenizer
         self.max_len = max_len
         self.strict_answer = strict_answer
+        self.strict_code_contract = strict_code_contract
         self.domain = domain
 
     def _prompt(self, question: str) -> str:
+        if self.strict_code_contract and self.domain == "code":
+            return (
+                "You are a Python coding assistant. Return only valid Python code that solves the task. "
+                "Write standard multi-line Python with normal indentation. "
+                "Do not include explanations, markdown fences, example usage, or extra text.\n"
+                f"Question: {question}\nAnswer:"
+            )
         if self.strict_answer:
             if self.domain == "math":
                 return f"Question: {question}\nAnswer (single number only):"
@@ -177,6 +186,8 @@ def main():
                    help="Weight per-sample loss by a simple answer quality heuristic.")
     p.add_argument("--strict-answer", action="store_true",
                    help="Use a stricter prompt: 'Answer (short):' to bias short direct outputs.")
+    p.add_argument("--strict-code-contract", action="store_true",
+                   help="For code domain, train with the same strict code-only prompt shape as lumina_basic.")
     p.add_argument("--math-canonical-targets", action="store_true",
                    help="For math domain, train on canonical short answers (prefer numeric final answer).")
     args = p.parse_args()
@@ -215,10 +226,12 @@ def main():
         raise SystemExit("No trainable parameters were selected.")
 
     train_ds = QADataset(
-        train_rows, tok, args.max_len, strict_answer=args.strict_answer, domain=args.domain
+        train_rows, tok, args.max_len, strict_answer=args.strict_answer,
+        strict_code_contract=args.strict_code_contract, domain=args.domain
     )
     val_ds = QADataset(
-        val_rows, tok, args.max_len, strict_answer=args.strict_answer, domain=args.domain
+        val_rows, tok, args.max_len, strict_answer=args.strict_answer,
+        strict_code_contract=args.strict_code_contract, domain=args.domain
     )
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False)

@@ -154,7 +154,8 @@ Current code read:
 Next code step:
 
 - preserve the frozen strict contract + callable alignment
-- change only the answer model
+- rebuild the answer model on a Python-only, benchmark-shaped dataset under the
+  same strict contract
 - rerun the execution-aware baseline before building a learned code confidence
   probe
 
