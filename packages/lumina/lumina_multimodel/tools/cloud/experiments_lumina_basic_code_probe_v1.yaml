@@ -1,0 +1,19 @@
+project: argos-434718
+zone: us-central1-b
+machine_type: a2-highgpu-1g
+preemptible: false
+bucket: gs://lumina-checkpoints-argos-2026
+repo_url: https://github.com/HaruHunab1320/Prism-TS.git
+image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
+image_project: deeplearning-platform-release
+
+experiments:
+  - name: lumina-basic-code-probe-v1-001
+    preflight_commands:
+      - set -o pipefail; cd .. && test -f lumina_multimodel/benchmarks/code_exec/mbpp_test.jsonl && test -f lumina_multimodel/benchmarks/code_exec/humaneval_test.jsonl && python -m py_compile lumina_basic/evaluation/eval_code_confidence.py lumina_basic/training/train_code_confidence_head.py 2>&1 | tee lumina_multimodel/logs/lumina_basic_code_probe_v1_preflight.txt
+    commands:
+      - mkdir -p logs outputs_gen_base outputs_code_tx lumina_basic/outputs
+      - echo 'lumina_basic code probe v1 start' | tee logs/lumina_basic_code_probe_v1_start.txt
+      - set -o pipefail; gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-basic-code-python-contract-tx-001/outputs_gen/ outputs_code_tx/ 2>&1 | tee logs/lumina_basic_code_probe_v1_sync_code.txt
+      - set -o pipefail; cd .. && DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m lumina_basic.training.train_code_confidence_head --model lumina_multimodel/outputs_code_tx/code_Qwen_Qwen2.5-Coder-1.5B-Instruct_gen --benchmark both --fixture-root lumina_multimodel/benchmarks/code_exec --max-train-samples 100 --max-val-samples 100 --max-new-tokens 128 --timeout-sec 4.0 --strict-code-contract --output lumina_basic/outputs/code_confidence_probe_v1.pt --metrics-json lumina_multimodel/logs/lumina_basic_code_probe_v1_train.json 2>&1 | tee lumina_multimodel/logs/lumina_basic_code_probe_v1_train.txt
+      - set -o pipefail; cd .. && DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m lumina_basic.evaluation.eval_code_confidence --model lumina_multimodel/outputs_code_tx/code_Qwen_Qwen2.5-Coder-1.5B-Instruct_gen --benchmark both --fixture-root lumina_multimodel/benchmarks/code_exec --max-samples 100 --max-new-tokens 128 --timeout-sec 4.0 --strict-code-contract --confidence-head lumina_basic/outputs/code_confidence_probe_v1.pt --output-json lumina_multimodel/logs/lumina_basic_code_probe_v1_eval.json 2>&1 | tee lumina_multimodel/logs/lumina_basic_code_probe_v1_eval.txt

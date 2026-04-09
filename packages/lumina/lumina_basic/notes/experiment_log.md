@@ -1263,3 +1263,40 @@ Decision:
   - a Python-only dataset
   - benchmark-shaped rows
   - the same strict contract prompt used at runtime
+
+## 2026-04-09 — Python-contract code uplift
+
+Cloud spec:
+
+```bash
+bash launch_experiments.sh experiments_lumina_basic_code_python_contract.yaml
+```
+
+Control:
+
+- syntax-valid rate: `0.87`
+- pass rate: `0.26`
+- `AUROC`: `0.385`
+- `ECE`: `0.462`
+
+Treatment: Python-only contract-matched code uplift
+
+- syntax-valid rate: `0.83`
+- pass rate: `0.37`
+- `AUROC`: `0.350`
+- `ECE`: `0.344`
+
+Per benchmark:
+
+- `HumanEval`
+  - pass rate: `0.30 -> 0.38`
+- `MBPP`
+  - pass rate: `0.22 -> 0.36`
+
+Decision:
+
+- promote the Python-contract code answer model as the active code capability
+  baseline
+- do not claim code confidence is working yet
+- next step is a learned code confidence probe on top of this stronger answer
+  model

@@ -159,6 +159,20 @@ Next code step:
 - rerun the execution-aware baseline before building a learned code confidence
   probe
 
+Current code read:
+
+- the Python-contract answer-model uplift worked:
+  - pass rate `0.26 -> 0.37`
+  - `HumanEval` pass `0.30 -> 0.38`
+  - `MBPP` pass `0.22 -> 0.36`
+- confidence still does not rank correctness well enough
+
+Next code step:
+
+- freeze the Python-contract answer model
+- train a learned code confidence probe on execution labels
+- only then test thresholded code policies
+
 ### Phase C — Branching only if A/B pass
 
 Only revisit branching or disagreement if confidence has already shown value in

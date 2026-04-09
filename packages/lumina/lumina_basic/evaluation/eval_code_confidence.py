@@ -14,6 +14,8 @@ from typing import Dict, List
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from lumina_basic.models.confidence_probe import load_probe
+
 
 DEFAULT_FIXTURE_ROOT = Path("lumina_multimodel/benchmarks/code_exec")
 
@@ -363,6 +365,44 @@ def heuristic_confidence(avg_logprob: float, avg_entropy: float, answer: str) ->
     return 1.0 / (1.0 + math.exp(-raw))
 
 
+def code_contract_features(
+    row: Dict,
+    raw_answer: str,
+    candidate_code: str,
+    avg_logprob: float,
+    avg_entropy: float,
+    syntactic: bool,
+) -> List[float]:
+    raw = (raw_answer or "").strip()
+    candidate = (candidate_code or "").strip()
+    expected = expected_entry_point(row)
+    defined = top_level_function_names(candidate)
+    answer_words = raw.split()
+    candidate_lines = candidate.splitlines()
+    inline_def = 0.0
+    if candidate_lines:
+        inline_def = 1.0 if any(re.match(r"^\s*def\s+.+:\s+\S", line) for line in candidate_lines) else 0.0
+    return [
+        float(avg_logprob),
+        float(avg_entropy),
+        float(len(answer_words)),
+        float(len(raw)),
+        float(len(candidate_lines)),
+        1.0 if syntactic else 0.0,
+        1.0 if expected else 0.0,
+        1.0 if expected and expected in candidate else 0.0,
+        1.0 if expected and expected in defined else 0.0,
+        float(len(defined)),
+        1.0 if row["benchmark"] == "mbpp" else 0.0,
+        1.0 if row["benchmark"] == "humaneval" else 0.0,
+        1.0 if raw.startswith("def ") else 0.0,
+        1.0 if "```" in raw else 0.0,
+        1.0 if "return " in candidate else 0.0,
+        1.0 if "import " in candidate or "from " in candidate else 0.0,
+        inline_def,
+    ]
+
+
 def brier_score(rows: List[Dict]) -> float:
     if not rows:
         return 0.0
@@ -445,6 +485,7 @@ def main() -> None:
     p.add_argument("--temperature", type=float, default=0.8)
     p.add_argument("--top-p", type=float, default=0.95)
     p.add_argument("--strict-code-contract", action="store_true")
+    p.add_argument("--confidence-head", type=Path, default=None)
     p.add_argument("--debug-limit", type=int, default=10)
     p.add_argument("--output-json", type=Path, default=None)
     args = p.parse_args()
@@ -452,6 +493,7 @@ def main() -> None:
     device = resolve_device(args.device)
     model, tokenizer = load_model(args.model)
     model.to(device).eval()
+    probe_bundle = load_probe(args.confidence_head) if args.confidence_head else None
 
     rows = load_rows(args.fixture_root, args.benchmark, args.max_samples)
     result_rows: List[Dict] = []
@@ -476,7 +518,19 @@ def main() -> None:
         err = ""
         if syntactic:
             passed, err = run_script(build_test_script(row, candidate), args.timeout_sec)
-        conf = heuristic_confidence(avg_logprob, avg_entropy, pred)
+        feature_vector = code_contract_features(
+            row=row,
+            raw_answer=pred,
+            candidate_code=candidate,
+            avg_logprob=avg_logprob,
+            avg_entropy=avg_entropy,
+            syntactic=syntactic,
+        )
+        conf = (
+            probe_bundle.predict_prob(feature_vector)
+            if probe_bundle is not None
+            else heuristic_confidence(avg_logprob, avg_entropy, pred)
+        )
 
         record = {
             "benchmark": row["benchmark"],
@@ -486,6 +540,7 @@ def main() -> None:
             "syntax_valid": int(syntactic),
             "avg_logprob": avg_logprob,
             "avg_entropy": avg_entropy,
+            "feature_vector": feature_vector,
         }
         result_rows.append(record)
 
@@ -503,6 +558,7 @@ def main() -> None:
                     "syntax_valid": syntactic,
                     "passed": passed,
                     "confidence": conf,
+                    "feature_vector": feature_vector,
                     "error": err,
                 }
             )
@@ -513,6 +569,7 @@ def main() -> None:
 
     payload = {
         "model": args.model,
+        "confidence_source": "learned_probe" if probe_bundle is not None else "heuristic",
         "contract": {
             "domain": "code",
             "task_contract": "code_python_synthesis_v1",

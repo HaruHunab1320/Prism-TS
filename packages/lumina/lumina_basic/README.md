@@ -86,6 +86,13 @@ bash lumina_basic/tools/run_code_confidence.sh
 This now defaults to the promoted strict code contract unless
 `LUMINA_BASIC_STRICT_CODE_CONTRACT=0` is set.
 
+Train the first learned code confidence probe:
+
+```bash
+LUMINA_BASIC_CODE_MODEL="path-or-hf-model" \
+bash lumina_basic/tools/run_train_code_confidence_head.sh
+```
+
 Run the structured verification-style escalation experiment locally:
 
 ```bash
