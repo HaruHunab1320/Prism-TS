@@ -1199,3 +1199,34 @@ Interpretation:
 - The remaining blocker is mostly MBPP output shape and semantics.
 - Next step is output-shape cleanup for compact malformed function bodies,
   then another rerun of the same execution baseline.
+
+## 2026-04-08 — Code contract shape cleanup
+
+Cloud spec:
+
+```bash
+bash launch_experiments.sh experiments_lumina_basic_code_contract_shape.yaml
+```
+
+Result:
+
+- syntax-valid rate: `0.87`
+- pass rate: `0.26`
+- `AUROC`: `0.385`
+- `ECE`: `0.462`
+- `Brier`: `0.393`
+
+Per benchmark:
+
+- `HumanEval`
+  - pass rate: `0.30`
+- `MBPP`
+  - pass rate: `0.22`
+
+Interpretation:
+
+- This shape-cleanup variant is a drop.
+- Callable alignment was the real contract win.
+- Remaining errors are mostly semantic, not formatting.
+- Next step is a cleaner answer-model change under the frozen strict contract,
+  not more output-shape tweaking.

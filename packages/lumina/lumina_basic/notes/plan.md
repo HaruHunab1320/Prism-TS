@@ -147,13 +147,14 @@ Current code read:
   - `AUROC 0.46 -> 0.58`
 - benchmark-aware callable alignment then improved pass rate again:
   - pass rate `0.19 -> 0.28`
-- the dominant remaining failure mode is MBPP output shape / semantics,
-  especially compact malformed one-line function bodies
+- shape cleanup did not help:
+  - pass rate `0.28 -> 0.26`
+- the dominant remaining failure mode is now clearly semantic correctness
 
 Next code step:
 
-- preserve strict code-only prompting + callable alignment
-- force more standard multiline function bodies
+- preserve the frozen strict contract + callable alignment
+- change only the answer model
 - rerun the execution-aware baseline before building a learned code confidence
   probe
 
