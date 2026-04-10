@@ -4,6 +4,7 @@ import argparse
 import ast
 import json
 import math
+import random
 import re
 import subprocess
 import sys
@@ -49,6 +50,13 @@ def load_rows(fixture_root: Path, benchmark: str, max_samples: int) -> List[Dict
         half = max(1, max_samples // 2)
         return load_jsonl(fixture_root / "mbpp_test.jsonl")[:half] + load_jsonl(fixture_root / "humaneval_test.jsonl")[:half]
     raise ValueError(f"Unsupported benchmark: {benchmark}")
+
+
+def sample_rows(rows: List[Dict], max_samples: int, seed: int) -> List[Dict]:
+    rows = list(rows)
+    rng = random.Random(seed)
+    rng.shuffle(rows)
+    return rows[:max_samples]
 
 
 def strip_code_fences(text: str) -> str:
@@ -478,6 +486,7 @@ def main() -> None:
     p.add_argument("--benchmark", choices=["mbpp", "humaneval", "both"], default="both")
     p.add_argument("--fixture-root", type=Path, default=DEFAULT_FIXTURE_ROOT)
     p.add_argument("--max-samples", type=int, default=100)
+    p.add_argument("--seed", type=int, default=7)
     p.add_argument("--max-new-tokens", type=int, default=128)
     p.add_argument("--timeout-sec", type=float, default=4.0)
     p.add_argument("--device", default="")
@@ -495,7 +504,7 @@ def main() -> None:
     model.to(device).eval()
     probe_bundle = load_probe(args.confidence_head) if args.confidence_head else None
 
-    rows = load_rows(args.fixture_root, args.benchmark, args.max_samples)
+    rows = sample_rows(load_rows(args.fixture_root, args.benchmark, args.max_samples), args.max_samples, args.seed)
     result_rows: List[Dict] = []
     debug_rows = []
     bench_stats: Dict[str, Dict[str, int]] = {}
@@ -570,6 +579,7 @@ def main() -> None:
     payload = {
         "model": args.model,
         "confidence_source": "learned_probe" if probe_bundle is not None else "heuristic",
+        "seed": args.seed,
         "contract": {
             "domain": "code",
             "task_contract": "code_python_synthesis_v1",

@@ -93,6 +93,13 @@ LUMINA_BASIC_CODE_MODEL="path-or-hf-model" \
 bash lumina_basic/tools/run_train_code_confidence_head.sh
 ```
 
+Current code confidence candidate:
+
+- `code_probe_v1` on the promoted Python-contract code model
+- threshold candidates:
+  - default: `0.40`
+  - stricter: `0.50`
+
 Run the structured verification-style escalation experiment locally:
 
 ```bash

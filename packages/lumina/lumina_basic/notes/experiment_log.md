@@ -1300,3 +1300,39 @@ Decision:
 - do not claim code confidence is working yet
 - next step is a learned code confidence probe on top of this stronger answer
   model
+
+## 2026-04-09 — Code confidence probe v1
+
+Cloud spec:
+
+```bash
+bash launch_experiments.sh experiments_lumina_basic_code_probe_v1.yaml
+```
+
+Training:
+
+- val `AUROC`: `0.751`
+- val `ECE`: `0.126`
+- val `Brier`: `0.218`
+
+Eval on promoted Python-contract code model:
+
+- pass rate: `0.37`
+- learned-probe `AUROC`: `0.716`
+- learned-probe `ECE`: `0.124`
+- learned-probe `Brier`: `0.221`
+
+Threshold sweep:
+
+- `0.40`
+  - coverage: `0.82`
+  - selective accuracy: `0.451`
+- `0.50`
+  - coverage: `0.70`
+  - selective accuracy: `0.514`
+
+Decision:
+
+- this is the first validated code-confidence result
+- promote `code_probe_v1` as the active code confidence candidate
+- next step is policy stability at thresholds `0.40` and `0.50`

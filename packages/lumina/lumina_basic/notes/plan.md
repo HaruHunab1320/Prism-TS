@@ -173,6 +173,21 @@ Next code step:
 - train a learned code confidence probe on execution labels
 - only then test thresholded code policies
 
+Current code confidence read:
+
+- `code_probe_v1` is a real positive:
+  - eval `AUROC`: `0.716`
+  - eval `ECE`: `0.124`
+- likely default threshold candidate:
+  - `0.40`
+- stricter research point:
+  - `0.50`
+
+Next code step:
+
+- run stability across shuffled benchmark slices
+- then freeze the default code selective-answer threshold
+
 ### Phase C — Branching only if A/B pass
 
 Only revisit branching or disagreement if confidence has already shown value in

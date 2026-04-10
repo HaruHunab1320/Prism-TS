@@ -57,6 +57,7 @@ gcloud auth login
 - `experiments_lumina_basic_code_model_uplift.yaml`
 - `experiments_lumina_basic_code_python_contract.yaml`
 - `experiments_lumina_basic_code_probe_v1.yaml`
+- `experiments_lumina_basic_code_policy_stability.yaml`
 
 ### Larger confirm
 - `experiments_combined_confirm_5000.yaml`
