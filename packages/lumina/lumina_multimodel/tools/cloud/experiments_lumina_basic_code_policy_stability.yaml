@@ -1,5 +1,5 @@
 project: argos-434718
-zone: us-central1-b
+zone: us-central1-a
 machine_type: a2-highgpu-1g
 preemptible: false
 bucket: gs://lumina-checkpoints-argos-2026
