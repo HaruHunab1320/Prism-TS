@@ -4,8 +4,9 @@ This directory is for the original Lumina architecture:
 - A single model with confidence heads
 - Confidence-based branching / pruning / escalation
 
-Status: prototype implemented; active path is now the promoted math-contract
-baseline built on a fine-tuned Qwen math checkpoint plus `probe v2`.
+Status: prototype implemented; active paths are now:
+- promoted math confidence/control under the math contract
+- promoted code selective-answer behavior under the Python execution contract
 
 ## Run smoke eval
 From `packages/lumina/`:
@@ -93,12 +94,17 @@ LUMINA_BASIC_CODE_MODEL="path-or-hf-model" \
 bash lumina_basic/tools/run_train_code_confidence_head.sh
 ```
 
-Current code confidence candidate:
+Current promoted code operating point:
 
-- `code_probe_v1` on the promoted Python-contract code model
-- threshold candidates:
-  - default: `0.40`
-  - stricter: `0.50`
+- answer model: Python-contract code model
+- confidence head: `code_probe_v1`
+- mode: `baseline selective`
+- threshold: `0.40`
+- stability summary:
+  - coverage mean: `0.72`
+  - selective accuracy mean: `0.50`
+  - overall accuracy mean: `0.36`
+  - gain vs always-answer mean: `+0.13`
 
 Run the structured verification-style escalation experiment locally:
 
@@ -133,15 +139,19 @@ Current promotion status:
   - fine-tuned Qwen math answer model
   - `probe v2` with contract-aware answer features
   - escalation policy at `threshold 0.20`
+- promoted:
+  - Python-contract code answer model
+  - `code_probe_v1`
+  - baseline-selective policy at `threshold 0.40`
 - archived as prior baseline:
   - unfine-tuned Qwen selective-answer policy at `threshold 0.15`
 - active code decode contract:
   - strict code-only prompt and extraction
   - benchmark-aware callable-name alignment
-  - multiline function-body cleanup for compact malformed outputs
 
 See `notes/plan.md` for next phase gates.
 See `notes/reset_plan_2026-03-27.md` for the current reset plan.
 See `notes/prism_confidence_metadata_contract.md` for the Prism-facing metadata contract.
 See `notes/prism_language_note.md` for the language/runtime separation.
 See `notes/code_confidence_next_steps.md` for the next code-domain path.
+See `notes/validated_evidence_2026-04-10.md` for the current cross-domain evidence summary.

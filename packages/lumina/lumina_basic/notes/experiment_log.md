@@ -1336,3 +1336,34 @@ Decision:
 - this is the first validated code-confidence result
 - promote `code_probe_v1` as the active code confidence candidate
 - next step is policy stability at thresholds `0.40` and `0.50`
+
+## 2026-04-10 — Code policy stability
+
+Cloud spec:
+
+```bash
+bash launch_experiments.sh experiments_lumina_basic_code_policy_stability.yaml
+```
+
+`threshold 0.40`:
+
+- coverage mean: `0.72`
+- selective accuracy mean: `0.50`
+- overall accuracy mean: `0.36`
+- gain vs always-answer mean: `+0.13`
+- always-answer accuracy mean: `0.37`
+
+`threshold 0.50`:
+
+- coverage mean: `0.01`
+- selective accuracy mean: `1.00`
+- overall accuracy mean: `0.01`
+
+Decision:
+
+- freeze the promoted code path as:
+  - answer model: Python-contract code model
+  - confidence head: `code_probe_v1`
+  - mode: `baseline selective`
+  - threshold: `0.40`
+- `0.50` remains only a high-precision research point and is not operationally useful

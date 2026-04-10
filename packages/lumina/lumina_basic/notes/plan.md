@@ -178,15 +178,32 @@ Current code confidence read:
 - `code_probe_v1` is a real positive:
   - eval `AUROC`: `0.716`
   - eval `ECE`: `0.124`
-- likely default threshold candidate:
-  - `0.40`
-- stricter research point:
-  - `0.50`
+- code policy stability is now established:
+  - `threshold 0.40`
+    - coverage mean: `0.72`
+    - selective accuracy mean: `0.50`
+    - gain vs always-answer mean: `+0.13`
+  - `threshold 0.50` is too strict to be operationally useful
 
-Next code step:
+Current promoted code baseline:
 
-- run stability across shuffled benchmark slices
-- then freeze the default code selective-answer threshold
+- answer model: Python-contract code model
+- confidence head: `code_probe_v1`
+- operating mode: `baseline selective`
+- threshold: `0.40`
+
+Current code next step:
+
+- promoted code path is now frozen:
+  - answer model: Python-contract code model
+  - confidence head: `code_probe_v1`
+  - mode: `baseline selective`
+  - threshold: `0.40`
+- cross-domain evidence should now be treated as established enough to document
+  clearly for math and code
+- the next decision is strategic, not plumbing:
+  - extend to another domain, or
+  - add a code runtime/metadata path analogous to math
 
 ### Phase C — Branching only if A/B pass
 
