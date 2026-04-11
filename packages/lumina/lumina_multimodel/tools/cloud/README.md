@@ -1,6 +1,10 @@
 # Lumina Cloud Experiments
 
-This folder contains the GCP launcher and the current multimodel cloud experiment specs.
+This folder now keeps only the active promoted-path experiment specs.
+
+Older exploratory or superseded specs are archived under:
+
+- `archive/legacy_2026-04/`
 
 ## Prereqs
 - `gcloud` installed and authenticated
@@ -13,63 +17,26 @@ export CLOUDSDK_CONFIG=/tmp/gcloud
 gcloud auth login
 ```
 
-## Current canonical specs
+## Active canonical specs
 
-### Generator and gate path
-- `experiments_general_ablation.yaml`
-- `experiments_general_aclean_gate_agg.yaml`
-- `experiments_general_generator_uplift.yaml`
-- `experiments_math_generator_uplift.yaml`
-- `experiments_math_uplift_robust_router_5000.yaml`
-- `experiments_math_exact_uplift_5000.yaml`
-- `experiments_code_generator_uplift.yaml`
-- `experiments_code_heterogeneous_uplift_5000.yaml`
-- `experiments_code_exec_uplift_5000.yaml`
-- `experiments_code_v3_uplift_5000.yaml`
-
-### Routing and confidence path
-- `experiments_routing_isolation_300.yaml`
-- `experiments_math_attribution_2000.yaml`
-- `experiments_router_refresh_2000.yaml`
-- `experiments_router_robustness_5000.yaml`
-- `experiments_router_new_hybrid_only.yaml`
-- `experiments_conf_recalibration_2000.yaml`
-- `experiments_confidence_utility_5000.yaml`
-- `experiments_disagreement_utility_5000.yaml`
-- `experiments_specialist_diversity_5000.yaml`
-- `experiments_top2_selector_5000.yaml`
-- `experiments_prompt_contract_5000.yaml`
-- `experiments_code_decode_budget_5000.yaml`
-- `experiments_code_exec_benchmark_eval.yaml`
-- `experiments_lumina_basic_math_confidence.yaml`
-- `experiments_lumina_basic_math_policy_stability.yaml`
-- `experiments_lumina_basic_structured_escalation.yaml`
-- `experiments_lumina_basic_math_probe_scale.yaml`
-- `experiments_lumina_basic_gemma4_math_ab.yaml`
+### Math promoted path
 - `experiments_lumina_basic_qwen_math_uplift.yaml`
-- `experiments_lumina_basic_qwen_math_uplift_stability.yaml`
 - `experiments_lumina_basic_qwen_math_probe_v2.yaml`
 - `experiments_lumina_basic_qwen_math_probe_v2_stability.yaml`
-- `experiments_lumina_basic_code_confidence_baseline.yaml`
-- `experiments_lumina_basic_code_contract_tighten.yaml`
-- `experiments_lumina_basic_code_contract_aligned.yaml`
-- `experiments_lumina_basic_code_contract_shape.yaml`
-- `experiments_lumina_basic_code_model_uplift.yaml`
+
+### Code promoted path
 - `experiments_lumina_basic_code_python_contract.yaml`
 - `experiments_lumina_basic_code_probe_v1.yaml`
 - `experiments_lumina_basic_code_policy_stability.yaml`
 
-### Larger confirm
-- `experiments_combined_confirm_5000.yaml`
-- `experiments_combined_confirm_robust_router_5000.yaml`
-
-Superseded stage-a / stage-b specs were moved to:
+Older stage-a / stage-b and multimodel exploration specs were moved to:
 
 - `../../archive/legacy_2026-02/`
 - `../../archive/legacy_2026-03/`
+- `archive/legacy_2026-04/`
 
 ## Configure experiments
-Edit one of the current yaml files:
+Edit one of the active yaml files:
 - `project`, `zone`, `machine_type`, `bucket`, `repo_url`
 - experiment entries and command sequence
 - optional `preflight_commands` per experiment for cheap fail-fast validation before long training
@@ -78,7 +45,7 @@ Edit one of the current yaml files:
 From this folder:
 
 ```bash
-bash launch_experiments.sh experiments_combined_confirm_5000.yaml
+bash launch_experiments.sh experiments_lumina_basic_qwen_math_probe_v2.yaml
 ```
 
 Each VM:
