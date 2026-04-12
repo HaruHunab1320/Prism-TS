@@ -3,18 +3,18 @@ zone: us-central1-f
 machine_type: a2-highgpu-1g
 preemptible: false
 bucket: gs://lumina-checkpoints-argos-2026
-repo_url: git@github.com:HaruHunab1320/Prism-TS.git
+repo_url: https://github.com/HaruHunab1320/Prism-TS.git
 image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
 image_project: deeplearning-platform-release
 
 experiments:
-  - name: lumina-micro-js-map-control-001
+  - name: lumina-micro-js-map-control-002
     preflight_commands:
       - cd .. && python -m lumina_micro_specialists.data.build_js_array_loop_to_map_dataset --output-dir lumina_micro_specialists/data/datasets/js_array_loop_to_map_v1 --train-size 320 --val-size 64 | tee lumina_multimodel/logs/lumina_micro_js_map_control_build_dataset.txt
     commands:
       - cd .. && set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m lumina_micro_specialists.evaluation.eval_js_array_loop_to_map --dataset lumina_micro_specialists/data/datasets/js_array_loop_to_map_v1/val.jsonl --candidate-source model --model Qwen/Qwen2.5-Coder-1.5B-Instruct --max-samples 64 --output-json lumina_multimodel/logs/lumina_micro_js_map_control_eval.json 2>&1 | tee lumina_multimodel/logs/lumina_micro_js_map_control_eval.txt
 
-  - name: lumina-micro-js-map-tx-001
+  - name: lumina-micro-js-map-tx-002
     preflight_commands:
       - cd .. && python -m lumina_micro_specialists.data.build_js_array_loop_to_map_dataset --output-dir lumina_micro_specialists/data/datasets/js_array_loop_to_map_v1 --train-size 320 --val-size 64 | tee lumina_multimodel/logs/lumina_micro_js_map_tx_build_dataset.txt
     commands:
