@@ -29,6 +29,9 @@ gcloud auth login
 - `experiments_lumina_basic_code_probe_v1.yaml`
 - `experiments_lumina_basic_code_policy_stability.yaml`
 
+### Micro-specialist active path
+- `experiments_lumina_micro_js_array_loop_to_map_uplift.yaml`
+
 Older stage-a / stage-b and multimodel exploration specs were moved to:
 
 - `../../archive/legacy_2026-02/`

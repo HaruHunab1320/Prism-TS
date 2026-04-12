@@ -86,6 +86,8 @@ def make_row(idx: int, template: dict, rng: random.Random) -> dict:
         "source": "synthetic",
         "language": "javascript",
         "task_contract": "js_array_loop_to_map",
+        "question": prompt,
+        "answer": template["target"],
         "prompt": prompt,
         "input_code": template["original"],
         "target_code": template["target"],

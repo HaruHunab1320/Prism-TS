@@ -72,6 +72,18 @@ LUMINA_MICRO_MODEL="Qwen/Qwen2.5-Coder-1.5B-Instruct" \
 bash lumina_micro_specialists/tools/run_js_array_loop_to_map_baseline.sh
 ```
 
+Train the first contract-matched uplift:
+
+```bash
+bash lumina_micro_specialists/tools/run_train_js_array_loop_to_map_adapter.sh
+```
+
+Compare base model vs trained treatment:
+
+```bash
+bash lumina_micro_specialists/tools/run_js_array_loop_to_map_uplift.sh
+```
+
 ## Working rule
 
 Each micro-specialist must prove one thing:
