@@ -1,0 +1,1520 @@
+{
+  "task_contract": "js_array_loop_to_map",
+  "candidate_source": "target",
+  "model": "Qwen/Qwen2.5-Coder-1.5B-Instruct",
+  "samples": 32,
+  "routed_rate": 1.0,
+  "pass_rate": 1.0,
+  "syntax_valid_rate": 1.0,
+  "uses_map_rate": 1.0,
+  "rows": [
+    {
+      "id": "js_map_00330",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const cleaned = words.map((word) => word.trim());",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              "a",
+              "b",
+              "c"
+            ],
+            "expected": [
+              "a",
+              "b",
+              "c"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              ""
+            ],
+            "expected": [
+              ""
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00340",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const out = users.map((user) => user.name.toUpperCase());",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              "ADA",
+              "LINUS"
+            ],
+            "expected": [
+              "ADA",
+              "LINUS"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              "GRACE"
+            ],
+            "expected": [
+              "GRACE"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00332",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const summary = users.map((user) => ({ id: user.id, label: user.name.toUpperCase() }));",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "expected": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "expected": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00351",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const summary = users.map((user) => ({ id: user.id, label: user.name.toUpperCase() }));",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "expected": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "expected": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00370",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const doubled = nums.map((n) => n * 2);",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              2,
+              4,
+              6
+            ],
+            "expected": [
+              2,
+              4,
+              6
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              0,
+              -8,
+              14
+            ],
+            "expected": [
+              0,
+              -8,
+              14
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00375",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const cleaned = words.map((word) => word.trim());",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              "a",
+              "b",
+              "c"
+            ],
+            "expected": [
+              "a",
+              "b",
+              "c"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              ""
+            ],
+            "expected": [
+              ""
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00339",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const doubled = nums.map((n) => n * 2);",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              2,
+              4,
+              6
+            ],
+            "expected": [
+              2,
+              4,
+              6
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              0,
+              -8,
+              14
+            ],
+            "expected": [
+              0,
+              -8,
+              14
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00376",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const doubled = nums.map((n) => n * 2);",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              2,
+              4,
+              6
+            ],
+            "expected": [
+              2,
+              4,
+              6
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              0,
+              -8,
+              14
+            ],
+            "expected": [
+              0,
+              -8,
+              14
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00363",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const summary = users.map((user) => ({ id: user.id, label: user.name.toUpperCase() }));",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "expected": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "expected": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00365",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const summary = users.map((user) => ({ id: user.id, label: user.name.toUpperCase() }));",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "expected": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "expected": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00320",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const cleaned = words.map((word) => word.trim());",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              "a",
+              "b",
+              "c"
+            ],
+            "expected": [
+              "a",
+              "b",
+              "c"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              ""
+            ],
+            "expected": [
+              ""
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00341",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const summary = users.map((user) => ({ id: user.id, label: user.name.toUpperCase() }));",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "expected": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "expected": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00321",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const doubled = nums.map((n) => n * 2);",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              2,
+              4,
+              6
+            ],
+            "expected": [
+              2,
+              4,
+              6
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              0,
+              -8,
+              14
+            ],
+            "expected": [
+              0,
+              -8,
+              14
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00336",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const summary = users.map((user) => ({ id: user.id, label: user.name.toUpperCase() }));",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "expected": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "expected": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00328",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const cleaned = words.map((word) => word.trim());",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              "a",
+              "b",
+              "c"
+            ],
+            "expected": [
+              "a",
+              "b",
+              "c"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              ""
+            ],
+            "expected": [
+              ""
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00342",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const summary = users.map((user) => ({ id: user.id, label: user.name.toUpperCase() }));",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "expected": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "expected": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00331",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const cleaned = words.map((word) => word.trim());",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              "a",
+              "b",
+              "c"
+            ],
+            "expected": [
+              "a",
+              "b",
+              "c"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              ""
+            ],
+            "expected": [
+              ""
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00374",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const summary = users.map((user) => ({ id: user.id, label: user.name.toUpperCase() }));",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "expected": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "expected": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00373",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const doubled = nums.map((n) => n * 2);",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              2,
+              4,
+              6
+            ],
+            "expected": [
+              2,
+              4,
+              6
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              0,
+              -8,
+              14
+            ],
+            "expected": [
+              0,
+              -8,
+              14
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00362",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const cleaned = words.map((word) => word.trim());",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              "a",
+              "b",
+              "c"
+            ],
+            "expected": [
+              "a",
+              "b",
+              "c"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              ""
+            ],
+            "expected": [
+              ""
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00344",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const out = users.map((user) => user.name.toUpperCase());",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              "ADA",
+              "LINUS"
+            ],
+            "expected": [
+              "ADA",
+              "LINUS"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              "GRACE"
+            ],
+            "expected": [
+              "GRACE"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00349",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const doubled = nums.map((n) => n * 2);",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              2,
+              4,
+              6
+            ],
+            "expected": [
+              2,
+              4,
+              6
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              0,
+              -8,
+              14
+            ],
+            "expected": [
+              0,
+              -8,
+              14
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00338",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const cleaned = words.map((word) => word.trim());",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              "a",
+              "b",
+              "c"
+            ],
+            "expected": [
+              "a",
+              "b",
+              "c"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              ""
+            ],
+            "expected": [
+              ""
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00353",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const out = users.map((user) => user.name.toUpperCase());",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              "ADA",
+              "LINUS"
+            ],
+            "expected": [
+              "ADA",
+              "LINUS"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              "GRACE"
+            ],
+            "expected": [
+              "GRACE"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00350",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const summary = users.map((user) => ({ id: user.id, label: user.name.toUpperCase() }));",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "expected": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "expected": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00348",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const summary = users.map((user) => ({ id: user.id, label: user.name.toUpperCase() }));",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "expected": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "expected": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00369",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const doubled = nums.map((n) => n * 2);",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              2,
+              4,
+              6
+            ],
+            "expected": [
+              2,
+              4,
+              6
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              0,
+              -8,
+              14
+            ],
+            "expected": [
+              0,
+              -8,
+              14
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00381",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const summary = users.map((user) => ({ id: user.id, label: user.name.toUpperCase() }));",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "expected": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "expected": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00364",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const summary = users.map((user) => ({ id: user.id, label: user.name.toUpperCase() }));",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "expected": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "expected": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00360",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const out = users.map((user) => user.name.toUpperCase());",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              "ADA",
+              "LINUS"
+            ],
+            "expected": [
+              "ADA",
+              "LINUS"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              "GRACE"
+            ],
+            "expected": [
+              "GRACE"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00337",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const summary = users.map((user) => ({ id: user.id, label: user.name.toUpperCase() }));",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "expected": [
+              {
+                "id": 1,
+                "label": "ADA"
+              },
+              {
+                "id": 2,
+                "label": "LINUS"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "expected": [
+              {
+                "id": 9,
+                "label": "GRACE"
+              }
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "js_map_00368",
+      "routed": true,
+      "correct": true,
+      "syntax_valid": true,
+      "uses_map": true,
+      "candidate": "const cleaned = words.map((word) => word.trim());",
+      "route_confidence": 0.95,
+      "details": {
+        "tests": [
+          {
+            "actual": [
+              "a",
+              "b",
+              "c"
+            ],
+            "expected": [
+              "a",
+              "b",
+              "c"
+            ],
+            "passed": true
+          },
+          {
+            "actual": [
+              ""
+            ],
+            "expected": [
+              ""
+            ],
+            "passed": true
+          },
+          {
+            "actual": [],
+            "expected": [],
+            "passed": true
+          }
+        ]
+      }
+    }
+  ]
+}

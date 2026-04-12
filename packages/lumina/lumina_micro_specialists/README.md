@@ -49,6 +49,29 @@ Micro-specialists are intended to be:
 - `runtime/`
   - router + specialist + verifier + fallback path
 
+## First runnable commands
+
+Build the synthetic contract dataset:
+
+```bash
+bash lumina_micro_specialists/tools/build_js_array_loop_to_map_dataset.sh
+```
+
+Run the verifier sanity baseline against the gold target:
+
+```bash
+LUMINA_MICRO_SOURCE=target \
+bash lumina_micro_specialists/tools/run_js_array_loop_to_map_baseline.sh
+```
+
+Run a real base-model baseline:
+
+```bash
+LUMINA_MICRO_SOURCE=model \
+LUMINA_MICRO_MODEL="Qwen/Qwen2.5-Coder-1.5B-Instruct" \
+bash lumina_micro_specialists/tools/run_js_array_loop_to_map_baseline.sh
+```
+
 ## Working rule
 
 Each micro-specialist must prove one thing:
