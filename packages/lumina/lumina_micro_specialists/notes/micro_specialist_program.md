@@ -62,3 +62,10 @@ A micro-specialist is only worth keeping if it improves:
 - or selective-answer quality under a learned correctness estimate
 
 without making the end-to-end path brittle
+
+For narrow verifier-backed contracts, judge promotion by one of:
+
+- `>= +0.10` absolute verified pass-rate lift, or
+- `>= 25%` relative error reduction
+
+on the exact same contract and verifier

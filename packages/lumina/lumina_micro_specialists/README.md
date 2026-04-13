@@ -21,6 +21,7 @@ See:
 - `notes/js_array_loop_to_map_flow.md`
 - `notes/js_array_loop_to_map_build_plan.md`
 - `notes/micro_specialist_program.md`
+- `notes/experiment_log.md`
 
 ## Why this path
 
@@ -83,6 +84,24 @@ Compare base model vs trained treatment:
 ```bash
 bash lumina_micro_specialists/tools/run_js_array_loop_to_map_uplift.sh
 ```
+
+Train the first contract-specific confidence probe:
+
+```bash
+bash lumina_micro_specialists/tools/run_train_js_array_loop_to_map_confidence_head.sh
+```
+
+## Current result
+
+First valid cloud A/B (`2026-04-13`):
+
+- control verified pass rate: `0.797`
+- treatment verified pass rate: `0.906`
+- lift: `+0.109`
+- relative error reduction: `~54%`
+
+This is enough to keep the contract and freeze the treatment checkpoint as the
+current best path for `js_array_loop_to_map`.
 
 ## Working rule
 

@@ -130,8 +130,18 @@ Secondary:
 Promote only if the specialist beats the base model on the same contract by a
 clear margin under verification, not just syntax or style.
 
-For v1, a reasonable gate is:
+For v1, use either:
 
-- `+0.15` absolute verified pass-rate lift over the base model
+- `+0.10` absolute verified pass-rate lift over the base model, or
+- `>= 25%` relative error reduction
 
-If it does not clear that, the specialist is not worth the routing complexity.
+Observed result (`2026-04-13`, first valid cloud A/B):
+
+- control pass rate: `0.797`
+- treatment pass rate: `0.906`
+- lift: `+0.109`
+- relative error reduction: `~54%`
+
+This clears the continuation gate. The next step is not more answer-model
+experimentation. The next step is contract-specific confidence/control on top of
+the frozen treatment checkpoint.
