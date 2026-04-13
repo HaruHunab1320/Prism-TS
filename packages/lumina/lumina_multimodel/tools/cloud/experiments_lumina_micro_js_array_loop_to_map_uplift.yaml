@@ -8,15 +8,19 @@ image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
 image_project: deeplearning-platform-release
 
 experiments:
-  - name: lumina-micro-js-map-control-003
+  - name: lumina-micro-js-map-control-004
     preflight_commands:
+      - sudo apt-get update -y && sudo apt-get install -y nodejs npm
+      - node --version
       - cd .. && python -m lumina_micro_specialists.data.build_js_array_loop_to_map_dataset --output-dir lumina_micro_specialists/data/datasets/js_array_loop_to_map_v1 --train-size 320 --val-size 64 | tee lumina_multimodel/logs/lumina_micro_js_map_control_build_dataset.txt
       - test -f /root/.cache/huggingface/flat_models/Qwen_Qwen2.5-Coder-1.5B-Instruct_flat/config.json
     commands:
       - cd .. && set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -u -m lumina_micro_specialists.evaluation.eval_js_array_loop_to_map --dataset lumina_micro_specialists/data/datasets/js_array_loop_to_map_v1/val.jsonl --candidate-source model --model /root/.cache/huggingface/flat_models/Qwen_Qwen2.5-Coder-1.5B-Instruct_flat --max-samples 64 --output-json lumina_multimodel/logs/lumina_micro_js_map_control_eval.json 2>&1 | tee lumina_multimodel/logs/lumina_micro_js_map_control_eval.txt
 
-  - name: lumina-micro-js-map-tx-003
+  - name: lumina-micro-js-map-tx-004
     preflight_commands:
+      - sudo apt-get update -y && sudo apt-get install -y nodejs npm
+      - node --version
       - cd .. && python -m lumina_micro_specialists.data.build_js_array_loop_to_map_dataset --output-dir lumina_micro_specialists/data/datasets/js_array_loop_to_map_v1 --train-size 320 --val-size 64 | tee lumina_multimodel/logs/lumina_micro_js_map_tx_build_dataset.txt
       - test -f /root/.cache/huggingface/flat_models/Qwen_Qwen2.5-Coder-1.5B-Instruct_flat/config.json
     commands:
