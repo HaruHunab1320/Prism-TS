@@ -35,7 +35,7 @@ def extract_code(text: str) -> str:
     stripped = text.strip()
     if "```" in stripped:
         parts = stripped.split("```")
-        for block in parts:
+        for block in reversed(parts):
             block = block.strip()
             if block.startswith("js"):
                 return block[2:].strip()
@@ -45,7 +45,12 @@ def extract_code(text: str) -> str:
 
 
 def generate_candidate(generator, row, max_new_tokens: int):
-    out = generator(strict_prompt(row["prompt"]), max_new_tokens=max_new_tokens, do_sample=False)[0]["generated_text"]
+    out = generator(
+        strict_prompt(row["prompt"]),
+        max_new_tokens=max_new_tokens,
+        do_sample=False,
+        return_full_text=False,
+    )[0]["generated_text"]
     return extract_code(out)
 
 
