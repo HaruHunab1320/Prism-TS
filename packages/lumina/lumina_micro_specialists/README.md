@@ -61,6 +61,12 @@ Build the synthetic contract dataset:
 bash lumina_micro_specialists/tools/build_js_array_loop_to_map_dataset.sh
 ```
 
+Build the next reduce contract dataset:
+
+```bash
+bash lumina_micro_specialists/tools/build_js_reduce_accumulator_refactor_dataset.sh
+```
+
 Run the verifier sanity baseline against the gold target:
 
 ```bash
@@ -74,6 +80,14 @@ Run a real base-model baseline:
 LUMINA_MICRO_SOURCE=model \
 LUMINA_MICRO_MODEL="Qwen/Qwen2.5-Coder-1.5B-Instruct" \
 bash lumina_micro_specialists/tools/run_js_array_loop_to_map_baseline.sh
+```
+
+Run a real base-model baseline for the reduce contract:
+
+```bash
+LUMINA_MICRO_SOURCE=model \
+LUMINA_MICRO_MODEL="/tmp/Qwen_Qwen2.5-Coder-1.5B-Instruct_flat" \
+bash lumina_micro_specialists/tools/run_js_reduce_accumulator_refactor_baseline.sh
 ```
 
 Train the first contract-matched uplift:

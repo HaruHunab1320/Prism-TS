@@ -123,3 +123,22 @@ Important scope:
 - this result is strong because the contract is very narrow and verifier-backed
 - do not generalize this to broader JavaScript refactoring behavior
 - use it as evidence that the micro-specialist pattern can work end to end
+
+## 2026-04-13 — `js_reduce_accumulator_refactor` scaffold
+
+Implemented:
+
+- synthetic dataset builder
+- rules-first router
+- verifier
+- baseline evaluator
+
+Sanity result:
+
+- gold-target baseline passes cleanly under the verifier after router fix
+
+Operational note:
+
+- local base-model baseline on CPU is too slow to use as the main loop here
+- the first meaningful base-model read for this contract should come from the
+  cloud baseline run
