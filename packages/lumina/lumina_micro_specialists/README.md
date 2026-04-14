@@ -150,6 +150,17 @@ Goal:
   - learned correctness estimate
   - fixed policy stability before promotion
 
+Current base-model read for `js_reduce_accumulator_refactor`:
+
+- pass rate: `0.625`
+- syntax-valid rate: `1.000`
+- uses-reduce rate: `1.000`
+
+Main failure mode:
+
+- missing expected accumulator binding on otherwise correct `.reduce(...)`
+  expressions
+
 ## Working rule
 
 Each micro-specialist must prove one thing:

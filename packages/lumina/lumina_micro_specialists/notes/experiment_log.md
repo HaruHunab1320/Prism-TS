@@ -142,3 +142,31 @@ Operational note:
 - local base-model baseline on CPU is too slow to use as the main loop here
 - the first meaningful base-model read for this contract should come from the
   cloud baseline run
+
+## 2026-04-14 — `js_reduce_accumulator_refactor` first cloud baseline
+
+Run:
+
+- `lumina-micro-js-reduce-baseline-002`
+
+Result:
+
+- samples: `64`
+- routed rate: `1.000`
+- pass rate: `0.625`
+- syntax-valid rate: `1.000`
+- uses-reduce rate: `1.000`
+
+Observed failure mode:
+
+- the model often emits a correct `.reduce(...)` expression without binding it
+  to the expected accumulator variable
+- example:
+  - `users.reduce((acc, user) => acc + user.age, 0);`
+  - expected binding: `totalAge`
+
+Interpretation:
+
+- the contract is viable
+- the base model is already fairly strong here
+- this contract still deserves one clean contract-matched uplift run
