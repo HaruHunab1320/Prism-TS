@@ -32,6 +32,7 @@ gcloud auth login
 ### Micro-specialist active path
 - `experiments_lumina_micro_js_array_loop_to_map_uplift.yaml`
 - `experiments_lumina_micro_js_array_loop_to_map_probe_v1.yaml`
+- `experiments_lumina_micro_js_array_loop_to_map_policy_stability.yaml`
 
 Older stage-a / stage-b and multimodel exploration specs were moved to:
 

@@ -49,3 +49,38 @@ Decision:
   contract
 - next work should focus on correctness/control on top of this frozen contract,
   not broader training churn
+
+## 2026-04-13 — `js_array_loop_to_map` confidence probe v1
+
+Run:
+
+- `lumina-micro-js-map-probe-v1-001`
+
+Training result:
+
+- val `AUROC`: `1.000`
+- val `ECE`: `0.167`
+- val `Brier`: `0.035`
+
+Eval result on the promoted treatment checkpoint:
+
+- pass rate: `0.906`
+- eval `AUROC`: `1.000`
+- eval `ECE`: `0.310`
+- eval `Brier`: `0.124`
+
+Threshold points:
+
+- `0.30`
+  - coverage: `0.906`
+  - selective accuracy: `1.000`
+  - overall accuracy: `0.906`
+- `0.50`
+  - coverage: `0.641`
+  - selective accuracy: `1.000`
+
+Interpretation:
+
+- the learned probe cleanly separates the current narrow failure mode
+- this is promising, but one run is not enough to freeze a policy
+- next gate is stability across shuffled slices at `0.30` and `0.50`
