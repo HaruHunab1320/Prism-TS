@@ -8,7 +8,7 @@ image_family: pytorch-2-9-cu129-ubuntu-2204-nvidia-580
 image_project: deeplearning-platform-release
 
 experiments:
-  - name: lumina-micro-js-reduce-baseline-001
+  - name: lumina-micro-js-reduce-baseline-002
     preflight_commands:
       - for i in $(seq 1 30); do sudo apt-get update -y && sudo apt-get install -y nodejs npm && exit 0; echo "apt lock busy, retrying in 10s"; sleep 10; done; exit 1
       - node --version
