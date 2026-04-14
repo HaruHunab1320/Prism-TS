@@ -20,6 +20,9 @@ See:
 - `notes/js_array_loop_to_map_contract.md`
 - `notes/js_array_loop_to_map_flow.md`
 - `notes/js_array_loop_to_map_build_plan.md`
+- `notes/js_reduce_accumulator_refactor_contract.md`
+- `notes/js_reduce_accumulator_refactor_flow.md`
+- `notes/js_reduce_accumulator_refactor_build_plan.md`
 - `notes/micro_specialist_program.md`
 - `notes/experiment_log.md`
 
@@ -102,6 +105,36 @@ First valid cloud A/B (`2026-04-13`):
 
 This is enough to keep the contract and freeze the treatment checkpoint as the
 current best path for `js_array_loop_to_map`.
+
+Promoted micro-specialist baseline:
+
+- contract: `js_array_loop_to_map`
+- answer model: contract-matched treatment checkpoint
+- confidence head: `probe_v1`
+- mode: `baseline selective`
+- threshold: `0.30`
+
+Policy stability:
+
+- coverage mean: `0.641`
+- selective accuracy mean: `1.000`
+- overall accuracy mean: `0.641`
+- gain vs always-answer mean: `+0.094`
+
+## Next contract
+
+Next vertical slice:
+
+- `js_reduce_accumulator_refactor`
+
+Goal:
+
+- convert a simple accumulator loop into a correct `.reduce(...)` expression
+- keep the same pattern:
+  - rules-first routing
+  - verifier-backed answer model
+  - learned correctness estimate
+  - fixed policy stability before promotion
 
 ## Working rule
 

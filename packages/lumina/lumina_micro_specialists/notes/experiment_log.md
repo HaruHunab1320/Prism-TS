@@ -84,3 +84,42 @@ Interpretation:
 - the learned probe cleanly separates the current narrow failure mode
 - this is promising, but one run is not enough to freeze a policy
 - next gate is stability across shuffled slices at `0.30` and `0.50`
+
+## 2026-04-13 — `js_array_loop_to_map` policy stability
+
+Run:
+
+- `lumina-micro-js-map-policy-stability-001`
+
+Probe training stayed consistent:
+
+- val `AUROC`: `1.000`
+- val `ECE`: `0.163`
+- val `Brier`: `0.033`
+
+Stability at `threshold 0.30`:
+
+- coverage mean: `0.641`
+- selective accuracy mean: `1.000`
+- overall accuracy mean: `0.641`
+- gain vs always-answer mean: `+0.094`
+- always-answer accuracy mean: `0.906`
+
+Stability at `threshold 0.50`:
+
+- identical to `0.30` on this slice
+
+Decision:
+
+- promote `js_array_loop_to_map` as the first frozen micro-specialist baseline
+- active path:
+  - answer model: contract-matched treatment checkpoint
+  - confidence head: `probe_v1`
+  - mode: `baseline selective`
+  - threshold: `0.30`
+
+Important scope:
+
+- this result is strong because the contract is very narrow and verifier-backed
+- do not generalize this to broader JavaScript refactoring behavior
+- use it as evidence that the micro-specialist pattern can work end to end
