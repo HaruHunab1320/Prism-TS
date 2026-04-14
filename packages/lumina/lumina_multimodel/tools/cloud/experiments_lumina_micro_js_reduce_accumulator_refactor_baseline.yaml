@@ -10,7 +10,7 @@ image_project: deeplearning-platform-release
 experiments:
   - name: lumina-micro-js-reduce-baseline-001
     preflight_commands:
-      - sudo apt-get update -y && sudo apt-get install -y nodejs npm
+      - for i in $(seq 1 30); do sudo apt-get update -y && sudo apt-get install -y nodejs npm && exit 0; echo "apt lock busy, retrying in 10s"; sleep 10; done; exit 1
       - node --version
       - cd .. && python -m py_compile lumina_micro_specialists/data/build_js_reduce_accumulator_refactor_dataset.py lumina_micro_specialists/runtime/router_js_reduce_accumulator_refactor.py lumina_micro_specialists/evaluation/verify_js_reduce_accumulator_refactor.py lumina_micro_specialists/evaluation/eval_js_reduce_accumulator_refactor.py 2>&1 | tee lumina_multimodel/logs/lumina_micro_js_reduce_preflight.txt
       - test -f /root/.cache/huggingface/flat_models/Qwen_Qwen2.5-Coder-1.5B-Instruct_flat/config.json
