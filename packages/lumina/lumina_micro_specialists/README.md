@@ -135,45 +135,27 @@ Policy stability:
 - overall accuracy mean: `0.641`
 - gain vs always-answer mean: `+0.094`
 
-## Next contract
+## Second vertical slice
 
-Next vertical slice:
+- contract: `js_reduce_accumulator_refactor`
+- domain: JavaScript refactoring
+- task: convert a simple accumulator loop into `.reduce`
 
-- `js_reduce_accumulator_refactor`
+Promoted answer-model baseline:
 
-Goal:
+- control pass rate: `0.797`
+- treatment pass rate: `1.000`
+- answer-model decision: promote treatment
 
-- convert a simple accumulator loop into a correct `.reduce(...)` expression
-- keep the same pattern:
-  - rules-first routing
-  - verifier-backed answer model
-  - learned correctness estimate
-  - fixed policy stability before promotion
+What made it work:
 
-Current base-model read for `js_reduce_accumulator_refactor`:
+- explicit output binding in dataset, training, and runtime prompts
+- runtime accepts the first complete contract-matching assignment statement
 
-- pass rate: `0.625`
-- syntax-valid rate: `1.000`
-- uses-reduce rate: `1.000`
+Current next step:
 
-First uplift attempt:
-
-- treatment pass rate: `0.531`
-- treatment syntax-valid rate: `0.797`
-- decision: drop
-
-Main failure modes:
-
-- missing expected accumulator binding on otherwise correct `.reduce(...)`
-  expressions
-- overlong repeated assignments that break syntax
-
-Current rerun method:
-
-- make the expected binding explicit in dataset, training, and runtime prompts
-- require exactly one assignment statement to the expected output variable
-- score the first contract-matching reduce assignment instead of the whole
-  spillover completion
+- train `probe_v1` for the promoted reduce specialist
+- then run policy stability before freezing a confidence threshold
 
 ## Working rule
 

@@ -202,3 +202,38 @@ Decision:
 
 - drop the first reduce uplift result
 - rerun once with the stricter binding-aware method
+
+## 2026-04-15 — `js_reduce_accumulator_refactor` promoted uplift
+
+Rerun:
+
+- control
+  - `pass_rate = 0.797`
+  - `syntax_valid_rate = 1.000`
+  - `uses_reduce_rate = 0.797`
+- treatment
+  - `pass_rate = 1.000`
+  - `syntax_valid_rate = 1.000`
+  - `uses_reduce_rate = 1.000`
+
+Training:
+
+- epoch 1
+  - `train_loss = 0.0799`
+  - `val_loss = 0.0137`
+- epoch 2
+  - `train_loss = 0.0096`
+  - `val_loss = 0.0067`
+
+Interpretation:
+
+- the contract-matched treatment is now a valid uplift
+- the key fix was runtime statement stopping:
+  - take the first complete contract-matching assignment statement
+- this matches the intended micro-specialist contract behavior
+
+Decision:
+
+- promote `js_reduce_accumulator_refactor` as the second answer-model
+  micro-specialist baseline
+- next step is `probe_v1` on top of this promoted reduce path
