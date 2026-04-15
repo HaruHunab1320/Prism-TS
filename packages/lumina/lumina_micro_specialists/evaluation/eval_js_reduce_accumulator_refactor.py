@@ -1,6 +1,7 @@
 import argparse
 import json
 import random
+import re
 from pathlib import Path
 
 from lumina_micro_specialists.evaluation.verify_js_reduce_accumulator_refactor import (
@@ -55,6 +56,18 @@ def _contract_assignment_lines(text: str, row: dict) -> list[str]:
     return matches
 
 
+def _extract_first_assignment_statement(text: str, row: dict) -> str | None:
+    output_name = re.escape(row["expected_output_var"])
+    pattern = re.compile(
+        rf"\b(?:const|let|var)\s+{output_name}\s*=\s*.*?;",
+        flags=re.DOTALL,
+    )
+    match = pattern.search(text)
+    if match and ".reduce(" in match.group(0):
+        return " ".join(match.group(0).split())
+    return None
+
+
 def extract_code(text: str, row: dict) -> str:
     stripped = text.strip()
     if "```" in stripped:
@@ -67,6 +80,9 @@ def extract_code(text: str, row: dict) -> str:
             if "const " in block or "let " in block or "for (" in block:
                 stripped = block.strip()
                 break
+    first_statement = _extract_first_assignment_statement(stripped, row)
+    if first_statement:
+        return first_statement
     contract_lines = _contract_assignment_lines(stripped, row)
     if contract_lines:
         return contract_lines[0]
