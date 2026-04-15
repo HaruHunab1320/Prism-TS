@@ -154,8 +154,9 @@ What made it work:
 
 Current next step:
 
-- train `probe_v1` for the promoted reduce specialist
-- then run policy stability before freezing a confidence threshold
+- train `probe_v1` for the promoted reduce specialist on a harder held-out split
+- only freeze a confidence threshold if the harder split produces both
+  positives and negatives
 
 ## Working rule
 

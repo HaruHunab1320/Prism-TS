@@ -237,3 +237,24 @@ Decision:
 - promote `js_reduce_accumulator_refactor` as the second answer-model
   micro-specialist baseline
 - next step is `probe_v1` on top of this promoted reduce path
+
+## 2026-04-15 — `js_reduce_accumulator_refactor` first probe saturated
+
+Result:
+
+- promoted answer model passed the full eval slice:
+  - `pass_rate = 1.000`
+  - `syntax_valid_rate = 1.000`
+- probe training/eval had `positive_rate = 1.000`
+
+Interpretation:
+
+- this is not a valid confidence result
+- the eval slice is saturated with positives, so the probe can only learn
+  `everything passes`
+
+Method change:
+
+- add `hard_val.jsonl` with harder held-out reduce variants
+- keep the promoted answer model fixed
+- rerun the probe against the harder split before making any confidence claim

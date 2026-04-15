@@ -72,6 +72,106 @@ for (const user of users) {
 ]
 
 
+HARD_REDUCE_TEMPLATES = [
+    {
+        "pattern": "indexed_numeric_sum_assignment_style",
+        "array_name": "measurements",
+        "output_name": "runningTotal",
+        "initial_value": 0,
+        "input_values": [
+            [4, 5, 6],
+            [-3, 9],
+            [],
+        ],
+        "original": """let runningTotal = 0;
+for (let idx = 0; idx < measurements.length; idx += 1) {
+  runningTotal = runningTotal + measurements[idx];
+}""",
+        "target": "const runningTotal = measurements.reduce((acc, measurement) => acc + measurement, 0);",
+    },
+    {
+        "pattern": "for_of_property_sum_assignment_style",
+        "array_name": "roster",
+        "output_name": "scoreTotal",
+        "initial_value": 0,
+        "input_values": [
+            [{"score": 11}, {"score": 7}],
+            [{"score": 5}],
+            [],
+        ],
+        "original": """let scoreTotal = 0;
+for (const player of roster) {
+  scoreTotal = scoreTotal + player.score;
+}""",
+        "target": "const scoreTotal = roster.reduce((acc, player) => acc + player.score, 0);",
+    },
+    {
+        "pattern": "indexed_string_concat_named_parts",
+        "array_name": "nameParts",
+        "output_name": "fullName",
+        "initial_value": "",
+        "input_values": [
+            ["Ada", "Lovelace"],
+            ["Grace"],
+            [],
+        ],
+        "original": """let fullName = "";
+for (let i = 0; i < nameParts.length; i++) {
+  fullName = fullName + nameParts[i];
+}""",
+        "target": "const fullName = nameParts.reduce((acc, part) => acc + part, \"\");",
+    },
+    {
+        "pattern": "for_of_numeric_product_assignment_style",
+        "array_name": "weights",
+        "output_name": "combinedWeight",
+        "initial_value": 1,
+        "input_values": [
+            [2, 5, 3],
+            [7],
+            [],
+        ],
+        "original": """let combinedWeight = 1;
+for (const factor of weights) {
+  combinedWeight = combinedWeight * factor;
+}""",
+        "target": "const combinedWeight = weights.reduce((acc, factor) => acc * factor, 1);",
+    },
+    {
+        "pattern": "indexed_property_sum_long_names",
+        "array_name": "lineItems",
+        "output_name": "totalCents",
+        "initial_value": 0,
+        "input_values": [
+            [{"cents": 120}, {"cents": 30}],
+            [{"cents": 99}],
+            [],
+        ],
+        "original": """let totalCents = 0;
+for (let itemIndex = 0; itemIndex < lineItems.length; itemIndex++) {
+  totalCents += lineItems[itemIndex].cents;
+}""",
+        "target": "const totalCents = lineItems.reduce((acc, item) => acc + item.cents, 0);",
+    },
+    {
+        "pattern": "for_of_string_concat_assignment_style",
+        "array_name": "segments",
+        "output_name": "pathText",
+        "initial_value": "",
+        "input_values": [
+            ["usr", "/", "bin"],
+            ["tmp"],
+            [],
+        ],
+        "original": """let pathText = "";
+for (const segment of segments) {
+  pathText = pathText + segment;
+}""",
+        "target": "const pathText = segments.reduce((acc, segment) => acc + segment, \"\");",
+    },
+]
+
+
 PROMPT_VARIANTS = [
     (
         "Refactor this loop to use reduce.\n"
@@ -92,6 +192,28 @@ PROMPT_VARIANTS = [
 ]
 
 
+HARD_PROMPT_VARIANTS = [
+    (
+        "Refactor this accumulator loop to reduce.\n"
+        "Keep the final binding name exactly `{output_name}`.\n"
+        "Return one JavaScript statement only.\n"
+        "```js\n{code}\n```"
+    ),
+    (
+        "Rewrite this aggregation loop in idiomatic JavaScript.\n"
+        "Use `{array_name}.reduce(...)` and assign the result to `{output_name}`.\n"
+        "Do not include comments, prose, or repeated statements.\n"
+        "```js\n{code}\n```"
+    ),
+    (
+        "Convert this loop into a single reduce-based assignment.\n"
+        "Required shape: `const {output_name} = {array_name}.reduce(...);`\n"
+        "Return only the final statement.\n"
+        "```js\n{code}\n```"
+    ),
+]
+
+
 def eval_target(template: dict, values):
     pattern = template["pattern"]
     if pattern == "indexed_numeric_sum":
@@ -105,17 +227,32 @@ def eval_target(template: dict, values):
         return "".join(values)
     if pattern == "for_of_property_sum":
         return sum(v["age"] for v in values)
+    if pattern == "indexed_numeric_sum_assignment_style":
+        return sum(values)
+    if pattern == "for_of_property_sum_assignment_style":
+        return sum(v["score"] for v in values)
+    if pattern == "indexed_string_concat_named_parts":
+        return "".join(values)
+    if pattern == "for_of_numeric_product_assignment_style":
+        out = 1
+        for value in values:
+            out *= value
+        return out
+    if pattern == "indexed_property_sum_long_names":
+        return sum(v["cents"] for v in values)
+    if pattern == "for_of_string_concat_assignment_style":
+        return "".join(values)
     raise ValueError(f"unknown pattern: {pattern}")
 
 
-def make_row(idx: int, template: dict, rng: random.Random) -> dict:
-    prompt = rng.choice(PROMPT_VARIANTS).format(
+def make_row(idx: int, template: dict, rng: random.Random, *, prompt_variants=None, prefix: str = "js_reduce") -> dict:
+    prompt = rng.choice(prompt_variants or PROMPT_VARIANTS).format(
         code=template["original"],
         output_name=template["output_name"],
         array_name=template["array_name"],
     )
     return {
-        "id": f"js_reduce_{idx:05d}",
+        "id": f"{prefix}_{idx:05d}",
         "source": "synthetic",
         "language": "javascript",
         "task_contract": "js_reduce_accumulator_refactor",
@@ -147,6 +284,7 @@ def main():
     p.add_argument("--output-dir", type=Path, default=Path("lumina_micro_specialists/data/datasets/js_reduce_accumulator_refactor_v1"))
     p.add_argument("--train-size", type=int, default=320)
     p.add_argument("--val-size", type=int, default=64)
+    p.add_argument("--hard-val-size", type=int, default=128)
     p.add_argument("--seed", type=int, default=7)
     args = p.parse_args()
 
@@ -154,15 +292,29 @@ def main():
     templates = REDUCE_TEMPLATES[:]
     train_rows = [make_row(i, rng.choice(templates), rng) for i in range(args.train_size)]
     val_rows = [make_row(args.train_size + i, rng.choice(templates), rng) for i in range(args.val_size)]
+    hard_templates = HARD_REDUCE_TEMPLATES[:]
+    hard_val_rows = [
+        make_row(
+            args.train_size + args.val_size + i,
+            rng.choice(hard_templates),
+            rng,
+            prompt_variants=HARD_PROMPT_VARIANTS,
+            prefix="js_reduce_hard",
+        )
+        for i in range(args.hard_val_size)
+    ]
 
     write_jsonl(train_rows, args.output_dir / "train.jsonl")
     write_jsonl(val_rows, args.output_dir / "val.jsonl")
+    write_jsonl(hard_val_rows, args.output_dir / "hard_val.jsonl")
 
     summary = {
         "task_contract": "js_reduce_accumulator_refactor",
         "train_size": len(train_rows),
         "val_size": len(val_rows),
+        "hard_val_size": len(hard_val_rows),
         "patterns": sorted({row["input_pattern"] for row in train_rows + val_rows}),
+        "hard_patterns": sorted({row["input_pattern"] for row in hard_val_rows}),
         "output_dir": str(args.output_dir),
     }
     print(json.dumps(summary, indent=2))
