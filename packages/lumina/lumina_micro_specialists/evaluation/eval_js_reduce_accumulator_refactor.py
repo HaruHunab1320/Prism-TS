@@ -24,39 +24,63 @@ def load_transformers_model(model_name: str):
     return pipeline("text-generation", model=mdl, tokenizer=tok)
 
 
-def strict_prompt(prompt: str) -> str:
+def strict_prompt(row: dict) -> str:
+    output_name = row["expected_output_var"]
+    array_name = row["expected_array_var"]
     return (
         "You are a JavaScript refactoring specialist.\n"
         "Return only valid JavaScript.\n"
         "Preserve behavior.\n"
         "Use Array.prototype.reduce.\n"
         "Keep the accumulator binding.\n"
+        f"Return exactly one statement assigning to `{output_name}`.\n"
+        f"Use `{array_name}.reduce(...)`.\n"
         "Do not add explanation.\n\n"
-        f"{prompt}\n"
+        f"{row['prompt']}\n"
     )
 
 
-def extract_code(text: str) -> str:
+def _contract_assignment_lines(text: str, row: dict) -> list[str]:
+    output_name = row["expected_output_var"]
+    matches = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if output_name not in stripped:
+            continue
+        if ".reduce(" not in stripped and ".reduce (" not in stripped:
+            continue
+        if "=" not in stripped:
+            continue
+        matches.append(stripped)
+    return matches
+
+
+def extract_code(text: str, row: dict) -> str:
     stripped = text.strip()
     if "```" in stripped:
         parts = stripped.split("```")
         for block in reversed(parts):
             block = block.strip()
             if block.startswith("js"):
-                return block[2:].strip()
+                stripped = block[2:].strip()
+                break
             if "const " in block or "let " in block or "for (" in block:
-                return block.strip()
+                stripped = block.strip()
+                break
+    contract_lines = _contract_assignment_lines(stripped, row)
+    if contract_lines:
+        return contract_lines[0]
     return stripped
 
 
 def generate_candidate(generator, row, max_new_tokens: int):
     out = generator(
-        strict_prompt(row["prompt"]),
+        strict_prompt(row),
         max_new_tokens=max_new_tokens,
         do_sample=False,
         return_full_text=False,
     )[0]["generated_text"]
-    return extract_code(out)
+    return extract_code(out, row)
 
 
 def main():
@@ -65,7 +89,7 @@ def main():
     p.add_argument("--model", default=None)
     p.add_argument("--candidate-source", choices=["target", "input", "model"], default="target")
     p.add_argument("--max-samples", type=int, default=32)
-    p.add_argument("--max-new-tokens", type=int, default=128)
+    p.add_argument("--max-new-tokens", type=int, default=96)
     p.add_argument("--seed", type=int, default=7)
     p.add_argument("--output-json", type=Path, default=None)
     args = p.parse_args()

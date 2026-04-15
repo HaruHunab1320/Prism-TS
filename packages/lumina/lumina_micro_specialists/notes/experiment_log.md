@@ -170,3 +170,35 @@ Interpretation:
 - the contract is viable
 - the base model is already fairly strong here
 - this contract still deserves one clean contract-matched uplift run
+
+## 2026-04-14 — `js_reduce_accumulator_refactor` first uplift dropped
+
+Result:
+
+- control
+  - `pass_rate = 0.625`
+  - `syntax_valid_rate = 1.000`
+- treatment
+  - `pass_rate = 0.531`
+  - `syntax_valid_rate = 0.797`
+
+Observed regressions:
+
+- repeated duplicate assignments in one completion
+- malformed multiline output
+- still-missing binding on some otherwise-correct `.reduce(...)` expressions
+
+Method change for the rerun:
+
+- make the required output binding explicit in:
+  - dataset prompts
+  - training prompts
+  - runtime prompts
+- require exactly one assignment statement to the expected output variable
+- during eval, recover the first contract-matching reduce assignment from
+  overlong generations instead of scoring the entire spillover completion
+
+Decision:
+
+- drop the first reduce uplift result
+- rerun once with the stricter binding-aware method

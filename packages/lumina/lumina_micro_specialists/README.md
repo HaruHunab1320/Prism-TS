@@ -156,10 +156,24 @@ Current base-model read for `js_reduce_accumulator_refactor`:
 - syntax-valid rate: `1.000`
 - uses-reduce rate: `1.000`
 
-Main failure mode:
+First uplift attempt:
+
+- treatment pass rate: `0.531`
+- treatment syntax-valid rate: `0.797`
+- decision: drop
+
+Main failure modes:
 
 - missing expected accumulator binding on otherwise correct `.reduce(...)`
   expressions
+- overlong repeated assignments that break syntax
+
+Current rerun method:
+
+- make the expected binding explicit in dataset, training, and runtime prompts
+- require exactly one assignment statement to the expected output variable
+- score the first contract-matching reduce assignment instead of the whole
+  spillover completion
 
 ## Working rule
 

@@ -73,9 +73,22 @@ for (const user of users) {
 
 
 PROMPT_VARIANTS = [
-    "Refactor this loop to use reduce:\n```js\n{code}\n```",
-    "Rewrite this JavaScript accumulator loop using reduce only:\n```js\n{code}\n```",
-    "Convert this aggregation loop into reduce and return only JavaScript:\n```js\n{code}\n```",
+    (
+        "Refactor this loop to use reduce.\n"
+        "Return exactly one JavaScript statement assigning the result to `{output_name}`.\n"
+        "Use `{array_name}.reduce(...)` and do not add explanation.\n"
+        "```js\n{code}\n```"
+    ),
+    (
+        "Rewrite this JavaScript accumulator loop using reduce only.\n"
+        "Keep the accumulator binding as `{output_name}` and return a single statement.\n"
+        "```js\n{code}\n```"
+    ),
+    (
+        "Convert this aggregation loop into reduce and return only JavaScript.\n"
+        "Your answer must be one statement of the form `const {output_name} = {array_name}.reduce(...);`.\n"
+        "```js\n{code}\n```"
+    ),
 ]
 
 
@@ -96,7 +109,11 @@ def eval_target(template: dict, values):
 
 
 def make_row(idx: int, template: dict, rng: random.Random) -> dict:
-    prompt = rng.choice(PROMPT_VARIANTS).format(code=template["original"])
+    prompt = rng.choice(PROMPT_VARIANTS).format(
+        code=template["original"],
+        output_name=template["output_name"],
+        array_name=template["array_name"],
+    )
     return {
         "id": f"js_reduce_{idx:05d}",
         "source": "synthetic",

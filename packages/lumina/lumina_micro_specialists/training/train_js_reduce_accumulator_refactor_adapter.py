@@ -60,15 +60,19 @@ class ContractDataset(Dataset):
         self.max_len = max_len
 
     @staticmethod
-    def prompt(question: str) -> str:
+    def prompt(row: dict) -> str:
+        output_name = row["expected_output_var"]
+        array_name = row["expected_array_var"]
         return (
             "You are a JavaScript refactoring specialist. "
             "Return only valid JavaScript. "
             "Preserve behavior. "
             "Use Array.prototype.reduce. "
             "Keep the accumulator binding. "
+            f"Return exactly one statement assigning to `{output_name}`. "
+            f"Use `{array_name}.reduce(...)`. "
             "Do not include explanations or markdown fences.\n"
-            f"{question}\nAnswer:"
+            f"{row['question']}\nAnswer:"
         )
 
     def __len__(self):
@@ -76,7 +80,7 @@ class ContractDataset(Dataset):
 
     def __getitem__(self, idx):
         row = self.rows[idx]
-        prompt = self.prompt(row["question"])
+        prompt = self.prompt(row)
         full = f"{prompt} {row['answer']}"
         enc = self.tok(
             full,
