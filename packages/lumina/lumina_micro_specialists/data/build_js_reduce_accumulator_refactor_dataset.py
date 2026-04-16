@@ -466,6 +466,7 @@ def main():
     p.add_argument("--train-size", type=int, default=320)
     p.add_argument("--val-size", type=int, default=64)
     p.add_argument("--hard-val-size", type=int, default=128)
+    p.add_argument("--probe-train-v2-size", type=int, default=256)
     p.add_argument("--hard-val-v2-size", type=int, default=128)
     p.add_argument("--seed", type=int, default=7)
     args = p.parse_args()
@@ -486,9 +487,19 @@ def main():
         for i in range(args.hard_val_size)
     ]
     hard_templates_v2 = HARD_REDUCE_TEMPLATES_V2[:]
-    hard_val_v2_rows = [
+    probe_train_v2_rows = [
         make_row(
             args.train_size + args.val_size + args.hard_val_size + i,
+            rng.choice(hard_templates_v2),
+            rng,
+            prompt_variants=HARD_PROMPT_VARIANTS_V2,
+            prefix="js_reduce_probe_v2",
+        )
+        for i in range(args.probe_train_v2_size)
+    ]
+    hard_val_v2_rows = [
+        make_row(
+            args.train_size + args.val_size + args.hard_val_size + args.probe_train_v2_size + i,
             rng.choice(hard_templates_v2),
             rng,
             prompt_variants=HARD_PROMPT_VARIANTS_V2,
@@ -500,6 +511,7 @@ def main():
     write_jsonl(train_rows, args.output_dir / "train.jsonl")
     write_jsonl(val_rows, args.output_dir / "val.jsonl")
     write_jsonl(hard_val_rows, args.output_dir / "hard_val.jsonl")
+    write_jsonl(probe_train_v2_rows, args.output_dir / "probe_train_v2.jsonl")
     write_jsonl(hard_val_v2_rows, args.output_dir / "hard_val_v2.jsonl")
 
     summary = {
@@ -507,9 +519,11 @@ def main():
         "train_size": len(train_rows),
         "val_size": len(val_rows),
         "hard_val_size": len(hard_val_rows),
+        "probe_train_v2_size": len(probe_train_v2_rows),
         "hard_val_v2_size": len(hard_val_v2_rows),
         "patterns": sorted({row["input_pattern"] for row in train_rows + val_rows}),
         "hard_patterns": sorted({row["input_pattern"] for row in hard_val_rows}),
+        "probe_patterns_v2": sorted({row["input_pattern"] for row in probe_train_v2_rows}),
         "hard_patterns_v2": sorted({row["input_pattern"] for row in hard_val_v2_rows}),
         "output_dir": str(args.output_dir),
     }
