@@ -172,6 +172,138 @@ for (const segment of segments) {
 ]
 
 
+HARD_REDUCE_TEMPLATES_V2 = [
+    {
+        "pattern": "for_of_weighted_sum",
+        "array_name": "lineItems",
+        "output_name": "totalCost",
+        "initial_value": 0,
+        "input_values": [
+            [{"price": 4, "qty": 3}, {"price": 2, "qty": 5}],
+            [{"price": 9, "qty": 1}],
+            [],
+        ],
+        "original": """let totalCost = 0;
+for (const item of lineItems) {
+  totalCost = totalCost + item.price * item.qty;
+}""",
+        "target": "const totalCost = lineItems.reduce((acc, item) => acc + item.price * item.qty, 0);",
+    },
+    {
+        "pattern": "indexed_max_value",
+        "array_name": "scores",
+        "output_name": "maxScore",
+        "initial_value": -999999999,
+        "input_values": [
+            [3, 11, 7],
+            [-5, -2],
+            [],
+        ],
+        "original": """let maxScore = -999999999;
+for (let i = 0; i < scores.length; i++) {
+  maxScore = Math.max(maxScore, scores[i]);
+}""",
+        "target": "const maxScore = scores.reduce((acc, score) => Math.max(acc, score), -999999999);",
+    },
+    {
+        "pattern": "for_of_min_value",
+        "array_name": "temps",
+        "output_name": "minTemp",
+        "initial_value": 999999999,
+        "input_values": [
+            [8, 3, 5],
+            [14],
+            [],
+        ],
+        "original": """let minTemp = 999999999;
+for (const temp of temps) {
+  minTemp = Math.min(minTemp, temp);
+}""",
+        "target": "const minTemp = temps.reduce((acc, temp) => Math.min(acc, temp), 999999999);",
+    },
+    {
+        "pattern": "for_of_boolean_and",
+        "array_name": "checks",
+        "output_name": "allPassed",
+        "initial_value": True,
+        "input_values": [
+            [{"ok": True}, {"ok": True}],
+            [{"ok": True}, {"ok": False}],
+            [],
+        ],
+        "original": """let allPassed = true;
+for (const check of checks) {
+  allPassed = allPassed && check.ok;
+}""",
+        "target": "const allPassed = checks.reduce((acc, check) => acc && check.ok, true);",
+    },
+    {
+        "pattern": "for_of_boolean_or",
+        "array_name": "flags",
+        "output_name": "hasFailure",
+        "initial_value": False,
+        "input_values": [
+            [{"failed": False}, {"failed": False}],
+            [{"failed": False}, {"failed": True}],
+            [],
+        ],
+        "original": """let hasFailure = false;
+for (const flag of flags) {
+  hasFailure = hasFailure || flag.failed;
+}""",
+        "target": "const hasFailure = flags.reduce((acc, flag) => acc || flag.failed, false);",
+    },
+    {
+        "pattern": "for_of_count_predicate",
+        "array_name": "users",
+        "output_name": "adultCount",
+        "initial_value": 0,
+        "input_values": [
+            [{"age": 17}, {"age": 24}, {"age": 30}],
+            [{"age": 12}],
+            [],
+        ],
+        "original": """let adultCount = 0;
+for (const user of users) {
+  adultCount = adultCount + (user.age >= 18 ? 1 : 0);
+}""",
+        "target": "const adultCount = users.reduce((acc, user) => acc + (user.age >= 18 ? 1 : 0), 0);",
+    },
+    {
+        "pattern": "indexed_sum_string_lengths",
+        "array_name": "words",
+        "output_name": "totalChars",
+        "initial_value": 0,
+        "input_values": [
+            ["ab", "cdef"],
+            ["x"],
+            [],
+        ],
+        "original": """let totalChars = 0;
+for (let idx = 0; idx < words.length; idx += 1) {
+  totalChars += words[idx].length;
+}""",
+        "target": "const totalChars = words.reduce((acc, word) => acc + word.length, 0);",
+    },
+    {
+        "pattern": "for_of_collect_initials",
+        "array_name": "users",
+        "output_name": "initials",
+        "initial_value": "",
+        "input_values": [
+            [{"name": "Ada"}, {"name": "Linus"}],
+            [{"name": "Grace"}],
+            [],
+        ],
+        "original": """let initials = "";
+for (const user of users) {
+  initials = initials + user.name[0];
+}""",
+        "target": "const initials = users.reduce((acc, user) => acc + user.name[0], \"\");",
+    },
+]
+
+
 PROMPT_VARIANTS = [
     (
         "Refactor this loop to use reduce.\n"
@@ -214,6 +346,27 @@ HARD_PROMPT_VARIANTS = [
 ]
 
 
+HARD_PROMPT_VARIANTS_V2 = [
+    (
+        "Rewrite this reducer candidate as a single JavaScript statement.\n"
+        "Keep the final variable name exactly `{output_name}`.\n"
+        "Use `{array_name}.reduce(...)`.\n"
+        "```js\n{code}\n```"
+    ),
+    (
+        "Convert this accumulation loop into one reduce assignment.\n"
+        "Do not explain anything. Do not repeat the statement.\n"
+        "Expected binding: `{output_name}`.\n"
+        "```js\n{code}\n```"
+    ),
+    (
+        "Refactor this loop to reduce while preserving behavior.\n"
+        "Return only the final JavaScript statement assigning to `{output_name}`.\n"
+        "```js\n{code}\n```"
+    ),
+]
+
+
 def eval_target(template: dict, values):
     pattern = template["pattern"]
     if pattern == "indexed_numeric_sum":
@@ -242,6 +395,34 @@ def eval_target(template: dict, values):
         return sum(v["cents"] for v in values)
     if pattern == "for_of_string_concat_assignment_style":
         return "".join(values)
+    if pattern == "for_of_weighted_sum":
+        return sum(v["price"] * v["qty"] for v in values)
+    if pattern == "indexed_max_value":
+        out = -999999999
+        for value in values:
+            out = max(out, value)
+        return out
+    if pattern == "for_of_min_value":
+        out = 999999999
+        for value in values:
+            out = min(out, value)
+        return out
+    if pattern == "for_of_boolean_and":
+        out = True
+        for value in values:
+            out = out and value["ok"]
+        return out
+    if pattern == "for_of_boolean_or":
+        out = False
+        for value in values:
+            out = out or value["failed"]
+        return out
+    if pattern == "for_of_count_predicate":
+        return sum(1 for value in values if value["age"] >= 18)
+    if pattern == "indexed_sum_string_lengths":
+        return sum(len(value) for value in values)
+    if pattern == "for_of_collect_initials":
+        return "".join(value["name"][0] for value in values)
     raise ValueError(f"unknown pattern: {pattern}")
 
 
@@ -285,6 +466,7 @@ def main():
     p.add_argument("--train-size", type=int, default=320)
     p.add_argument("--val-size", type=int, default=64)
     p.add_argument("--hard-val-size", type=int, default=128)
+    p.add_argument("--hard-val-v2-size", type=int, default=128)
     p.add_argument("--seed", type=int, default=7)
     args = p.parse_args()
 
@@ -303,18 +485,32 @@ def main():
         )
         for i in range(args.hard_val_size)
     ]
+    hard_templates_v2 = HARD_REDUCE_TEMPLATES_V2[:]
+    hard_val_v2_rows = [
+        make_row(
+            args.train_size + args.val_size + args.hard_val_size + i,
+            rng.choice(hard_templates_v2),
+            rng,
+            prompt_variants=HARD_PROMPT_VARIANTS_V2,
+            prefix="js_reduce_hard_v2",
+        )
+        for i in range(args.hard_val_v2_size)
+    ]
 
     write_jsonl(train_rows, args.output_dir / "train.jsonl")
     write_jsonl(val_rows, args.output_dir / "val.jsonl")
     write_jsonl(hard_val_rows, args.output_dir / "hard_val.jsonl")
+    write_jsonl(hard_val_v2_rows, args.output_dir / "hard_val_v2.jsonl")
 
     summary = {
         "task_contract": "js_reduce_accumulator_refactor",
         "train_size": len(train_rows),
         "val_size": len(val_rows),
         "hard_val_size": len(hard_val_rows),
+        "hard_val_v2_size": len(hard_val_v2_rows),
         "patterns": sorted({row["input_pattern"] for row in train_rows + val_rows}),
         "hard_patterns": sorted({row["input_pattern"] for row in hard_val_rows}),
+        "hard_patterns_v2": sorted({row["input_pattern"] for row in hard_val_v2_rows}),
         "output_dir": str(args.output_dir),
     }
     print(json.dumps(summary, indent=2))
