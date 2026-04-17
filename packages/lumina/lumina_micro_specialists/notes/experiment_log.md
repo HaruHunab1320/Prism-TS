@@ -238,6 +238,52 @@ Decision:
   micro-specialist baseline
 - next step is `probe_v1` on top of this promoted reduce path
 
+## 2026-04-16 — `js_reduce_accumulator_refactor` confidence probe v1 validated
+
+Gate result on `hard_val_v2`:
+
+- answer-model pass rate: `0.766`
+- negatives now exist on the held-out split, so confidence is testable
+
+First probe rerun on `hard_val_v2` only as validation:
+
+- dropped
+- root cause:
+  - probe training still used an all-positive train split
+
+Fixed method:
+
+- added `probe_train_v2.jsonl`
+- probe training now uses adversarial `hard_v2` semantics with mixed
+  positives/negatives
+- validation/eval still uses `hard_val_v2.jsonl`
+
+Validated probe result (`lumina-micro-js-reduce-probe-v1-004`):
+
+- eval `pass_rate = 0.898`
+- eval `AUROC = 1.000`
+- eval `ECE = 0.369`
+- eval `Brier = 0.143`
+
+Threshold points:
+
+- `0.30`
+  - coverage: `0.945`
+  - selective accuracy: `0.950`
+  - overall accuracy: `0.898`
+- `0.40`
+  - coverage: `0.898`
+  - selective accuracy: `1.000`
+  - overall accuracy: `0.898`
+
+Interpretation:
+
+- the real issue was negative training data, not probe architecture
+- reduce confidence is now validated on the adversarial held-out split
+- next gate is stability at:
+  - `0.40`
+  - `0.50`
+
 ## 2026-04-15 — `js_reduce_accumulator_refactor` first probe saturated
 
 Result:

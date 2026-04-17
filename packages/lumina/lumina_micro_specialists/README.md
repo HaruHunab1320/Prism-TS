@@ -154,9 +154,14 @@ What made it work:
 
 Current next step:
 
-- train `probe_v1` for the promoted reduce specialist on a harder held-out split
-- only freeze a confidence threshold if the harder split produces both
-  positives and negatives
+- freeze confidence only after stability on the adversarial split
+
+Validated reduce probe result:
+
+- gate/eval split: `hard_val_v2`
+- training split: `probe_train_v2`
+- eval `AUROC`: `1.000`
+- candidate default threshold: `0.40`
 
 ## Working rule
 
