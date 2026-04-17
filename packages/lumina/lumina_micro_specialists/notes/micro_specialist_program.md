@@ -69,3 +69,29 @@ For narrow verifier-backed contracts, judge promotion by one of:
 - `>= 25%` relative error reduction
 
 on the exact same contract and verifier
+
+## Current validated contracts
+
+1. `js_array_loop_to_map`
+- answer model uplift: `0.797 -> 0.906`
+- frozen control path:
+  - `probe_v1`
+  - `baseline selective`
+  - `threshold 0.30`
+
+2. `js_reduce_accumulator_refactor`
+- answer model uplift: `0.797 -> 1.000` under the contract-matched runtime
+- frozen control path:
+  - `probe_v1`
+  - `baseline selective`
+  - `threshold 0.40`
+
+Current evidence supports:
+
+- narrow verifier-backed micro-specialists can materially improve task success
+- contract-specific learned confidence can support stable selective control
+
+Current evidence does not support:
+
+- broad specialization buckets
+- universal confidence across unrelated tasks

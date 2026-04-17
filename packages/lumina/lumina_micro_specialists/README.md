@@ -154,7 +154,7 @@ What made it work:
 
 Current next step:
 
-- freeze confidence only after stability on the adversarial split
+- summarize the validated evidence across promoted micro-specialists
 
 Validated reduce probe result:
 
@@ -162,6 +162,21 @@ Validated reduce probe result:
 - training split: `probe_train_v2`
 - eval `AUROC`: `1.000`
 - candidate default threshold: `0.40`
+
+Promoted reduce baseline:
+
+- contract: `js_reduce_accumulator_refactor`
+- answer model: contract-matched treatment checkpoint
+- confidence head: `probe_v1`
+- mode: `baseline selective`
+- threshold: `0.40`
+
+Policy stability:
+
+- coverage mean: `0.898`
+- selective accuracy mean: `1.000`
+- overall accuracy mean: `0.898`
+- gain vs always-answer mean: `+0.102`
 
 ## Working rule
 

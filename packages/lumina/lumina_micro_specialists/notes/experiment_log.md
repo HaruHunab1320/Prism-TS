@@ -284,6 +284,40 @@ Interpretation:
   - `0.40`
   - `0.50`
 
+## 2026-04-17 — `js_reduce_accumulator_refactor` policy stability
+
+Run:
+
+- `lumina-micro-js-reduce-policy-stability-001`
+
+Stability at `threshold 0.40`:
+
+- coverage mean: `0.898`
+- selective accuracy mean: `1.000`
+- overall accuracy mean: `0.898`
+- gain vs always-answer mean: `+0.102`
+- always-answer accuracy mean: `0.898`
+
+Stability at `threshold 0.50`:
+
+- identical to `0.40` on this split
+
+Decision:
+
+- promote `js_reduce_accumulator_refactor` as the second frozen
+  micro-specialist baseline
+- active path:
+  - answer model: contract-matched treatment checkpoint
+  - confidence head: `probe_v1`
+  - mode: `baseline selective`
+  - threshold: `0.40`
+
+Important scope:
+
+- this result is on the adversarial `hard_val_v2` split, not a broad JS
+  refactoring benchmark
+- the micro-specialist evidence remains contract-specific by design
+
 ## 2026-04-15 — `js_reduce_accumulator_refactor` first probe saturated
 
 Result:
