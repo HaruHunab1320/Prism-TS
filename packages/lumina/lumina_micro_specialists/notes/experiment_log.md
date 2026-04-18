@@ -359,3 +359,30 @@ Decision:
   - baseline
   - uplift
   - confidence
+
+## 2026-04-18 — `js_filter_predicate_refactor` easy baseline saturated
+
+Run:
+
+- `lumina-micro-js-filter-baseline-001`
+
+Result:
+
+- samples: `64`
+- routed rate: `1.000`
+- pass rate: `1.000`
+- syntax-valid rate: `1.000`
+- uses-filter rate: `1.000`
+
+Interpretation:
+
+- the contract is valid
+- the easy split is not discriminative
+- base `Qwen/Qwen2.5-Coder-1.5B-Instruct` already solves it perfectly
+
+Decision:
+
+- do not train an uplift on the easy split
+- add a harder held-out gate with conjunction, disjunction, negation, and
+  less-trivial predicate forms
+- only continue if the hard gate creates real headroom
