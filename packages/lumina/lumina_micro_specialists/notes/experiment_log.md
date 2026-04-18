@@ -386,3 +386,24 @@ Decision:
 - add a harder held-out gate with conjunction, disjunction, negation, and
   less-trivial predicate forms
 - only continue if the hard gate creates real headroom
+
+## 2026-04-18 — `js_reduce_object_index_builder` scaffold
+
+Implemented:
+
+- synthetic dataset builder
+- rules-first router
+- verifier
+- baseline evaluator
+
+Local sanity result:
+
+- gold-target verifier path passes cleanly
+
+Decision:
+
+- launch the first cloud baseline before any adapter training
+- keep the same contract-first sequence:
+  - baseline
+  - uplift
+  - confidence

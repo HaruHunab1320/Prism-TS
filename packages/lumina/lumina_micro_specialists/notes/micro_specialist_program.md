@@ -19,6 +19,7 @@ Examples:
 
 - `js_array_loop_to_map`
 - `js_reduce_accumulator_refactor`
+- `js_reduce_object_index_builder`
 - `js_filter_predicate_refactor`
 - `python_pandas_groupby_aggregate`
 - `sql_select_where_to_join_fix`

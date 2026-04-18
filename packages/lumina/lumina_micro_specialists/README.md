@@ -23,6 +23,9 @@ See:
 - `notes/js_reduce_accumulator_refactor_contract.md`
 - `notes/js_reduce_accumulator_refactor_flow.md`
 - `notes/js_reduce_accumulator_refactor_build_plan.md`
+- `notes/js_reduce_object_index_builder_contract.md`
+- `notes/js_reduce_object_index_builder_flow.md`
+- `notes/js_reduce_object_index_builder_build_plan.md`
 - `notes/js_filter_predicate_refactor_contract.md`
 - `notes/js_filter_predicate_refactor_flow.md`
 - `notes/js_filter_predicate_refactor_build_plan.md`
@@ -76,6 +79,12 @@ Build the next filter contract dataset:
 bash lumina_micro_specialists/tools/build_js_filter_predicate_refactor_dataset.sh
 ```
 
+Build the next object-index contract dataset:
+
+```bash
+bash lumina_micro_specialists/tools/build_js_reduce_object_index_builder_dataset.sh
+```
+
 Run the verifier sanity baseline against the gold target:
 
 ```bash
@@ -105,6 +114,14 @@ Run a real base-model baseline for the filter contract:
 LUMINA_MICRO_SOURCE=model \
 LUMINA_MICRO_MODEL="/tmp/Qwen_Qwen2.5-Coder-1.5B-Instruct_flat" \
 bash lumina_micro_specialists/tools/run_js_filter_predicate_refactor_baseline.sh
+```
+
+Run a real base-model baseline for the object-index contract:
+
+```bash
+LUMINA_MICRO_SOURCE=model \
+LUMINA_MICRO_MODEL="/tmp/Qwen_Qwen2.5-Coder-1.5B-Instruct_flat" \
+bash lumina_micro_specialists/tools/run_js_reduce_object_index_builder_baseline.sh
 ```
 
 Train the first contract-matched uplift:
