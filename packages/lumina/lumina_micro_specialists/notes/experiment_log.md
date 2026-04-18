@@ -338,3 +338,24 @@ Method change:
 - add `hard_val.jsonl` with harder held-out reduce variants
 - keep the promoted answer model fixed
 - rerun the probe against the harder split before making any confidence claim
+
+## 2026-04-17 — `js_filter_predicate_refactor` scaffold
+
+Implemented:
+
+- synthetic dataset builder
+- rules-first router
+- verifier
+- baseline evaluator
+
+Local sanity result:
+
+- gold-target verifier path passes cleanly
+
+Decision:
+
+- launch the first cloud baseline before any adapter training
+- keep the same contract-first sequence:
+  - baseline
+  - uplift
+  - confidence

@@ -38,6 +38,7 @@ gcloud auth login
 - `experiments_lumina_micro_js_reduce_accumulator_refactor_probe_v1.yaml`
 - `experiments_lumina_micro_js_reduce_accumulator_refactor_policy_stability.yaml`
 - `experiments_lumina_micro_js_reduce_accumulator_refactor_hard_v2_gate.yaml`
+- `experiments_lumina_micro_js_filter_predicate_refactor_baseline.yaml`
 
 Older stage-a / stage-b and multimodel exploration specs were moved to:
 
