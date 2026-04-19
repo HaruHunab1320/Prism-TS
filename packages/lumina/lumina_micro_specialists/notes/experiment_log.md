@@ -407,3 +407,33 @@ Decision:
   - baseline
   - uplift
   - confidence
+
+## 2026-04-18 — `js_reduce_object_index_builder` first cloud baseline
+
+Run:
+
+- `lumina-micro-js-reduce-index-baseline-001`
+
+Result:
+
+- samples: `64`
+- routed rate: `1.000`
+- pass rate: `0.641`
+- syntax-valid rate: `0.641`
+- uses-reduce rate: `1.000`
+
+Observed failure mode:
+
+- the model often emits the right reduce pattern but truncates before closing
+- representative failure:
+  - `const productsBySku = products.reduce((acc, product) => { acc[product.sku] = product;`
+
+Interpretation:
+
+- the contract is viable
+- the base model is not saturated
+- failure is structured and should be addressable with contract-matched uplift
+
+Decision:
+
+- continue with the standard uplift A/B
