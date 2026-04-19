@@ -20,7 +20,7 @@ TEMPLATES = [
 for (const user of users) {
   usersById[user.id] = user;
 }""",
-        "target": "const usersById = users.reduce((acc, user) => { acc[user.id] = user; return acc; }, {});",
+        "target": "const usersById = users.reduce((acc, user) => ({ ...acc, [user.id]: user }), {});",
         "build": lambda values: {item["id"]: item for item in values},
     },
     {
@@ -38,7 +38,7 @@ for (const user of users) {
 for (let i = 0; i < products.length; i++) {
   productsBySku[products[i].sku] = products[i];
 }""",
-        "target": "const productsBySku = products.reduce((acc, product) => { acc[product.sku] = product; return acc; }, {});",
+        "target": "const productsBySku = products.reduce((acc, product) => ({ ...acc, [product.sku]: product }), {});",
         "build": lambda values: {item["sku"]: item for item in values},
     },
     {
@@ -56,7 +56,7 @@ for (let i = 0; i < products.length; i++) {
 for (const page of pages) {
   pagesBySlug[page.slug] = page;
 }""",
-        "target": "const pagesBySlug = pages.reduce((acc, page) => { acc[page.slug] = page; return acc; }, {});",
+        "target": "const pagesBySlug = pages.reduce((acc, page) => ({ ...acc, [page.slug]: page }), {});",
         "build": lambda values: {item["slug"]: item for item in values},
     },
     {
@@ -74,7 +74,7 @@ for (const page of pages) {
 for (let idx = 0; idx < members.length; idx += 1) {
   membersByHandle[members[idx].handle] = members[idx];
 }""",
-        "target": "const membersByHandle = members.reduce((acc, member) => { acc[member.handle] = member; return acc; }, {});",
+        "target": "const membersByHandle = members.reduce((acc, member) => ({ ...acc, [member.handle]: member }), {});",
         "build": lambda values: {item["handle"]: item for item in values},
     },
 ]

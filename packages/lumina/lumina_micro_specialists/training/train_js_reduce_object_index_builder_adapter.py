@@ -71,7 +71,8 @@ class ContractDataset(Dataset):
             "Build an object index. "
             f"Return exactly one statement assigning to `{output_name}`. "
             f"Use `{array_name}.reduce(...)`. "
-            "Return the accumulator object. "
+            "Prefer a concise expression-body reduce form. "
+            "Avoid block bodies. "
             "Do not include explanations or markdown fences.\n"
             f"{row['question']}\nAnswer:"
         )

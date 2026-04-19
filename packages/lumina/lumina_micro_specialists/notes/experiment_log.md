@@ -437,3 +437,38 @@ Interpretation:
 Decision:
 
 - continue with the standard uplift A/B
+
+## 2026-04-18 — `js_reduce_object_index_builder` first uplift dropped
+
+Runs:
+
+- `lumina-micro-js-reduce-index-control-001`
+- `lumina-micro-js-reduce-index-tx-001`
+
+Result:
+
+- control pass rate: `0.641`
+- treatment pass rate: `0.000`
+- control syntax-valid rate: `0.641`
+- treatment syntax-valid rate: `0.000`
+
+Observed failure mode:
+
+- the treatment collapsed into truncated block-body completions
+- representative shape:
+  - `const usersById = users.reduce((acc, user) => { acc[user.id] = user;`
+
+Interpretation:
+
+- the contract is still viable
+- training optimization was stable
+- the target form was likely wrong for this slice
+- base-model successes often used concise expression/spread outputs, while
+  the training targets used block-body mutation form
+
+Decision:
+
+- drop the first uplift recipe
+- change one method variable only:
+  - rewrite training targets to concise expression-body reduce assignments
+- rerun the uplift A/B after the target-shape change
