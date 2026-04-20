@@ -79,6 +79,82 @@ for (let idx = 0; idx < members.length; idx += 1) {
     },
 ]
 
+HARD_TEMPLATES = [
+    {
+        "pattern": "for_of_orders_by_ref",
+        "array_name": "orders",
+        "output_name": "ordersByRef",
+        "element_var": "order",
+        "key_expr": "order.ref",
+        "input_values": [
+            [{"ref": "o-1", "total": 15}, {"ref": "o-2", "total": 19}],
+            [{"ref": "o-3", "total": 7}],
+            [],
+        ],
+        "original": """const ordersByRef = {};
+for (const order of orders) {
+  ordersByRef[order.ref] = order;
+}""",
+        "target": "const ordersByRef = orders.reduce((acc, order) => ({ ...acc, [order.ref]: order }), {});",
+        "build": lambda values: {item["ref"]: item for item in values},
+    },
+    {
+        "pattern": "indexed_accounts_by_email",
+        "array_name": "accounts",
+        "output_name": "accountsByEmail",
+        "element_var": "account",
+        "key_expr": "account.email",
+        "input_values": [
+            [{"email": "a@example.com", "tier": "pro"}, {"email": "b@example.com", "tier": "free"}],
+            [{"email": "c@example.com", "tier": "team"}],
+            [],
+        ],
+        "original": """const accountsByEmail = {};
+for (let i = 0; i < accounts.length; i += 1) {
+  accountsByEmail[accounts[i].email] = accounts[i];
+}""",
+        "target": "const accountsByEmail = accounts.reduce((acc, account) => ({ ...acc, [account.email]: account }), {});",
+        "build": lambda values: {item["email"]: item for item in values},
+    },
+    {
+        "pattern": "for_of_articles_by_slug",
+        "array_name": "articles",
+        "output_name": "articlesBySlug",
+        "element_var": "article",
+        "key_expr": "article.meta.slug",
+        "input_values": [
+            [{"meta": {"slug": "alpha"}, "title": "Alpha"}, {"meta": {"slug": "beta"}, "title": "Beta"}],
+            [{"meta": {"slug": "docs"}, "title": "Docs"}],
+            [],
+        ],
+        "original": """const articlesBySlug = {};
+for (const article of articles) {
+  articlesBySlug[article.meta.slug] = article;
+}""",
+        "target": "const articlesBySlug = articles.reduce((acc, article) => ({ ...acc, [article.meta.slug]: article }), {});",
+        "build": lambda values: {item["meta"]["slug"]: item for item in values},
+    },
+    {
+        "pattern": "indexed_sessions_by_token",
+        "array_name": "sessions",
+        "output_name": "sessionsByToken",
+        "element_var": "session",
+        "key_expr": "session.token",
+        "input_values": [
+            [{"token": "t1", "active": True}, {"token": "t2", "active": False}],
+            [{"token": "t3", "active": True}],
+            [],
+        ],
+        "original": """const sessionsByToken = {};
+for (let idx = 0; idx < sessions.length; idx += 1) {
+  const session = sessions[idx];
+  sessionsByToken[session.token] = session;
+}""",
+        "target": "const sessionsByToken = sessions.reduce((acc, session) => ({ ...acc, [session.token]: session }), {});",
+        "build": lambda values: {item["token"]: item for item in values},
+    },
+]
+
 PROMPT_VARIANTS = [
     (
         "Refactor this JavaScript loop to use reduce.\n"
@@ -143,6 +219,7 @@ def main():
     p.add_argument("--output-dir", type=Path, default=Path("lumina_micro_specialists/data/datasets/js_reduce_object_index_builder_v1"))
     p.add_argument("--train-size", type=int, default=320)
     p.add_argument("--val-size", type=int, default=64)
+    p.add_argument("--hard-val-size", type=int, default=128)
     p.add_argument("--seed", type=int, default=7)
     args = p.parse_args()
 
@@ -150,15 +227,23 @@ def main():
     templates = TEMPLATES[:]
     train_rows = [make_row(i, rng.choice(templates), rng) for i in range(args.train_size)]
     val_rows = [make_row(args.train_size + i, rng.choice(templates), rng) for i in range(args.val_size)]
+    hard_templates = HARD_TEMPLATES[:]
+    hard_rows = [
+        make_row(args.train_size + args.val_size + i, rng.choice(hard_templates), rng, prefix="js_reduce_obj_hard")
+        for i in range(args.hard_val_size)
+    ]
 
     write_jsonl(train_rows, args.output_dir / "train.jsonl")
     write_jsonl(val_rows, args.output_dir / "val.jsonl")
+    write_jsonl(hard_rows, args.output_dir / "hard_val.jsonl")
 
     summary = {
         "task_contract": "js_reduce_object_index_builder",
         "train_size": len(train_rows),
         "val_size": len(val_rows),
+        "hard_val_size": len(hard_rows),
         "patterns": sorted({row["input_pattern"] for row in train_rows + val_rows}),
+        "hard_patterns": sorted({row["input_pattern"] for row in hard_rows}),
         "output_dir": str(args.output_dir),
     }
     print(json.dumps(summary, indent=2))

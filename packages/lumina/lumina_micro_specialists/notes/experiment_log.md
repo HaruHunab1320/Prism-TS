@@ -472,3 +472,36 @@ Decision:
 - change one method variable only:
   - rewrite training targets to concise expression-body reduce assignments
 - rerun the uplift A/B after the target-shape change
+
+## 2026-04-19 — `js_reduce_object_index_builder` retargeted uplift win
+
+Runs:
+
+- `lumina-micro-js-reduce-index-control-002`
+- `lumina-micro-js-reduce-index-tx-002`
+
+Result:
+
+- control pass rate: `0.641`
+- treatment pass rate: `1.000`
+- control syntax-valid rate: `0.641`
+- treatment syntax-valid rate: `1.000`
+
+What changed:
+
+- training targets were rewritten to concise expression-body reduce outputs
+- the training prompt now explicitly prefers expression-body reduce form and
+  avoids block bodies
+
+Interpretation:
+
+- the first failure was target-shape mismatch, not contract failure
+- this contract is now promoted on the answer-model side
+
+Decision:
+
+- promote the retargeted treatment as the active answer model for
+  `js_reduce_object_index_builder`
+- do not train a confidence head on `val.jsonl`, because the promoted answer
+  model now saturates it
+- first run a harder held-out gate on `hard_val.jsonl`

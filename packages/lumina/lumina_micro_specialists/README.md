@@ -212,6 +212,29 @@ Policy stability:
 - overall accuracy mean: `0.898`
 - gain vs always-answer mean: `+0.102`
 
+## Third promoted answer-model slice
+
+- contract: `js_reduce_object_index_builder`
+- domain: JavaScript refactoring
+- task: convert an object-index loop into one `.reduce` assignment
+
+Promoted answer-model result:
+
+- control pass rate: `0.641`
+- treatment pass rate: `1.000`
+- answer-model decision: promote treatment
+
+What made it work:
+
+- retargeted training outputs to concise expression-body reduce assignments
+- avoided block-body mutation targets that caused truncation collapse
+
+Current next step:
+
+- confidence is not validated yet
+- the promoted answer model saturates `val.jsonl`
+- next gate is `hard_val.jsonl` before any object-index confidence training
+
 ## Working rule
 
 Each micro-specialist must prove one thing:
