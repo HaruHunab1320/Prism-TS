@@ -560,3 +560,37 @@ Decision:
 
 - build mixed-negative `probe_train_v2` from the same adversarial family
 - train `probe_v1` against `hard_val_v2`
+
+## 2026-04-20 — `js_reduce_object_index_builder` probe v1 succeeded
+
+Run:
+
+- `lumina-micro-js-reduce-index-probe-v1-001`
+
+Result:
+
+- eval pass rate: `0.414`
+- eval `AUROC`: `1.000`
+- eval `ECE`: `0.232`
+- eval `Brier`: `0.061`
+
+Threshold behavior:
+
+- `thr=0.40`
+  - coverage: `0.500`
+  - selective accuracy: `0.828`
+  - overall accuracy: `0.414`
+- `thr=0.50`
+  - coverage: `0.414`
+  - selective accuracy: `1.000`
+  - overall accuracy: `0.414`
+
+Interpretation:
+
+- object-index confidence is now validated on `hard_val_v2`
+- ranking/control is strong even though calibration is not perfect
+
+Decision:
+
+- run policy stability for `0.40` and `0.50`
+- if stable, freeze `0.50` as the likely default threshold

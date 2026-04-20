@@ -238,6 +238,13 @@ Current next step:
   - pass rate `0.289`
 - next step is mixed-negative `probe_train_v2` + `probe_v1` on `hard_val_v2`
 
+Validated object-index probe result:
+
+- eval `AUROC`: `1.000`
+- eval `ECE`: `0.232`
+- candidate threshold `0.50`
+- broader operating point to test: `0.40`
+
 ## Working rule
 
 Each micro-specialist must prove one thing:
