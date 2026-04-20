@@ -20,3 +20,24 @@ Active documents:
 - `notes/final_push_plan.md`
 - `notes/local_runtime_architecture.md`
 - `notes/demo_flow.md`
+
+Current scaffold:
+- `runtime/schema.py` - execution trace types
+- `runtime/planner.py` - block extraction from JavaScript source
+- `runtime/router.py` - rules-first routing across the 3 promoted contracts
+- `runtime/orchestrator.py` - builds the route/planning trace
+- `run_demo_trace.py` - CLI entrypoint
+
+Run the current route/planning demo:
+
+```bash
+bash lumina_micro_demo/tools/run_demo_trace.sh
+```
+
+Override prompt or input file:
+
+```bash
+LUMINA_MICRO_DEMO_PROMPT="Refactor this JavaScript into more idiomatic functional code." \
+LUMINA_MICRO_DEMO_INPUT="path/to/input.js" \
+bash lumina_micro_demo/tools/run_demo_trace.sh
+```
