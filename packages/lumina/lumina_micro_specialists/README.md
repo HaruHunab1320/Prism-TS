@@ -1,262 +1,80 @@
 # Lumina Micro-Specialists
 
-This workspace is for narrow, contract-matched specialists.
+This workspace holds the validated micro-specialist research path.
 
-The goal is not "code" or "math" in general. The goal is one small task that:
+The main result is narrow, verifier-backed specialists with contract-specific
+confidence, not broad domain specialists.
 
-- has a precise input/output contract
-- is cheap to verify
-- can be routed with high precision
-- can fall back cleanly when outside scope
+## Frozen baselines
 
-## First vertical slice
-
-- contract: `js_array_loop_to_map`
-- domain: JavaScript refactoring
-- task: convert a simple imperative array transform loop into `.map`
-
-See:
-
-- `notes/js_array_loop_to_map_contract.md`
-- `notes/js_array_loop_to_map_flow.md`
-- `notes/js_array_loop_to_map_build_plan.md`
-- `notes/js_reduce_accumulator_refactor_contract.md`
-- `notes/js_reduce_accumulator_refactor_flow.md`
-- `notes/js_reduce_accumulator_refactor_build_plan.md`
-- `notes/js_reduce_object_index_builder_contract.md`
-- `notes/js_reduce_object_index_builder_flow.md`
-- `notes/js_reduce_object_index_builder_build_plan.md`
-- `notes/js_filter_predicate_refactor_contract.md`
-- `notes/js_filter_predicate_refactor_flow.md`
-- `notes/js_filter_predicate_refactor_build_plan.md`
-- `notes/micro_specialist_program.md`
-- `notes/experiment_log.md`
-
-## Why this path
-
-Broad specialists like `code`, `math`, and `general` were still too wide.
-
-Micro-specialists are intended to be:
-
-- easier to train well
-- easier to evaluate rigorously
-- easier to route safely
-- easier to attach confidence/control behavior to
-
-## Planned structure
-
-- `notes/`
-  - contract specs
-  - routing rules
-  - verifier design
-  - end-to-end flow notes
-- `data/`
-  - narrow contract-matched datasets
-- `evaluation/`
-  - verifier and contract-specific evaluation
-- `training/`
-  - adapter or LoRA training for the narrow contract
-- `runtime/`
-  - router + specialist + verifier + fallback path
-
-## First runnable commands
-
-Build the synthetic contract dataset:
-
-```bash
-bash lumina_micro_specialists/tools/build_js_array_loop_to_map_dataset.sh
-```
-
-Build the next reduce contract dataset:
-
-```bash
-bash lumina_micro_specialists/tools/build_js_reduce_accumulator_refactor_dataset.sh
-```
-
-Build the next filter contract dataset:
-
-```bash
-bash lumina_micro_specialists/tools/build_js_filter_predicate_refactor_dataset.sh
-```
-
-Build the next object-index contract dataset:
-
-```bash
-bash lumina_micro_specialists/tools/build_js_reduce_object_index_builder_dataset.sh
-```
-
-Run the verifier sanity baseline against the gold target:
-
-```bash
-LUMINA_MICRO_SOURCE=target \
-bash lumina_micro_specialists/tools/run_js_array_loop_to_map_baseline.sh
-```
-
-Run a real base-model baseline:
-
-```bash
-LUMINA_MICRO_SOURCE=model \
-LUMINA_MICRO_MODEL="Qwen/Qwen2.5-Coder-1.5B-Instruct" \
-bash lumina_micro_specialists/tools/run_js_array_loop_to_map_baseline.sh
-```
-
-Run a real base-model baseline for the reduce contract:
-
-```bash
-LUMINA_MICRO_SOURCE=model \
-LUMINA_MICRO_MODEL="/tmp/Qwen_Qwen2.5-Coder-1.5B-Instruct_flat" \
-bash lumina_micro_specialists/tools/run_js_reduce_accumulator_refactor_baseline.sh
-```
-
-Run a real base-model baseline for the filter contract:
-
-```bash
-LUMINA_MICRO_SOURCE=model \
-LUMINA_MICRO_MODEL="/tmp/Qwen_Qwen2.5-Coder-1.5B-Instruct_flat" \
-bash lumina_micro_specialists/tools/run_js_filter_predicate_refactor_baseline.sh
-```
-
-Run a real base-model baseline for the object-index contract:
-
-```bash
-LUMINA_MICRO_SOURCE=model \
-LUMINA_MICRO_MODEL="/tmp/Qwen_Qwen2.5-Coder-1.5B-Instruct_flat" \
-bash lumina_micro_specialists/tools/run_js_reduce_object_index_builder_baseline.sh
-```
-
-Train the first contract-matched uplift:
-
-```bash
-bash lumina_micro_specialists/tools/run_train_js_array_loop_to_map_adapter.sh
-```
-
-Compare base model vs trained treatment:
-
-```bash
-bash lumina_micro_specialists/tools/run_js_array_loop_to_map_uplift.sh
-```
-
-Train the first contract-specific confidence probe:
-
-```bash
-bash lumina_micro_specialists/tools/run_train_js_array_loop_to_map_confidence_head.sh
-```
-
-## Current result
-
-First valid cloud A/B (`2026-04-13`):
-
-- control verified pass rate: `0.797`
-- treatment verified pass rate: `0.906`
-- lift: `+0.109`
-- relative error reduction: `~54%`
-
-This is enough to keep the contract and freeze the treatment checkpoint as the
-current best path for `js_array_loop_to_map`.
-
-Promoted micro-specialist baseline:
-
-- contract: `js_array_loop_to_map`
-- answer model: contract-matched treatment checkpoint
+### 1. `js_array_loop_to_map`
+- answer model: promoted treatment checkpoint
 - confidence head: `probe_v1`
 - mode: `baseline selective`
 - threshold: `0.30`
+- stable result:
+  - coverage mean: `0.641`
+  - selective accuracy mean: `1.000`
+  - overall accuracy mean: `0.641`
 
-Policy stability:
-
-- coverage mean: `0.641`
-- selective accuracy mean: `1.000`
-- overall accuracy mean: `0.641`
-- gain vs always-answer mean: `+0.094`
-
-## Second vertical slice
-
-- contract: `js_reduce_accumulator_refactor`
-- domain: JavaScript refactoring
-- task: convert a simple accumulator loop into `.reduce`
-
-Promoted answer-model baseline:
-
-- control pass rate: `0.797`
-- treatment pass rate: `1.000`
-- answer-model decision: promote treatment
-
-What made it work:
-
-- explicit output binding in dataset, training, and runtime prompts
-- runtime accepts the first complete contract-matching assignment statement
-
-Current next step:
-
-- summarize the validated evidence across promoted micro-specialists
-
-Validated reduce probe result:
-
-- gate/eval split: `hard_val_v2`
-- training split: `probe_train_v2`
-- eval `AUROC`: `1.000`
-- candidate default threshold: `0.40`
-
-Promoted reduce baseline:
-
-- contract: `js_reduce_accumulator_refactor`
-- answer model: contract-matched treatment checkpoint
+### 2. `js_reduce_accumulator_refactor`
+- answer model: promoted treatment checkpoint
 - confidence head: `probe_v1`
 - mode: `baseline selective`
 - threshold: `0.40`
+- stable result:
+  - coverage mean: `0.898`
+  - selective accuracy mean: `1.000`
+  - overall accuracy mean: `0.898`
 
-Policy stability:
-
-- coverage mean: `0.898`
-- selective accuracy mean: `1.000`
-- overall accuracy mean: `0.898`
-- gain vs always-answer mean: `+0.102`
-
-## Third promoted answer-model slice
-
-- contract: `js_reduce_object_index_builder`
-- domain: JavaScript refactoring
-- task: convert an object-index loop into one `.reduce` assignment
-
-Promoted answer-model result:
-
-- control pass rate: `0.641`
-- treatment pass rate: `1.000`
-- answer-model decision: promote treatment
-
-What made it work:
-
-- retargeted training outputs to concise expression-body reduce assignments
-- avoided block-body mutation targets that caused truncation collapse
-
-Validated object-index probe result:
-
-- eval `AUROC`: `1.000`
-- eval `ECE`: `0.232`
-- candidate threshold `0.50`
-- broader operating point to test: `0.40`
-
-Promoted object-index baseline:
-
-- contract: `js_reduce_object_index_builder`
-- answer model: contract-matched treatment checkpoint
+### 3. `js_reduce_object_index_builder`
+- answer model: promoted treatment checkpoint
 - confidence head: `probe_v1`
 - mode: `baseline selective`
 - threshold: `0.50`
-
-Policy stability:
-
-- `threshold 0.40`
-  - coverage mean: `0.500`
-  - selective accuracy mean: `0.828`
-- `threshold 0.50`
+- stable result on adversarial `hard_val_v2`:
   - coverage mean: `0.414`
   - selective accuracy mean: `1.000`
   - overall accuracy mean: `0.414`
 
-## Working rule
+## Active notes
 
-Each micro-specialist must prove one thing:
+- `notes/micro_specialist_program.md`
+- `notes/experiment_log.md`
+- `notes/validated_evidence_2026-04-20.md`
+- `notes/js_array_loop_to_map_contract.md`
+- `notes/js_reduce_accumulator_refactor_contract.md`
+- `notes/js_reduce_object_index_builder_contract.md`
 
-- under its contract, it beats the base model strongly enough to justify the
-  extra routing and control complexity
+## Archive
+
+Dropped or superseded contracts and evidence were moved to:
+
+- `archive/2026-04/notes/`
+
+That currently includes:
+- `js_filter_predicate_refactor`
+- older evidence snapshots
+
+## What this workspace proves
+
+- narrow verifier-backed specialists can materially beat the base model
+- contract-specific learned confidence can support stable selective control
+- the contract and runtime shape matter as much as the training recipe
+
+It does not prove:
+- broad specialization buckets
+- universal confidence across unrelated tasks
+- deployment efficiency yet
+
+## Next phase
+
+The next phase is not more full checkpoint churn.
+The next phase is a shared-base local runtime:
+
+- one base model
+- specialist adapters/deltas
+- tiny confidence heads
+- verifier-backed routing
+
+That work is being staged in `lumina_micro_demo/`.
