@@ -2,6 +2,7 @@
 
 from .contracts import PROMOTED_CONTRACTS
 from .orchestrator import build_demo_trace
+from .specialists import MockSpecialistBackend, SpecialistBackend, SpecialistRequest
 from .schema import DemoTrace, StepCandidate, StepTrace
 
 __all__ = [
@@ -10,4 +11,7 @@ __all__ = [
     "DemoTrace",
     "StepCandidate",
     "StepTrace",
+    "MockSpecialistBackend",
+    "SpecialistBackend",
+    "SpecialistRequest",
 ]

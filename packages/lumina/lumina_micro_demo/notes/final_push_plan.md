@@ -24,10 +24,17 @@ A local Mac-first runtime that:
 4. runs verifier-backed acceptance
 5. returns transformed code plus an execution trace
 
-## Work order
+## Current scaffold state
 
-1. define shared-base adapter packaging
-2. define runtime trace schema
-3. build a rules-first span router
-4. build one local orchestrator
-5. measure memory and latency on one-machine runs
+Implemented now:
+1. route/planning trace
+2. specialist backend interface
+3. mock contract-matched execution backend
+4. verifier-backed accept/fallback behavior
+5. final composed output
+6. readable CLI demo view
+
+Still missing:
+1. real shared-base adapter backend
+2. confidence-threshold-driven fallback behavior beyond binary verifier pass/fail
+3. local memory/latency measurements on the target Mac runtime

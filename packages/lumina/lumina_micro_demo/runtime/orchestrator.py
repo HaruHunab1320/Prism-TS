@@ -1,7 +1,7 @@
-from .executor import execute_contract
 from .planner import extract_transform_blocks
 from .router import choose_contract, route_block
 from .schema import DemoTrace, SourceSpan, StepTrace
+from .specialists import MockSpecialistBackend, SpecialistBackend, SpecialistRequest
 
 
 def _compose_final_output(source_code: str, steps: list[StepTrace]) -> str:
@@ -28,7 +28,8 @@ def _compose_final_output(source_code: str, steps: list[StepTrace]) -> str:
     return "\n".join(out_lines) + ("\n" if source_code.endswith("\n") else "")
 
 
-def build_demo_trace(prompt: str, source_code: str) -> DemoTrace:
+def build_demo_trace(prompt: str, source_code: str, backend: SpecialistBackend | None = None) -> DemoTrace:
+    backend = backend or MockSpecialistBackend()
     blocks = extract_transform_blocks(source_code)
     steps: list[StepTrace] = []
     for idx, block in enumerate(blocks, start=1):
@@ -42,13 +43,15 @@ def build_demo_trace(prompt: str, source_code: str) -> DemoTrace:
         control_action = None
         verification_details: dict[str, object] = {}
         if selected_contract:
-            result = execute_contract(selected_contract, block.code)
+            result = backend.run(SpecialistRequest(contract=selected_contract, input_code=block.code))
             generated_code = result.generated_code
             verified = result.verified
             answer_confidence = result.answer_confidence
             control_action = result.control_action
             verification_details = result.details
             notes.extend(result.notes)
+            if not verified:
+                notes.append("Specialist output failed verification; keeping original block.")
             action = "accepted" if result.verified else "fallback"
         else:
             notes.append("No promoted contract matched strongly enough.")
@@ -80,6 +83,7 @@ def build_demo_trace(prompt: str, source_code: str) -> DemoTrace:
         "num_routed": sum(1 for step in steps if step.selected_contract),
         "num_accepted": sum(1 for step in steps if step.action == "accepted"),
         "num_fallback": sum(1 for step in steps if step.action == "fallback"),
+        "backend": backend.__class__.__name__,
     }
     return DemoTrace(
         prompt=prompt,

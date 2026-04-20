@@ -25,20 +25,20 @@ Current scaffold:
 - `runtime/schema.py` - execution trace types
 - `runtime/planner.py` - block extraction from JavaScript source
 - `runtime/router.py` - rules-first routing across the 3 promoted contracts
+- `runtime/specialists.py` - specialist backend interface
 - `runtime/executor.py` - contract-matched mock execution plus verifier calls
 - `runtime/orchestrator.py` - builds the full demo trace and composed output
-- `run_demo_trace.py` - CLI entrypoint
+- `run_demo_trace.py` - raw JSON trace CLI
+- `run_demo_view.py` - readable demo view
 
-Run the current demo:
+Run the readable demo:
 
 ```bash
-bash lumina_micro_demo/tools/run_demo_trace.sh
+bash lumina_micro_demo/tools/run_demo_view.sh
 ```
 
-Override prompt or input file:
+Run the raw JSON trace:
 
 ```bash
-LUMINA_MICRO_DEMO_PROMPT="Refactor this JavaScript into more idiomatic functional code." \
-LUMINA_MICRO_DEMO_INPUT="path/to/input.js" \
 bash lumina_micro_demo/tools/run_demo_trace.sh
 ```
