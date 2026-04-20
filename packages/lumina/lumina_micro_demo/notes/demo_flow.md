@@ -15,10 +15,11 @@ Input includes:
 
 1. parse candidate spans
 2. assign each span to a frozen contract
-3. run the chosen specialist
-4. verify output
-5. keep only verified/high-confidence results
-6. merge accepted rewrites into final code
+3. synthesize a contract-matched rewrite for the routed step
+4. generate verifier inputs from the original imperative block
+5. verify the rewrite against the contract
+6. accept verified outputs, fall back otherwise
+7. merge accepted rewrites into final code
 
 ## Demo output
 

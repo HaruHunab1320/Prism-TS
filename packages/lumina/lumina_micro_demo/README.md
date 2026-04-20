@@ -14,7 +14,7 @@ Inputs:
 
 Outputs:
 - one local orchestration path that goes from user prompt to verified response
-- one demo script that shows decomposition, routing, confidence, and final code
+- one demo script that shows decomposition, routing, confidence, verification, and final code
 
 Active documents:
 - `notes/final_push_plan.md`
@@ -25,10 +25,11 @@ Current scaffold:
 - `runtime/schema.py` - execution trace types
 - `runtime/planner.py` - block extraction from JavaScript source
 - `runtime/router.py` - rules-first routing across the 3 promoted contracts
-- `runtime/orchestrator.py` - builds the route/planning trace
+- `runtime/executor.py` - contract-matched mock execution plus verifier calls
+- `runtime/orchestrator.py` - builds the full demo trace and composed output
 - `run_demo_trace.py` - CLI entrypoint
 
-Run the current route/planning demo:
+Run the current demo:
 
 ```bash
 bash lumina_micro_demo/tools/run_demo_trace.sh

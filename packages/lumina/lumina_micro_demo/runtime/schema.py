@@ -26,6 +26,11 @@ class StepTrace:
     candidates: list[StepCandidate] = field(default_factory=list)
     action: str = "unresolved"
     verifier: str | None = None
+    generated_code: str | None = None
+    verified: bool = False
+    answer_confidence: float | None = None
+    control_action: str | None = None
+    verification_details: dict[str, Any] = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)
 
 
@@ -36,6 +41,7 @@ class DemoTrace:
     source_code: str
     steps: list[StepTrace]
     final_status: str
+    final_output_code: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
