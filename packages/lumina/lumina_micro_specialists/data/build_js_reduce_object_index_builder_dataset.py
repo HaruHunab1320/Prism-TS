@@ -155,6 +155,98 @@ for (let idx = 0; idx < sessions.length; idx += 1) {
     },
 ]
 
+HARD_TEMPLATES_V2 = [
+    {
+        "pattern": "for_of_customers_by_normalized_email",
+        "array_name": "customers",
+        "output_name": "customersByNormalizedEmail",
+        "element_var": "customer",
+        "key_expr": "customer.email.trim().toLowerCase()",
+        "input_values": [
+            [
+                {"email": " Ada@Example.com ", "name": "Ada"},
+                {"email": "linus@example.com", "name": "Linus"},
+            ],
+            [{"email": " GRACE@EXAMPLE.COM ", "name": "Grace"}],
+            [],
+        ],
+        "original": """const customersByNormalizedEmail = {};
+for (const customer of customers) {
+  const normalizedEmail = customer.email.trim().toLowerCase();
+  customersByNormalizedEmail[normalizedEmail] = customer;
+}""",
+        "target": "const customersByNormalizedEmail = customers.reduce((acc, customer) => ({ ...acc, [customer.email.trim().toLowerCase()]: customer }), {});",
+        "build": lambda values: {item["email"].strip().lower(): item for item in values},
+    },
+    {
+        "pattern": "indexed_products_by_category_sku",
+        "array_name": "products",
+        "output_name": "productsByCategorySku",
+        "element_var": "product",
+        "key_expr": "`${product.category}:${product.sku}`",
+        "input_values": [
+            [
+                {"category": "books", "sku": "sku-1", "price": 5},
+                {"category": "games", "sku": "sku-2", "price": 9},
+            ],
+            [{"category": "audio", "sku": "sku-3", "price": 7}],
+            [],
+        ],
+        "original": """const productsByCategorySku = {};
+for (let i = 0; i < products.length; i += 1) {
+  const product = products[i];
+  const compositeKey = `${product.category}:${product.sku}`;
+  productsByCategorySku[compositeKey] = product;
+}""",
+        "target": "const productsByCategorySku = products.reduce((acc, product) => ({ ...acc, [`${product.category}:${product.sku}`]: product }), {});",
+        "build": lambda values: {f"{item['category']}:{item['sku']}": item for item in values},
+    },
+    {
+        "pattern": "for_of_articles_by_author_slug",
+        "array_name": "articles",
+        "output_name": "articlesByAuthorSlug",
+        "element_var": "article",
+        "key_expr": "`${article.author.handle.toLowerCase()}:${article.slug}`",
+        "input_values": [
+            [
+                {"author": {"handle": "Ada"}, "slug": "intro", "title": "Intro"},
+                {"author": {"handle": "Linus"}, "slug": "systems", "title": "Systems"},
+            ],
+            [{"author": {"handle": "Grace"}, "slug": "docs", "title": "Docs"}],
+            [],
+        ],
+        "original": """const articlesByAuthorSlug = {};
+for (const article of articles) {
+  const key = `${article.author.handle.toLowerCase()}:${article.slug}`;
+  articlesByAuthorSlug[key] = article;
+}""",
+        "target": "const articlesByAuthorSlug = articles.reduce((acc, article) => ({ ...acc, [`${article.author.handle.toLowerCase()}:${article.slug}`]: article }), {});",
+        "build": lambda values: {f"{item['author']['handle'].lower()}:{item['slug']}": item for item in values},
+    },
+    {
+        "pattern": "indexed_sessions_by_user_token",
+        "array_name": "sessions",
+        "output_name": "sessionsByUserToken",
+        "element_var": "session",
+        "key_expr": "`${session.user.id}::${session.token}`",
+        "input_values": [
+            [
+                {"user": {"id": "u1"}, "token": "t1", "active": True},
+                {"user": {"id": "u2"}, "token": "t2", "active": False},
+            ],
+            [{"user": {"id": "u3"}, "token": "t3", "active": True}],
+            [],
+        ],
+        "original": """const sessionsByUserToken = {};
+for (let idx = 0; idx < sessions.length; idx += 1) {
+  const session = sessions[idx];
+  sessionsByUserToken[`${session.user.id}::${session.token}`] = session;
+}""",
+        "target": "const sessionsByUserToken = sessions.reduce((acc, session) => ({ ...acc, [`${session.user.id}::${session.token}`]: session }), {});",
+        "build": lambda values: {f"{item['user']['id']}::{item['token']}": item for item in values},
+    },
+]
+
 PROMPT_VARIANTS = [
     (
         "Refactor this JavaScript loop to use reduce.\n"
@@ -220,6 +312,7 @@ def main():
     p.add_argument("--train-size", type=int, default=320)
     p.add_argument("--val-size", type=int, default=64)
     p.add_argument("--hard-val-size", type=int, default=128)
+    p.add_argument("--hard-val-v2-size", type=int, default=128)
     p.add_argument("--seed", type=int, default=7)
     args = p.parse_args()
 
@@ -232,18 +325,31 @@ def main():
         make_row(args.train_size + args.val_size + i, rng.choice(hard_templates), rng, prefix="js_reduce_obj_hard")
         for i in range(args.hard_val_size)
     ]
+    hard_v2_templates = HARD_TEMPLATES_V2[:]
+    hard_v2_rows = [
+        make_row(
+            args.train_size + args.val_size + args.hard_val_size + i,
+            rng.choice(hard_v2_templates),
+            rng,
+            prefix="js_reduce_obj_hard_v2",
+        )
+        for i in range(args.hard_val_v2_size)
+    ]
 
     write_jsonl(train_rows, args.output_dir / "train.jsonl")
     write_jsonl(val_rows, args.output_dir / "val.jsonl")
     write_jsonl(hard_rows, args.output_dir / "hard_val.jsonl")
+    write_jsonl(hard_v2_rows, args.output_dir / "hard_val_v2.jsonl")
 
     summary = {
         "task_contract": "js_reduce_object_index_builder",
         "train_size": len(train_rows),
         "val_size": len(val_rows),
         "hard_val_size": len(hard_rows),
+        "hard_val_v2_size": len(hard_v2_rows),
         "patterns": sorted({row["input_pattern"] for row in train_rows + val_rows}),
         "hard_patterns": sorted({row["input_pattern"] for row in hard_rows}),
+        "hard_v2_patterns": sorted({row["input_pattern"] for row in hard_v2_rows}),
         "output_dir": str(args.output_dir),
     }
     print(json.dumps(summary, indent=2))

@@ -505,3 +505,27 @@ Decision:
 - do not train a confidence head on `val.jsonl`, because the promoted answer
   model now saturates it
 - first run a harder held-out gate on `hard_val.jsonl`
+
+## 2026-04-19 — `js_reduce_object_index_builder` hard gate saturated
+
+Run:
+
+- `lumina-micro-js-reduce-index-hard-gate-001`
+
+Result on `hard_val`:
+
+- samples: `128`
+- pass rate: `1.000`
+- syntax-valid rate: `1.000`
+- uses-reduce rate: `1.000`
+
+Interpretation:
+
+- the promoted answer model generalized through the first harder split
+- object-index confidence is still not testable on `hard_val`
+
+Decision:
+
+- build a genuinely adversarial `hard_val_v2`
+- use transformed/composite key expressions, not just renamed variables
+- only consider confidence training if `hard_val_v2` produces negatives
