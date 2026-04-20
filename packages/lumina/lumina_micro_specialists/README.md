@@ -229,21 +229,30 @@ What made it work:
 - retargeted training outputs to concise expression-body reduce assignments
 - avoided block-body mutation targets that caused truncation collapse
 
-Current next step:
-
-- confidence is not validated yet
-- the promoted answer model saturates `val.jsonl`
-- `hard_val.jsonl` also saturated
-- `hard_val_v2.jsonl` created real negatives:
-  - pass rate `0.289`
-- next step is mixed-negative `probe_train_v2` + `probe_v1` on `hard_val_v2`
-
 Validated object-index probe result:
 
 - eval `AUROC`: `1.000`
 - eval `ECE`: `0.232`
 - candidate threshold `0.50`
 - broader operating point to test: `0.40`
+
+Promoted object-index baseline:
+
+- contract: `js_reduce_object_index_builder`
+- answer model: contract-matched treatment checkpoint
+- confidence head: `probe_v1`
+- mode: `baseline selective`
+- threshold: `0.50`
+
+Policy stability:
+
+- `threshold 0.40`
+  - coverage mean: `0.500`
+  - selective accuracy mean: `0.828`
+- `threshold 0.50`
+  - coverage mean: `0.414`
+  - selective accuracy mean: `1.000`
+  - overall accuracy mean: `0.414`
 
 ## Working rule
 

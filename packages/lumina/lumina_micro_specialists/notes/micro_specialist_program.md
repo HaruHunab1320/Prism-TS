@@ -88,6 +88,13 @@ on the exact same contract and verifier
   - `baseline selective`
   - `threshold 0.40`
 
+3. `js_reduce_object_index_builder`
+- answer model uplift: `0.641 -> 1.000`
+- frozen control path:
+  - `probe_v1`
+  - `baseline selective`
+  - `threshold 0.50`
+
 Current evidence supports:
 
 - narrow verifier-backed micro-specialists can materially improve task success

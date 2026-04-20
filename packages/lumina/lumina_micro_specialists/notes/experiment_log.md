@@ -594,3 +594,28 @@ Decision:
 
 - run policy stability for `0.40` and `0.50`
 - if stable, freeze `0.50` as the likely default threshold
+
+## 2026-04-20 — `js_reduce_object_index_builder` policy stability
+
+Run:
+
+- `lumina-micro-js-reduce-index-policy-stability-001`
+
+Stable result:
+
+- `threshold 0.40`
+  - coverage mean: `0.500`
+  - selective accuracy mean: `0.828`
+  - overall accuracy mean: `0.414`
+- `threshold 0.50`
+  - coverage mean: `0.414`
+  - selective accuracy mean: `1.000`
+  - overall accuracy mean: `0.414`
+
+Decision:
+
+- freeze `js_reduce_object_index_builder` as:
+  - answer model: promoted treatment checkpoint
+  - confidence head: `probe_v1`
+  - mode: `baseline selective`
+  - threshold: `0.50`
