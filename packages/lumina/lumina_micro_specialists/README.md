@@ -234,8 +234,9 @@ Current next step:
 - confidence is not validated yet
 - the promoted answer model saturates `val.jsonl`
 - `hard_val.jsonl` also saturated
-- next gate is a genuinely adversarial `hard_val_v2.jsonl` with transformed and
-  composite key expressions before any object-index confidence training
+- `hard_val_v2.jsonl` created real negatives:
+  - pass rate `0.289`
+- next step is mixed-negative `probe_train_v2` + `probe_v1` on `hard_val_v2`
 
 ## Working rule
 

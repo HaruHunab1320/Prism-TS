@@ -529,3 +529,34 @@ Decision:
 - build a genuinely adversarial `hard_val_v2`
 - use transformed/composite key expressions, not just renamed variables
 - only consider confidence training if `hard_val_v2` produces negatives
+
+## 2026-04-20 — `js_reduce_object_index_builder` hard v2 created negatives
+
+Run:
+
+- `lumina-micro-js-reduce-index-hard-v2-gate-001`
+
+Result on `hard_val_v2`:
+
+- samples: `128`
+- pass rate: `0.289`
+- syntax-valid rate: `0.289`
+- uses-reduce rate: `1.000`
+
+Observed failure mode:
+
+- transformed/composite-key cases trigger truncated block-body fallback
+- representative failures:
+  - normalized email key
+  - composite category+sku key
+  - author-handle+slug key
+
+Interpretation:
+
+- object-index confidence is now testable
+- `hard_val_v2` is the right adversarial eval split
+
+Decision:
+
+- build mixed-negative `probe_train_v2` from the same adversarial family
+- train `probe_v1` against `hard_val_v2`

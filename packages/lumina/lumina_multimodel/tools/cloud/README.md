@@ -44,6 +44,7 @@ gcloud auth login
 - `experiments_lumina_micro_js_reduce_object_index_builder_uplift.yaml`
 - `experiments_lumina_micro_js_reduce_object_index_builder_hard_gate.yaml`
 - `experiments_lumina_micro_js_reduce_object_index_builder_hard_v2_gate.yaml`
+- `experiments_lumina_micro_js_reduce_object_index_builder_probe_v1.yaml`
 
 Older stage-a / stage-b and multimodel exploration specs were moved to:
 

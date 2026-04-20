@@ -268,13 +268,51 @@ PROMPT_VARIANTS = [
     ),
 ]
 
+HARD_PROMPT_VARIANTS = [
+    (
+        "Refactor this object-index loop to reduce.\n"
+        "Keep the final binding name exactly `{output_name}`.\n"
+        "Return one JavaScript statement only.\n"
+        "```js\n{code}\n```"
+    ),
+    (
+        "Rewrite this object-index builder in idiomatic JavaScript.\n"
+        "Use `{array_name}.reduce(...)` and assign the result to `{output_name}`.\n"
+        "Do not include comments, prose, or repeated statements.\n"
+        "```js\n{code}\n```"
+    ),
+]
+
+HARD_PROMPT_VARIANTS_V2 = [
+    (
+        "Rewrite this keyed object-index loop as one JavaScript statement.\n"
+        "Keep the final binding name exactly `{output_name}`.\n"
+        "Use `{array_name}.reduce(...)`.\n"
+        "Preserve the derived key logic.\n"
+        "```js\n{code}\n```"
+    ),
+    (
+        "Convert this object-index loop into one reduce assignment.\n"
+        "Do not explain anything. Do not repeat the statement.\n"
+        "Expected binding: `{output_name}`.\n"
+        "Keep the computed key behavior unchanged.\n"
+        "```js\n{code}\n```"
+    ),
+    (
+        "Refactor this loop to reduce while preserving behavior.\n"
+        "Return only the final JavaScript statement assigning to `{output_name}`.\n"
+        "Keep any normalization or composite-key logic intact.\n"
+        "```js\n{code}\n```"
+    ),
+]
+
 
 def eval_target(template: dict, values):
     return template["build"](values)
 
 
-def make_row(idx: int, template: dict, rng: random.Random, *, prefix: str = "js_reduce_obj") -> dict:
-    prompt = rng.choice(PROMPT_VARIANTS).format(
+def make_row(idx: int, template: dict, rng: random.Random, *, prompt_variants=None, prefix: str = "js_reduce_obj") -> dict:
+    prompt = rng.choice(prompt_variants or PROMPT_VARIANTS).format(
         code=template["original"],
         output_name=template["output_name"],
         array_name=template["array_name"],
@@ -290,6 +328,7 @@ def make_row(idx: int, template: dict, rng: random.Random, *, prefix: str = "js_
         "input_code": template["original"],
         "target_code": template["target"],
         "input_pattern": template["pattern"],
+        "expected_key_expr": template["key_expr"],
         "expected_output_var": template["output_name"],
         "expected_array_var": template["array_name"],
         "tests": [
@@ -312,6 +351,7 @@ def main():
     p.add_argument("--train-size", type=int, default=320)
     p.add_argument("--val-size", type=int, default=64)
     p.add_argument("--hard-val-size", type=int, default=128)
+    p.add_argument("--probe-train-v2-size", type=int, default=256)
     p.add_argument("--hard-val-v2-size", type=int, default=128)
     p.add_argument("--seed", type=int, default=7)
     args = p.parse_args()
@@ -322,15 +362,32 @@ def main():
     val_rows = [make_row(args.train_size + i, rng.choice(templates), rng) for i in range(args.val_size)]
     hard_templates = HARD_TEMPLATES[:]
     hard_rows = [
-        make_row(args.train_size + args.val_size + i, rng.choice(hard_templates), rng, prefix="js_reduce_obj_hard")
+        make_row(
+            args.train_size + args.val_size + i,
+            rng.choice(hard_templates),
+            rng,
+            prompt_variants=HARD_PROMPT_VARIANTS,
+            prefix="js_reduce_obj_hard",
+        )
         for i in range(args.hard_val_size)
     ]
     hard_v2_templates = HARD_TEMPLATES_V2[:]
-    hard_v2_rows = [
+    probe_train_v2_rows = [
         make_row(
             args.train_size + args.val_size + args.hard_val_size + i,
             rng.choice(hard_v2_templates),
             rng,
+            prompt_variants=HARD_PROMPT_VARIANTS_V2,
+            prefix="js_reduce_obj_probe_v2",
+        )
+        for i in range(args.probe_train_v2_size)
+    ]
+    hard_v2_rows = [
+        make_row(
+            args.train_size + args.val_size + args.hard_val_size + args.probe_train_v2_size + i,
+            rng.choice(hard_v2_templates),
+            rng,
+            prompt_variants=HARD_PROMPT_VARIANTS_V2,
             prefix="js_reduce_obj_hard_v2",
         )
         for i in range(args.hard_val_v2_size)
@@ -339,6 +396,7 @@ def main():
     write_jsonl(train_rows, args.output_dir / "train.jsonl")
     write_jsonl(val_rows, args.output_dir / "val.jsonl")
     write_jsonl(hard_rows, args.output_dir / "hard_val.jsonl")
+    write_jsonl(probe_train_v2_rows, args.output_dir / "probe_train_v2.jsonl")
     write_jsonl(hard_v2_rows, args.output_dir / "hard_val_v2.jsonl")
 
     summary = {
@@ -346,9 +404,11 @@ def main():
         "train_size": len(train_rows),
         "val_size": len(val_rows),
         "hard_val_size": len(hard_rows),
+        "probe_train_v2_size": len(probe_train_v2_rows),
         "hard_val_v2_size": len(hard_v2_rows),
         "patterns": sorted({row["input_pattern"] for row in train_rows + val_rows}),
         "hard_patterns": sorted({row["input_pattern"] for row in hard_rows}),
+        "probe_patterns_v2": sorted({row["input_pattern"] for row in probe_train_v2_rows}),
         "hard_v2_patterns": sorted({row["input_pattern"] for row in hard_v2_rows}),
         "output_dir": str(args.output_dir),
     }
