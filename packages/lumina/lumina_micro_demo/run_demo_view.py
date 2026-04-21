@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 
 from lumina_micro_demo.runtime.orchestrator import build_demo_trace
+from lumina_micro_demo.runtime.specialists import MockSpecialistBackend, OllamaSpecialistBackend
 
 
 def _fmt_conf(value: float | None) -> str:
@@ -14,10 +15,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Render a readable Lumina micro demo trace.")
     parser.add_argument("--prompt", required=True, help="User prompt for the demo request.")
     parser.add_argument("--input", required=True, help="Path to a JavaScript source file.")
+    parser.add_argument("--backend", choices=["mock", "ollama"], default="mock")
+    parser.add_argument("--ollama-model", default="llama3.1:latest")
     args = parser.parse_args()
 
     source_code = Path(args.input).read_text(encoding="utf-8")
-    trace = build_demo_trace(args.prompt, source_code)
+    backend = MockSpecialistBackend() if args.backend == "mock" else OllamaSpecialistBackend(args.ollama_model)
+    trace = build_demo_trace(args.prompt, source_code, backend=backend)
 
     print("Lumina Micro Demo")
     print(f"status: {trace.final_status}")

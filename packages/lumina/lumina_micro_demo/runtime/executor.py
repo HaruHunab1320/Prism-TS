@@ -26,6 +26,12 @@ STRING_METHOD_RE = re.compile(r"\.(trim|toUpperCase|toLowerCase|slice|padStart|p
 
 
 @dataclass
+class ContractContext:
+    prompt: str
+    verifier_row: dict[str, Any]
+
+
+@dataclass
 class ExecutionResult:
     generated_code: str | None
     verified: bool
@@ -57,9 +63,9 @@ def _assignment_line(code: str) -> str:
 
 
 def _extract_loop_binding(code: str) -> tuple[str, str] | None:
-    m = FOR_OF_RE.search(code)
-    if m:
-        return m.group("item"), m.group("array")
+    match = FOR_OF_RE.search(code)
+    if match:
+        return match.group("item"), match.group("array")
     index_match = re.search(
         r"for\s*\(\s*(?:let|var)\s+(?P<idx>[A-Za-z_$][\w$]*)\s*=\s*0\s*;\s*"
         r"(?P<array>[A-Za-z_$][\w$]*)\.length",
@@ -137,8 +143,9 @@ def _rewrite_map(code: str) -> tuple[str | None, dict[str, Any] | None]:
     out_var = out_match.group("out")
     expr = push_match.group("expr").strip()
     if iter_var != array_var and re.search(rf"\b{re.escape(array_var)}\s*\[\s*{re.escape(iter_var)}\s*\]", expr):
-        expr = re.sub(rf"\b{re.escape(array_var)}\s*\[\s*{re.escape(iter_var)}\s*\]", iter_var[:-1] if iter_var.endswith('i') else 'item', expr)
-        iter_var = iter_var[:-1] if iter_var.endswith('i') else 'item'
+        replacement_var = iter_var[:-1] if iter_var.endswith("i") else "item"
+        expr = re.sub(rf"\b{re.escape(array_var)}\s*\[\s*{re.escape(iter_var)}\s*\]", replacement_var, expr)
+        iter_var = replacement_var
     generated = f"const {out_var} = {array_var}.map(({iter_var}) => {expr});"
     sample_input = _build_items_for_expression(expr, iter_var)
     row = {
@@ -194,9 +201,7 @@ def _rewrite_reduce_object_index(code: str) -> tuple[str | None, dict[str, Any] 
     iter_var, array_var = binding
     key_expr = assign_match.group("key").strip()
     value_expr = assign_match.group("value").strip()
-    generated = (
-        f"const {out_var} = {array_var}.reduce((acc, {iter_var}) => ({{ ...acc, [{key_expr}]: {value_expr} }}), {{}});"
-    )
+    generated = f"const {out_var} = {array_var}.reduce((acc, {iter_var}) => ({{ ...acc, [{key_expr}]: {value_expr} }}), {{}});"
     sample_input = _build_items_for_expression(f"{key_expr} {value_expr}", iter_var)
     row = {
         "expected_array_var": array_var,
@@ -206,31 +211,52 @@ def _rewrite_reduce_object_index(code: str) -> tuple[str | None, dict[str, Any] 
     return generated, row
 
 
+BUILDERS = {
+    "js_array_loop_to_map": _rewrite_map,
+    "js_reduce_accumulator_refactor": _rewrite_reduce_accumulator,
+    "js_reduce_object_index_builder": _rewrite_reduce_object_index,
+}
+
+VERIFIERS = {
+    "js_array_loop_to_map": verify_js_array_loop_to_map,
+    "js_reduce_accumulator_refactor": verify_js_reduce_accumulator_refactor,
+    "js_reduce_object_index_builder": verify_js_reduce_object_index_builder,
+}
+
+
+def build_contract_context(contract: str, input_code: str) -> ContractContext | None:
+    builder = BUILDERS.get(contract)
+    if builder is None:
+        return None
+    _generated, row = builder(input_code)
+    if not row or not row.get("tests"):
+        return None
+    if contract == "js_array_loop_to_map":
+        prompt = f"Refactor this loop to use map:\n```js\n{input_code}\n```"
+    elif contract == "js_reduce_accumulator_refactor":
+        prompt = f"Refactor this loop to use reduce:\n```js\n{input_code}\n```"
+    else:
+        prompt = f"Refactor this loop into one reduce-based object index assignment:\n```js\n{input_code}\n```"
+    row["prompt"] = prompt
+    return ContractContext(prompt=prompt, verifier_row=row)
+
+
 def execute_contract(contract: str, input_code: str) -> ExecutionResult:
-    builders = {
-        "js_array_loop_to_map": _rewrite_map,
-        "js_reduce_accumulator_refactor": _rewrite_reduce_accumulator,
-        "js_reduce_object_index_builder": _rewrite_reduce_object_index,
-    }
-    verifiers = {
-        "js_array_loop_to_map": verify_js_array_loop_to_map,
-        "js_reduce_accumulator_refactor": verify_js_reduce_accumulator_refactor,
-        "js_reduce_object_index_builder": verify_js_reduce_object_index_builder,
-    }
-    builder = builders.get(contract)
-    verifier = verifiers.get(contract)
-    if builder is None or verifier is None:
+    verifier = VERIFIERS.get(contract)
+    builder = BUILDERS.get(contract)
+    if verifier is None or builder is None:
         return ExecutionResult(None, False, False, False, 0.0, "fallback", {}, ["Unsupported contract."])
-    generated, row = builder(input_code)
-    if not generated or not row or not row.get("tests"):
-        return ExecutionResult(generated, False, False, False, 0.0, "fallback", row or {}, ["Could not synthesize verifier inputs from source block."])
-    verify_result = verifier(generated, row)
+    context = build_contract_context(contract, input_code)
+    if context is None:
+        return ExecutionResult(None, False, False, False, 0.0, "fallback", {}, ["Could not synthesize verifier inputs from source block."])
+    generated, _row = builder(input_code)
+    verify_result = verifier(generated, context.verifier_row)
     contract_marker_present = bool(verify_result.uses_map if hasattr(verify_result, "uses_map") else verify_result.uses_reduce)
     verified = bool(verify_result.passed)
     confidence = 1.0 if verified else 0.0
     action = "accepted" if verified else "fallback"
     details = {
-        "verifier_row": row,
+        "verifier_row": context.verifier_row,
         "verification": {
             "syntax_valid": verify_result.syntax_valid,
             "contract_marker_present": contract_marker_present,

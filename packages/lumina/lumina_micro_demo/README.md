@@ -26,10 +26,14 @@ Current scaffold:
 - `runtime/planner.py` - block extraction from JavaScript source
 - `runtime/router.py` - rules-first routing across the 3 promoted contracts
 - `runtime/specialists.py` - specialist backend interface
-- `runtime/executor.py` - contract-matched mock execution plus verifier calls
+- `runtime/executor.py` - verifier-row synthesis and mock execution helpers
 - `runtime/orchestrator.py` - builds the full demo trace and composed output
 - `run_demo_trace.py` - raw JSON trace CLI
 - `run_demo_view.py` - readable demo view
+
+Validated local backends:
+- `mock`
+- `ollama` using `llama3.1:latest`
 
 Run the readable demo:
 
@@ -41,4 +45,13 @@ Run the raw JSON trace:
 
 ```bash
 bash lumina_micro_demo/tools/run_demo_trace.sh
+```
+
+
+Use the local Ollama backend:
+
+```bash
+LUMINA_MICRO_DEMO_BACKEND=ollama \
+LUMINA_MICRO_DEMO_OLLAMA_MODEL=llama3.1:latest \
+bash lumina_micro_demo/tools/run_demo_view.sh
 ```

@@ -30,9 +30,14 @@ Implemented now:
 1. route/planning trace
 2. specialist backend interface
 3. mock contract-matched execution backend
-4. verifier-backed accept/fallback behavior
-5. final composed output
-6. readable CLI demo view
+4. real local `ollama` backend
+5. verifier-backed accept/fallback behavior
+6. final composed output
+7. readable CLI demo view
+
+Validated locally:
+- `mock` backend completes on the sample input
+- `ollama` backend completes on the sample input with `llama3.1:latest`
 
 Still missing:
 1. real shared-base adapter backend
