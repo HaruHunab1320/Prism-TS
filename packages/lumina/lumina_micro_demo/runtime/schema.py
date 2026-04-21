@@ -23,11 +23,13 @@ class StepTrace:
     selected_contract: str | None
     selected_threshold: float | None
     selected_mode: str | None
+    selected_adapter: str | None = None
     candidates: list[StepCandidate] = field(default_factory=list)
     action: str = "unresolved"
     verifier: str | None = None
     generated_code: str | None = None
     verified: bool = False
+    threshold_passed: bool | None = None
     answer_confidence: float | None = None
     control_action: str | None = None
     verification_details: dict[str, Any] = field(default_factory=dict)

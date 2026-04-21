@@ -25,11 +25,12 @@ Current scaffold:
 - `runtime/schema.py` - execution trace types
 - `runtime/planner.py` - block extraction from JavaScript source
 - `runtime/router.py` - rules-first routing across the 3 promoted contracts
-- `runtime/specialists.py` - specialist backend interface
+- `runtime/specialists.py` - specialist backend interface and shared-base-oriented backend metadata
 - `runtime/executor.py` - verifier-row synthesis and mock execution helpers
-- `runtime/orchestrator.py` - builds the full demo trace and composed output
+- `runtime/orchestrator.py` - builds the full demo trace, threshold gating, and composed output
 - `run_demo_trace.py` - raw JSON trace CLI
 - `run_demo_view.py` - readable demo view
+- `bench_demo.py` - local cold/warm latency benchmark harness
 
 Validated local backends:
 - `mock`
@@ -55,4 +56,16 @@ LUMINA_MICRO_DEMO_BACKEND=ollama \
 LUMINA_MICRO_DEMO_OLLAMA_MODEL=llama3.1:latest \
 LUMINA_MICRO_DEMO_OLLAMA_KEEPALIVE=5m \
 bash lumina_micro_demo/tools/run_demo_view.sh
+```
+
+
+Run the local benchmark:
+
+```bash
+LUMINA_MICRO_DEMO_BACKEND=ollama \
+LUMINA_MICRO_DEMO_OLLAMA_MODEL=llama3.1:latest \
+LUMINA_MICRO_DEMO_OLLAMA_KEEPALIVE=5m \
+LUMINA_MICRO_DEMO_ITERATIONS=3 \
+LUMINA_MICRO_DEMO_COLD_FIRST=1 \
+bash lumina_micro_demo/tools/run_bench_demo.sh
 ```

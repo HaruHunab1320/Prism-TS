@@ -2,12 +2,37 @@ import subprocess
 from dataclasses import dataclass
 from typing import Protocol
 
+from lumina_micro_demo.runtime.contracts import get_contract_spec
+from lumina_micro_specialists.evaluation.eval_js_array_loop_to_map import (
+    contract_feature_vector as map_feature_vector,
+)
 from lumina_micro_specialists.evaluation.eval_js_array_loop_to_map import extract_code as extract_map_code
+from lumina_micro_specialists.evaluation.eval_js_array_loop_to_map import heuristic_confidence as map_heuristic_confidence
 from lumina_micro_specialists.evaluation.eval_js_array_loop_to_map import strict_prompt as strict_map_prompt
-from lumina_micro_specialists.evaluation.eval_js_reduce_accumulator_refactor import extract_code as extract_reduce_code
-from lumina_micro_specialists.evaluation.eval_js_reduce_accumulator_refactor import strict_prompt as strict_reduce_prompt
-from lumina_micro_specialists.evaluation.eval_js_reduce_object_index_builder import extract_code as extract_index_code
-from lumina_micro_specialists.evaluation.eval_js_reduce_object_index_builder import strict_prompt as strict_index_prompt
+from lumina_micro_specialists.evaluation.eval_js_reduce_accumulator_refactor import (
+    contract_feature_vector as reduce_feature_vector,
+)
+from lumina_micro_specialists.evaluation.eval_js_reduce_accumulator_refactor import (
+    extract_code as extract_reduce_code,
+)
+from lumina_micro_specialists.evaluation.eval_js_reduce_accumulator_refactor import (
+    heuristic_confidence as reduce_heuristic_confidence,
+)
+from lumina_micro_specialists.evaluation.eval_js_reduce_accumulator_refactor import (
+    strict_prompt as strict_reduce_prompt,
+)
+from lumina_micro_specialists.evaluation.eval_js_reduce_object_index_builder import (
+    contract_feature_vector as index_feature_vector,
+)
+from lumina_micro_specialists.evaluation.eval_js_reduce_object_index_builder import (
+    extract_code as extract_index_code,
+)
+from lumina_micro_specialists.evaluation.eval_js_reduce_object_index_builder import (
+    heuristic_confidence as index_heuristic_confidence,
+)
+from lumina_micro_specialists.evaluation.eval_js_reduce_object_index_builder import (
+    strict_prompt as strict_index_prompt,
+)
 
 from .executor import ContractContext, ExecutionResult, VERIFIERS, build_contract_context, execute_contract
 
@@ -16,6 +41,7 @@ from .executor import ContractContext, ExecutionResult, VERIFIERS, build_contrac
 class SpecialistRequest:
     contract: str
     input_code: str
+    route_confidence: float
 
 
 class SpecialistBackend(Protocol):
@@ -23,14 +49,45 @@ class SpecialistBackend(Protocol):
         ...
 
 
+def _score_candidate(contract: str, route_confidence: float, row: dict, candidate: str, verdict) -> float:
+    if contract == "js_array_loop_to_map":
+        return map_heuristic_confidence(map_feature_vector(row, candidate, route_confidence, verdict))
+    if contract == "js_reduce_accumulator_refactor":
+        return reduce_heuristic_confidence(reduce_feature_vector(row, candidate, route_confidence, verdict))
+    return index_heuristic_confidence(index_feature_vector(row, candidate, route_confidence, verdict))
+
+
 class MockSpecialistBackend:
     """Contract-matched stand-in for the future shared-base adapter runtime."""
 
     def run(self, request: SpecialistRequest) -> ExecutionResult:
-        return execute_contract(request.contract, request.input_code)
+        result = execute_contract(request.contract, request.input_code)
+        spec = get_contract_spec(request.contract)
+        if spec:
+            result.details.setdefault("runtime", {})
+            result.details["runtime"].update(
+                {
+                    "base_model_family": spec.base_model_family,
+                    "adapter_name": spec.adapter_name,
+                    "route_confidence": request.route_confidence,
+                    "backend": "shared_base_mock",
+                }
+            )
+        if result.generated_code and result.verified:
+            verifier = VERIFIERS[request.contract]
+            row = result.details.get("verifier_row", {})
+            verdict = verifier(result.generated_code, row)
+            result.answer_confidence = _score_candidate(
+                request.contract,
+                request.route_confidence,
+                row,
+                result.generated_code,
+                verdict,
+            )
+        return result
 
 
-class OllamaSpecialistBackend:
+class SharedBaseOllamaBackend:
     def __init__(self, model: str = "llama3.1:latest", keepalive: str = "5m") -> None:
         self.model = model
         self.keepalive = keepalive
@@ -48,6 +105,7 @@ class OllamaSpecialistBackend:
 
     def run(self, request: SpecialistRequest) -> ExecutionResult:
         context = build_contract_context(request.contract, request.input_code)
+        spec = get_contract_spec(request.contract)
         if context is None:
             return ExecutionResult(None, False, False, False, 0.0, "fallback", {}, ["Could not synthesize verifier inputs from source block."])
         try:
@@ -59,16 +117,20 @@ class OllamaSpecialistBackend:
         verdict = verifier(candidate, context.verifier_row)
         contract_marker_present = bool(getattr(verdict, "uses_map", getattr(verdict, "uses_reduce", False)))
         verified = bool(verdict.passed)
+        confidence = _score_candidate(request.contract, request.route_confidence, context.verifier_row, candidate, verdict)
         return ExecutionResult(
             generated_code=candidate.strip(),
             verified=verified,
             syntax_valid=bool(verdict.syntax_valid),
             contract_marker_present=contract_marker_present,
-            answer_confidence=1.0 if verified else 0.0,
+            answer_confidence=confidence,
             control_action="accepted" if verified else "fallback",
             details={
-                "backend": "ollama",
+                "backend": "shared_base_ollama",
                 "model": self.model,
+                "base_model_family": spec.base_model_family if spec else None,
+                "adapter_name": spec.adapter_name if spec else None,
+                "route_confidence": request.route_confidence,
                 "raw_output": raw,
                 "verifier_row": context.verifier_row,
                 "verification": {
@@ -89,7 +151,6 @@ class OllamaSpecialistBackend:
             return strict_reduce_prompt(row)
         return strict_index_prompt(row)
 
-
     def _postprocess_candidate(self, candidate: str, context: ContractContext) -> str:
         row = context.verifier_row
         expected_var = row.get("expected_output_var", "")
@@ -108,3 +169,6 @@ class OllamaSpecialistBackend:
         if contract == "js_reduce_accumulator_refactor":
             return extract_reduce_code(raw, row)
         return extract_index_code(raw, row)
+
+
+OllamaSpecialistBackend = SharedBaseOllamaBackend

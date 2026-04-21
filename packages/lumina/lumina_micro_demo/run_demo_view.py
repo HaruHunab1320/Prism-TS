@@ -28,14 +28,17 @@ def main() -> None:
     print(f"status: {trace.final_status}")
     print(f"backend: {trace.metadata.get('backend')}")
     print(f"steps: {trace.metadata.get('num_steps')} accepted={trace.metadata.get('num_accepted')} fallback={trace.metadata.get('num_fallback')}")
+    print(f"threshold_rejected: {trace.metadata.get('num_threshold_rejected')}")
     print(f"total_latency_ms: {trace.metadata.get('total_latency_ms', 0.0):.1f}")
     print()
     print("Step Trace")
     for step in trace.steps:
         print(f"- {step.step_id} lines {step.source_span.start_line}-{step.source_span.end_line}")
         print(f"  contract: {step.selected_contract or 'fallback'}")
+        print(f"  adapter: {step.selected_adapter or '-'}")
         print(f"  action: {step.action}")
         print(f"  threshold: {step.selected_threshold if step.selected_threshold is not None else '-'}")
+        print(f"  threshold_passed: {step.threshold_passed if step.threshold_passed is not None else '-'}")
         print(f"  confidence: {_fmt_conf(step.answer_confidence)}")
         print(f"  latency_ms: {step.latency_ms:.1f}" if step.latency_ms is not None else "  latency_ms: -")
         if step.generated_code:
