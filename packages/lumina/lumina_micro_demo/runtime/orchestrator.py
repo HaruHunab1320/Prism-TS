@@ -1,3 +1,4 @@
+import time
 from .planner import extract_transform_blocks
 from .router import choose_contract, route_block
 from .schema import DemoTrace, SourceSpan, StepTrace
@@ -30,6 +31,7 @@ def _compose_final_output(source_code: str, steps: list[StepTrace]) -> str:
 
 def build_demo_trace(prompt: str, source_code: str, backend: SpecialistBackend | None = None) -> DemoTrace:
     backend = backend or MockSpecialistBackend()
+    start_total = time.perf_counter()
     blocks = extract_transform_blocks(source_code)
     steps: list[StepTrace] = []
     for idx, block in enumerate(blocks, start=1):
@@ -42,8 +44,11 @@ def build_demo_trace(prompt: str, source_code: str, backend: SpecialistBackend |
         answer_confidence = None
         control_action = None
         verification_details: dict[str, object] = {}
+        latency_ms = None
         if selected_contract:
+            step_start = time.perf_counter()
             result = backend.run(SpecialistRequest(contract=selected_contract, input_code=block.code))
+            latency_ms = (time.perf_counter() - step_start) * 1000.0
             generated_code = result.generated_code
             verified = result.verified
             answer_confidence = result.answer_confidence
@@ -71,6 +76,7 @@ def build_demo_trace(prompt: str, source_code: str, backend: SpecialistBackend |
                 answer_confidence=answer_confidence,
                 control_action=control_action,
                 verification_details=verification_details,
+                latency_ms=latency_ms,
                 notes=notes,
             )
         )
@@ -78,12 +84,14 @@ def build_demo_trace(prompt: str, source_code: str, backend: SpecialistBackend |
     final_status = "completed" if steps and all(step.action == "accepted" for step in steps) else "partial"
     if not steps:
         final_status = "no_transform_blocks_found"
+    total_latency_ms = (time.perf_counter() - start_total) * 1000.0
     metadata = {
         "num_steps": len(steps),
         "num_routed": sum(1 for step in steps if step.selected_contract),
         "num_accepted": sum(1 for step in steps if step.action == "accepted"),
         "num_fallback": sum(1 for step in steps if step.action == "fallback"),
         "backend": backend.__class__.__name__,
+        "total_latency_ms": total_latency_ms,
     }
     return DemoTrace(
         prompt=prompt,

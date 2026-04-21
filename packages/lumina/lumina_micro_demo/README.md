@@ -53,5 +53,6 @@ Use the local Ollama backend:
 ```bash
 LUMINA_MICRO_DEMO_BACKEND=ollama \
 LUMINA_MICRO_DEMO_OLLAMA_MODEL=llama3.1:latest \
+LUMINA_MICRO_DEMO_OLLAMA_KEEPALIVE=5m \
 bash lumina_micro_demo/tools/run_demo_view.sh
 ```

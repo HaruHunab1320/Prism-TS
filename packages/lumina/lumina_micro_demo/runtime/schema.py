@@ -31,6 +31,7 @@ class StepTrace:
     answer_confidence: float | None = None
     control_action: str | None = None
     verification_details: dict[str, Any] = field(default_factory=dict)
+    latency_ms: float | None = None
     notes: list[str] = field(default_factory=list)
 
 

@@ -43,3 +43,12 @@ Still missing:
 1. real shared-base adapter backend
 2. confidence-threshold-driven fallback behavior beyond binary verifier pass/fail
 3. local memory/latency measurements on the target Mac runtime
+
+## Measured local sample
+
+On the sample 3-step JavaScript refactor input:
+
+- `mock` backend total latency: about `590 ms`
+- `ollama` backend total latency: about `6.0-7.0 s` with `llama3.1:latest`
+- first specialist call dominates cold/warm startup cost
+- `ollama ps` reports the loaded model at about `5.9 GB` and `100% GPU` on the local machine

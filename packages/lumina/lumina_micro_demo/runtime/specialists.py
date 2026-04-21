@@ -31,12 +31,13 @@ class MockSpecialistBackend:
 
 
 class OllamaSpecialistBackend:
-    def __init__(self, model: str = "llama3.1:latest") -> None:
+    def __init__(self, model: str = "llama3.1:latest", keepalive: str = "5m") -> None:
         self.model = model
+        self.keepalive = keepalive
 
     def _run_ollama(self, prompt: str) -> str:
         proc = subprocess.run(
-            ["ollama", "run", "--nowordwrap", self.model, prompt],
+            ["ollama", "run", "--nowordwrap", "--keepalive", self.keepalive, self.model, prompt],
             capture_output=True,
             text=True,
             timeout=120,
