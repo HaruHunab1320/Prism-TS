@@ -1,0 +1,60 @@
+{
+  "backend": "ollama",
+  "ollama_model": "llama3.1:latest",
+  "iterations": 3,
+  "cold_stop_first": true,
+  "cold_stop_each_run": false,
+  "total_latency_ms": {
+    "values": [
+      3290.428124833852,
+      2160.6291248463094,
+      2584.0819999575615
+    ],
+    "mean": 2678.379749879241,
+    "min": 2160.6291248463094,
+    "max": 3290.428124833852
+  },
+  "step_latency_ms": {
+    "step_1": {
+      "values": [
+        1654.459625016898,
+        611.6240830160677,
+        573.6212502233684
+      ],
+      "mean": 946.5683194187781,
+      "min": 573.6212502233684,
+      "max": 1654.459625016898
+    },
+    "step_2": {
+      "values": [
+        762.3933330178261,
+        735.080708283931,
+        729.7001671977341
+      ],
+      "mean": 742.3914028331637,
+      "min": 729.7001671977341,
+      "max": 762.3933330178261
+    },
+    "step_3": {
+      "values": [
+        872.5514579564333,
+        813.5260832495987,
+        1280.3798341192305
+      ],
+      "mean": 988.8191251084208,
+      "min": 813.5260832495987,
+      "max": 1280.3798341192305
+    }
+  },
+  "final_statuses": [
+    "completed",
+    "completed",
+    "completed"
+  ],
+  "accepted_counts": [
+    3,
+    3,
+    3
+  ],
+  "ollama_ps": "NAME               ID              SIZE      PROCESSOR    CONTEXT    UNTIL              \nllama3.1:latest    f66fc8dc39ea    5.9 GB    100% GPU     4096       4 minutes from now"
+}
