@@ -49,11 +49,12 @@ The current local backend is shaped like a shared-base system, but it still runs
 Read in this order:
 
 1. `docs/what_this_bundle_is.md`
-2. `docs/validated_micro_specialist_evidence.md`
-3. `artifacts/demo_input.js`
-4. `artifacts/mock_demo_output.txt`
-5. `artifacts/ollama_demo_output.txt`
-6. `artifacts/ollama_benchmark.json`
+2. `docs/research_note.md`
+3. `docs/validated_micro_specialist_evidence.md`
+4. `artifacts/demo_input.js`
+5. `artifacts/mock_demo_output.txt`
+6. `artifacts/ollama_demo_output.txt`
+7. `artifacts/ollama_benchmark.json`
 
 ## Run commands
 

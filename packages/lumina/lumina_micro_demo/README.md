@@ -20,6 +20,7 @@ Active documents:
 - `notes/final_push_plan.md`
 - `notes/local_runtime_architecture.md`
 - `notes/demo_flow.md`
+- `paper/research_note.md`
 
 Current scaffold:
 - `runtime/schema.py` - execution trace types
