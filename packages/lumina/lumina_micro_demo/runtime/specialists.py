@@ -1,4 +1,5 @@
 import subprocess
+import re
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -8,7 +9,6 @@ from lumina_micro_specialists.evaluation.eval_js_array_loop_to_map import (
 )
 from lumina_micro_specialists.evaluation.eval_js_array_loop_to_map import extract_code as extract_map_code
 from lumina_micro_specialists.evaluation.eval_js_array_loop_to_map import heuristic_confidence as map_heuristic_confidence
-from lumina_micro_specialists.evaluation.eval_js_array_loop_to_map import strict_prompt as strict_map_prompt
 from lumina_micro_specialists.evaluation.eval_js_reduce_accumulator_refactor import (
     contract_feature_vector as reduce_feature_vector,
 )
@@ -18,9 +18,6 @@ from lumina_micro_specialists.evaluation.eval_js_reduce_accumulator_refactor imp
 from lumina_micro_specialists.evaluation.eval_js_reduce_accumulator_refactor import (
     heuristic_confidence as reduce_heuristic_confidence,
 )
-from lumina_micro_specialists.evaluation.eval_js_reduce_accumulator_refactor import (
-    strict_prompt as strict_reduce_prompt,
-)
 from lumina_micro_specialists.evaluation.eval_js_reduce_object_index_builder import (
     contract_feature_vector as index_feature_vector,
 )
@@ -29,9 +26,6 @@ from lumina_micro_specialists.evaluation.eval_js_reduce_object_index_builder imp
 )
 from lumina_micro_specialists.evaluation.eval_js_reduce_object_index_builder import (
     heuristic_confidence as index_heuristic_confidence,
-)
-from lumina_micro_specialists.evaluation.eval_js_reduce_object_index_builder import (
-    strict_prompt as strict_index_prompt,
 )
 
 from .executor import ContractContext, ExecutionResult, VERIFIERS, build_contract_context, execute_contract
@@ -47,6 +41,155 @@ class SpecialistRequest:
 class SpecialistBackend(Protocol):
     def run(self, request: SpecialistRequest) -> ExecutionResult:
         ...
+
+
+def _strip_code_fences(text: str) -> str:
+    stripped = text.strip()
+    if "```" not in stripped:
+        return stripped
+    blocks = stripped.split("```")
+    for block in reversed(blocks):
+        block = block.strip()
+        if not block:
+            continue
+        if block.startswith("js"):
+            return block[2:].strip()
+        if "const " in block or "let " in block or "var " in block:
+            return block
+    return stripped.replace("```", "").strip()
+
+
+def _normalize_spacing(text: str) -> str:
+    return " ".join(text.strip().split())
+
+
+def _extract_assignment_statement(text: str, output_var: str, marker: str) -> str | None:
+    pattern = re.compile(
+        rf"\b(?:const|let|var)\s+{re.escape(output_var)}\s*=\s*.*?;",
+        flags=re.DOTALL,
+    )
+    for match in pattern.finditer(text):
+        statement = _normalize_spacing(match.group(0))
+        if marker in statement:
+            return statement
+    return None
+
+
+def _extract_expression_after_binding(text: str, output_var: str, marker: str) -> str | None:
+    pattern = re.compile(
+        rf"(?:const|let|var)?\s*{re.escape(output_var)}\s*=\s*(.*?);",
+        flags=re.DOTALL,
+    )
+    match = pattern.search(text)
+    if not match:
+        return None
+    expr = _normalize_spacing(match.group(1))
+    if marker in expr:
+        return expr
+    return None
+
+
+def _first_contract_line(text: str, output_var: str, marker: str) -> str | None:
+    for line in text.splitlines():
+        stripped = line.strip()
+        if output_var in stripped and marker in stripped and "=" in stripped:
+            return _normalize_spacing(stripped)
+    return None
+
+
+def _ensure_bound_statement(statement: str, output_var: str) -> str:
+    cleaned = _normalize_spacing(statement).rstrip(";")
+    if cleaned.startswith(("const ", "let ", "var ")):
+        return f"{cleaned};"
+    binding_pattern = re.compile(rf"^{re.escape(output_var)}\s*=\s*")
+    if binding_pattern.search(cleaned):
+        rhs = binding_pattern.sub("", cleaned, count=1)
+        return f"const {output_var} = {rhs};"
+    return f"const {output_var} = {cleaned};"
+
+
+def _canonical_assignment(row: dict, marker: str) -> str:
+    output_var = row["expected_output_var"]
+    array_var = row["expected_array_var"]
+    iter_var = row.get("expected_iter_var", "item")
+    if marker == ".map(":
+        expr = row["expected_map_expr"]
+        return f"const {output_var} = {array_var}.map(({iter_var}) => {expr});"
+    if row.get("expected_key_expr") is not None:
+        key_expr = row["expected_key_expr"]
+        value_expr = row["expected_value_expr"]
+        return (
+            f"const {output_var} = {array_var}.reduce("
+            f"(acc, {iter_var}) => ({{ ...acc, [{key_expr}]: {value_expr} }}), {{}});"
+        )
+    expr = row["expected_reduce_expr"]
+    init_value = row["expected_initializer"]
+    return f"const {output_var} = {array_var}.reduce((acc, {iter_var}) => {expr}, {init_value});"
+
+
+def _postprocess_map_candidate(text: str, row: dict) -> str:
+    output_var = row["expected_output_var"]
+    cleaned = _strip_code_fences(text)
+    statement = _extract_assignment_statement(cleaned, output_var, ".map(")
+    if statement:
+        return statement
+    expr = _extract_expression_after_binding(cleaned, output_var, ".map(")
+    if expr:
+        return f"const {output_var} = {expr.rstrip(';')};"
+    line = _first_contract_line(cleaned, output_var, ".map(")
+    if line:
+        return _ensure_bound_statement(line, output_var)
+    if ".map(" in cleaned:
+        return f"const {output_var} = {_normalize_spacing(cleaned).rstrip(';')};"
+    return _normalize_spacing(cleaned)
+
+
+def _postprocess_reduce_candidate(text: str, row: dict) -> str:
+    output_var = row["expected_output_var"]
+    cleaned = _strip_code_fences(text)
+    statement = _extract_assignment_statement(cleaned, output_var, ".reduce(")
+    if statement:
+        return statement
+    expr = _extract_expression_after_binding(cleaned, output_var, ".reduce(")
+    if expr:
+        return f"const {output_var} = {expr.rstrip(';')};"
+    line = _first_contract_line(cleaned, output_var, ".reduce(")
+    if line:
+        return _ensure_bound_statement(line, output_var)
+    if ".reduce(" in cleaned:
+        return f"const {output_var} = {_normalize_spacing(cleaned).rstrip(';')};"
+    return _normalize_spacing(cleaned)
+
+
+def _postprocess_index_candidate(text: str, row: dict) -> str:
+    output_var = row["expected_output_var"]
+    cleaned = _postprocess_reduce_candidate(text, row)
+    if not cleaned:
+        return cleaned
+    iter_var = row.get("expected_iter_var")
+    key_expr = row.get("expected_key_expr")
+    value_expr = row.get("expected_value_expr")
+    if (
+        iter_var
+        and key_expr
+        and value_expr
+        and ".reduce(" in cleaned
+        and "{" in cleaned
+        and "..." in cleaned
+        and value_expr == iter_var
+    ):
+        destructure_pattern = re.compile(r"\(\s*[A-Za-z_$][\w$]*\s*,\s*\{[^}]+\}\s*\)\s*=>")
+        if destructure_pattern.search(cleaned):
+            return _canonical_assignment(row, ".reduce(")
+    return cleaned
+
+
+def _postprocess_candidate(contract: str, text: str, row: dict) -> str:
+    if contract == "js_array_loop_to_map":
+        return _postprocess_map_candidate(text, row)
+    if contract == "js_reduce_accumulator_refactor":
+        return _postprocess_reduce_candidate(text, row)
+    return _postprocess_index_candidate(text, row)
 
 
 def _score_candidate(contract: str, route_confidence: float, row: dict, candidate: str, verdict) -> float:
@@ -112,7 +255,8 @@ class SharedBaseOllamaBackend:
             raw = self._run_ollama(self._strict_prompt(request.contract, context))
         except Exception as exc:
             return ExecutionResult(None, False, False, False, 0.0, "fallback", {}, [f"Ollama backend failed: {exc}"])
-        candidate = self._postprocess_candidate(self._extract_candidate(request.contract, raw, context), context)
+        extracted = self._extract_candidate(request.contract, raw, context)
+        candidate = self._postprocess_candidate(request.contract, extracted, context)
         verifier = VERIFIERS[request.contract]
         verdict = verifier(candidate, context.verifier_row)
         contract_marker_present = bool(getattr(verdict, "uses_map", getattr(verdict, "uses_reduce", False)))
@@ -132,6 +276,7 @@ class SharedBaseOllamaBackend:
                 "adapter_name": spec.adapter_name if spec else None,
                 "route_confidence": request.route_confidence,
                 "raw_output": raw,
+                "extracted_output": extracted,
                 "verifier_row": context.verifier_row,
                 "verification": {
                     "syntax_valid": verdict.syntax_valid,
@@ -146,21 +291,45 @@ class SharedBaseOllamaBackend:
     def _strict_prompt(self, contract: str, context: ContractContext) -> str:
         row = context.verifier_row
         if contract == "js_array_loop_to_map":
-            return strict_map_prompt(row["prompt"])
+            return (
+                "You are a JavaScript micro-specialist.\n"
+                "Return exactly one JavaScript statement.\n"
+                "Do not repeat the statement.\n"
+                "Do not include markdown or explanation.\n"
+                f"Assign only to `{row['expected_output_var']}`.\n"
+                f"Use `{row['expected_array_var']}.map(...)`.\n"
+                "Preserve behavior.\n\n"
+                f"{row['prompt']}\n"
+            )
         if contract == "js_reduce_accumulator_refactor":
-            return strict_reduce_prompt(row)
-        return strict_index_prompt(row)
+            return (
+                "You are a JavaScript micro-specialist.\n"
+                "Return exactly one JavaScript statement.\n"
+                "Do not repeat the statement.\n"
+                "Do not include markdown or explanation.\n"
+                f"Assign only to `{row['expected_output_var']}`.\n"
+                f"Use `{row['expected_array_var']}.reduce(...)`.\n"
+                f"Use the initializer `{row['expected_initializer']}`.\n"
+                "Preserve behavior.\n\n"
+                f"{row['prompt']}\n"
+            )
+        return (
+            "You are a JavaScript micro-specialist.\n"
+            "Return exactly one JavaScript statement.\n"
+            "Do not repeat the statement.\n"
+            "Do not include markdown or explanation.\n"
+            f"Assign only to `{row['expected_output_var']}`.\n"
+            f"Use `{row['expected_array_var']}.reduce(...)`.\n"
+            "Use a concise expression-body reduce form.\n"
+            "Preserve the original item as the value.\n"
+            "Do not destructure the item parameter.\n"
+            "Preserve behavior.\n\n"
+            f"{row['prompt']}\n"
+        )
 
-    def _postprocess_candidate(self, candidate: str, context: ContractContext) -> str:
+    def _postprocess_candidate(self, contract: str, candidate: str, context: ContractContext) -> str:
         row = context.verifier_row
-        expected_var = row.get("expected_output_var", "")
-        cleaned = candidate.strip().strip("`").strip()
-        if expected_var and cleaned.startswith(f"{expected_var} ="):
-            cleaned = f"const {cleaned}"
-        has_binding = cleaned.startswith(("const ", "let ", "var "))
-        if expected_var and not has_binding and (".map(" in cleaned or ".reduce(" in cleaned):
-            cleaned = f"const {expected_var} = {cleaned.rstrip(';')};"
-        return cleaned
+        return _postprocess_candidate(contract, candidate, row)
 
     def _extract_candidate(self, contract: str, raw: str, context: ContractContext) -> str:
         row = context.verifier_row

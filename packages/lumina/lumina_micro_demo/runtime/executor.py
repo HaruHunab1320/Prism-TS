@@ -151,6 +151,8 @@ def _rewrite_map(code: str) -> tuple[str | None, dict[str, Any] | None]:
     row = {
         "expected_array_var": array_var,
         "expected_output_var": out_var,
+        "expected_iter_var": iter_var,
+        "expected_map_expr": expr,
         "tests": _oracle_tests_from_input(code, array_var, out_var, sample_input),
     }
     return generated, row
@@ -186,6 +188,9 @@ def _rewrite_reduce_accumulator(code: str) -> tuple[str | None, dict[str, Any] |
     row = {
         "expected_array_var": array_var,
         "expected_output_var": out_var,
+        "expected_iter_var": iter_var,
+        "expected_reduce_expr": expr,
+        "expected_initializer": init_value,
         "tests": _oracle_tests_from_input(code, array_var, out_var, sample_input),
     }
     return generated, row
@@ -206,6 +211,9 @@ def _rewrite_reduce_object_index(code: str) -> tuple[str | None, dict[str, Any] 
     row = {
         "expected_array_var": array_var,
         "expected_output_var": out_var,
+        "expected_iter_var": iter_var,
+        "expected_key_expr": key_expr,
+        "expected_value_expr": value_expr,
         "tests": _oracle_tests_from_input(code, array_var, out_var, sample_input),
     }
     return generated, row

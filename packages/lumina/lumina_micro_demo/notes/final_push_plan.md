@@ -34,6 +34,8 @@ Implemented now:
 5. verifier-backed accept/fallback behavior
 6. final composed output
 7. readable CLI demo view
+8. presentation-oriented CLI demo view
+9. contract-preserving local Ollama normalization for the 3 promoted specialists
 
 Validated locally:
 - `mock` backend completes on the sample input
@@ -46,24 +48,23 @@ Still missing:
 
 ## Measured local sample
 
-On the sample 3-step JavaScript refactor input:
+On the sample 3-step JavaScript refactor input after the normalization pass:
 
 - `mock` backend total latency: about `590 ms`
-- `ollama` backend total latency: about `6.0-7.0 s` with `llama3.1:latest`
-- first specialist call dominates cold/warm startup cost
+- `ollama` presentation demo completes with `3/3` accepted steps
+- `ollama` demo total latency: about `3.1 s` with `llama3.1:latest`
+- first specialist call still dominates cold/warm startup cost
 - `ollama ps` reports the loaded model at about `5.9 GB` and `100% GPU` on the local machine
 
 ## Measured local benchmark
 
 Ollama benchmark on the sample 3-step input with `llama3.1:latest`, `keepalive=5m`, `3` iterations, cold stop before the first run:
 
-- total latency mean: about `2.61 s`
-- cold total latency: about `3.34 s`
-- warm totals: about `2.18-2.30 s`
+- total latency mean: about `2.77 s`
+- cold total latency: about `3.99 s`
+- warm totals: about `2.14-2.19 s`
 - warm per-step latency settled around:
-  - step 1: `0.57-0.59 s`
-  - step 2: `0.77-0.87 s`
-  - step 3: `0.82-1.02 s`
+  - step 1: `0.57-0.58 s`
+  - step 2: `0.73-0.81 s`
+  - step 3: `0.82-0.83 s`
 - `ollama ps` still reports the model loaded at about `5.9 GB` on GPU after the run
-
-One caveat: a standalone interactive run showed some output instability even though the benchmark runs completed cleanly. So the local path is viable, but not yet presentation-grade deterministic.

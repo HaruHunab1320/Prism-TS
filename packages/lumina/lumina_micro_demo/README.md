@@ -30,6 +30,7 @@ Current scaffold:
 - `runtime/orchestrator.py` - builds the full demo trace, threshold gating, and composed output
 - `run_demo_trace.py` - raw JSON trace CLI
 - `run_demo_view.py` - readable demo view
+- `run_demo_present.py` - presentation-oriented local demo view
 - `bench_demo.py` - local cold/warm latency benchmark harness
 
 Validated local backends:
@@ -56,6 +57,15 @@ LUMINA_MICRO_DEMO_BACKEND=ollama \
 LUMINA_MICRO_DEMO_OLLAMA_MODEL=llama3.1:latest \
 LUMINA_MICRO_DEMO_OLLAMA_KEEPALIVE=5m \
 bash lumina_micro_demo/tools/run_demo_view.sh
+```
+
+Run the presentation-oriented demo:
+
+```bash
+LUMINA_MICRO_DEMO_BACKEND=ollama \
+LUMINA_MICRO_DEMO_OLLAMA_MODEL=llama3.1:latest \
+LUMINA_MICRO_DEMO_OLLAMA_KEEPALIVE=5m \
+bash lumina_micro_demo/tools/run_demo_present.sh
 ```
 
 
