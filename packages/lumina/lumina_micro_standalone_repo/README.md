@@ -1,6 +1,6 @@
-# Lumina Micro Standalone Repo Dry Run
+# Lumina Micro
 
-This directory is a runnable dry run of what a standalone shareable `lumina-micro` repo would look like.
+This directory is a runnable standalone-repo candidate for the current Lumina micro-specialist work.
 
 It is the distilled surface only:
 
@@ -11,7 +11,7 @@ It is the distilled surface only:
 
 ## What it proves
 
-This dry run supports a narrow claim:
+This repo candidate supports a narrow claim:
 
 > A verifier-backed local code transformation runtime where narrow contract specialists improve pass rates and confidence-gated acceptance enables high-precision rewrites.
 
@@ -66,11 +66,23 @@ bash tools/run_bench_demo.sh
 
 ## Important limitation
 
-This is a real runnable dry run, but it still preserves one architectural limitation from the current project:
+This is a real runnable standalone candidate, but it still preserves one architectural limitation from the current project:
 
 - the local backend uses a single Ollama model
 - it is shaped like a shared-base system
 - it is not yet true adapter-swapping deployment
+
+## Local prerequisites
+
+- Python `3.11+`
+- Node.js on `PATH`
+- Ollama only if you want the local model path
+
+Installable package metadata now exists via:
+
+```bash
+python -m pip install -e .
+```
 
 ## Best audit path
 
