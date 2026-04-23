@@ -1,0 +1,43 @@
+Lumina Micro Demo
+=================
+Prompt: Refactor this JavaScript into more idiomatic functional code.
+Backend: MockSpecialistBackend
+Status: completed
+Summary: steps=3 accepted=3 fallback=0 threshold_rejected=0 total_latency_ms=1136.7
+
+Input
+-----
+const names = [];
+for (const user of users) {
+  names.push(user.name.toUpperCase());
+}
+
+let totalAge = 0;
+for (const user of users) {
+  totalAge += user.age;
+}
+
+const usersById = {};
+for (const user of users) {
+  usersById[user.id] = user;
+}
+
+Execution
+---------
+step_1: lines 1-4 -> js_array_loop_to_map
+  action=accepted adapter=adapter_js_array_loop_to_map_v1 confidence=0.94 threshold=0.30 threshold_passed=True latency_ms=369.7
+  generated: const names = users.map((user) => user.name.toUpperCase());
+step_2: lines 6-9 -> js_reduce_accumulator_refactor
+  action=accepted adapter=adapter_js_reduce_accumulator_refactor_v1 confidence=0.94 threshold=0.40 threshold_passed=True latency_ms=383.4
+  generated: const totalAge = users.reduce((acc, user) => acc + user.age, 0);
+step_3: lines 11-14 -> js_reduce_object_index_builder
+  action=accepted adapter=adapter_js_reduce_object_index_builder_v1 confidence=0.92 threshold=0.50 threshold_passed=True latency_ms=382.3
+  generated: const usersById = users.reduce((acc, user) => ({ ...acc, [user.id]: user }), {});
+
+Final Output
+------------
+const names = users.map((user) => user.name.toUpperCase());
+
+const totalAge = users.reduce((acc, user) => acc + user.age, 0);
+
+const usersById = users.reduce((acc, user) => ({ ...acc, [user.id]: user }), {});
