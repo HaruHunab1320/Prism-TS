@@ -1,0 +1,8 @@
+datasets*
+outputs*
+logs
+__pycache__
+**/__pycache__
+.venv
+**/*.safetensors
+**/*.pt

@@ -2,6 +2,10 @@
 
 Confidence extraction library for Prism - standardized patterns for extracting confidence values from LLMs and other sources.
 
+<div align="center">
+  <img src="https://docs.prismlang.dev/img/prism-logo-v1.png" width="160" alt="Prism logo" />
+</div>
+
 📚 **[Full Documentation](https://docs.prismlang.dev/docs/confidence/)** | 🔧 **[API Reference](https://docs.prismlang.dev/docs/api/confidence/)** | 💡 **[Examples](https://docs.prismlang.dev/docs/examples/confidence-extraction)**
 
 ## Overview
@@ -13,6 +17,11 @@ Since most LLM providers (except OpenAI) don't provide log probabilities, this l
 - **Structured parsing** - Extract explicit confidence values from responses
 - **Domain calibration** - Adjust confidence based on domain-specific knowledge
 - **Ensemble methods** - Combine multiple confidence signals
+
+## Important Note
+
+These scores are heuristic confidence signals, not guaranteed calibrated probabilities.
+Use them as decision support, and add domain-specific thresholds/review for high-stakes flows.
 
 ## Installation
 
@@ -236,6 +245,10 @@ See the `/examples` directory for complete examples including:
 - [`@prism-lang/validator`](https://www.npmjs.com/package/@prism-lang/validator) - Validation toolkit
 - [`@prism-lang/cli`](https://www.npmjs.com/package/@prism-lang/cli) - Command-line interface
 - [`@prism-lang/repl`](https://www.npmjs.com/package/@prism-lang/repl) - Interactive REPL
+
+## R&D
+
+- Lumina — confidence-native model architecture (R&D)
 
 ## Contributing
 

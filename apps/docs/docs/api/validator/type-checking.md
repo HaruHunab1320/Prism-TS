@@ -27,7 +27,6 @@ if (result.errors.length > 0) {
 - `string` - Text values
 - `boolean` - true/false
 - `null` - Null value
-- `undefined` - Undefined value
 - `array` - Arrays of any type
 - `object` - Key-value objects
 - `function` - Functions
@@ -35,7 +34,7 @@ if (result.errors.length > 0) {
 
 ### Type Inference
 
-```prism
+```javascript
 // Types are inferred from values
 const x = 42              // number
 const name = "Alice"      // string
@@ -50,7 +49,7 @@ const result = x ~> 0.7   // confidence<number>
 ## Type Checking Rules
 
 ### 1. Binary Operations
-```prism
+```javascript
 // ✅ Valid
 const sum = 10 + 20       // number + number
 const concat = "a" + "b"  // string + string
@@ -60,7 +59,7 @@ const invalid = 10 + "20" // number + string
 ```
 
 ### 2. Confidence Operations
-```prism
+```javascript
 // Confidence operators preserve types
 const x = 42 ~> 0.8       // confidence<number>
 const y = 10 ~> 0.9       // confidence<number>
@@ -71,7 +70,7 @@ const conf = ~x           // number (0.8)
 ```
 
 ### 3. Function Calls
-```prism
+```javascript
 // Functions track parameter and return types
 function add(a, b) {
   return a + b
@@ -85,7 +84,7 @@ add("hello", 20)         // string, number
 ```
 
 ### 4. Array Operations
-```prism
+```javascript
 const nums = [1, 2, 3]
 const strs = ["a", "b"]
 
@@ -100,7 +99,7 @@ nums.push("four")        // string to number[]
 ## Confidence Propagation
 
 ### Arithmetic Operations
-```prism
+```javascript
 const a = 10 ~> 0.8
 const b = 20 ~> 0.9
 
@@ -110,7 +109,7 @@ const product = a ~* b   // 200 ~> 0.72
 ```
 
 ### Control Flow
-```prism
+```javascript
 // Type checker ensures branches return compatible types
 uncertain if (condition ~> 0.7) {
   high { return 42 }          // number
@@ -164,7 +163,7 @@ const checker = new TypeChecker({
 ```
 
 ### Type Annotations (Future)
-```prism
+```javascript
 // Planned feature
 function add(a: number, b: number): number {
   return a + b
@@ -199,7 +198,7 @@ console.log("Type errors:", result.typeErrors);
 3. **Check Function Arguments**: Ensure correct types are passed
 4. **Handle Mixed Types**: Use type guards when needed
 
-```prism
+```javascript
 // Type guard example
 function process(value) {
   if (typeof value === "number") {

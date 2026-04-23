@@ -2,13 +2,13 @@ import {
   ASTNode,
   Program,
   Statement,
+  Expression,
   IdentifierExpression,
   NumberLiteral,
   StringLiteral,
   InterpolatedString,
   BooleanLiteral,
   NullLiteral,
-  UndefinedLiteral,
   BinaryExpression,
   UnaryExpression,
   CallExpression,
@@ -41,6 +41,7 @@ import {
   ObjectPattern,
   RestElement,
   DestructuringAssignment,
+  MatchExpression,
   FunctionDeclaration,
   ReturnStatement,
   VariableDeclaration,
@@ -59,12 +60,12 @@ import {
   StringValue,
   BooleanValue,
   NullValue,
-  UndefinedValue,
   ConfidenceValue,
   ArrayValue,
   ObjectValue,
   FunctionValue,
   PromiseValue,
+  ConfidenceProvenance,
 } from './runtime/values';
 import { LLMProvider, LLMRequest, LLMResponse, LLMStreamChunk, LLMOptions } from './llm-types';
 import { createLLMBuiltin } from './runtime/builtins/llm';
@@ -77,7 +78,6 @@ import { registerAsyncBuiltins } from './runtime/builtins/async';
 
 interface PropertyAccessOptions {
   nullishReturnsNull?: boolean;
-  missingReturnsUndefined?: boolean;
   missingReturnsNull?: boolean;
   forceConfidenceResult?: boolean;
   wrapNullishResult?: boolean;
@@ -90,10 +90,77 @@ export class Interpreter {
   private llmProviders = new Map<string, LLMProvider>();
   private defaultLLMProvider?: string;
   private contextStack: string[] = [];
+  private confidenceStrategy: Required<ConfidenceStrategy>;
+  private trackProvenance: boolean;
 
-  constructor() {
+  constructor(options?: ConfidenceOptions) {
     this.environment = new Environment();
+    this.confidenceStrategy = {
+      arithmetic: options?.strategy?.arithmetic ?? 'min',
+      comparison: options?.strategy?.comparison ?? 'min',
+      logicalAnd: options?.strategy?.logicalAnd ?? 'min',
+      logicalOr: options?.strategy?.logicalOr ?? 'max',
+      chain: options?.strategy?.chain ?? 'min',
+      ternary: options?.strategy?.ternary ?? 'product',
+      functionCall: options?.strategy?.functionCall ?? 'product',
+      parallel: options?.strategy?.parallel ?? 'max',
+      coalesceThreshold: options?.strategy?.coalesceThreshold ?? 0.5,
+      thresholdGate: {
+        threshold: options?.strategy?.thresholdGate?.threshold ?? 0.7,
+        reduceFactor: options?.strategy?.thresholdGate?.reduceFactor ?? 0.5,
+        onFail: options?.strategy?.thresholdGate?.onFail ?? 'reduce',
+      },
+    };
+    this.trackProvenance = options?.trackProvenance ?? false;
     this.setupBuiltins();
+  }
+
+  private combineConfidence(mode: ConfidenceCombineMode, left: ConfidenceLib, right: ConfidenceLib): ConfidenceLib {
+    switch (mode) {
+      case 'max':
+        return left.value >= right.value ? left : right;
+      case 'product':
+        return new ConfidenceLib(left.value * right.value);
+      case 'average':
+        return new ConfidenceLib((left.value + right.value) / 2);
+      case 'min':
+      default:
+        return left.value <= right.value ? left : right;
+    }
+  }
+
+  private createConfidenceValue(value: Value, confidence: ConfidenceLib, rule: string, inputs: number[]): ConfidenceValue {
+    const provenance: ConfidenceProvenance | undefined = this.trackProvenance
+      ? { rule, inputs }
+      : undefined;
+    return new ConfidenceValue(value, confidence, provenance);
+  }
+
+  private confidenceModeForOperator(operator: BinaryOperator): ConfidenceCombineMode {
+    switch (operator) {
+      case '+':
+      case '-':
+      case '*':
+      case '/':
+      case '%':
+      case '**':
+        return this.confidenceStrategy.arithmetic;
+      case '==':
+      case '!=':
+      case '===':
+      case '!==':
+      case '>':
+      case '<':
+      case '>=':
+      case '<=':
+        return this.confidenceStrategy.comparison;
+      case '&&':
+        return this.confidenceStrategy.logicalAnd;
+      case '||':
+        return this.confidenceStrategy.logicalOr;
+      default:
+        return 'min';
+    }
   }
 
   private setupBuiltins(): void {
@@ -102,7 +169,12 @@ export class Interpreter {
     this.environment.define('stream_llm', new FunctionValue('stream_llm', createLLMStreamBuiltin((providerName?: string) => this.getLLMProvider(providerName))));
     registerArrayBuiltins((name, fn) => registerValue(name, fn));
     registerConsoleBuiltins(registerValue);
-    registerConfidenceBuiltins((name, fn) => registerValue(name, fn));
+    registerConfidenceBuiltins(
+      (name, fn) => registerValue(name, fn),
+      {
+        createConfidenceValue: (value, confidence, rule, inputs) => this.createConfidenceValue(value, confidence, rule, inputs),
+      }
+    );
     registerCollectionBuiltins(registerValue);
     registerAsyncBuiltins(registerValue);
 
@@ -138,7 +210,7 @@ export class Interpreter {
 
       // Return with confidence if any input had confidence
       if (maxConfidence && maxVal) {
-        return new ConfidenceValue(maxVal, maxConfidence);
+        return this.createConfidenceValue(maxVal, maxConfidence, 'max()', [maxConfidence.value]);
       }
       return maxVal!;
     }));
@@ -175,7 +247,7 @@ export class Interpreter {
 
       // Return with confidence if any input had confidence
       if (minConfidence && minVal) {
-        return new ConfidenceValue(minVal, minConfidence);
+        return this.createConfidenceValue(minVal, minConfidence, 'min()', [minConfidence.value]);
       }
       return minVal!;
     }));
@@ -221,8 +293,6 @@ export class Interpreter {
         return this.interpretBooleanLiteral(node as BooleanLiteral);
       case 'NullLiteral':
         return this.interpretNullLiteral(node as NullLiteral);
-      case 'UndefinedLiteral':
-        return this.interpretUndefinedLiteral(node as UndefinedLiteral);
       case 'IdentifierExpression':
         return this.interpretIdentifier(node as IdentifierExpression);
       case 'BinaryExpression':
@@ -255,6 +325,8 @@ export class Interpreter {
         return this.interpretAssignmentStatement(node as AssignmentStatement);
       case 'DestructuringAssignment':
         return this.interpretDestructuringAssignment(node as DestructuringAssignment);
+      case 'MatchExpression':
+        return this.interpretMatchExpression(node as MatchExpression);
       case 'AssignmentExpression':
         return this.interpretAssignmentExpression(node as AssignmentExpression);
       case 'AwaitExpression':
@@ -306,6 +378,9 @@ export class Interpreter {
 
   private async interpretProgram(program: Program): Promise<Value> {
     let result: Value = new NumberValue(0); // Default return value
+
+    // Hoist let/const declarations to enforce TDZ
+    this.predeclareStatements(program.statements);
 
     // First pass: process imports (they need to be available before any code runs)
     for (const statement of program.statements) {
@@ -366,9 +441,6 @@ export class Interpreter {
     return new NullValue();
   }
 
-  private async interpretUndefinedLiteral(_node: UndefinedLiteral): Promise<Value> {
-    return new UndefinedValue();
-  }
 
   private async interpretIdentifier(node: IdentifierExpression): Promise<Value> {
     try {
@@ -385,7 +457,7 @@ export class Interpreter {
       }
       const left = await this.interpret(node.left);
       const options = node.operator === '~.'
-        ? { nullishReturnsNull: true, missingReturnsUndefined: true, forceConfidenceResult: true }
+        ? { nullishReturnsNull: true, missingReturnsNull: true, forceConfidenceResult: true }
         : {};
       return this.resolvePropertyAccess(left, node.right.name, node, options);
     }
@@ -424,8 +496,7 @@ export class Interpreter {
     // Ensure right is a Value for all other operators
     if (!(right instanceof NumberValue || right instanceof StringValue || right instanceof BooleanValue || 
           right instanceof ConfidenceValue || right instanceof FunctionValue || 
-          right instanceof ArrayValue || right instanceof ObjectValue || right instanceof NullValue || 
-          right instanceof UndefinedValue)) {
+          right instanceof ArrayValue || right instanceof ObjectValue || right instanceof NullValue)) {
       throw new RuntimeError(`Invalid right operand for operator ${operator}`, node);
     }
 
@@ -522,8 +593,8 @@ export class Interpreter {
         throw new RuntimeError('Logical operators should be handled in interpretBinaryExpression', node);
 
       case '??':
-        // Nullish coalescing - return right if left is null or undefined
-        if (left instanceof NullValue || left instanceof UndefinedValue) {
+        // Nullish coalescing - return right if left is null
+        if (left instanceof NullValue) {
           return right;
         }
         return left;
@@ -621,7 +692,7 @@ export class Interpreter {
             case 'null':
               return new BooleanValue(valueToCheck instanceof NullValue);
             case 'undefined':
-              return new BooleanValue(valueToCheck instanceof UndefinedValue);
+              return new BooleanValue(valueToCheck instanceof NullValue);
             default:
               throw new RuntimeError(`Unknown type name: ${typeName}`, node);
           }
@@ -687,7 +758,7 @@ export class Interpreter {
         return right; // Right value already has confidence
       }
       const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
-      return new ConfidenceValue(right, leftConf);
+      return this.createConfidenceValue(right, leftConf, '~|>', [leftConf.value]);
     }
 
     // Special handling for confidence threshold gate operator (~?>)
@@ -707,9 +778,10 @@ export class Interpreter {
     const result = this.applyBinaryOperator(operator, leftValue, rightValue, node);
 
     // Combine confidences (use minimum for most operations)
-    const combinedConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
+    const mode = this.confidenceModeForOperator(operator);
+    const combinedConfidence = this.combineConfidence(mode, leftConf, rightConf);
 
-    return new ConfidenceValue(result, combinedConfidence);
+    return this.createConfidenceValue(result, combinedConfidence, operator, [leftConf.value, rightConf.value]);
   }
 
   private applyConfidenceChaining(left: Value, right: Value, _node: BinaryExpression): Value {
@@ -723,12 +795,12 @@ export class Interpreter {
     const rightConf = right instanceof ConfidenceValue ? right.confidence : new ConfidenceLib(1.0);
     
     // Combine confidences using minimum (most conservative approach)
-    const chainedConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
+    const chainedConfidence = this.combineConfidence(this.confidenceStrategy.chain, leftConf, rightConf);
     
     // For chaining, we return the right value with the chained confidence
     const resultValue = right instanceof ConfidenceValue ? right.value : right;
     
-    return new ConfidenceValue(resultValue, chainedConfidence);
+    return this.createConfidenceValue(resultValue, chainedConfidence, '~~', [leftConf.value, rightConf.value]);
   }
 
   private applyConfidenceCoalesce(left: Value, right: Value, _node: BinaryExpression): Value {
@@ -738,7 +810,7 @@ export class Interpreter {
     const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
     
     // Define threshold for "sufficient confidence" - using medium confidence (0.5) as default
-    const SUFFICIENT_CONFIDENCE_THRESHOLD = 0.5;
+    const SUFFICIENT_CONFIDENCE_THRESHOLD = this.confidenceStrategy.coalesceThreshold;
     
     // If left value has sufficient confidence, return it
     if (leftConf.value >= SUFFICIENT_CONFIDENCE_THRESHOLD) {
@@ -767,15 +839,15 @@ export class Interpreter {
       // Confident AND: both must be true AND confident
       resultBool = leftBool && rightBool;
       // For AND, take minimum confidence (both must be confident)
-      resultConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
+      resultConfidence = this.combineConfidence(this.confidenceStrategy.logicalAnd, leftConf, rightConf);
     } else { // operator === '~||'
       // Confident OR: at least one must be true with confidence
       resultBool = leftBool || rightBool;
       // For OR, take maximum confidence (best of the two)
-      resultConfidence = leftConf.max ? leftConf.max(rightConf) : leftConf;
+      resultConfidence = this.combineConfidence(this.confidenceStrategy.logicalOr, leftConf, rightConf);
     }
     
-    return new ConfidenceValue(new BooleanValue(resultBool), resultConfidence);
+    return this.createConfidenceValue(new BooleanValue(resultBool), resultConfidence, operator, [leftConf.value, rightConf.value]);
   }
 
   private applyConfidentArithmetic(operator: '~+' | '~-' | '~*' | '~/', left: Value, right: Value, node: BinaryExpression): Value {
@@ -817,9 +889,9 @@ export class Interpreter {
     }
     
     // For arithmetic operations, use minimum confidence (error propagation principle)
-    const resultConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
+    const resultConfidence = this.combineConfidence(this.confidenceStrategy.arithmetic, leftConf, rightConf);
     
-    return new ConfidenceValue(new NumberValue(result), resultConfidence);
+    return this.createConfidenceValue(new NumberValue(result), resultConfidence, operator, [leftConf.value, rightConf.value]);
   }
 
   private applyConfidentComparison(operator: '~==' | '~!=' | '~<' | '~>=' | '~<=', left: Value, right: Value, node: BinaryExpression): Value {
@@ -866,9 +938,9 @@ export class Interpreter {
     }
     
     // For comparison operations, use minimum confidence (both values must be confident for reliable comparison)
-    const resultConfidence = leftConf.min ? leftConf.min(rightConf) : leftConf;
+    const resultConfidence = this.combineConfidence(this.confidenceStrategy.comparison, leftConf, rightConf);
     
-    return new ConfidenceValue(new BooleanValue(result), resultConfidence);
+    return this.createConfidenceValue(new BooleanValue(result), resultConfidence, operator, [leftConf.value, rightConf.value]);
   }
 
   private applyParallelConfidence(left: Value, right: Value, _node: BinaryExpression): Value {
@@ -879,11 +951,10 @@ export class Interpreter {
     const rightConf = right instanceof ConfidenceValue ? right.confidence : new ConfidenceLib(1.0);
     
     // Select the value with higher confidence
-    if (leftConf.value >= rightConf.value) {
-      return left;
-    } else {
-      return right;
+    if (this.confidenceStrategy.parallel === 'min') {
+      return leftConf.value <= rightConf.value ? left : right;
     }
+    return leftConf.value >= rightConf.value ? left : right;
   }
 
   private applyThresholdGate(left: Value, right: Value, _node: BinaryExpression): Value {
@@ -893,15 +964,22 @@ export class Interpreter {
     const leftConf = left instanceof ConfidenceValue ? left.confidence : new ConfidenceLib(1.0);
     
     // Define threshold for execution - using medium confidence (0.7) as default
-    const EXECUTION_THRESHOLD = 0.7;
+    const EXECUTION_THRESHOLD = this.confidenceStrategy.thresholdGate.threshold ?? 0.7;
     
     // If left value meets the confidence threshold, return the right value
     if (leftConf.value >= EXECUTION_THRESHOLD) {
       return right;
     } else {
-      // If threshold not met, return the left value with reduced confidence
-      const reducedConfidence = new ConfidenceLib(leftConf.value * 0.5);
-      return new ConfidenceValue(left instanceof ConfidenceValue ? left.value : left, reducedConfidence);
+      const onFail = this.confidenceStrategy.thresholdGate.onFail;
+      if (onFail === 'returnNull') {
+        return new NullValue();
+      }
+      if (onFail === 'returnLeft') {
+        return left;
+      }
+      const reduceFactor = this.confidenceStrategy.thresholdGate.reduceFactor ?? 0.5;
+      const reducedConfidence = new ConfidenceLib(leftConf.value * reduceFactor);
+      return this.createConfidenceValue(left instanceof ConfidenceValue ? left.value : left, reducedConfidence, '~@>', [leftConf.value]);
     }
   }
   
@@ -929,7 +1007,7 @@ export class Interpreter {
     } else if (right instanceof NumberValue) {
       // Format: ~?> threshold
       threshold = right.value;
-      defaultValue = new UndefinedValue();
+      defaultValue = new NullValue();
     } else {
       throw new RuntimeError('Threshold gate expects a number or [threshold, default] array', node);
     }
@@ -942,7 +1020,7 @@ export class Interpreter {
     // Check if confidence meets threshold
     if (leftConf.value >= threshold) {
       // Confidence meets threshold, continue with the value
-      return new ConfidenceValue(leftValue, leftConf);
+      return this.createConfidenceValue(leftValue, leftConf, '~?>', [leftConf.value]);
     } else {
       // Confidence below threshold, return default value
       return defaultValue;
@@ -991,8 +1069,6 @@ export class Interpreter {
           return new StringValue('object');
         } else if (operand instanceof NullValue) {
           return new StringValue('null');
-        } else if (operand instanceof UndefinedValue) {
-          return new StringValue('undefined');
         } else if (operand instanceof ConfidenceValue) {
           // For confidence values, return the type of the wrapped value
           const inner = operand.value;
@@ -1003,7 +1079,6 @@ export class Interpreter {
           if (inner instanceof ArrayValue) return new StringValue('array');
           if (inner instanceof ObjectValue) return new StringValue('object');
           if (inner instanceof NullValue) return new StringValue('null');
-          if (inner instanceof UndefinedValue) return new StringValue('undefined');
           return new StringValue('unknown');
         }
         return new StringValue('unknown');
@@ -1050,10 +1125,17 @@ export class Interpreter {
     if (functionConfidence) {
       // If result already has confidence, combine them
       if (result instanceof ConfidenceValue) {
-        const combinedConfidence = result.confidence.value * functionConfidence.value;
-        return new ConfidenceValue(result.value, new ConfidenceLib(combinedConfidence));
+        const combinedConfidence = this.combineConfidence(
+          this.confidenceStrategy.functionCall,
+          result.confidence,
+          functionConfidence
+        );
+        return this.createConfidenceValue(result.value, combinedConfidence, 'call', [
+          result.confidence.value,
+          functionConfidence.value,
+        ]);
       } else {
-        return new ConfidenceValue(result, functionConfidence);
+        return this.createConfidenceValue(result, functionConfidence, 'call', [functionConfidence.value]);
       }
     }
     
@@ -1097,12 +1179,17 @@ export class Interpreter {
     }
     
     // Combine confidences (multiply them)
-    const combinedConfidence = new ConfidenceLib(
-      conditionConfidence.value * branchConfidence.value
+    const combinedConfidence = this.combineConfidence(
+      this.confidenceStrategy.ternary,
+      conditionConfidence,
+      branchConfidence
     );
     
     // Return result with combined confidence
-    return new ConfidenceValue(branchValue, combinedConfidence);
+    return this.createConfidenceValue(branchValue, combinedConfidence, '~?', [
+      conditionConfidence.value,
+      branchConfidence.value,
+    ]);
   }
 
   private async interpretArrayLiteral(node: ArrayLiteral): Promise<Value> {
@@ -1110,7 +1197,7 @@ export class Interpreter {
     for (const elem of node.elements) {
       if (elem === null) {
         // Hole in array - this is handled during destructuring
-        elements.push(new UndefinedValue());
+        elements.push(new NullValue());
       } else if (elem instanceof SpreadElement) {
         // Handle spread element
         let spreadValue = await this.interpret(elem.argument);
@@ -1174,7 +1261,6 @@ export class Interpreter {
   ): Value {
     const {
       nullishReturnsNull = false,
-      missingReturnsUndefined = false,
       missingReturnsNull = false,
       forceConfidenceResult = false,
       wrapNullishResult = true,
@@ -1196,11 +1282,17 @@ export class Interpreter {
       }
       if (value instanceof ConfidenceValue) {
         if (activeConfidence) {
-          return new ConfidenceValue(value.value, activeConfidence.multiply(value.confidence));
+          const combined = activeConfidence.multiply(value.confidence);
+          return this.createConfidenceValue(value.value, combined, 'propagate', [
+            activeConfidence.value,
+            value.confidence.value,
+          ]);
         }
         return value;
       }
-      return new ConfidenceValue(value, activeConfidence ?? new ConfidenceLib(1.0));
+      return this.createConfidenceValue(value, activeConfidence ?? new ConfidenceLib(1.0), 'propagate', [
+        activeConfidence?.value ?? 1.0,
+      ]);
     };
     const maybeWrap = (value: Value): Value => (wrapConfidence ? wrapValue(value) : value);
 
@@ -1213,10 +1305,6 @@ export class Interpreter {
     };
 
     const handleMissing = (): Value => {
-      if (missingReturnsUndefined) {
-        const result = new UndefinedValue();
-        return wrapConfidence && wrapMissingResult ? wrapValue(result) : result;
-      }
       if (missingReturnsNull) {
         const result = new NullValue();
         return wrapConfidence && wrapMissingResult ? wrapValue(result) : result;
@@ -1224,12 +1312,12 @@ export class Interpreter {
       throw new RuntimeError(`Property '${property}' does not exist`, node);
     };
 
-    if (baseValue instanceof NullValue || baseValue instanceof UndefinedValue) {
+    if (baseValue instanceof NullValue) {
       return handleNullish();
     }
 
     if (baseValue instanceof ArrayValue) {
-      const wrapArrayResults = forceConfidenceResult;
+      const wrapArrayResults = wrapConfidence || forceConfidenceResult;
       return this.resolveArrayProperty(baseValue, property, node, maybeWrap, handleMissing, wrapArrayResults);
     }
 
@@ -1372,7 +1460,7 @@ export class Interpreter {
             }
             await fn.value(callArgs);
           }
-          return new UndefinedValue();
+          return new NullValue();
         }));
 
       case 'join':
@@ -1398,7 +1486,7 @@ export class Interpreter {
               return el.value.toString();
             } else if (el instanceof NullValue) {
               return '';
-            } else if (el instanceof UndefinedValue) {
+            } else if (el instanceof NullValue) {
               return '';
             } else {
               return el.toString();
@@ -1440,6 +1528,19 @@ export class Interpreter {
       
       return object.elements[idx];
     }
+
+    if (object instanceof ObjectValue) {
+      if (!(index instanceof StringValue)) {
+        throw new RuntimeError('Object index must be a string', node);
+      }
+
+      const value = object.properties.get(index.value);
+      if (!value) {
+        return new NullValue();
+      }
+
+      return value;
+    }
     
     // Handle confidence values
     if (object instanceof ConfidenceValue && object.value instanceof ArrayValue) {
@@ -1454,7 +1555,21 @@ export class Interpreter {
         throw new RuntimeError(`Array index ${idx} out of bounds`, node);
       }
       
-      return new ConfidenceValue(innerArray.elements[idx], object.confidence);
+      return this.createConfidenceValue(innerArray.elements[idx], object.confidence, 'index', [object.confidence.value]);
+    }
+
+    if (object instanceof ConfidenceValue && object.value instanceof ObjectValue) {
+      if (!(index instanceof StringValue)) {
+        throw new RuntimeError('Object index must be a string', node);
+      }
+
+      const innerObject = object.value as ObjectValue;
+      const value = innerObject.properties.get(index.value);
+      if (!value) {
+        return this.createConfidenceValue(new NullValue(), object.confidence, 'index', [object.confidence.value]);
+      }
+
+      return this.createConfidenceValue(value, object.confidence, 'index', [object.confidence.value]);
     }
     
     throw new RuntimeError(`Cannot index ${object.type}`, node);
@@ -1495,9 +1610,9 @@ export class Interpreter {
           this.environment = lambdaEnv;
           try {
             if (param instanceof ArrayPattern) {
-              await this.destructureArray(param, arg);
+              await this.destructureArray(param, arg, undefined, true, true);
             } else {
-              await this.destructureObject(param, arg);
+              await this.destructureObject(param, arg, undefined, true, true);
             }
           } finally {
             this.environment = previousEnv;
@@ -1517,9 +1632,9 @@ export class Interpreter {
           try {
             const restArray = new ArrayValue(restArgs);
             if (node.restParameter instanceof ArrayPattern) {
-              await this.destructureArray(node.restParameter, restArray);
+              await this.destructureArray(node.restParameter, restArray, undefined, true, true);
             } else if (node.restParameter instanceof ObjectPattern) {
-              await this.destructureObject(node.restParameter, restArray);
+              await this.destructureObject(node.restParameter, restArray, undefined, true, true);
             }
           } finally {
             this.environment = previousEnv;
@@ -1575,26 +1690,18 @@ export class Interpreter {
     }
     
     const confidence = new ConfidenceLib(confidenceNumber);
-    return new ConfidenceValue(expression, confidence);
+    return this.createConfidenceValue(expression, confidence, '~>', [confidenceNumber]);
   }
 
   private async interpretAssignmentStatement(node: AssignmentStatement): Promise<Value> {
     const value = await this.interpret(node.value);
-    if (this.environment.has(node.identifier)) {
-      this.environment.set(node.identifier, value);
-    } else {
-      this.environment.define(node.identifier, value);
-    }
+    this.environment.set(node.identifier, value);
     return value;
   }
 
   private async interpretAssignmentExpression(node: AssignmentExpression): Promise<Value> {
     const value = await this.interpret(node.value);
-    if (this.environment.has(node.identifier)) {
-      this.environment.set(node.identifier, value);
-    } else {
-      this.environment.define(node.identifier, value);
-    }
+    this.environment.set(node.identifier, value);
     return value;
   }
   
@@ -1631,6 +1738,47 @@ export class Interpreter {
     
     return value;
   }
+
+  private async interpretMatchExpression(node: MatchExpression): Promise<Value> {
+    const value = await this.interpret(node.value);
+
+    for (const arm of node.arms) {
+      const previousEnv = this.environment;
+      this.environment = new Environment(previousEnv);
+
+      try {
+        let globalThreshold: number | undefined;
+        if (arm.confidenceThreshold) {
+          const thresholdValue = await this.interpret(arm.confidenceThreshold);
+          if (!(thresholdValue instanceof NumberValue)) {
+            throw new RuntimeError('Confidence threshold must be a number', arm.confidenceThreshold);
+          }
+          globalThreshold = thresholdValue.value;
+        }
+
+        const matched = await this.matchPattern(arm.pattern, value, globalThreshold);
+        if (!matched) {
+          continue;
+        }
+
+        if (arm.guard) {
+          const guardValue = await this.interpret(arm.guard);
+          if (!guardValue.isTruthy()) {
+            continue;
+          }
+        }
+
+        if (arm.body instanceof BlockStatement) {
+          return await this.interpretBlockStatement(arm.body);
+        }
+        return await this.interpret(arm.body);
+      } finally {
+        this.environment = previousEnv;
+      }
+    }
+
+    return new NullValue();
+  }
   
   private async destructureArray(pattern: ArrayPattern, value: Value, globalThreshold?: number, isMutable: boolean = true, isDeclared: boolean = false): Promise<void> {
     if (!(value instanceof ArrayValue)) {
@@ -1651,7 +1799,7 @@ export class Interpreter {
     // Process regular elements
     for (let i = 0; i < restStartIndex; i++) {
       const element = pattern.elements[i];
-      const arrayValue = i < array.length ? array[i] : new UndefinedValue();
+      const arrayValue = i < array.length ? array[i] : new NullValue();
       
       if (element === null) {
         // Skip hole
@@ -1677,9 +1825,9 @@ export class Interpreter {
       }
       
       if (!shouldAssign) {
-        // Assign undefined if confidence is too low
+        // Assign null if confidence is too low
         if (element instanceof IdentifierExpression) {
-          this.assignIdentifier(element.name, new UndefinedValue(), isMutable, isDeclared);
+          this.assignIdentifier(element.name, new NullValue(), isMutable, isDeclared);
         } else if (element instanceof ArrayPattern) {
           await this.destructureArray(element, new ArrayValue([]), globalThreshold, isMutable, isDeclared);
         } else if (element instanceof ObjectPattern) {
@@ -1692,6 +1840,8 @@ export class Interpreter {
           await this.destructureArray(element, arrayValue, globalThreshold, isMutable, isDeclared);
         } else if (element instanceof ObjectPattern) {
           await this.destructureObject(element, arrayValue, globalThreshold, isMutable, isDeclared);
+        } else {
+          throw new RuntimeError('Invalid destructuring pattern', pattern);
         }
       }
     }
@@ -1761,7 +1911,7 @@ export class Interpreter {
       } else if (prop.defaultValue) {
         assignValue = await this.interpret(prop.defaultValue);
       } else {
-        assignValue = new UndefinedValue();
+        assignValue = new NullValue();
       }
       
       // Check confidence threshold
@@ -1782,9 +1932,9 @@ export class Interpreter {
       }
       
       if (!shouldAssign) {
-        // Assign undefined if confidence is too low
+        // Assign null if confidence is too low
         if (prop.value instanceof IdentifierExpression) {
-          this.assignIdentifier(prop.value.name, new UndefinedValue(), isMutable, isDeclared);
+          this.assignIdentifier(prop.value.name, new NullValue(), isMutable, isDeclared);
         } else if (prop.value instanceof ArrayPattern) {
           await this.destructureArray(prop.value, new ArrayValue([]), globalThreshold, isMutable, isDeclared);
         } else if (prop.value instanceof ObjectPattern) {
@@ -1805,6 +1955,8 @@ export class Interpreter {
             (await this.interpret(prop.confidenceThreshold) as NumberValue).value : 
             globalThreshold;
           await this.destructureObject(prop.value, assignValue, nestedThreshold, isMutable, isDeclared);
+        } else {
+          throw new RuntimeError('Invalid destructuring pattern', pattern);
         }
       }
     }
@@ -1831,6 +1983,152 @@ export class Interpreter {
         isDeclared
       );
     }
+  }
+
+  private async matchPattern(pattern: Expression, value: Value, globalThreshold?: number): Promise<boolean> {
+    if (globalThreshold !== undefined && !this.meetsConfidenceThreshold(value, globalThreshold)) {
+      return false;
+    }
+
+    const matchValue = value instanceof ConfidenceValue ? value.value : value;
+
+    if (pattern instanceof IdentifierExpression) {
+      if (pattern.name === '_') {
+        return true;
+      }
+      this.environment.define(pattern.name, value, true, true);
+      return true;
+    }
+
+    if (pattern instanceof NumberLiteral) {
+      return matchValue instanceof NumberValue && matchValue.value === pattern.value;
+    }
+
+    if (pattern instanceof StringLiteral) {
+      return matchValue instanceof StringValue && matchValue.value === pattern.value;
+    }
+
+    if (pattern instanceof BooleanLiteral) {
+      return matchValue instanceof BooleanValue && matchValue.value === pattern.value;
+    }
+
+    if (pattern instanceof NullLiteral) {
+      return matchValue instanceof NullValue;
+    }
+
+    if (pattern instanceof ArrayPattern) {
+      return this.matchArrayPattern(pattern, matchValue, globalThreshold);
+    }
+
+    if (pattern instanceof ObjectPattern) {
+      return this.matchObjectPattern(pattern, matchValue, globalThreshold);
+    }
+
+    throw new RuntimeError('Invalid match pattern', pattern);
+  }
+
+  private async matchArrayPattern(pattern: ArrayPattern, value: Value, globalThreshold?: number): Promise<boolean> {
+    if (!(value instanceof ArrayValue)) {
+      return false;
+    }
+
+    const array = value.value;
+    let restStartIndex = pattern.elements.length;
+
+    for (let i = 0; i < pattern.elements.length; i++) {
+      if (pattern.elements[i] instanceof RestElement) {
+        restStartIndex = i;
+        break;
+      }
+    }
+
+    if (array.length < restStartIndex) {
+      return false;
+    }
+    if (restStartIndex === pattern.elements.length && array.length !== pattern.elements.length) {
+      return false;
+    }
+
+    for (let i = 0; i < restStartIndex; i++) {
+      const elementPattern = pattern.elements[i];
+      if (elementPattern === null) {
+        continue;
+      }
+
+      if (i >= array.length) {
+        return false;
+      }
+
+      let threshold = globalThreshold;
+      if (pattern.elementThresholds && pattern.elementThresholds[i]) {
+        const thresholdValue = await this.interpret(pattern.elementThresholds[i]!);
+        if (!(thresholdValue instanceof NumberValue)) {
+          throw new RuntimeError('Element confidence threshold must be a number', pattern);
+        }
+        threshold = thresholdValue.value;
+      }
+
+      const matched = await this.matchPattern(elementPattern as Expression, array[i], threshold);
+      if (!matched) {
+        return false;
+      }
+    }
+
+    if (restStartIndex < pattern.elements.length) {
+      const restElement = pattern.elements[restStartIndex] as RestElement;
+      const restValues = array.slice(restStartIndex);
+      if (restElement.argument.name !== '_') {
+        this.environment.define(restElement.argument.name, new ArrayValue(restValues), true, true);
+      }
+    }
+
+    return true;
+  }
+
+  private async matchObjectPattern(pattern: ObjectPattern, value: Value, globalThreshold?: number): Promise<boolean> {
+    if (!(value instanceof ObjectValue)) {
+      return false;
+    }
+
+    const obj = value.value;
+    const extractedKeys = new Set<string>();
+
+    for (const prop of pattern.properties) {
+      const objValue = obj.get(prop.key);
+      if (objValue === undefined) {
+        return false;
+      }
+
+      extractedKeys.add(prop.key);
+
+      let threshold = globalThreshold;
+      if (prop.confidenceThreshold) {
+        const thresholdValue = await this.interpret(prop.confidenceThreshold);
+        if (!(thresholdValue instanceof NumberValue)) {
+          throw new RuntimeError('Property confidence threshold must be a number', pattern);
+        }
+        threshold = thresholdValue.value;
+      }
+
+      const matched = await this.matchPattern(prop.value, objValue, threshold);
+      if (!matched) {
+        return false;
+      }
+    }
+
+    if (pattern.rest) {
+      const restObj = new Map<string, Value>();
+      for (const [key, val] of obj.entries()) {
+        if (!extractedKeys.has(key)) {
+          restObj.set(key, val);
+        }
+      }
+      if (pattern.rest.argument.name !== '_') {
+        this.environment.define(pattern.rest.argument.name, new ObjectValue(restObj), true, true);
+      }
+    }
+
+    return true;
   }
 
   private async interpretIfStatement(node: IfStatement): Promise<Value> {
@@ -1872,7 +2170,7 @@ export class Interpreter {
   }
 
   private async interpretTryStatement(node: TryStatement): Promise<Value> {
-    let result: Value = new UndefinedValue();
+    let result: Value = new NullValue();
     let errorValue: Value | null = null;
 
     try {
@@ -1928,6 +2226,10 @@ export class Interpreter {
 
     try {
       let result: Value = new NumberValue(0);
+
+      if (node.createScope) {
+        this.predeclareStatements(node.statements);
+      }
       
       for (const statement of node.statements) {
         result = await this.interpret(statement);
@@ -1956,11 +2258,12 @@ export class Interpreter {
 
   private async interpretFunctionDeclaration(node: FunctionDeclaration): Promise<Value> {
     // Create a function value that captures the current environment
+    const closureEnv = this.environment;
     const functionValue = new FunctionValue(
       node.name,
       async (args: Value[]): Promise<Value> => {
         // Create new scope for function execution with captured environment
-        const functionEnv = new Environment(this.environment);
+        const functionEnv = new Environment(closureEnv);
         const previousEnv = this.environment;
         this.environment = functionEnv;
 
@@ -1999,7 +2302,7 @@ export class Interpreter {
     if (node.confidenceAnnotation) {
       const confidence = await this.interpret(node.confidenceAnnotation);
       if (confidence instanceof NumberValue) {
-        result = new ConfidenceValue(functionValue, new ConfidenceLib(confidence.value));
+        result = this.createConfidenceValue(functionValue, new ConfidenceLib(confidence.value), 'function', [confidence.value]);
       }
     }
 
@@ -2039,7 +2342,7 @@ export class Interpreter {
       }
     } else {
       // Regular declaration: const/let name = value
-      let value: Value = new NumberValue(0); // Default value for let without initializer
+      let value: Value = new NullValue(); // Default value for let without initializer
       
       if (node.initializer) {
         value = await this.interpret(node.initializer);
@@ -2050,6 +2353,50 @@ export class Interpreter {
     }
     
     return new NumberValue(0); // Variable declarations return 0
+  }
+
+  private predeclareStatements(statements: Statement[]): void {
+    for (const statement of statements) {
+      if (statement instanceof VariableDeclaration) {
+        const isMutable = statement.kind === 'let';
+        if (statement.pattern) {
+          const names: string[] = [];
+          this.collectPatternIdentifiers(statement.pattern, names);
+          for (const name of names) {
+            this.environment.declare(name, isMutable);
+          }
+        } else {
+          this.environment.declare(statement.identifier, isMutable);
+        }
+      }
+    }
+  }
+
+  private collectPatternIdentifiers(pattern: ArrayPattern | ObjectPattern, names: string[]): void {
+    if (pattern instanceof ArrayPattern) {
+      for (const element of pattern.elements) {
+        if (!element) continue;
+        if (element instanceof IdentifierExpression) {
+          names.push(element.name);
+        } else if (element instanceof RestElement) {
+          names.push(element.argument.name);
+        } else if (element instanceof ArrayPattern || element instanceof ObjectPattern) {
+          this.collectPatternIdentifiers(element, names);
+        }
+      }
+      return;
+    }
+
+    for (const prop of pattern.properties) {
+      if (prop.value instanceof IdentifierExpression) {
+        names.push(prop.value.name);
+      } else if (prop.value instanceof ArrayPattern || prop.value instanceof ObjectPattern) {
+        this.collectPatternIdentifiers(prop.value, names);
+      }
+    }
+    if (pattern.rest) {
+      names.push(pattern.rest.argument.name);
+    }
   }
 
   private async interpretAgentDeclaration(node: AgentDeclaration): Promise<Value> {
@@ -2123,9 +2470,9 @@ export class Interpreter {
       } else if (param instanceof ArrayPattern || param instanceof ObjectPattern) {
         // Destructuring parameter
         if (param instanceof ArrayPattern) {
-          await this.destructureArray(param, arg);
+          await this.destructureArray(param, arg, undefined, true, true);
         } else {
-          await this.destructureObject(param, arg);
+          await this.destructureObject(param, arg, undefined, true, true);
         }
       }
     }
@@ -2139,9 +2486,9 @@ export class Interpreter {
         // Rest parameter with destructuring pattern
         const restArray = new ArrayValue(restArgs);
         if (restParameter instanceof ArrayPattern) {
-          await this.destructureArray(restParameter, restArray);
+          await this.destructureArray(restParameter, restArray, undefined, true, true);
         } else {
-          await this.destructureObject(restParameter, restArray);
+          await this.destructureObject(restParameter, restArray, undefined, true, true);
         }
       }
     }
@@ -2159,7 +2506,7 @@ export class Interpreter {
         await this.interpret(node.init);
       }
 
-      let result: Value = new UndefinedValue();
+      let result: Value = new NullValue();
 
       // Loop while condition is true
       while (true) {
@@ -2219,7 +2566,7 @@ export class Interpreter {
     this.environment = loopEnv;
 
     try {
-      let result: Value = new UndefinedValue();
+      let result: Value = new NullValue();
 
       // Iterate over array elements
       for (let i = 0; i < iterableValue.elements.length; i++) {
@@ -2253,7 +2600,7 @@ export class Interpreter {
   }
 
   private async interpretWhileLoop(node: WhileLoop): Promise<Value> {
-    let result: Value = new UndefinedValue();
+    let result: Value = new NullValue();
 
     while (true) {
       // Check condition
@@ -2282,7 +2629,7 @@ export class Interpreter {
   }
 
   private async interpretDoWhileLoop(node: DoWhileLoop): Promise<Value> {
-    let result: Value = new UndefinedValue();
+    let result: Value = new NullValue();
 
     while (true) {
       try {
@@ -2323,7 +2670,7 @@ export class Interpreter {
         await this.interpret(node.init);
       }
 
-      let result: Value = new UndefinedValue();
+      let result: Value = new NullValue();
       
       // Track overall loop confidence
       let loopConfidence = new ConfidenceLib(1.0);
@@ -2412,7 +2759,7 @@ export class Interpreter {
   }
   
   private async interpretUncertainWhileLoop(node: UncertainWhileLoop): Promise<Value> {
-    let result: Value = new UndefinedValue();
+    let result: Value = new NullValue();
 
     while (true) {
       // Check condition and extract confidence
@@ -2491,12 +2838,6 @@ export class Interpreter {
       return left.equals(right);
     }
 
-    // null == undefined
-    if ((left instanceof NullValue && right instanceof UndefinedValue) ||
-        (left instanceof UndefinedValue && right instanceof NullValue)) {
-      return true;
-    }
-
     // Number comparisons with type coercion
     if (left instanceof NumberValue || right instanceof NumberValue) {
       const leftNum = this.toNumber(left);
@@ -2538,15 +2879,37 @@ export class Interpreter {
     if (value instanceof NullValue) {
       return 0;
     }
-    if (value instanceof UndefinedValue) {
-      return null;
-    }
     return null;
   }
 }
 
 export interface RuntimeOptions {
   moduleSystem?: ModuleSystem;
+  confidence?: ConfidenceOptions;
+}
+
+export type ConfidenceCombineMode = 'min' | 'max' | 'product' | 'average';
+
+export interface ConfidenceStrategy {
+  arithmetic?: ConfidenceCombineMode;
+  comparison?: ConfidenceCombineMode;
+  logicalAnd?: ConfidenceCombineMode;
+  logicalOr?: ConfidenceCombineMode;
+  chain?: ConfidenceCombineMode;
+  ternary?: ConfidenceCombineMode;
+  functionCall?: ConfidenceCombineMode;
+  parallel?: 'max' | 'min';
+  coalesceThreshold?: number;
+  thresholdGate?: {
+    threshold?: number;
+    reduceFactor?: number;
+    onFail?: 'reduce' | 'returnNull' | 'returnLeft';
+  };
+}
+
+export interface ConfidenceOptions {
+  strategy?: ConfidenceStrategy;
+  trackProvenance?: boolean;
 }
 
 export interface ModuleInvalidationOptions {
@@ -2569,7 +2932,7 @@ export class Runtime {
 
   constructor(options?: RuntimeOptions) {
     this.moduleSystem = options?.moduleSystem ?? new ModuleSystem();
-    this.interpreter = new Interpreter();
+    this.interpreter = new Interpreter(options?.confidence);
     (this.interpreter as any).__runtime = this;
   }
 
@@ -2707,7 +3070,6 @@ export {
   StringValue,
   BooleanValue,
   NullValue,
-  UndefinedValue,
   ConfidenceValue,
   ArrayValue,
   ObjectValue,

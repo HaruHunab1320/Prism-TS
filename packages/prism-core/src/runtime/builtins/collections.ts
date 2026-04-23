@@ -7,7 +7,7 @@ import {
   ObjectValue,
   FunctionValue,
   NumberValue,
-  UndefinedValue,
+  NullValue,
   StringValue,
 } from '../values';
 
@@ -57,8 +57,8 @@ export function registerCollectionBuiltins(register: Registrar): void {
           const bProp = bVal.properties.get(keyName);
 
           if (!aProp || !bProp) {
-            aVal = aProp ? (aProp instanceof ConfidenceValue ? aProp.value : aProp) : new UndefinedValue();
-            bVal = bProp ? (bProp instanceof ConfidenceValue ? bProp.value : bProp) : new UndefinedValue();
+            aVal = aProp ? (aProp instanceof ConfidenceValue ? aProp.value : aProp) : new NullValue();
+            bVal = bProp ? (bProp instanceof ConfidenceValue ? bProp.value : bProp) : new NullValue();
           } else {
             aVal = aProp instanceof ConfidenceValue ? aProp.value : aProp;
             bVal = bProp instanceof ConfidenceValue ? bProp.value : bProp;
@@ -107,7 +107,7 @@ export function registerCollectionBuiltins(register: Registrar): void {
           const obj = element instanceof ConfidenceValue ? element.value : element;
           if (obj instanceof ObjectValue) {
             const prop = obj.properties.get(keyOrFunc.value);
-            groupKey = prop ? prop.toString() : 'undefined';
+            groupKey = prop ? prop.toString() : 'null';
           } else {
             groupKey = obj.toString();
           }

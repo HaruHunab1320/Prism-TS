@@ -101,11 +101,49 @@ function createRuntime(options?: RuntimeOptions): Runtime
 Creates a fully configured runtime.
 
 - `options.moduleSystem` (optional): Provide a preconfigured `ModuleSystem` (custom file readers, virtual files, etc.). When omitted, a new one is created automatically.
+- `options.confidence` (optional): Configure confidence combination rules and provenance tracking.
 
 ```typescript
 interface RuntimeOptions {
   moduleSystem?: ModuleSystem;
+  confidence?: {
+    strategy?: {
+      arithmetic?: 'min' | 'max' | 'product' | 'average';
+      comparison?: 'min' | 'max' | 'product' | 'average';
+      logicalAnd?: 'min' | 'max' | 'product' | 'average';
+      logicalOr?: 'min' | 'max' | 'product' | 'average';
+      chain?: 'min' | 'max' | 'product' | 'average';
+      ternary?: 'min' | 'max' | 'product' | 'average';
+      functionCall?: 'min' | 'max' | 'product' | 'average';
+      parallel?: 'min' | 'max';
+      coalesceThreshold?: number;
+      thresholdGate?: {
+        threshold?: number;
+        reduceFactor?: number;
+        onFail?: 'reduce' | 'returnNull' | 'returnLeft';
+      };
+    };
+    trackProvenance?: boolean;
+  };
 }
+```
+
+**Example: custom confidence strategy**
+
+```typescript
+import { createRuntime } from '@prism-lang/core';
+
+const runtime = createRuntime({
+  confidence: {
+    strategy: {
+      arithmetic: 'min',
+      logicalOr: 'max',
+      ternary: 'product',
+      thresholdGate: { threshold: 0.8, reduceFactor: 0.4 }
+    },
+    trackProvenance: true
+  }
+});
 ```
 
 ### Runtime Methods
@@ -258,20 +296,6 @@ class NullValue extends Value {
 ```
 
 Represents null values.
-
-**Truthy:** Always false
-
-### UndefinedValue
-
-```typescript
-class UndefinedValue extends Value {
-  constructor()
-  type: 'undefined'
-  value: undefined
-}
-```
-
-Represents undefined values.
 
 **Truthy:** Always false
 
@@ -488,11 +512,11 @@ interface LLMCallOptions {
 **Returns:** Confident string response using either the provider-reported confidence or the extractor override.
 
 **Example:**
-```prism
-response = llm("What is 2+2?");
+```javascript
+let response = llm("What is 2+2?");
 // => "4" (~95%)
 
-custom = llm("Summarize this doc", {
+let custom = llm("Summarize this doc", {
   provider: "claude",
   model: "claude-3-sonnet",
   temperature: 0.2,
@@ -502,16 +526,16 @@ custom = llm("Summarize this doc", {
 
 ### stream_llm()
 
-```prism
-handle = stream_llm("Draft a summary", { structuredOutput: false })
+```javascript
+let handle = stream_llm("Draft a summary", { structuredOutput: false })
 
-chunk = await handle.next()
+let chunk = await handle.next()
 while (chunk) {
   console.log(chunk.text)
   chunk = await handle.next()
 }
 
-final = await handle.result()
+let final = await handle.result()
 ```
 
 Returns a stream handle containing:
@@ -532,9 +556,9 @@ map(array: Array, fn: Function): Array
 Transforms array elements.
 
 **Example:**
-```prism
-numbers = [1, 2, 3];
-doubled = map(numbers, x => x * 2);
+```javascript
+let numbers = [1, 2, 3];
+let doubled = map(numbers, x => x * 2);
 // Returns: [2, 4, 6]
 ```
 
@@ -547,9 +571,9 @@ filter(array: Array, predicate: Function): Array
 Filters array elements.
 
 **Example:**
-```prism
-numbers = [1, 2, 3, 4, 5];
-evens = filter(numbers, x => x % 2 == 0);
+```javascript
+let numbers = [1, 2, 3, 4, 5];
+let evens = filter(numbers, x => x % 2 == 0);
 // Returns: [2, 4]
 ```
 
@@ -562,9 +586,9 @@ reduce(array: Array, reducer: Function, initial?: any): any
 Reduces array to single value.
 
 **Example:**
-```prism
-numbers = [1, 2, 3, 4];
-sum = reduce(numbers, (acc, x) => acc + x, 0);
+```javascript
+let numbers = [1, 2, 3, 4];
+let sum = reduce(numbers, (acc, x) => acc + x, 0);
 // Returns: 10
 ```
 
@@ -579,8 +603,8 @@ max(...values: number[]): number
 Returns maximum value.
 
 **Example:**
-```prism
-largest = max(10, 5, 20, 15);
+```javascript
+let largest = max(10, 5, 20, 15);
 // Returns: 20
 ```
 
@@ -593,9 +617,222 @@ min(...values: number[]): number
 Returns minimum value.
 
 **Example:**
-```prism
-smallest = min(10, 5, 20, 15);
+```javascript
+let smallest = min(10, 5, 20, 15);
 // Returns: 5
+```
+
+### Async Functions
+
+#### delay()
+
+```typescript
+delay(milliseconds: number): Promise<void>
+```
+
+Pauses execution for the specified number of milliseconds. Returns a promise that resolves after the delay.
+
+**Example:**
+```javascript
+async function slowOperation() {
+  console.log("Starting...")
+  await delay(2000)  // Wait 2 seconds
+  console.log("Done!")
+}
+
+// Retry with exponential backoff
+async function retryWithBackoff(operation, maxRetries) {
+  for let i = 0; i < maxRetries; i++ {
+    try {
+      return await operation()
+    } catch (e) {
+      await delay(1000 * (2 ** i))  // 1s, 2s, 4s...
+    }
+  }
+}
+```
+
+#### sleep()
+
+```typescript
+sleep(milliseconds: number): Promise<void>
+```
+
+Alias for `delay()`. Pauses execution for the specified duration.
+
+**Example:**
+```javascript
+await sleep(500)  // Same as await delay(500)
+```
+
+#### debounce()
+
+```typescript
+debounce(waitMs: number): Function
+```
+
+Creates a debounced wrapper that delays invoking a function until after `waitMs` milliseconds have elapsed since the last call. Useful for rate-limiting user input handlers.
+
+**Example:**
+```javascript
+// Create a debounced search function
+let searchDebouncer = debounce(300)
+
+// In event handler
+let onSearchInput = (query) => {
+  searchDebouncer(() => {
+    let results = performSearch(query)
+    updateUI(results)
+  })
+}
+
+// Only executes 300ms after the user stops typing
+```
+
+### Collection Functions
+
+#### sortBy()
+
+```typescript
+sortBy(key: string, direction?: "asc" | "desc"): Function
+```
+
+Creates a function that sorts an array of objects by the specified key. Returns a higher-order function for use in pipelines.
+
+**Parameters:**
+- `key`: The property name to sort by
+- `direction`: Sort direction - `"asc"` (default) or `"desc"`
+
+**Example:**
+```javascript
+let users = [
+  {name: "Alice", score: 85},
+  {name: "Bob", score: 92},
+  {name: "Charlie", score: 78}
+]
+
+// Create sorter functions
+let byScoreDesc = sortBy("score", "desc")
+let byName = sortBy("name")
+
+// Apply sorting
+let rankedUsers = byScoreDesc(users)
+// [{name: "Bob", score: 92}, {name: "Alice", score: 85}, {name: "Charlie", score: 78}]
+
+let alphabetical = byName(users)
+// [{name: "Alice", ...}, {name: "Bob", ...}, {name: "Charlie", ...}]
+
+// Use in pipeline
+let result = users |> sortBy("score", "desc")(_) |> map(u => u.name)
+// ["Bob", "Alice", "Charlie"]
+```
+
+#### groupBy()
+
+```typescript
+groupBy(key: string | Function): Function
+```
+
+Creates a function that groups an array of objects by the specified key or function. Returns an object with keys for each group.
+
+**Parameters:**
+- `key`: Property name to group by, or a function that returns the group key
+
+**Example:**
+```javascript
+let items = [
+  {name: "Apple", category: "fruit", price: 1.5},
+  {name: "Banana", category: "fruit", price: 0.5},
+  {name: "Carrot", category: "vegetable", price: 0.8},
+  {name: "Broccoli", category: "vegetable", price: 1.2}
+]
+
+// Group by property
+let byCategory = groupBy("category")
+let grouped = byCategory(items)
+// {
+//   fruit: [{name: "Apple", ...}, {name: "Banana", ...}],
+//   vegetable: [{name: "Carrot", ...}, {name: "Broccoli", ...}]
+// }
+
+// Group by computed value
+let byPriceRange = groupBy(item => item.price > 1 ? "expensive" : "cheap")
+let priceGrouped = byPriceRange(items)
+// {
+//   expensive: [{name: "Apple", ...}, {name: "Broccoli", ...}],
+//   cheap: [{name: "Banana", ...}, {name: "Carrot", ...}]
+// }
+
+// Use in pipeline
+let result = items |> groupBy("category")(_)
+```
+
+### Confidence Functions
+
+#### confidence()
+
+```typescript
+confidence(threshold: number): Function
+```
+
+Creates a function that wraps another function's return value with the specified confidence level. Useful for creating confidence-aware processing pipelines.
+
+**Parameters:**
+- `threshold`: Confidence value between 0 and 1 to attach to results
+
+**Example:**
+```javascript
+// Wrap a function to add confidence to its output
+let highConfidence = confidence(0.95)
+let mediumConfidence = confidence(0.7)
+
+let processWithConfidence = highConfidence(data => data * 2)
+let result = processWithConfidence(10)
+// 20 ~> 0.95
+
+// Create calibrated processors
+let sensorProcessor = confidence(0.85)
+let userInputProcessor = confidence(0.6)
+
+let sensorReading = sensorProcessor(() => readSensor())
+let userValue = userInputProcessor(() => getUserInput())
+```
+
+#### threshold()
+
+```typescript
+threshold(minConfidence: number): Function
+```
+
+Creates a filter function that only passes values meeting the minimum confidence threshold. Values below the threshold are filtered out.
+
+**Parameters:**
+- `minConfidence`: Minimum confidence value (0-1) required to pass
+
+**Example:**
+```javascript
+// Filter data by confidence level
+let highConfidenceOnly = threshold(0.9)
+let moderateConfidence = threshold(0.5)
+
+let data = [
+  10 ~> 0.95,
+  20 ~> 0.7,
+  30 ~> 0.92,
+  40 ~> 0.4
+]
+
+let reliable = highConfidenceOnly(data)
+// [10 ~> 0.95, 30 ~> 0.92]
+
+let usable = moderateConfidence(data)
+// [10 ~> 0.95, 20 ~> 0.7, 30 ~> 0.92]
+
+// Use in pipeline for confident decision making
+let result = predictions
+  |> threshold(0.8)(_)
+  |> map(p => p.recommendation)
+  |> first
 ```
 
 ## Execution Features
@@ -604,20 +841,20 @@ smallest = min(10, 5, 20, 15);
 
 Confidence values are propagated through operations:
 
-```prism
-x = 10 ~> 0.9;
-y = 20 ~> 0.8;
-z = x + y;  // Result has confidence based on inputs
+```javascript
+let x = 10 ~> 0.9;
+let y = 20 ~> 0.8;
+let z = x + y;  // Result has confidence based on inputs
 ```
 
 ### Context Management
 
 The runtime maintains execution contexts for uncertainty handling:
 
-```prism
+```javascript
 in context "analysis" {
   // Code executes in analysis context
-  result = processData(input);
+  let result = processData(input);
 }
 ```
 
@@ -625,8 +862,8 @@ in context "analysis" {
 
 Supports break and continue statements:
 
-```prism
-for i = 0; i < 10; i++ {
+```javascript
+for let i = 0; i < 10; i++ {
   if (i == 5) {
     break;  // Exit loop
   }
@@ -641,16 +878,18 @@ for i = 0; i < 10; i++ {
 
 Supports array and object destructuring with confidence:
 
-```prism
+```javascript
 // Array destructuring
-[a, b, c] = [1, 2, 3];
-[x, ...rest] = array;
+let [a, b, c] = [1, 2, 3];
+let [x, ...rest] = array;
 
 // Object destructuring
-{name, age} = person;
-{x: coordX, y: coordY} = point;
+let {name, age} = person;
+let {x: coordX, y: coordY} = point;
 
 // With confidence thresholds
+let a = null;
+let b = null;
 [a, b] ~> 0.8 = uncertainArray;
 ```
 

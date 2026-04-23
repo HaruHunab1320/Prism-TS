@@ -61,13 +61,13 @@ describe('Module System', () => {
     test('default export and import', async () => {
       // Set up module files
       fileContents.set('/math.prism', `
-        PI = 3.14159
+        let PI = 3.14159
         export default PI
       `);
       
       fileContents.set('/main.prism', `
         import pi from "./math.prism"
-        result = pi * 2
+        let result = pi * 2
         export default result
       `);
       
@@ -86,16 +86,16 @@ describe('Module System', () => {
     
     test('named exports and imports', async () => {
       fileContents.set('/utils.prism', `
-        export double = x => x * 2
-        export triple = x => x * 3
+        export const double = x => x * 2
+        export const triple = x => x * 3
         export const PI = 3.14159
       `);
       
       fileContents.set('/main.prism', `
         import {double, triple, PI} from "./utils.prism"
-        result1 = double(5)
-        result2 = triple(5)
-        result3 = PI
+        let result1 = double(5)
+        let result2 = triple(5)
+        let result3 = PI
         export {result1, result2, result3}
       `);
       
@@ -113,18 +113,18 @@ describe('Module System', () => {
     
     test('namespace import', async () => {
       fileContents.set('/math.prism', `
-        export add = (a, b) => a + b
-        export subtract = (a, b) => a - b
-        export multiply = (a, b) => a * b
+        export const add = (a, b) => a + b
+        export const subtract = (a, b) => a - b
+        export const multiply = (a, b) => a * b
         export const E = 2.71828
       `);
       
       fileContents.set('/main.prism', `
         import * as math from "./math.prism"
-        sum = math.add(10, 5)
-        diff = math.subtract(10, 5)
-        prod = math.multiply(10, 5)
-        euler = math.E
+        let sum = math.add(10, 5)
+        let diff = math.subtract(10, 5)
+        let prod = math.multiply(10, 5)
+        let euler = math.E
         export {sum, diff, prod, euler}
       `);
       
@@ -143,7 +143,7 @@ describe('Module System', () => {
     test('re-exports', async () => {
       fileContents.set('/core.prism', `
         export const VERSION = "1.0.0"
-        export greet = name => "Hello, " + name
+        export const greet = name => "Hello, " + name
       `);
       
       fileContents.set('/index.prism', `
@@ -170,14 +170,14 @@ describe('Module System', () => {
       // Note: This only works with functions, not values
       fileContents.set('/a.prism', `
         import {getB} from "./b.prism"
-        export getA = () => "A"
-        export callB = () => "A calls " + getB()
+        export const getA = () => "A"
+        export const callB = () => "A calls " + getB()
       `);
       
       fileContents.set('/b.prism', `
         import {getA} from "./a.prism"
-        export getB = () => "B"
-        export callA = () => "B calls " + getA()
+        export const getB = () => "B"
+        export const callA = () => "B calls " + getA()
       `);
       
       const runtime = createRuntime();
@@ -345,14 +345,14 @@ describe('Module System', () => {
   describe('Confidence propagation', () => {
     test('exports preserve confidence', async () => {
       fileContents.set('/confident.prism', `
-        export confidentValue = 100 ~> 0.85
-        export confidentFunc = x => (x * 2) ~> 0.9
+        export const confidentValue = 100 ~> 0.85
+        export const confidentFunc = x => (x * 2) ~> 0.9
       `);
       
       fileContents.set('/main.prism', `
         import {confidentValue, confidentFunc} from "./confident.prism"
-        result1 = confidentValue
-        result2 = confidentFunc(10)
+        let result1 = confidentValue
+        let result2 = confidentFunc(10)
         export {result1, result2}
       `);
       

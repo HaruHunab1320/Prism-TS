@@ -2,6 +2,7 @@
   "name": "@prism/examples",
   "version": "1.0.0",
   "description": "Comprehensive examples of Prism language features for documentation and LLM training",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -9,12 +10,17 @@
     "build": "tsc",
     "lint": "eslint src/**/*.ts"
   },
-  "keywords": ["prism", "examples", "documentation", "tutorial"],
+  "keywords": [
+    "prism",
+    "examples",
+    "documentation",
+    "tutorial"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@prism/core": "workspace:*",
-    "@prism/cli": "workspace:*"
+    "@prism-lang/core": "workspace:*",
+    "@prism-lang/cli": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

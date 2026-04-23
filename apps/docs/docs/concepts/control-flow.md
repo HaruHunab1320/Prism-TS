@@ -13,20 +13,21 @@ Prism extends traditional control flow constructs with confidence-aware capabili
 
 Standard if statements work as expected:
 
-```prism
+```javascript
 // Basic if
+let status = "cool"
 if temperature > 30 {
   status = "hot"
 }
 
 // If-else
+let result = "fail"
 if score >= 60 {
   result = "pass"
-} else {
-  result = "fail"
 }
 
 // If-else if-else chains
+let grade = "F"
 if score >= 90 {
   grade = "A"
 } else if score >= 80 {
@@ -35,8 +36,6 @@ if score >= 90 {
   grade = "C"
 } else if score >= 60 {
   grade = "D"
-} else {
-  grade = "F"
 }
 
 // Nested conditions
@@ -55,33 +54,49 @@ if user.isAuthenticated {
 
 For simple conditional expressions:
 
-```prism
+```javascript
 // Basic ternary
-status = temperature > 30 ? "hot" : "cool"
+let status = temperature > 30 ? "hot" : "cool"
 
 // Nested ternary (use sparingly)
-grade = score >= 90 ? "A" : 
+let grade = score >= 90 ? "A" : 
         score >= 80 ? "B" : 
         score >= 70 ? "C" : "F"
 
 // With confident values
-result = (confidence > 0.8) ? 
+let result = (confidence > 0.8) ? 
   processHighConfidence(data) : 
   requestManualReview(data)
 ```
+
+### Pattern Matching
+
+Use `match` to branch on structure with guards and confidence thresholds:
+
+```javascript
+let outcome = match input {
+  0 => "zero",
+  [x, y, ...rest] => rest,
+  {type: "error", message} => message,
+  x if x > 10 => "large",
+  _ => "fallback"
+}
+```
+
+For full pattern syntax, see the [Pattern Matching](./pattern-matching) guide.
 
 ## Loops
 
 ### For Loops
 
-```prism
+```javascript
 // Traditional for loop
-for i = 0; i < 10; i = i + 1 {
+for let i = 0; i < 10; i = i + 1 {
   console.log(i)
 }
 
 // With break
-for i = 0; i < 100; i = i + 1 {
+for let i = 0; i < 100; i = i + 1 {
   if i == 50 {
     break
   }
@@ -89,7 +104,7 @@ for i = 0; i < 100; i = i + 1 {
 }
 
 // With continue
-for i = 0; i < 100; i = i + 1 {
+for let i = 0; i < 100; i = i + 1 {
   if i % 2 == 0 {
     continue  // Skip even numbers
   }
@@ -101,9 +116,9 @@ for i = 0; i < 100; i = i + 1 {
 
 Iterate over collections:
 
-```prism
+```javascript
 // Iterate over array values
-numbers = [1, 2, 3, 4, 5]
+let numbers = [1, 2, 3, 4, 5]
 for num in numbers {
   console.log(num * 2)
 }
@@ -114,30 +129,32 @@ for value, index in numbers {
 }
 
 // Iterate over object properties
-person = {name: "Alice", age: 30, city: "NYC"}
+let person = {name: "Alice", age: 30, city: "NYC"}
 for key in person {
   console.log(`${key}: ${person[key]}`)
 }
 
 // Destructuring in loops
-points = [{x: 1, y: 2}, {x: 3, y: 4}, {x: 5, y: 6}]
+let points = [{x: 1, y: 2}, {x: 3, y: 4}, {x: 5, y: 6}]
 for {x, y} in points {
-  distance = Math.sqrt(x * x + y * y)
+  let distance = Math.sqrt(x * x + y * y)
   console.log(`Distance: ${distance}`)
 }
 ```
 
 ### While Loops
 
-```prism
+```javascript
 // Basic while loop
-count = 0
+let count = 0
 while count < 10 {
   console.log(count)
   count = count + 1
 }
 
 // With complex condition
+let temperature = readSensor()
+let time = 0
 while temperature > threshold && time < maxTime {
   adjustCooling()
   temperature = readSensor()
@@ -146,7 +163,7 @@ while temperature > threshold && time < maxTime {
 
 // Infinite loop with break
 while true {
-  input = getUserInput()
+  let input = getUserInput()
   if input == "exit" {
     break
   }
@@ -158,17 +175,17 @@ while true {
 
 Execute at least once:
 
-```prism
+```javascript
 // Basic do-while
-attempts = 0
+let attempts = 0
 do {
-  success = tryOperation()
+  let success = tryOperation()
   attempts = attempts + 1
 } while !success && attempts < maxAttempts
 
 // User input validation
 do {
-  value = promptUser("Enter a positive number:")
+  let value = promptUser("Enter a positive number:")
 } while value <= 0
 ```
 
@@ -178,9 +195,9 @@ do {
 
 Branch based on confidence levels:
 
-```prism
+```javascript
 // Basic uncertain if
-data = fetchSensorData() ~> 0.75
+let data = fetchSensorData() ~> 0.75
 
 uncertain if data {
   high {
@@ -198,7 +215,7 @@ uncertain if data {
 }
 
 // With explicit threshold
-prediction = model.predict(input) ~> confidence
+let prediction = model.predict(input) ~> confidence
 
 uncertain if prediction > 0.8 {  // Custom threshold
   high {
@@ -213,7 +230,7 @@ uncertain if prediction > 0.8 {  // Custom threshold
 }
 
 // With default branch (like switch statement default)
-analysis = llm("Analyze this") ~> customConfidence
+let analysis = llm("Analyze this") ~> customConfidence
 
 uncertain if analysis {
   high {
@@ -234,11 +251,11 @@ uncertain if analysis {
 }
 
 // Conditional confidence checking
-result = complexCalculation() ~> calcConfidence
+let result = complexCalculation() ~> calcConfidence
 
 uncertain if result {
   high {
-    finalResult = result
+    let finalResult = result
   }
   low {
     // Fallback calculation with different method
@@ -251,9 +268,9 @@ uncertain if result {
 
 Loops that behave differently based on confidence:
 
-```prism
+```javascript
 // Uncertain for loop
-uncertain for i = 0; i < dataPoints.length; i = i + 1 {
+uncertain for let i = 0; i < dataPoints.length; i = i + 1 {
   high {
     // Process with full algorithm
     results[i] = complexAnalysis(dataPoints[i])
@@ -269,10 +286,10 @@ uncertain for i = 0; i < dataPoints.length; i = i + 1 {
 }
 
 // Uncertain while loop with default
-attempts = 0
+let attempts = 0
 uncertain while (attempts < maxAttempts) ~> 0.9 {
   high {
-    result = tryRiskyOperation()
+    let result = tryRiskyOperation()
     if result.success {
       break
     }
@@ -299,7 +316,7 @@ uncertain while (attempts < maxAttempts) ~> 0.9 {
 
 The `default` branch in uncertain constructs acts like a switch statement's default case, executing when the confidence level doesn't match any of the standard thresholds:
 
-```prism
+```javascript
 // Use cases for default branch
 uncertain if (apiResponse) {
   high { processNormally() }
@@ -316,7 +333,7 @@ uncertain if (apiResponse) {
 }
 
 // Adaptive threshold adjustment
-threshold = 0.7
+let threshold = 0.7
 uncertain if (measurement) {
   high { 
     // Confidence >= threshold
@@ -336,7 +353,7 @@ uncertain if (prediction) {
   low { abort() }
   default {
     // Medium confidence - gather more data
-    additionalData = gatherMoreInfo()
+    let additionalData = gatherMoreInfo()
     reanalyze(additionalData)
   }
 }
@@ -348,10 +365,10 @@ The default branch ensures your uncertainty-aware code can gracefully handle all
 
 Using confident values in conditions:
 
-```prism
+```javascript
 // Confident comparison
-temp1 = 25 ~> 0.9
-temp2 = 26 ~> 0.85
+let temp1 = 25 ~> 0.9
+let temp2 = 26 ~> 0.85
 
 if temp1 ~< temp2 {
   // Comparison considers confidence
@@ -359,7 +376,7 @@ if temp1 ~< temp2 {
 }
 
 // Confidence extraction in conditions
-measurement = readSensor() ~> sensorConfidence
+let measurement = readSensor() ~> sensorConfidence
 
 if ~measurement > 0.8 {
   // Check if confidence is high enough
@@ -367,8 +384,8 @@ if ~measurement > 0.8 {
 }
 
 // Combining confident conditions
-condition1 = checkCondition1() ~> 0.9
-condition2 = checkCondition2() ~> 0.8
+let condition1 = checkCondition1() ~> 0.9
+let condition2 = checkCondition2() ~> 0.8
 
 if condition1 ~&& condition2 {
   // Both conditions true with combined confidence
@@ -380,12 +397,12 @@ if condition1 ~&& condition2 {
 
 ### Confidence-Based State Machines
 
-```prism
+```javascript
 // State machine with confidence transitions
-currentState = "idle"
-confidence = 1.0
+let currentState = "idle"
+let confidence = 1.0
 
-processEvent = (event) => {
+let processEvent = (event) => {
   uncertain if event ~> confidence {
     high {
       // Confident state transitions
@@ -411,16 +428,16 @@ processEvent = (event) => {
 
 ### Early Exit Patterns
 
-```prism
+```javascript
 // Confidence gates for early exit
-processData = (data) => {
+let processData = (data) => {
   // Check confidence at entry
   if ~data < 0.5 {
     return null  // Too uncertain
   }
   
   // Progressive validation
-  validated = validate(data)
+  let validated = validate(data)
   if ~validated < 0.7 {
     return fallbackProcess(data)
   }
@@ -430,7 +447,7 @@ processData = (data) => {
 }
 
 // Multiple exit points
-analyzeReading = (reading) => {
+let analyzeReading = (reading) => {
   // Quick confidence check
   if ~reading < 0.3 {
     return {status: "rejected", reason: "too uncertain"}
@@ -458,10 +475,10 @@ analyzeReading = (reading) => {
 
 ### Nested Uncertain Control Flow
 
-```prism
+```javascript
 // Nested uncertain structures
-mainProcess = (input) => {
-  primaryResult = primaryModel(input) ~> 0.8
+let mainProcess = (input) => {
+  let primaryResult = primaryModel(input) ~> 0.8
   
   uncertain if primaryResult {
     high {
@@ -470,7 +487,7 @@ mainProcess = (input) => {
     }
     medium {
       // Try secondary model
-      secondaryResult = secondaryModel(input) ~> 0.7
+      let secondaryResult = secondaryModel(input) ~> 0.7
       
       uncertain if secondaryResult {
         high {
@@ -493,28 +510,28 @@ mainProcess = (input) => {
 
 ### Sensor Reading Validation
 
-```prism
+```javascript
 // Multi-stage sensor validation with confidence
-validateSensorReading = (reading) => {
+let validateSensorReading = (reading) => {
   // Stage 1: Range check
-  inRange = (reading >= minTemp && reading <= maxTemp) ~> 0.95
+  let inRange = (reading >= minTemp && reading <= maxTemp) ~> 0.95
   
   // Stage 2: Rate of change check
-  changeRate = abs(reading - lastReading) / timeInterval
-  validChange = (changeRate < maxChangeRate) ~> 0.9
+  let changeRate = abs(reading - lastReading) / timeInterval
+  let validChange = (changeRate < maxChangeRate) ~> 0.9
   
   // Stage 3: Cross-validation with other sensors
-  nearbyAvg = getNearbySensorAverage()
-  deviation = abs(reading - nearbyAvg)
-  consistent = (deviation < threshold) ~> 0.85
+  let nearbyAvg = getNearbySensorAverage()
+  let deviation = abs(reading - nearbyAvg)
+  let consistent = (deviation < threshold) ~> 0.85
   
   // Combined validation
-  valid = inRange ~&& validChange ~&& consistent
+  let valid = inRange ~&& validChange ~&& consistent
   
   uncertain if valid {
     high {
       updateReading(reading)
-      lastReading = reading
+      let lastReading = reading
     }
     medium {
       // Additional verification needed
@@ -525,7 +542,7 @@ validateSensorReading = (reading) => {
     }
     low {
       // Reject reading, use interpolation
-      interpolated = (lastReading + nextExpected) / 2
+      let interpolated = (lastReading + nextExpected) / 2
       updateReading(interpolated ~> 0.7)
     }
   }
@@ -534,16 +551,16 @@ validateSensorReading = (reading) => {
 
 ### Adaptive Algorithm Selection
 
-```prism
+```javascript
 // Choose algorithm based on data confidence
-processDataAdaptively = (data) => {
-  dataQuality = assessQuality(data) ~> 0.85
+let processDataAdaptively = (data) => {
+  let dataQuality = assessQuality(data) ~> 0.85
   
   uncertain if dataQuality {
     high {
       // Use sophisticated ML model
-      model = loadComplexModel()
-      result = model.process(data)
+      let model = loadComplexModel()
+      let result = model.process(data)
       
       // Verify result confidence
       if ~result > 0.9 {
@@ -555,7 +572,7 @@ processDataAdaptively = (data) => {
     }
     medium {
       // Use robust statistical methods
-      cleaned = robustClean(data)
+      let cleaned = robustClean(data)
       result = statisticalAnalysis(cleaned)
       return result ~> 0.7
     }
@@ -574,17 +591,17 @@ processDataAdaptively = (data) => {
 
 ### Retry Logic with Confidence Decay
 
-```prism
+```javascript
 // Retry with decreasing confidence
-reliableOperation = (params) => {
-  maxRetries = 5
-  initialConfidence = 0.95
-  decayFactor = 0.15
+let reliableOperation = (params) => {
+  let maxRetries = 5
+  let initialConfidence = 0.95
+  let decayFactor = 0.15
   
-  for attempt = 0; attempt < maxRetries; attempt = attempt + 1 {
-    confidence = initialConfidence * (1 - decayFactor * attempt)
+  for let attempt = 0; attempt < maxRetries; attempt = attempt + 1 {
+    let confidence = initialConfidence * (1 - decayFactor * attempt)
     
-    result = attemptOperation(params) ~> confidence
+    let result = attemptOperation(params) ~> confidence
     
     uncertain if result {
       high {
@@ -615,9 +632,9 @@ reliableOperation = (params) => {
 
 ### Decision Tree with Confidence
 
-```prism
+```javascript
 // Medical diagnosis decision tree
-diagnose = (symptoms) => {
+let diagnose = (symptoms) => {
   // Check primary symptom
   if symptoms.fever ~> 0.9 {
     uncertain if symptoms.fever > 38.5 {

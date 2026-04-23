@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@prism-lang/confidence": ["../prism-confidence/src"],
+      "@prism-lang/confidence/*": ["../prism-confidence/src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["test/**/*", "**/*.test.ts", "**/*.spec.ts"],
+  "references": []
+}

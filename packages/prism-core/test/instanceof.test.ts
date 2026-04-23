@@ -51,8 +51,8 @@ describe('instanceof operator', () => {
       expect(result.value).toBe(true);
     });
 
-    it('should check undefined', async () => {
-      const program = parse(`undefined instanceof "undefined"`);
+    it('should check null', async () => {
+      const program = parse(`null instanceof "null"`);
       const result = await runtime.execute(program);
       expect(result.value).toBe(true);
     });
@@ -81,7 +81,7 @@ describe('instanceof operator', () => {
   describe('With variables', () => {
     it('should work with variables', async () => {
       const program = parse(`
-        x = "hello";
+        let x = "hello";
         x instanceof "string"
       `);
       const result = await runtime.execute(program);
@@ -90,8 +90,8 @@ describe('instanceof operator', () => {
 
     it('should work with type names in variables', async () => {
       const program = parse(`
-        value = 42;
-        typeName = "number";
+        let value = 42;
+        let typeName = "number";
         value instanceof typeName
       `);
       const result = await runtime.execute(program);
@@ -122,9 +122,9 @@ describe('instanceof operator', () => {
   describe('Combined with typeof', () => {
     it('should work together with typeof', async () => {
       const program = parse(`
-        x = [1, 2, 3];
-        typeOfX = typeof x;
-        isArray = x instanceof "array";
+        let x = [1, 2, 3];
+        let typeOfX = typeof x;
+        let isArray = x instanceof "array";
         typeOfX + " - " + isArray
       `);
       const result = await runtime.execute(program);
@@ -133,7 +133,7 @@ describe('instanceof operator', () => {
 
     it('should be consistent with typeof', async () => {
       const program = parse(`
-        value = "test";
+        let value = "test";
         (typeof value == "string") == (value instanceof "string")
       `);
       const result = await runtime.execute(program);
@@ -156,7 +156,7 @@ describe('instanceof operator', () => {
   describe('Real-world patterns', () => {
     it('should work in conditional logic', async () => {
       const program = parse(`
-        data = [1, 2, 3];
+        let data = [1, 2, 3];
         data instanceof "array" ? data.length : 0
       `);
       const result = await runtime.execute(program);
@@ -165,7 +165,7 @@ describe('instanceof operator', () => {
 
     it('should work for type guards', async () => {
       const program = parse(`
-        process = value => value instanceof "number" ? value * 2 : value instanceof "string" ? value + value : "unknown";
+        let process = value => value instanceof "number" ? value * 2 : value instanceof "string" ? value + value : "unknown";
         process(21)
       `);
       const result = await runtime.execute(program);

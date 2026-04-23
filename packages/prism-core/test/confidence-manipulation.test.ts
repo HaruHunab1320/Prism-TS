@@ -21,8 +21,9 @@ describe('Confidence Manipulation in Expressions', () => {
   describe('Arithmetic with confidence values', () => {
     it('should multiply confidence value with regular number', async () => {
       const result = await execute(`
-        confValue = 100 ~> 0.8
-        adjusted = confValue * 2
+        let confValue = 100 ~> 0.8
+        let adjusted = confValue * 2
+        adjusted
       `);
       expect(result).toBeInstanceOf(ConfidenceValue);
       const conf = result as ConfidenceValue;
@@ -32,8 +33,9 @@ describe('Confidence Manipulation in Expressions', () => {
 
     it('should add regular number to confidence value', async () => {
       const result = await execute(`
-        confValue = 50 ~> 0.9
-        result = confValue + 30
+        let confValue = 50 ~> 0.9
+        let result = confValue + 30
+        result
       `);
       expect(result).toBeInstanceOf(ConfidenceValue);
       const conf = result as ConfidenceValue;
@@ -43,9 +45,10 @@ describe('Confidence Manipulation in Expressions', () => {
 
     it('should handle confidence on right side', async () => {
       const result = await execute(`
-        regular = 10
-        confValue = 5 ~> 0.7
-        result = regular * confValue
+        let regular = 10
+        let confValue = 5 ~> 0.7
+        let result = regular * confValue
+        result
       `);
       expect(result).toBeInstanceOf(ConfidenceValue);
       const conf = result as ConfidenceValue;
@@ -57,9 +60,10 @@ describe('Confidence Manipulation in Expressions', () => {
   describe('Extracting and manipulating confidence', () => {
     it('should extract confidence and use in calculations', async () => {
       const result = await execute(`
-        value = 100 ~> 0.8
-        conf = <~ value
-        adjustedConf = conf * 0.9
+        let value = 100 ~> 0.8
+        let conf = <~ value
+        let adjustedConf = conf * 0.9
+        adjustedConf
       `);
       expect(result).toBeInstanceOf(NumberValue);
       expect((result as NumberValue).value).toBeCloseTo(0.72);
@@ -67,10 +71,11 @@ describe('Confidence Manipulation in Expressions', () => {
 
     it('should apply adjusted confidence to value', async () => {
       const result = await execute(`
-        value = 100 ~> 0.8
-        conf = <~ value
-        adjustedConf = conf * 0.5
-        newValue = 100 ~> adjustedConf
+        let value = 100 ~> 0.8
+        let conf = <~ value
+        let adjustedConf = conf * 0.5
+        let newValue = 100 ~> adjustedConf
+        newValue
       `);
       expect(result).toBeInstanceOf(ConfidenceValue);
       const conf = result as ConfidenceValue;
@@ -82,10 +87,11 @@ describe('Confidence Manipulation in Expressions', () => {
   describe('Complex confidence manipulations', () => {
     it('should handle confidence decay in calculations', async () => {
       const result = await execute(`
-        initial = 100 ~> 0.9
-        step1 = initial * 2
-        step2 = step1 + 50
-        step3 = step2 / 5
+        let initial = 100 ~> 0.9
+        let step1 = initial * 2
+        let step2 = step1 + 50
+        let step3 = step2 / 5
+        step3
       `);
       expect(result).toBeInstanceOf(ConfidenceValue);
       const conf = result as ConfidenceValue;
@@ -95,11 +101,12 @@ describe('Confidence Manipulation in Expressions', () => {
 
     it('should work with ternary operator', async () => {
       const result = await execute(`
-        highConf = 100 ~> 0.9
-        lowConf = 100 ~> 0.3
+        let highConf = 100 ~> 0.9
+        let lowConf = 100 ~> 0.3
         
-        useHigh = (<~ highConf) > 0.5
-        result = useHigh ? highConf * 2 : lowConf * 2
+        let useHigh = (<~ highConf) > 0.5
+        let result = useHigh ? highConf * 2 : lowConf * 2
+        result
       `);
       expect(result).toBeInstanceOf(ConfidenceValue);
       const conf = result as ConfidenceValue;
@@ -109,12 +116,13 @@ describe('Confidence Manipulation in Expressions', () => {
 
     it('should handle confidence in conditions', async () => {
       const result = await execute(`
-        measurement = 25.5 ~> 0.85
+        let measurement = 25.5 ~> 0.85
         
         // Check if confident enough
-        confident = (<~ measurement) > 0.8
+        let confident = (<~ measurement) > 0.8
         
-        result = confident ? "high confidence" : "low confidence"
+        let result = confident ? "high confidence" : "low confidence"
+        result
       `);
       expect(result.toString()).toBe('high confidence');
     });
@@ -123,12 +131,13 @@ describe('Confidence Manipulation in Expressions', () => {
   describe('Confidence adjustment patterns', () => {
     it('should support confidence scaling', async () => {
       const result = await execute(`
-        original = 100 ~> 0.8
+        let original = 100 ~> 0.8
         
         // Scale confidence down by 80%
-        conf = <~ original
-        newConf = conf * 0.8
-        adjusted = 100 ~> newConf
+        let conf = <~ original
+        let newConf = conf * 0.8
+        let adjusted = 100 ~> newConf
+        adjusted
       `);
       expect(result).toBeInstanceOf(ConfidenceValue);
       const conf = result as ConfidenceValue;
@@ -137,12 +146,13 @@ describe('Confidence Manipulation in Expressions', () => {
 
     it('should support confidence thresholding', async () => {
       const result = await execute(`
-        value = 100 ~> 0.6
+        let value = 100 ~> 0.6
         
         // If confidence < 0.7, set to 0.5
-        conf = <~ value
-        adjustedConf = conf < 0.7 ? 0.5 : conf
-        result = 100 ~> adjustedConf
+        let conf = <~ value
+        let adjustedConf = conf < 0.7 ? 0.5 : conf
+        let result = 100 ~> adjustedConf
+        result
       `);
       expect(result).toBeInstanceOf(ConfidenceValue);
       const conf = result as ConfidenceValue;

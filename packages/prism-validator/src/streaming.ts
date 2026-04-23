@@ -2,29 +2,112 @@ import { Token, TokenType, tokenize } from '@prism-lang/core';
 import { StreamingValidationResult, SyntaxError, Warning } from './types';
 
 const fallbackKeywords: Record<string, TokenType> = {
-  'uncertain': TokenType.UNCERTAIN,
   'if': TokenType.IF,
+  'else': TokenType.ELSE,
+  'uncertain': TokenType.UNCERTAIN,
   'high': TokenType.HIGH,
   'medium': TokenType.MEDIUM,
   'low': TokenType.LOW,
   'default': TokenType.DEFAULT,
-  'import': TokenType.IMPORT,
-  'export': TokenType.EXPORT,
-  'from': TokenType.FROM,
-  'async': TokenType.ASYNC,
-  'await': TokenType.AWAIT,
+  'in': TokenType.IN,
+  'context': TokenType.CONTEXT,
+  'agents': TokenType.AGENTS,
+  'fn': TokenType.FUNCTION,
   'function': TokenType.FUNCTION,
   'return': TokenType.RETURN,
-  'const': TokenType.CONST,
   'let': TokenType.LET,
-  'for': TokenType.FOR,
-  'while': TokenType.WHILE,
-  'do': TokenType.DO,
+  'const': TokenType.CONST,
+  'match': TokenType.MATCH,
   'true': TokenType.TRUE,
   'false': TokenType.FALSE,
   'null': TokenType.NULL,
   'undefined': TokenType.UNDEFINED,
+  'for': TokenType.FOR,
+  'while': TokenType.WHILE,
+  'break': TokenType.BREAK,
+  'continue': TokenType.CONTINUE,
+  'typeof': TokenType.TYPEOF,
+  'instanceof': TokenType.INSTANCEOF,
+  'import': TokenType.IMPORT,
+  'export': TokenType.EXPORT,
+  'from': TokenType.FROM,
+  'as': TokenType.AS,
+  'async': TokenType.ASYNC,
+  'await': TokenType.AWAIT,
+  'try': TokenType.TRY,
+  'catch': TokenType.CATCH,
+  'finally': TokenType.FINALLY,
+  'do': TokenType.DO,
 };
+
+const fallbackOperators: Array<[string, TokenType]> = [
+  ['~||>', TokenType.PARALLEL_CONFIDENCE],
+  ['~?>', TokenType.CONFIDENCE_THRESHOLD_GATE],
+  ['~??', TokenType.CONFIDENCE_COALESCE],
+  ['~>=', TokenType.CONFIDENCE_GREATER_EQUAL],
+  ['~<=', TokenType.CONFIDENCE_LESS_EQUAL],
+  ['~==', TokenType.CONFIDENCE_EQUAL],
+  ['~!=', TokenType.CONFIDENCE_NOT_EQUAL],
+  ['~+=', TokenType.CONFIDENCE_PLUS_EQUAL],
+  ['~-=', TokenType.CONFIDENCE_MINUS_EQUAL],
+  ['~*=', TokenType.CONFIDENCE_STAR_EQUAL],
+  ['~/=', TokenType.CONFIDENCE_SLASH_EQUAL],
+  ['!==', TokenType.NOT_EQUAL_EQUAL],
+  ['===', TokenType.EQUAL_EQUAL_EQUAL],
+  ['==', TokenType.EQUAL_EQUAL],
+  ['!=', TokenType.NOT_EQUAL],
+  ['>=', TokenType.GREATER_EQUAL],
+  ['<=', TokenType.LESS_EQUAL],
+  ['<~', TokenType.CONFIDENCE_EXTRACT],
+  ['~||', TokenType.CONFIDENCE_OR],
+  ['~&&', TokenType.CONFIDENCE_AND],
+  ['~|>', TokenType.CONFIDENCE_PIPELINE],
+  ['~@>', TokenType.THRESHOLD_GATE],
+  ['~?', TokenType.CONFIDENCE_QUESTION],
+  ['~>', TokenType.CONFIDENCE_ARROW],
+  ['~+', TokenType.CONFIDENCE_PLUS],
+  ['~-', TokenType.CONFIDENCE_MINUS],
+  ['~*', TokenType.CONFIDENCE_STAR],
+  ['~/', TokenType.CONFIDENCE_SLASH],
+  ['~<', TokenType.CONFIDENCE_LESS],
+  ['~.', TokenType.CONFIDENCE_DOT],
+  ['~~', TokenType.CONFIDENCE_CHAIN],
+  ['?.', TokenType.OPTIONAL_CHAIN],
+  ['??', TokenType.QUESTION_QUESTION],
+  ['=>', TokenType.ARROW],
+  ['->', TokenType.CONTEXT_ARROW],
+  ['|>', TokenType.PIPELINE],
+  ['||', TokenType.OR],
+  ['&&', TokenType.AND],
+  ['+=', TokenType.PLUS_EQUAL],
+  ['-=', TokenType.MINUS_EQUAL],
+  ['*=', TokenType.STAR_EQUAL],
+  ['/=', TokenType.SLASH_EQUAL],
+  ['%=', TokenType.PERCENT_EQUAL],
+  ['**', TokenType.STAR_STAR],
+  ['...', TokenType.SPREAD],
+  ['+', TokenType.PLUS],
+  ['-', TokenType.MINUS],
+  ['*', TokenType.STAR],
+  ['/', TokenType.SLASH],
+  ['%', TokenType.PERCENT],
+  ['=', TokenType.EQUAL],
+  ['<', TokenType.LESS],
+  ['>', TokenType.GREATER],
+  ['!', TokenType.NOT],
+  ['~', TokenType.TILDE],
+  ['(', TokenType.LEFT_PAREN],
+  [')', TokenType.RIGHT_PAREN],
+  ['{', TokenType.LEFT_BRACE],
+  ['}', TokenType.RIGHT_BRACE],
+  ['[', TokenType.LEFT_BRACKET],
+  [']', TokenType.RIGHT_BRACKET],
+  [',', TokenType.COMMA],
+  ['.', TokenType.DOT],
+  [':', TokenType.COLON],
+  [';', TokenType.SEMICOLON],
+  ['?', TokenType.QUESTION],
+];
 
 export class StreamingValidator {
   private buffer: string = '';
@@ -59,9 +142,10 @@ export class StreamingValidator {
       this.tokenizePartial();
       this.analyzePartialSyntax();
     } catch (error: any) {
+      const lastToken = this.tokens[this.tokens.length - 1];
       this.errors.push({
-        line: 1,
-        column: 1,
+        line: lastToken?.line ?? 1,
+        column: lastToken?.column ?? 1,
         message: error.message || 'Streaming parse error',
         code: 'STREAM_PARSE_ERROR',
         severity: 'error'
@@ -191,9 +275,21 @@ export class StreamingValidator {
         }
 
         if (char === '"' || char === "'") {
-          this.inString = true;
-          this.stringDelimiter = char;
-          pos++;
+          const stringEnd = line.indexOf(char, pos + 1);
+          if (stringEnd === -1) {
+            this.inString = true;
+            this.stringDelimiter = char;
+            pos++;
+            continue;
+          }
+          const literal = line.slice(pos + 1, stringEnd);
+          tokens.push({
+            type: TokenType.STRING,
+            value: literal,
+            line: lineNum + 1,
+            column: pos + 1,
+          });
+          pos = stringEnd + 1;
           continue;
         }
 
@@ -213,78 +309,53 @@ export class StreamingValidator {
   private extractSimpleToken(line: string, start: number, lineNum: number): Token | null {
     const remaining = line.substring(start);
 
+    const numberMatch = remaining.match(/^\d+(\.\d+)?/);
+    if (numberMatch) {
+      const value = numberMatch[0];
+      return { type: TokenType.NUMBER, value, line: lineNum, column: start + 1 };
+    }
+
     const keywordMatch = remaining.match(/^[a-zA-Z_]\w*/);
     if (keywordMatch) {
       const word = keywordMatch[0];
       if (word in fallbackKeywords) {
         return { type: fallbackKeywords[word], value: word, line: lineNum, column: start + 1 };
       }
+      return { type: TokenType.IDENTIFIER, value: word, line: lineNum, column: start + 1 };
     }
 
-    // Operators
-    if (remaining.startsWith('~>')) {
-      return { type: TokenType.CONFIDENCE_ARROW, value: '~>', line: lineNum, column: start + 1 };
-    }
-    if (remaining[0] === '~') {
-      return { type: TokenType.CONFIDENCE_EXTRACT, value: '~', line: lineNum, column: start + 1 };
-    }
-    if (remaining[0] === '@') {
-      return { type: TokenType.CONFIDENCE, value: '@', line: lineNum, column: start + 1 };
-    }
-    if (remaining[0] === '=') {
-      return { type: TokenType.EQUAL, value: '=', line: lineNum, column: start + 1 };
-    }
-
-    // Delimiters
-    if (remaining[0] === '(') {
-      this.parenDepth++;
-      this.parenStack.push({ type: TokenType.LEFT_PAREN, value: '(', line: lineNum, column: start + 1 });
-      return { type: TokenType.LEFT_PAREN, value: '(', line: lineNum, column: start + 1 };
-    }
-    if (remaining[0] === ')') {
-      this.parenDepth--;
-      if (this.parenStack.length > 0) {
-        this.parenStack.pop();
-      }
-      return { type: TokenType.RIGHT_PAREN, value: ')', line: lineNum, column: start + 1 };
-    }
-    if (remaining[0] === '{') {
-      this.braceDepth++;
-      this.braceStack.push({ type: TokenType.LEFT_BRACE, value: '{', line: lineNum, column: start + 1 });
-      return { type: TokenType.LEFT_BRACE, value: '{', line: lineNum, column: start + 1 };
-    }
-    if (remaining[0] === '}') {
-      this.braceDepth--;
-      if (this.braceStack.length > 0) {
-        this.braceStack.pop();
-      }
-      return { type: TokenType.RIGHT_BRACE, value: '}', line: lineNum, column: start + 1 };
-    }
-    if (remaining[0] === '[') {
-      this.bracketDepth++;
-      this.bracketStack.push({ type: TokenType.LEFT_BRACKET, value: '[', line: lineNum, column: start + 1 });
-      return { type: TokenType.LEFT_BRACKET, value: '[', line: lineNum, column: start + 1 };
-    }
-    if (remaining[0] === ']') {
-      this.bracketDepth--;
-      if (this.bracketStack.length > 0) {
-        this.bracketStack.pop();
-      }
-      return { type: TokenType.RIGHT_BRACKET, value: ']', line: lineNum, column: start + 1 };
-    }
-
-    // Identifiers
-    if (/^[a-zA-Z_]\w*/.test(remaining)) {
-      const match = remaining.match(/^[a-zA-Z_]\w*/);
-      if (match) {
-        return { type: TokenType.IDENTIFIER, value: match[0], line: lineNum, column: start + 1 };
-      }
-    }
-
-    if (/^\d+/.test(remaining)) {
-      const match = remaining.match(/^\d+(\.\d+)?/);
-      if (match) {
-        return { type: TokenType.NUMBER, value: match[0], line: lineNum, column: start + 1 };
+    for (const [operator, type] of fallbackOperators) {
+      if (remaining.startsWith(operator)) {
+        const token: Token = { type, value: operator, line: lineNum, column: start + 1 };
+        switch (type) {
+          case TokenType.LEFT_PAREN:
+            this.parenDepth++;
+            this.parenStack.push(token);
+            break;
+          case TokenType.RIGHT_PAREN:
+            this.parenDepth--;
+            if (this.parenStack.length > 0) this.parenStack.pop();
+            break;
+          case TokenType.LEFT_BRACE:
+            this.braceDepth++;
+            this.braceStack.push(token);
+            break;
+          case TokenType.RIGHT_BRACE:
+            this.braceDepth--;
+            if (this.braceStack.length > 0) this.braceStack.pop();
+            break;
+          case TokenType.LEFT_BRACKET:
+            this.bracketDepth++;
+            this.bracketStack.push(token);
+            break;
+          case TokenType.RIGHT_BRACKET:
+            this.bracketDepth--;
+            if (this.bracketStack.length > 0) this.bracketStack.pop();
+            break;
+          default:
+            break;
+        }
+        return token;
       }
     }
 

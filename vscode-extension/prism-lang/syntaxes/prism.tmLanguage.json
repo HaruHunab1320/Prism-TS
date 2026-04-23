@@ -148,7 +148,7 @@
         },
         {
           "name": "keyword.control.agent.prism",
-          "match": "\\b(agents|agent)\\b"
+          "match": "\\b(agents)\\b"
         },
         {
           "name": "keyword.other.confidence.prism",

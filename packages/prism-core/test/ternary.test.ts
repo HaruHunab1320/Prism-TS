@@ -20,27 +20,28 @@ describe('Ternary Operator', () => {
 
   describe('Basic ternary operations', () => {
     it('should evaluate true branch when condition is true', async () => {
-      const result = await execute('result = true ? "yes" : "no"');
+      const result = await execute('let result = true ? "yes" : "no"\nresult');
       expect(result).toBeInstanceOf(StringValue);
       expect((result as StringValue).value).toBe('yes');
     });
 
     it('should evaluate false branch when condition is false', async () => {
-      const result = await execute('result = false ? "yes" : "no"');
+      const result = await execute('let result = false ? "yes" : "no"\nresult');
       expect(result).toBeInstanceOf(StringValue);
       expect((result as StringValue).value).toBe('no');
     });
 
     it('should work with numeric comparisons', async () => {
-      const result = await execute('result = 10 > 5 ? 100 : 200');
+      const result = await execute('let result = 10 > 5 ? 100 : 200\nresult');
       expect(result).toBeInstanceOf(NumberValue);
       expect((result as NumberValue).value).toBe(100);
     });
 
     it('should work with variables', async () => {
       const result = await execute(`
-        age = 25
-        status = age >= 18 ? "adult" : "minor"
+        let age = 25
+        let status = age >= 18 ? "adult" : "minor"
+        status
       `);
       expect(result).toBeInstanceOf(StringValue);
       expect((result as StringValue).value).toBe('adult');
@@ -50,8 +51,9 @@ describe('Ternary Operator', () => {
   describe('Nested ternary operators', () => {
     it('should handle nested ternary in true branch', async () => {
       const result = await execute(`
-        x = 10
-        result = x > 5 ? (x > 15 ? "high" : "medium") : "low"
+        let x = 10
+        let result = x > 5 ? (x > 15 ? "high" : "medium") : "low"
+        result
       `);
       expect(result).toBeInstanceOf(StringValue);
       expect((result as StringValue).value).toBe('medium');
@@ -59,8 +61,9 @@ describe('Ternary Operator', () => {
 
     it('should handle nested ternary in false branch', async () => {
       const result = await execute(`
-        x = 3
-        result = x > 5 ? "high" : (x > 2 ? "medium" : "low")
+        let x = 3
+        let result = x > 5 ? "high" : (x > 2 ? "medium" : "low")
+        result
       `);
       expect(result).toBeInstanceOf(StringValue);
       expect((result as StringValue).value).toBe('medium');
@@ -70,8 +73,9 @@ describe('Ternary Operator', () => {
   describe('Ternary with confidence values', () => {
     it('should work with confident conditions', async () => {
       const result = await execute(`
-        temp = 22.5 ~> 0.9
-        status = temp > 20 ? "warm" : "cold"
+        let temp = 22.5 ~> 0.9
+        let status = temp > 20 ? "warm" : "cold"
+        status
       `);
       expect(result).toBeInstanceOf(StringValue);
       expect((result as StringValue).value).toBe('warm');
@@ -79,8 +83,9 @@ describe('Ternary Operator', () => {
 
     it('should preserve confidence in branches', async () => {
       const result = await execute(`
-        value = 100 ~> 0.8
-        result = true ? value : 0
+        let value = 100 ~> 0.8
+        let result = true ? value : 0
+        result
       `);
       expect(result).toBeInstanceOf(ConfidenceValue);
       expect((result as ConfidenceValue).confidence.value).toBeCloseTo(0.8);
@@ -88,11 +93,12 @@ describe('Ternary Operator', () => {
 
     it('should handle confidence-based conditions', async () => {
       const result = await execute(`
-        highConf = 100 ~> 0.9
-        lowConf = 100 ~> 0.3
+        let highConf = 100 ~> 0.9
+        let lowConf = 100 ~> 0.3
         
         // Use confidence coalesce to check confidence
-        result = (highConf ~?? 0) == highConf ? "confident" : "uncertain"
+        let result = (highConf ~?? 0) == highConf ? "confident" : "uncertain"
+        result
       `);
       expect(result).toBeInstanceOf(StringValue);
       expect((result as StringValue).value).toBe('confident');
@@ -102,9 +108,10 @@ describe('Ternary Operator', () => {
   describe('Complex expressions', () => {
     it('should work in assignment statements', async () => {
       const result = await execute(`
-        x = 10
-        y = 20
-        max = x > y ? x : y
+        let x = 10
+        let y = 20
+        let max = x > y ? x : y
+        max
       `);
       expect(result).toBeInstanceOf(NumberValue);
       expect((result as NumberValue).value).toBe(20);
@@ -113,8 +120,9 @@ describe('Ternary Operator', () => {
     it('should work with function calls', async () => {
       // Since we can't easily test llm(), let's use a simpler example
       const result = await execute(`
-        hasData = true
-        message = hasData ? "Processing data" : "No data available"
+        let hasData = true
+        let message = hasData ? "Processing data" : "No data available"
+        message
       `);
       expect(result).toBeInstanceOf(StringValue);
       expect((result as StringValue).value).toBe('Processing data');
@@ -122,9 +130,10 @@ describe('Ternary Operator', () => {
 
     it('should handle complex conditions', async () => {
       const result = await execute(`
-        age = 25
-        hasLicense = true
-        canDrive = age >= 16 && hasLicense ? "yes" : "no"
+        let age = 25
+        let hasLicense = true
+        let canDrive = age >= 16 && hasLicense ? "yes" : "no"
+        canDrive
       `);
       expect(result).toBeInstanceOf(StringValue);
       expect((result as StringValue).value).toBe('yes');
@@ -134,17 +143,17 @@ describe('Ternary Operator', () => {
   describe('Error handling', () => {
     it('should provide helpful error for missing colon', async () => {
       try {
-        await execute('result = true ? "yes" "no"');
+        await execute('let result = true ? "yes" "no"');
         fail('Should have thrown an error');
       } catch (error: any) {
         expect(error.message).toContain("Expected ':' after true branch");
-        expect(error.message).toContain('1 | result = true ? "yes" "no"');
+        expect(error.message).toContain('1 | let result = true ? "yes" "no"');
       }
     });
 
     it('should provide helpful error for missing false branch', async () => {
       try {
-        await execute('result = true ? "yes" :');
+        await execute('let result = true ? "yes" :');
         fail('Should have thrown an error');
       } catch (error: any) {
         expect(error.message).toContain("Expected expression");

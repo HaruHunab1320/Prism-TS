@@ -14,12 +14,22 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Reference',
+      collapsed: false,
+      items: [
+        'reference/quick-reference',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Core Concepts',
       items: [
         'concepts/syntax',
         'concepts/confidence-operators',
         'concepts/uncertainty-propagation',
         'concepts/control-flow',
+        'concepts/pattern-matching',
+        'concepts/modules',
         'concepts/syntax-highlighting-demo',
       ],
     },
@@ -69,6 +79,7 @@ const sidebars: SidebarsConfig = {
             'api/confidence/extractor',
             'api/confidence/calibration',
             'api/confidence/patterns',
+            'api/confidence/sources',
           ],
         },
         {
@@ -88,6 +99,7 @@ const sidebars: SidebarsConfig = {
             'api/validator/type-checking',
             'api/validator/linting',
             'api/validator/streaming',
+            'api/validator/utilities',
           ],
         },
       ],

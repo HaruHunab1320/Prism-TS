@@ -1,0 +1,55 @@
+{
+  "name": "@prism-lang/lumina",
+  "version": "0.1.4",
+  "description": "Lumina: A superposition-native LLM architecture for Prism",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "MIT",
+  "private": true,
+  "keywords": [
+    "llm",
+    "machine-learning",
+    "uncertainty",
+    "superposition",
+    "probability",
+    "neural-network",
+    "transformer",
+    "confidence",
+    "prism"
+  ],
+  "homepage": "https://docs.prismlang.dev/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HaruHunab1320/Prism-TS.git",
+    "directory": "packages/lumina"
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "dev": "tsc -b tsconfig.build.json -w",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@prism-lang/confidence": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.30",
+    "@typescript-eslint/eslint-plugin": "^7.3.1",
+    "@typescript-eslint/parser": "^7.3.1",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.4.3"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "VISION.md"
+  ]
+}

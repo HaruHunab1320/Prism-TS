@@ -1,72 +1,39 @@
 # Prism Language Syntax Highlighting
 
-This directory contains the syntax highlighting definition for the Prism programming language.
+Prism.js language definition used by the docs site.
 
-## Features
+<div align="center">
+  <img src="https://docs.prismlang.dev/img/prism-logo-v1.png" width="140" alt="Prism logo" />
+</div>
 
-The syntax highlighter supports all Prism language features:
+## Coverage
 
-### Token Types
-- **Comments** - Single-line comments with `//`
-- **Strings** - Regular and interpolated strings with `${expressions}`
-- **Numbers** - Integers, decimals, and scientific notation
-- **Keywords** - All 25+ keywords including `uncertain`, `high`, `medium`, `low`, `context`, `agents`
-- **Operators** - 40+ operators including all confidence operators
-- **Functions** - Function names and built-in functions like `llm()`
-- **Identifiers** - Variables and properties
+The highlighter covers current Prism syntax, including:
 
-### Confidence Operators
-Special highlighting for Prism's unique confidence operators:
-- `~>` - Confidence assignment
-- `<~` - Confidence extraction
-- `~~` - Confidence chaining
-- `~||>` - Parallel confidence
-- `~@>` - Threshold gate
-- `~+`, `~-`, `~*`, `~/` - Confident arithmetic
-- `~==`, `~!=`, `~<`, `~>` - Confident comparisons
-- `~&&`, `~||` - Confident logical operations
-- And more...
-
-### Themes
-The highlighter includes both light and dark themes with:
-- Distinct colors for confidence operators
-- Semantic coloring for uncertainty levels (high=green, medium=orange, low=red)
-- Special styling for context and agent blocks
-- Proper contrast ratios for accessibility
+- Core keywords (`let`, `const`, `if`, `uncertain`, `match`, etc.)
+- Confidence operators (`~>`, `<~`, `~||>`, `~??`, `~+`, `~-`, `~*`, `~/`)
+- String interpolation (`${...}`)
+- Function calls and built-ins (including `llm()`)
+- Arrays, objects, property/index access, and comments
 
 ## Files
 
-- `prism-language.js` - The Prism.js language definition
-- `README.md` - This documentation file
+- `prism-language.js` - Prism.js language definition
+- `README.md` - Notes for maintainers
 
 ## Usage
 
-The syntax highlighter is automatically loaded by Docusaurus for any code block marked with the `prism` language:
+Any fenced block marked as `prism` in docs will use this grammar:
 
 ````markdown
 ```prism
-// Your Prism code here
-value = 42 ~> 0.9
+const result = llm("Rate this output") ~> 0.82
+console.log(<~ result)
 ```
 ````
 
-## Customization
+## Updating the Grammar
 
-To modify the syntax highlighting:
-
-1. Edit `prism-language.js` to change token patterns
-2. Edit `../css/prism-theme.css` to change colors and styles
-3. Rebuild the documentation site
-
-## Adding New Tokens
-
-To add support for new syntax:
-
-1. Add the token pattern to `prism-language.js`
-2. Add corresponding styles to `prism-theme.css`
-3. Test with example code
-4. Update this README
-
-## Testing
-
-View the [Syntax Highlighting Demo](/docs/concepts/syntax-highlighting-demo) to see all features in action.
+1. Edit `prism-language.js`
+2. Adjust theme tokens in `../css/prism-theme.css` when needed
+3. Rebuild docs and review the syntax demo page

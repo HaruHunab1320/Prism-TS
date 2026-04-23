@@ -185,7 +185,7 @@ describe('Runtime System', () => {
       expect(child.get('x').value).toBe(20); // Shadows parent
     });
 
-    it('should throw on undefined variables', () => {
+    it('should throw on null variables', () => {
       const env = new Environment();
       expect(() => env.get('undefined_var')).toThrow(RuntimeError);
     });
@@ -421,7 +421,7 @@ describe('Runtime System', () => {
 
     it('supports extractor functions to derive confidence', async () => {
       const program = parse(`
-        extractor = response => response.confidence / 2
+        let extractor = response => response.confidence / 2
         llm("Derive confidence", { extractor })
       `);
       const result = await runtime.execute(program);
@@ -445,7 +445,7 @@ describe('Runtime System', () => {
     });
 
     it('should provide meaningful error messages', async () => {
-      const program = parse('x = undefined_var + 5');
+      const program = parse('let x = undefined_var + 5');
       
       try {
         await runtime.execute(program);
@@ -554,10 +554,10 @@ describe('Runtime System', () => {
       runtime.setDefaultLLMProvider('stream');
 
       const program = parse(`
-        handle = stream_llm("hello world")
-        first = await handle.next()
-        second = await handle.next()
-        finalValue = await handle.result()
+        let handle = stream_llm("hello world")
+        let first = await handle.next()
+        let second = await handle.next()
+        let finalValue = await handle.result()
         finalValue
       `);
 
@@ -577,7 +577,7 @@ describe('Runtime System', () => {
       runtime.setDefaultLLMProvider('stream');
 
       const program = parse(`
-        handle = stream_llm("cancel stream")
+        let handle = stream_llm("cancel stream")
         await handle.next()
         handle.cancel()
         await handle.result()
@@ -596,7 +596,7 @@ describe('Runtime System', () => {
 
     it('executes the body at least once even if condition is false', async () => {
       const program = parse(`
-        counter = 0
+        let counter = 0
         do {
           counter = counter + 1
         } while (false)

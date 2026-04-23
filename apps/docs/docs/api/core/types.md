@@ -28,7 +28,6 @@ export type NodeType =
   | 'InterpolatedString'
   | 'BooleanLiteral'
   | 'NullLiteral'
-  | 'UndefinedLiteral'
   | 'ArrayLiteral'
   | 'ObjectLiteral'
   | 'PropertyAccess'
@@ -261,14 +260,6 @@ class BooleanLiteral extends Expression {
 ```typescript
 class NullLiteral extends Expression {
   type: 'NullLiteral';
-}
-```
-
-#### UndefinedLiteral
-
-```typescript
-class UndefinedLiteral extends Expression {
-  type: 'UndefinedLiteral';
 }
 ```
 
@@ -660,7 +651,6 @@ Expression
 │   ├── StringLiteral
 │   ├── BooleanLiteral
 │   ├── NullLiteral
-│   └── UndefinedLiteral
 ├── IdentifierExpression
 ├── Operations
 │   ├── BinaryExpression

@@ -40,9 +40,10 @@ describe('Performance Benchmarks', () => {
     it('should parse complex programs efficiently', () => {
       const complexProgram = `
         // Variables with confidence
-        ${Array(100).fill('x = 42 ~> 0.8').map((v, i) => v.replace('x', `var${i}`)).join('\n')}
+        ${Array(100).fill('let x = 42 ~> 0.8').map((v, i) => v.replace('x', `var${i}`)).join('\n')}
         
         // Calculations
+        let result = 0
         ${Array(50).fill('result = var0 + var1 * var2').join('\n')}
         
         // Conditional logic
@@ -67,7 +68,7 @@ describe('Performance Benchmarks', () => {
   describe('runtime performance', () => {
     it('should execute arithmetic operations efficiently', async () => {
       const program = parse(`
-        result = 0
+        let result = 0
         ${Array(1000).fill('result = result + 1').join('\n')}
       `);
       
@@ -81,9 +82,10 @@ describe('Performance Benchmarks', () => {
 
     it('should handle confidence propagation efficiently', async () => {
       const program = parse(`
-        a = 10 ~> 0.9
-        b = 20 ~> 0.8
-        c = 30 ~> 0.7
+        let a = 10 ~> 0.9
+        let b = 20 ~> 0.8
+        let c = 30 ~> 0.7
+        let result = 0
         
         ${Array(100).fill('result = a ~+ b ~* c').join('\n')}
       `);
@@ -98,10 +100,10 @@ describe('Performance Benchmarks', () => {
     it('should handle variable lookups efficiently', async () => {
       const program = parse(`
         // Create many variables
-        ${Array(500).fill('x = 42').map((v, i) => v.replace('x', `var${i}`)).join('\n')}
+        ${Array(500).fill('let x = 42').map((v, i) => v.replace('x', `var${i}`)).join('\n')}
         
         // Access them
-        sum = 0
+        let sum = 0
         ${Array(500).fill('sum = sum + var').map((v, i) => v + i).join('\n')}
       `);
       
@@ -119,6 +121,7 @@ describe('Performance Benchmarks', () => {
       const program = parse('x = 42 + 58');
       
       // Get initial memory usage
+      await runtime.execute(parse('let x = 0'));
       if (global.gc) global.gc();
       const initialMemory = process.memoryUsage().heapUsed;
       
@@ -141,8 +144,8 @@ describe('Performance Benchmarks', () => {
     it.skip('should show minimal overhead for confidence operators', async () => {
       // Regular operators
       const regularProgram = parse(`
-        a = 10
-        b = 20
+        let a = 10
+        let b = 20
         ${Array(100).fill('result = a + b * 2 - 5').join('\n')}
       `);
       
@@ -153,8 +156,8 @@ describe('Performance Benchmarks', () => {
       
       // Confidence operators
       const confidentProgram = parse(`
-        a = 10 ~> 0.9
-        b = 20 ~> 0.8
+        let a = 10 ~> 0.9
+        let b = 20 ~> 0.8
         ${Array(100).fill('result = a ~+ b ~* 2 ~- 5').join('\n')}
       `);
       

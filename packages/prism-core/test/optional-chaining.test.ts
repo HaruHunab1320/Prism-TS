@@ -21,8 +21,8 @@ describe('Optional Chaining', () => {
   describe('Basic optional chaining', () => {
     it('should return null for null object', async () => {
       const code = `
-        obj = null
-        result = obj?.name
+        let obj = null
+        let result = obj?.name
         result
       `;
       const result = await execute(code);
@@ -31,8 +31,8 @@ describe('Optional Chaining', () => {
 
     it('should return property value for non-null object', async () => {
       const code = `
-        obj = { name: "Alice", age: 30 }
-        result = obj?.name
+        let obj = { name: "Alice", age: 30 }
+        let result = obj?.name
         result
       `;
       const result = await execute(code);
@@ -42,8 +42,8 @@ describe('Optional Chaining', () => {
 
     it('should return null for missing property', async () => {
       const code = `
-        obj = { name: "Alice" }
-        result = obj?.email
+        let obj = { name: "Alice" }
+        let result = obj?.email
         result
       `;
       const result = await execute(code);
@@ -54,8 +54,8 @@ describe('Optional Chaining', () => {
   describe('Chained optional access', () => {
     it('should handle multiple optional chains', async () => {
       const code = `
-        user = { profile: { name: "Bob" } }
-        result = user?.profile?.name
+        let user = { profile: { name: "Bob" } }
+        let result = user?.profile?.name
         result
       `;
       const result = await execute(code);
@@ -65,8 +65,8 @@ describe('Optional Chaining', () => {
 
     it('should short-circuit on null', async () => {
       const code = `
-        user = { profile: null }
-        result = user?.profile?.name
+        let user = { profile: null }
+        let result = user?.profile?.name
         result
       `;
       const result = await execute(code);
@@ -75,7 +75,7 @@ describe('Optional Chaining', () => {
 
     it('should handle deeply nested chains', async () => {
       const code = `
-        data = { 
+        let data = { 
           level1: { 
             level2: { 
               level3: { 
@@ -84,7 +84,7 @@ describe('Optional Chaining', () => {
             } 
           } 
         }
-        result = data?.level1?.level2?.level3?.value
+        let result = data?.level1?.level2?.level3?.value
         result
       `;
       const result = await execute(code);
@@ -96,8 +96,8 @@ describe('Optional Chaining', () => {
   describe('Mixed with regular property access', () => {
     it('should work with regular dot notation', async () => {
       const code = `
-        obj = { user: { name: "Charlie" } }
-        result = obj.user?.name
+        let obj = { user: { name: "Charlie" } }
+        let result = obj.user?.name
         result
       `;
       const result = await execute(code);
@@ -107,8 +107,8 @@ describe('Optional Chaining', () => {
 
     it('should throw on regular access to null', async () => {
       const code = `
-        obj = { user: null }
-        result = obj.user.name
+        let obj = { user: null }
+        let result = obj.user.name
       `;
       await expect(execute(code)).rejects.toThrow();
     });
@@ -117,8 +117,8 @@ describe('Optional Chaining', () => {
   describe('With arrays', () => {
     it('should access array length with optional chaining', async () => {
       const code = `
-        arr = [1, 2, 3]
-        result = arr?.length
+        let arr = [1, 2, 3]
+        let result = arr?.length
         result
       `;
       const result = await execute(code);
@@ -128,8 +128,8 @@ describe('Optional Chaining', () => {
 
     it('should return null for null array', async () => {
       const code = `
-        arr = null
-        result = arr?.length
+        let arr = null
+        let result = arr?.length
         result
       `;
       const result = await execute(code);
@@ -140,8 +140,8 @@ describe('Optional Chaining', () => {
   describe('With confidence values', () => {
     it('should preserve confidence through optional chain', async () => {
       const code = `
-        obj = { score: 85 } ~> 0.9
-        result = obj?.score
+        let obj = { score: 85 } ~> 0.9
+        let result = obj?.score
         <~ result
       `;
       const result = await execute(code);
@@ -150,8 +150,8 @@ describe('Optional Chaining', () => {
 
     it('should return null for null with confidence', async () => {
       const code = `
-        obj = null ~> 0.8
-        result = obj?.name
+        let obj = null ~> 0.8
+        let result = obj?.name
         result
       `;
       const result = await execute(code);
@@ -162,8 +162,8 @@ describe('Optional Chaining', () => {
   describe('Complex scenarios', () => {
     it('should handle optional chaining in expressions', async () => {
       const code = `
-        user = { age: 25 }
-        canDrink = user?.age >= 21
+        let user = { age: 25 }
+        let canDrink = user?.age >= 21
         canDrink
       `;
       const result = await execute(code);
@@ -172,8 +172,8 @@ describe('Optional Chaining', () => {
 
     it('should work with ternary operators', async () => {
       const code = `
-        user = null
-        greeting = user?.name ? "Hello, " + user.name : "Hello, Guest"
+        let user = null
+        let greeting = user?.name ? "Hello, " + user.name : "Hello, Guest"
         greeting
       `;
       const result = await execute(code);
@@ -182,9 +182,9 @@ describe('Optional Chaining', () => {
 
     it('should handle optional chaining with null fallback', async () => {
       const code = `
-        config = { settings: null }
-        theme = config?.settings?.theme
-        defaultTheme = theme != null ? theme : "light"
+        let config = { settings: null }
+        let theme = config?.settings?.theme
+        let defaultTheme = theme != null ? theme : "light"
         defaultTheme
       `;
       const result = await execute(code);

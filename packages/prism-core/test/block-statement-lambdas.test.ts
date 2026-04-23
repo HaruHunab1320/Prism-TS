@@ -19,16 +19,16 @@ describe('Block-Statement Lambdas', () => {
   describe('Basic block-statement lambda syntax', () => {
     it('should parse single-parameter lambda with block body', () => {
       const program = parse(`
-        lambda = x => {
+        let lambda = x => {
           return x * 2
         }
       `);
       
       expect(program.statements).toHaveLength(1);
-      const assignment = program.statements[0];
-      expect(assignment.type).toBe('AssignmentStatement');
+      const declaration = program.statements[0] as VariableDeclaration;
+      expect(declaration.type).toBe('VariableDeclaration');
       
-      const lambda = (assignment as any).value as LambdaExpression;
+      const lambda = (declaration as any).initializer as LambdaExpression;
       expect(lambda).toBeInstanceOf(LambdaExpression);
       expect(lambda.parameters).toEqual(['x']);
       expect(lambda.body.type).toBe('BlockStatement');
@@ -40,14 +40,14 @@ describe('Block-Statement Lambdas', () => {
 
     it('should parse multi-parameter lambda with block body', () => {
       const program = parse(`
-        lambda = (x, y) => {
+        let lambda = (x, y) => {
           const sum = x + y
           return sum
         }
       `);
       
-      const assignment = program.statements[0];
-      const lambda = (assignment as any).value as LambdaExpression;
+      const declaration = program.statements[0] as VariableDeclaration;
+      const lambda = (declaration as any).initializer as LambdaExpression;
       expect(lambda.parameters).toEqual(['x', 'y']);
       expect(lambda.body.type).toBe('BlockStatement');
       
@@ -59,14 +59,14 @@ describe('Block-Statement Lambdas', () => {
 
     it('should parse lambda with zero parameters and block body', () => {
       const program = parse(`
-        lambda = () => {
+        let lambda = () => {
           const value = 42
           return value
         }
       `);
       
-      const assignment = program.statements[0];
-      const lambda = (assignment as any).value as LambdaExpression;
+      const declaration = program.statements[0] as VariableDeclaration;
+      const lambda = (declaration as any).initializer as LambdaExpression;
       expect(lambda.parameters).toEqual([]);
       expect(lambda.body.type).toBe('BlockStatement');
     });
@@ -75,10 +75,10 @@ describe('Block-Statement Lambdas', () => {
   describe('Block-statement lambda execution', () => {
     it('should execute simple block lambda with return', async () => {
       const program = parse(`
-        double = x => {
+        let double = x => {
           return x * 2
         }
-        result = double(5)
+        let result = double(5)
       `);
       
       await runtime.execute(program);
@@ -87,12 +87,12 @@ describe('Block-Statement Lambdas', () => {
 
     it('should execute multi-statement block lambda', async () => {
       const program = parse(`
-        process = x => {
+        let process = x => {
           let doubled = x * 2
           let incremented = doubled + 1
           return incremented
         }
-        result = process(10)
+        let result = process(10)
       `);
       
       await runtime.execute(program);
@@ -101,12 +101,12 @@ describe('Block-Statement Lambdas', () => {
 
     it('should execute lambda with variable declarations', async () => {
       const program = parse(`
-        calculate = (a, b) => {
+        let calculate = (a, b) => {
           const sum = a + b
           const product = a * b
           return sum + product
         }
-        result = calculate(3, 4)
+        let result = calculate(3, 4)
       `);
       
       await runtime.execute(program);
@@ -115,10 +115,10 @@ describe('Block-Statement Lambdas', () => {
 
     it('should handle lambda without explicit return (default to 0)', async () => {
       const program = parse(`
-        noReturn = x => {
+        let noReturn = x => {
           let temp = x * 2
         }
-        result = noReturn(5)
+        let result = noReturn(5)
       `);
       
       await runtime.execute(program);
@@ -127,15 +127,15 @@ describe('Block-Statement Lambdas', () => {
 
     it('should handle early return in lambda block', async () => {
       const program = parse(`
-        earlyReturn = x => {
+        let earlyReturn = x => {
           if (x > 10) {
             return x * 2
           }
           let doubled = x * 3
           return doubled
         }
-        result1 = earlyReturn(15)
-        result2 = earlyReturn(5)
+        let result1 = earlyReturn(15)
+        let result2 = earlyReturn(5)
       `);
       
       await runtime.execute(program);
@@ -147,8 +147,8 @@ describe('Block-Statement Lambdas', () => {
   describe('Block lambda with array methods', () => {
     it('should work with map using block lambdas', async () => {
       const program = parse(`
-        numbers = [1, 2, 3, 4, 5]
-        doubled = numbers.map(x => {
+        let numbers = [1, 2, 3, 4, 5]
+        let doubled = numbers.map(x => {
           const result = x * 2
           return result
         })
@@ -161,8 +161,8 @@ describe('Block-Statement Lambdas', () => {
 
     it('should work with filter using block lambdas', async () => {
       const program = parse(`
-        numbers = [1, 2, 3, 4, 5, 6]
-        evens = numbers.filter(x => {
+        let numbers = [1, 2, 3, 4, 5, 6]
+        let evens = numbers.filter(x => {
           const remainder = x % 2
           return remainder == 0
         })
@@ -175,8 +175,8 @@ describe('Block-Statement Lambdas', () => {
 
     it('should work with reduce using block lambdas', async () => {
       const program = parse(`
-        numbers = [1, 2, 3, 4]
-        sum = numbers.reduce((acc, x) => {
+        let numbers = [1, 2, 3, 4]
+        let sum = numbers.reduce((acc, x) => {
           const newAcc = acc + x
           return newAcc
         }, 0)
@@ -190,14 +190,14 @@ describe('Block-Statement Lambdas', () => {
   describe('Nested block lambdas', () => {
     it('should handle nested block lambdas', async () => {
       const program = parse(`
-        makeMultiplier = x => {
+        let makeMultiplier = x => {
           return y => {
             const result = x * y
             return result
           }
         }
-        triple = makeMultiplier(3)
-        result = triple(4)
+        let triple = makeMultiplier(3)
+        let result = triple(4)
       `);
       
       await runtime.execute(program);
@@ -206,7 +206,7 @@ describe('Block-Statement Lambdas', () => {
 
     it('should handle complex nested scenarios', async () => {
       const program = parse(`
-        processData = data => {
+        let processData = data => {
           const filtered = data.filter(x => {
             return x > 0
           })
@@ -216,8 +216,8 @@ describe('Block-Statement Lambdas', () => {
           })
           return doubled
         }
-        input = [-1, 2, -3, 4, 5]
-        result = processData(input)
+        let input = [-1, 2, -3, 4, 5]
+        let result = processData(input)
       `);
       
       await runtime.execute(program);
@@ -229,12 +229,12 @@ describe('Block-Statement Lambdas', () => {
   describe('Block lambda scope and closures', () => {
     it('should properly capture closure variables', async () => {
       const program = parse(`
-        outer = 10
-        lambda = x => {
+        let outer = 10
+        let lambda = x => {
           const inner = x + outer
           return inner
         }
-        result = lambda(5)
+        let result = lambda(5)
       `);
       
       await runtime.execute(program);
@@ -243,11 +243,11 @@ describe('Block-Statement Lambdas', () => {
 
     it('should isolate block lambda scope', async () => {
       const program = parse(`
-        lambda = x => {
+        let lambda = x => {
           const local = x * 2
           return local
         }
-        result = lambda(5)
+        let result = lambda(5)
       `);
       
       await runtime.execute(program);
@@ -257,13 +257,13 @@ describe('Block-Statement Lambdas', () => {
 
     it('should handle variable shadowing in block lambdas', async () => {
       const program = parse(`
-        x = 100
-        lambda = x => {
+        let x = 100
+        let lambda = x => {
           const x = 42  // Shadows parameter
           return x
         }
-        result = lambda(10)
-        outer = x
+        let result = lambda(10)
+        let outer = x
       `);
       
       await runtime.execute(program);
@@ -275,11 +275,11 @@ describe('Block-Statement Lambdas', () => {
   describe('Block lambda with confidence expressions', () => {
     it('should work with confidence values', async () => {
       const program = parse(`
-        confident = x => {
+        let confident = x => {
           const result = x ~> 0.9
           return result
         }
-        result = confident(100)
+        let result = confident(100)
       `);
       
       await runtime.execute(program);
@@ -289,12 +289,12 @@ describe('Block-Statement Lambdas', () => {
 
     it('should propagate confidence through block lambda', async () => {
       const program = parse(`
-        process = x => {
+        let process = x => {
           const doubled = x * 2
           return doubled ~> 0.8
         }
-        numbers = [10, 20, 30]
-        results = numbers.map(process)
+        let numbers = [10, 20, 30]
+        let results = numbers.map(process)
       `);
       
       await runtime.execute(program);
@@ -306,14 +306,14 @@ describe('Block-Statement Lambdas', () => {
   describe('Mixed expression and block lambda syntax', () => {
     it('should support both expression and block lambdas in same program', async () => {
       const program = parse(`
-        simple = x => x * 2
-        complex = x => {
+        let simple = x => x * 2
+        let complex = x => {
           const doubled = x * 2
           const incremented = doubled + 1
           return incremented
         }
-        result1 = simple(5)
-        result2 = complex(5)
+        let result1 = simple(5)
+        let result2 = complex(5)
       `);
       
       await runtime.execute(program);
@@ -323,9 +323,9 @@ describe('Block-Statement Lambdas', () => {
 
     it('should handle arrays with mixed lambda types', async () => {
       const program = parse(`
-        numbers = [1, 2, 3]
-        simple = numbers.map(x => x * 2)
-        complex = numbers.map(x => {
+        let numbers = [1, 2, 3]
+        let simple = numbers.map(x => x * 2)
+        let complex = numbers.map(x => {
           const doubled = x * 2
           return doubled + 1
         })
@@ -342,7 +342,7 @@ describe('Block-Statement Lambdas', () => {
   describe('Error cases', () => {
     it('should handle syntax errors in block lambda', () => {
       expect(() => parse(`
-        lambda = x => {
+        let lambda = x => {
           return x *
         }
       `)).toThrow();
@@ -350,16 +350,16 @@ describe('Block-Statement Lambdas', () => {
 
     it('should handle unclosed block in lambda', () => {
       expect(() => parse(`
-        lambda = x => {
+        let lambda = x => {
           return x * 2
       `)).toThrow();
     });
 
     it('should handle empty block lambda', async () => {
       const program = parse(`
-        empty = x => {
+        let empty = x => {
         }
-        result = empty(5)
+        let result = empty(5)
       `);
       
       await runtime.execute(program);
@@ -370,14 +370,14 @@ describe('Block-Statement Lambdas', () => {
   describe('Complex scenarios', () => {
     it('should handle block lambda with loops', async () => {
       const program = parse(`
-        factorial = n => {
+        let factorial = n => {
           let result = 1
-          for i = 1; i <= n; i = i + 1 {
+          for let i = 1; i <= n; i = i + 1 {
             result = result * i
           }
           return result
         }
-        result = factorial(5)
+        let result = factorial(5)
       `);
       
       await runtime.execute(program);
@@ -386,8 +386,8 @@ describe('Block-Statement Lambdas', () => {
 
     it('should handle block lambda with uncertain control flow', async () => {
       const program = parse(`
-        process = x => {
-          confident = (x > 5) ~> 0.8
+        let process = x => {
+          let confident = (x > 5) ~> 0.8
           uncertain if (confident) {
             high { return x * 2 }
             medium { return x * 1.5 }
@@ -395,7 +395,7 @@ describe('Block-Statement Lambdas', () => {
           }
           return 0
         }
-        result = process(10)
+        let result = process(10)
       `);
       
       await runtime.execute(program);
@@ -406,11 +406,11 @@ describe('Block-Statement Lambdas', () => {
 
     it('should handle destructuring parameters in block lambda', async () => {
       const program = parse(`
-        extract = ([a, b]) => {
+        let extract = ([a, b]) => {
           const sum = a + b
           return sum
         }
-        result = extract([10, 20])
+        let result = extract([10, 20])
       `);
       
       await runtime.execute(program);

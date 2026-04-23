@@ -173,6 +173,41 @@ describe('TypeChecker', () => {
       expect(result.errors[0].code).toBe('UNDEFINED_PROPERTY');
     });
 
+    test('should validate dynamic object index with string key', () => {
+      const code = `
+        weights = { bg: 0.7, fg: 0.3 }
+        key = "bg"
+        selected = weights[key]
+      `;
+      const ast = parse(code);
+      const result = typeChecker.checkTypes(ast);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    test('should detect non-string object index', () => {
+      const code = `
+        obj = { a: 1 }
+        value = obj[0]
+      `;
+      const ast = parse(code);
+      const result = typeChecker.checkTypes(ast);
+      expect(result.valid).toBe(false);
+      expect(result.errors[0].code).toBe('INVALID_INDEX_TYPE');
+      expect(result.errors[0].expectedType).toBe('string');
+    });
+
+    test('should detect missing object property with string-literal index', () => {
+      const code = `
+        obj = { a: 1 }
+        value = obj["missing"]
+      `;
+      const ast = parse(code);
+      const result = typeChecker.checkTypes(ast);
+      expect(result.valid).toBe(false);
+      expect(result.errors[0].code).toBe('UNDEFINED_PROPERTY');
+    });
+
     test('should validate uncertain if with confidence', () => {
       const code = `
         x = llm("test")

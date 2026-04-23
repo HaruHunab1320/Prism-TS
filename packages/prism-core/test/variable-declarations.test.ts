@@ -95,7 +95,7 @@ describe('Variable Declarations', () => {
       const program = parse(`let x`);
       
       await runtime.execute(program);
-      expect(runtime.getVariable('x').value).toBe(0);
+      expect(runtime.getVariable('x').value).toBe(null);
     });
 
     it('should allow reassignment to let variable', async () => {
@@ -117,7 +117,7 @@ describe('Variable Declarations', () => {
           const inner = 20
           return inner + outer
         }
-        result = test()
+        let result = test()
       `);
       
       await runtime.execute(program);
@@ -132,7 +132,7 @@ describe('Variable Declarations', () => {
           let inner = 15
           return inner + outer
         }
-        result = test()
+        let result = test()
       `);
       
       await runtime.execute(program);
@@ -156,7 +156,7 @@ describe('Variable Declarations', () => {
           const x = 20
           return x
         }
-        inner = test()
+        let inner = test()
       `);
       
       await runtime.execute(program);
@@ -235,9 +235,9 @@ describe('Variable Declarations', () => {
     it('should coexist with legacy assignment', async () => {
       const program = parse(`
         const x = 10
-        y = 20
+        let y = 20
         let z = 30
-        result = x + y + z
+        let result = x + y + z
       `);
       
       await runtime.execute(program);
@@ -279,7 +279,7 @@ describe('Variable Declarations', () => {
         }
         
         const input = 5
-        output = processData(input)
+        let output = processData(input)
       `);
       
       await runtime.execute(program);

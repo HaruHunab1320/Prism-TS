@@ -32,12 +32,6 @@ describe('typeof operator', () => {
       const result = await runtime.execute(program);
       expect(result.value).toBe('null');
     });
-
-    it('should return "undefined" for undefined', async () => {
-      const program = parse(`typeof undefined`);
-      const result = await runtime.execute(program);
-      expect(result.value).toBe('undefined');
-    });
   });
 
   describe('Complex types', () => {
@@ -55,7 +49,7 @@ describe('typeof operator', () => {
 
     it('should return "function" for functions', async () => {
       const program = parse(`
-        f = x => x * 2;
+        let f = x => x * 2;
         typeof f
       `);
       const result = await runtime.execute(program);
@@ -66,7 +60,7 @@ describe('typeof operator', () => {
   describe('Variables', () => {
     it('should work with variables', async () => {
       const program = parse(`
-        x = 42;
+        let x = 42;
         typeof x
       `);
       const result = await runtime.execute(program);
@@ -97,7 +91,7 @@ describe('typeof operator', () => {
   describe('Type checking patterns', () => {
     it('should work in conditional expressions', async () => {
       const program = parse(`
-        x = "hello";
+        let x = "hello";
         typeof x == "string" ? "It's a string!" : "Not a string"
       `);
       const result = await runtime.execute(program);
@@ -106,8 +100,8 @@ describe('typeof operator', () => {
 
     it('should work with function type checking', async () => {
       const program = parse(`
-        add = (a, b) => a + b;
-        isFunction = typeof add == "function";
+        let add = (a, b) => a + b;
+        let isFunction = typeof add == "function";
         isFunction
       `);
       const result = await runtime.execute(program);
@@ -116,10 +110,10 @@ describe('typeof operator', () => {
 
     it('should distinguish arrays from objects', async () => {
       const program = parse(`
-        arr = [1, 2, 3];
-        obj = {a: 1, b: 2};
-        arrType = typeof arr;
-        objType = typeof obj;
+        let arr = [1, 2, 3];
+        let obj = {a: 1, b: 2};
+        let arrType = typeof arr;
+        let objType = typeof obj;
         arrType + " vs " + objType
       `);
       const result = await runtime.execute(program);

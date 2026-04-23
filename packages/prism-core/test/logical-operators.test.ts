@@ -27,8 +27,8 @@ describe('Logical Operators with Type Coercion', () => {
       expect(result.value).toBe("fallback");
     });
 
-    it('should work with undefined values', async () => {
-      const program = parse('undefined || 42');
+    it('should work with null values', async () => {
+      const program = parse('null || 42');
       const result = await runtime.execute(program);
       expect(result.value).toBe(42);
     });
@@ -41,9 +41,9 @@ describe('Logical Operators with Type Coercion', () => {
 
     it('should work with variables', async () => {
       const program = parse(`
-        userInput = ""
-        defaultValue = "anonymous"
-        name = userInput || defaultValue
+        let userInput = ""
+        let defaultValue = "anonymous"
+        let name = userInput || defaultValue
         name
       `);
       const result = await runtime.execute(program);
@@ -52,7 +52,7 @@ describe('Logical Operators with Type Coercion', () => {
 
     it('should preserve confidence values', async () => {
       const program = parse(`
-        value = (100 ~> 0.8) || "fallback"
+        let value = (100 ~> 0.8) || "fallback"
         value
       `);
       const result = await runtime.execute(program);
@@ -62,9 +62,9 @@ describe('Logical Operators with Type Coercion', () => {
 
     it('should short-circuit evaluation', async () => {
       const program = parse(`
-        callCount = 0
-        increment = () => callCount + 1
-        result = "truthy" || increment()
+        let callCount = 0
+        let increment = () => callCount + 1
+        let result = "truthy" || increment()
         result + " calls: " + callCount
       `);
       const result = await runtime.execute(program);
@@ -73,10 +73,10 @@ describe('Logical Operators with Type Coercion', () => {
 
     it('should chain multiple OR operations', async () => {
       const program = parse(`
-        first = null
-        second = 0
-        third = "found"
-        result = first || second || third || "default"
+        let first = null
+        let second = 0
+        let third = "found"
+        let result = first || second || third || "default"
         result
       `);
       const result = await runtime.execute(program);
@@ -85,9 +85,9 @@ describe('Logical Operators with Type Coercion', () => {
 
     it('should work with array properties', async () => {
       const program = parse(`
-        arr = []
-        fallback = [1, 2, 3]
-        result = arr.length || fallback.length
+        let arr = []
+        let fallback = [1, 2, 3]
+        let result = arr.length || fallback.length
         result
       `);
       const result = await runtime.execute(program);
@@ -114,18 +114,18 @@ describe('Logical Operators with Type Coercion', () => {
       expect(result.value).toBe(null);
     });
 
-    it('should work with undefined values', async () => {
-      const program = parse('42 && undefined');
+    it('should work with null values', async () => {
+      const program = parse('42 && null');
       const result = await runtime.execute(program);
-      expect(result.type).toBe('undefined');
+      expect(result.type).toBe('null');
     });
 
     it('should short-circuit on falsy', async () => {
       const program = parse(`
-        callCount = 0
-        increment = () => callCount + 1  
-        result = false && increment()
-        resultStr = result + ""
+        let callCount = 0
+        let increment = () => callCount + 1  
+        let result = false && increment()
+        let resultStr = result + ""
         resultStr + " calls: " + callCount
       `);
       const result = await runtime.execute(program);
@@ -134,7 +134,7 @@ describe('Logical Operators with Type Coercion', () => {
 
     it('should chain multiple AND operations', async () => {
       const program = parse(`
-        result = 1 && 2 && 3 && 4
+        let result = 1 && 2 && 3 && 4
         result
       `);
       const result = await runtime.execute(program);
@@ -143,7 +143,7 @@ describe('Logical Operators with Type Coercion', () => {
 
     it('should preserve confidence values when truthy', async () => {
       const program = parse(`
-        value = "test" && (100 ~> 0.8)
+        let value = "test" && (100 ~> 0.8)
         value
       `);
       const result = await runtime.execute(program);
@@ -167,11 +167,11 @@ describe('Logical Operators with Type Coercion', () => {
 
     it('should handle complex expressions', async () => {
       const program = parse(`
-        a = null
-        b = ""
-        c = "default"
-        d = 42
-        result = a || b || (c && d)
+        let a = null
+        let b = ""
+        let c = "default"
+        let d = 42
+        let result = a || b || (c && d)
         result
       `);
       const result = await runtime.execute(program);
@@ -180,9 +180,9 @@ describe('Logical Operators with Type Coercion', () => {
 
     it('should work in conditions', async () => {
       const program = parse(`
-        userRole = ""
-        defaultRole = "guest"
-        role = userRole || defaultRole
+        let userRole = ""
+        let defaultRole = "guest"
+        let role = userRole || defaultRole
         if (role == "guest") {
           "is guest"
         } else {
@@ -215,8 +215,8 @@ describe('Logical Operators with Type Coercion', () => {
 
     it('should work in while loops', async () => {
       const program = parse(`
-        count = 3
-        result = ""
+        let count = 3
+        let result = ""
         while (count || false) {
           result = result + count
           count = count - 1

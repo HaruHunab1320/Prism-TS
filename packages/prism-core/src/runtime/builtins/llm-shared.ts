@@ -4,7 +4,6 @@ import {
   NumberValue,
   BooleanValue,
   NullValue,
-  UndefinedValue,
   ObjectValue,
   ArrayValue,
   FunctionValue,
@@ -33,7 +32,7 @@ export function extractPrompt(value: Value): string {
 }
 
 export function parseLLMOptions(optionsValue?: Value): ParsedLLMCallOptions {
-  if (!optionsValue || optionsValue instanceof UndefinedValue || optionsValue instanceof NullValue) {
+  if (!optionsValue || optionsValue instanceof NullValue) {
     return { requestOptions: {} };
   }
 
@@ -156,7 +155,7 @@ export function convertToValue(input: unknown): Value {
     return new NullValue();
   }
   if (input === undefined) {
-    return new UndefinedValue();
+    return new NullValue();
   }
   if (Array.isArray(input)) {
     return new ArrayValue(input.map(item => convertToValue(item)));
@@ -168,7 +167,7 @@ export function convertToValue(input: unknown): Value {
     }
     return new ObjectValue(props);
   }
-  return new UndefinedValue();
+  return new NullValue();
 }
 
 function getProperty(obj: ObjectValue, key: string): Value | undefined {
@@ -176,7 +175,7 @@ function getProperty(obj: ObjectValue, key: string): Value | undefined {
 }
 
 function isPresent(value?: Value): boolean {
-  return !!value && !(value instanceof UndefinedValue) && !(value instanceof NullValue);
+  return !!value && !(value instanceof NullValue) && !(value instanceof NullValue);
 }
 
 function expectString(value: Value, field: string): string {

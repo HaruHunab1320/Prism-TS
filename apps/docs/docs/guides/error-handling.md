@@ -168,7 +168,7 @@ async function robustQuery(query: string) {
 
 Handle errors in uncertain control flow:
 
-```prism
+```javascript
 // Prism code with uncertain control flow
 uncertain if (condition) {
   // This might execute based on confidence

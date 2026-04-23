@@ -1,0 +1,19 @@
+project: argos-434718
+zone: us-west1-b
+machine_type: a2-highgpu-1g
+bucket: gs://lumina-checkpoints-argos-2026
+repo_url: https://github.com/HaruHunab1320/Prism-TS.git
+image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
+image_project: deeplearning-platform-release
+
+experiments:
+  - name: lumina-hq-v2-stageb-conf-002
+    commands:
+      - gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-hq-v2-stagea-002/outputs_gen/ outputs_gen/
+      - python -m training.train_gpt2_confidence --data-root datasets_hq_v2_curated --domain general --epochs 2 --batch-size 8 --max-train-samples 40000 --max-val-samples 5000 --freeze-base --output outputs_gpt2_v2
+      - python -m training.train_gpt2_confidence --data-root datasets_hq_v2_curated --domain math --epochs 2 --batch-size 8 --max-train-samples 10433 --max-val-samples 549 --freeze-base --output outputs_gpt2_v2
+      - python -m training.train_gpt2_confidence --data-root datasets_hq_v2_curated --domain code --epochs 2 --batch-size 8 --max-train-samples 18918 --max-val-samples 995 --freeze-base --output outputs_gpt2_v2
+      - DATA_ROOT=datasets_hq_v2_curated OUTPUTS_GPT2_DIR=outputs_gpt2_v2 MAX_SAMPLES=5000 OUT_PATH=outputs_gpt2_v2/conf_calibration_hq_v2_stageb_sweep.json bash tools/build_conf_calibration_hq_med.sh
+      - DATA_ROOT=datasets_hq_v2_curated OUTPUTS_GPT2_DIR=outputs_gpt2_v2 OUTPUTS_GEN_DIR=outputs_gen GENERATOR_MODEL=gpt2-medium CONF_CALIB=outputs_gpt2_v2/conf_calibration_hq_v2_stageb_sweep.json LOG_PATH=logs/agg_hq_v2_stageb_conf_a035_m003.txt MAX_SAMPLES=5000 ABSTAIN_THRESHOLD=0.35 CONFLICT_MARGIN=0.03 ALPHA=0.5 TOP_K=2 bash tools/run_aggregator_hq_med_5000.sh
+      - DATA_ROOT=datasets_hq_v2_curated OUTPUTS_GPT2_DIR=outputs_gpt2_v2 OUTPUTS_GEN_DIR=outputs_gen GENERATOR_MODEL=gpt2-medium CONF_CALIB=outputs_gpt2_v2/conf_calibration_hq_v2_stageb_sweep.json LOG_PATH=logs/agg_hq_v2_stageb_conf_a045_m003.txt MAX_SAMPLES=5000 ABSTAIN_THRESHOLD=0.45 CONFLICT_MARGIN=0.03 ALPHA=0.5 TOP_K=2 bash tools/run_aggregator_hq_med_5000.sh
+      - DATA_ROOT=datasets_hq_v2_curated OUTPUTS_GPT2_DIR=outputs_gpt2_v2 OUTPUTS_GEN_DIR=outputs_gen GENERATOR_MODEL=gpt2-medium CONF_CALIB=outputs_gpt2_v2/conf_calibration_hq_v2_stageb_sweep.json LOG_PATH=logs/agg_hq_v2_stageb_conf_a055_m003.txt MAX_SAMPLES=5000 ABSTAIN_THRESHOLD=0.55 CONFLICT_MARGIN=0.03 ALPHA=0.5 TOP_K=2 bash tools/run_aggregator_hq_med_5000.sh

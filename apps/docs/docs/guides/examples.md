@@ -11,16 +11,16 @@ This guide provides complete example implementations showcasing various Prism fe
 
 ### 1. Simple Confidence Assignment
 
-```prism
+```javascript
 // Basic confidence assignment
-weather_prediction = "sunny" ~> 0.85
-temperature = 72 ~> 0.95
+let weather_prediction = "sunny" ~> 0.85
+let temperature = 72 ~> 0.95
 
 // Confidence extraction
-prediction_confidence = <~ weather_prediction  // 0.85
+let prediction_confidence = <~ weather_prediction  // 0.85
 
 // Confidence operations
-combined = weather_prediction ~*> temperature  // "sunny", 72 with confidence 0.8075
+let combined = weather_prediction ~*> temperature  // "sunny", 72 with confidence 0.8075
 ```
 
 ### 2. LLM Integration with Confidence
@@ -57,15 +57,15 @@ console.log(result);
 
 ### 3. Confidence Propagation
 
-```prism
+```javascript
 // Initial values with confidence
-sensor1 = 23.5 ~> 0.9
-sensor2 = 24.1 ~> 0.85
-sensor3 = 22.8 ~> 0.95
+let sensor1 = 23.5 ~> 0.9
+let sensor2 = 24.1 ~> 0.85
+let sensor3 = 22.8 ~> 0.95
 
 // Average with confidence propagation
-average = (sensor1 + sensor2 + sensor3) / 3
-avg_confidence = <~ average  // Automatically calculated
+let average = (sensor1 + sensor2 + sensor3) / 3
+let avg_confidence = <~ average  // Automatically calculated
 
 // Threshold check
 uncertain if (avg_confidence > 0.8) {
@@ -75,11 +75,34 @@ uncertain if (avg_confidence > 0.8) {
 }
 ```
 
+### 4. Consensus & Aggregation Helpers
+
+```javascript
+let modelA = "rain" ~> 0.7
+let modelB = "sunny" ~> 0.9
+let modelC = "cloudy" ~> 0.8
+
+// Choose the best-confidence output
+let winner = consensus([modelA, modelB, modelC])
+
+// Choose the least-confident output
+let pessimistic = consensus([modelA, modelB], { strategy: "min" })
+
+// Aggregate confidence (average by default)
+let grouped = aggregate([modelA, modelB], { strategy: "average" })
+
+// Aggregate with a custom combiner
+let combined = aggregate([modelA, modelB], {
+  strategy: "product",
+  combine: values => values[0] + values[1]
+})
+```
+
 ## Modern Language Features
 
 ### 1. Variable Declarations and Block Scoping
 
-```prism
+```javascript
 // Using const/let with block scoping
 function userProcessing() {
   const API_BASE = "https://api.example.com"
@@ -94,7 +117,7 @@ function userProcessing() {
       
       if (currentBatch.length >= batchSize) {
         // Process batch
-        result = processBatch(currentBatch)
+        let result = processBatch(currentBatch)
         processedCount += result.length
         
         // Clear batch for next iteration
@@ -114,7 +137,7 @@ function userProcessing() {
 
 ### 2. Named Functions with Returns
 
-```prism
+```javascript
 // Traditional function declarations with hoisting
 function calculateRiskScore(transactions, userProfile) {
   // Early return for invalid input
@@ -134,7 +157,7 @@ function calculateRiskScore(transactions, userProfile) {
   let patternScore = calculatePatternRisk(transactions, userProfile)
   
   // Weighted combination
-  const totalScore = 
+  const totalScore =
     (amountScore * weights.amount) +
     (frequencyScore * weights.frequency) +
     (patternScore * weights.pattern)
@@ -174,7 +197,7 @@ console.log("Risk assessment:", userRisk)
 
 ### 3. Block-Statement Lambdas
 
-```prism
+```javascript
 // Complex data processing with block-statement lambdas
 const users = [
   {name: "Alice", age: 28, score: 85},
@@ -272,7 +295,7 @@ const aggregator = items => {
 
 ### 4. Parameterized Primitives and Pipeline Operations
 
-```prism
+```javascript
 // Create reusable, configurable functions
 const highConfidenceFilter = threshold(0.8)
 const scoreSorter = sortBy("score", "desc")
@@ -348,7 +371,7 @@ console.log("Quality analysis complete:", qualityAnalysis)
 
 ### 5. Import/Export Module System
 
-```prism
+```javascript
 // math-utils.prism - Utility module
 export const PI = 3.14159
 export const E = 2.71828
@@ -448,7 +471,7 @@ print("Final result:", processed)
 
 ### 6. Debugging and Output
 
-```prism
+```javascript
 // Comprehensive debugging example
 function debugDataProcessing(rawData) {
   console.debug("Starting data processing")
@@ -457,7 +480,7 @@ function debugDataProcessing(rawData) {
   // Data cleaning phase
   print("=== Data Cleaning Phase ===")
   const cleaned = rawData.filter(item => {
-    const isValid = item && item.value !== null && item.value !== undefined
+    const isValid = item && item.value !== null
     if (!isValid) {
       console.warn("Filtering out invalid item:", item)
     }

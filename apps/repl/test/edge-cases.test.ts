@@ -79,9 +79,9 @@ describe('REPL Edge Cases', () => {
 
   describe('complex confidence propagation', () => {
     it('should handle triple confidence propagation', async () => {
-      await repl.evaluate('a = 10 ~> 0.9');
-      await repl.evaluate('b = 20 ~> 0.1');
-      await repl.evaluate('c = 30 ~> 0.8');
+      await repl.evaluate('let a = 10 ~> 0.9');
+      await repl.evaluate('let b = 20 ~> 0.1');
+      await repl.evaluate('let c = 30 ~> 0.8');
       
       const result = await repl.evaluate('a + b + c');
       expect(result.success).toBe(true);
@@ -91,9 +91,9 @@ describe('REPL Edge Cases', () => {
     });
 
     it('should handle mixed operations with confidence', async () => {
-      await repl.evaluate('a = 10 ~> 0.9');
-      await repl.evaluate('b = 20 ~> 0.1');
-      await repl.evaluate('c = 30 ~> 0.8');
+      await repl.evaluate('let a = 10 ~> 0.9');
+      await repl.evaluate('let b = 20 ~> 0.1');
+      await repl.evaluate('let c = 30 ~> 0.8');
       
       const result = await repl.evaluate('(a * b) + c');
       expect(result.success).toBe(true);
@@ -103,9 +103,9 @@ describe('REPL Edge Cases', () => {
     });
 
     it('should handle parentheses with confidence', async () => {
-      await repl.evaluate('a = 10 ~> 0.9');
-      await repl.evaluate('b = 20 ~> 0.1');
-      await repl.evaluate('c = 30 ~> 0.8');
+      await repl.evaluate('let a = 10 ~> 0.9');
+      await repl.evaluate('let b = 20 ~> 0.1');
+      await repl.evaluate('let c = 30 ~> 0.8');
       
       const result = await repl.evaluate('a * (b + c)');
       expect(result.success).toBe(true);
@@ -117,9 +117,9 @@ describe('REPL Edge Cases', () => {
 
   describe('boundary testing for uncertain if', () => {
     it('should handle value at high threshold', async () => {
-      await repl.evaluate('val1 = 1 ~> 0.70');
+      await repl.evaluate('let val1 = 1 ~> 0.70');
       const result = await repl.evaluate(`
-        result1 = 0
+        let result1 = 0
         uncertain if (val1 ~> 0.7) {
           high { result1 = 1 }
           medium { result1 = 2 }
@@ -135,9 +135,9 @@ describe('REPL Edge Cases', () => {
     });
 
     it('should handle value below high threshold', async () => {
-      await repl.evaluate('val2 = 1 ~> 0.69');
+      await repl.evaluate('let val2 = 1 ~> 0.69');
       const result = await repl.evaluate(`
-        result2 = 0
+        let result2 = 0
         uncertain if (val2) {
           high { result2 = 1 }
           medium { result2 = 2 }
@@ -155,7 +155,7 @@ describe('REPL Edge Cases', () => {
 
   describe('string edge cases', () => {
     it('should handle empty string', async () => {
-      const result = await repl.evaluate('empty_string = ""');
+      const result = await repl.evaluate('let empty_string = ""');
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.value).toBe('');
@@ -163,7 +163,7 @@ describe('REPL Edge Cases', () => {
     });
 
     it('should handle space-only string', async () => {
-      const result = await repl.evaluate('space_string = " "');
+      const result = await repl.evaluate('let space_string = " "');
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.value).toBe(' ');
@@ -171,7 +171,7 @@ describe('REPL Edge Cases', () => {
     });
 
     it('should handle special characters', async () => {
-      const result = await repl.evaluate('special = "!@#$%^&*()"');
+      const result = await repl.evaluate('let special = "!@#$%^&*()"');
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.value).toBe('!@#$%^&*()');
@@ -235,25 +235,25 @@ describe('REPL Edge Cases', () => {
 
   describe('LLM integration', () => {
     it('should handle multiple LLM calls', async () => {
-      const result1 = await repl.evaluate('llm1 = llm("First call")');
+      const result1 = await repl.evaluate('let llm1 = llm("First call")');
       expect(result1.success).toBe(true);
       
-      const result2 = await repl.evaluate('llm2 = llm("Second call")');
+      const result2 = await repl.evaluate('let llm2 = llm("Second call")');
       expect(result2.success).toBe(true);
       
-      const result3 = await repl.evaluate('llm3 = llm("Third call")');
+      const result3 = await repl.evaluate('let llm3 = llm("Third call")');
       expect(result3.success).toBe(true);
     });
   });
 
   describe('variable chaining', () => {
     it('should handle variable dependency chains', async () => {
-      await repl.evaluate('chain1 = 10');
-      await repl.evaluate('chain2 = chain1 + 5');
-      await repl.evaluate('chain3 = chain2 * 2');
-      await repl.evaluate('chain4 = chain3 ~> 0.95');
+      await repl.evaluate('let chain1 = 10');
+      await repl.evaluate('let chain2 = chain1 + 5');
+      await repl.evaluate('let chain3 = chain2 * 2');
+      await repl.evaluate('let chain4 = chain3 ~> 0.95');
       
-      const result = await repl.evaluate('final_chain = chain4 + chain1');
+      const result = await repl.evaluate('let final_chain = chain4 + chain1');
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.value).toBe('40 (~95.0%)'); // 30 + 10
@@ -263,8 +263,8 @@ describe('REPL Edge Cases', () => {
 
   describe('context scoping', () => {
     it('should maintain global variables after context', async () => {
-      await repl.evaluate('global_var = 100');
-      await repl.evaluate('in context TestScope { local_var = 200 }');
+      await repl.evaluate('let global_var = 100');
+      await repl.evaluate('in context TestScope { let local_var = 200 }');
       
       const result = await repl.evaluate('global_var');
       expect(result.success).toBe(true);

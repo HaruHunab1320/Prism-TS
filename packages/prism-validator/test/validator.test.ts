@@ -153,7 +153,7 @@ describe('PrismValidator', () => {
     test('should validate agent declarations', () => {
       const code = `
         agents {
-          MyAgent: Agent { confidence: 0.8 }
+          MyAgent: { confidence: 0.8 }
         }
       `;
       const result = validator.validate(code);

@@ -6,7 +6,6 @@ export type NodeType =
   | 'InterpolatedString'
   | 'BooleanLiteral'
   | 'NullLiteral'
-  | 'UndefinedLiteral'
   | 'ArrayLiteral'
   | 'ObjectLiteral'
   | 'PropertyAccess'
@@ -49,7 +48,9 @@ export type NodeType =
   | 'ReturnStatement'
   | 'VariableDeclaration'
   | 'AwaitExpression'
-  | 'TryStatement';
+  | 'TryStatement'
+  | 'MatchExpression'
+  | 'MatchArm';
 
 export abstract class ASTNode {
   abstract type: NodeType;
@@ -115,20 +116,36 @@ export class NullLiteral extends Expression {
   }
 }
 
-export class UndefinedLiteral extends Expression {
-  type: NodeType = 'UndefinedLiteral';
-  
-  constructor() {
-    super();
-  }
-}
-
 export class ConfidenceExpression extends Expression {
   type: NodeType = 'ConfidenceExpression';
   
   constructor(
     public expression: Expression,
     public confidence: Expression
+  ) {
+    super();
+  }
+}
+
+export class MatchArm extends ASTNode {
+  type: NodeType = 'MatchArm';
+
+  constructor(
+    public pattern: Expression,
+    public body: Expression | BlockStatement,
+    public guard?: Expression,
+    public confidenceThreshold?: Expression
+  ) {
+    super();
+  }
+}
+
+export class MatchExpression extends Expression {
+  type: NodeType = 'MatchExpression';
+
+  constructor(
+    public value: Expression,
+    public arms: MatchArm[]
   ) {
     super();
   }
@@ -484,7 +501,7 @@ export class ArrayPattern extends Expression {
   type: NodeType = 'ArrayPattern';
   
   constructor(
-    public elements: (IdentifierExpression | ArrayPattern | ObjectPattern | RestElement | null)[],
+    public elements: (Expression | RestElement | null)[],
     public elementThresholds?: (Expression | null)[]  // Per-element thresholds (Option 3)
   ) {
     super();
@@ -497,7 +514,7 @@ export class ObjectPattern extends Expression {
   constructor(
     public properties: Array<{
       key: string;
-      value: IdentifierExpression | ArrayPattern | ObjectPattern;
+      value: Expression;
       defaultValue?: Expression;
       confidenceThreshold?: Expression;  // Per-property threshold (Option 3)
     }>,

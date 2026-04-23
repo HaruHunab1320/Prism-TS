@@ -351,7 +351,7 @@ async function runLLMCommand(args: string[]): Promise<void> {
   };
 
   if (parsed.options.stream) {
-    if (requestOptions.structuredOutput && requestOptions.structuredOutput !== false) {
+    if (parsed.options.structuredOutput !== false) {
       console.error('❌ Streaming mode requires --no-structured-output');
       process.exit(1);
       return;
@@ -404,6 +404,12 @@ async function runLLMCommand(args: string[]): Promise<void> {
 function formatError(error: unknown, source?: string): string {
   if (error instanceof DiagnosticError) {
     return formatDiagnostic(error.diagnostic, source);
+  }
+  if (error && typeof error === 'object' && 'diagnostic' in error) {
+    const diagnostic = (error as { diagnostic?: unknown }).diagnostic;
+    if (diagnostic && typeof diagnostic === 'object') {
+      return formatDiagnostic(diagnostic as any, source);
+    }
   }
   if (error instanceof Error) {
     return error.message;

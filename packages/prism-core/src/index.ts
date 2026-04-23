@@ -5,6 +5,10 @@ export * from './parser';
 export { 
   createRuntime,
   Runtime,
+  RuntimeOptions,
+  ConfidenceOptions,
+  ConfidenceStrategy,
+  ConfidenceCombineMode,
   RuntimeError,
   RuntimeLLMCallOptions,
   RuntimeLLMStream,
@@ -13,7 +17,6 @@ export {
   StringValue,
   BooleanValue,
   NullValue,
-  UndefinedValue,
   ArrayValue,
   ObjectValue,
   FunctionValue,

@@ -3,7 +3,7 @@ import * as path from 'path';
 import { tokenize } from './tokenizer';
 import { Parser } from './parser';
 import { ImportStatement, ExportStatement } from './ast';
-import { Runtime, Value, UndefinedValue, ObjectValue, Environment } from './runtime';
+import { Runtime, Value, NullValue, ObjectValue, Environment } from './runtime';
 
 export interface ModuleExports {
   default?: Value;
@@ -209,7 +209,7 @@ export class ModuleSystem {
       if (!defaultExport && !isCircular) {
         throw new Error(`Module ${resolvedPath} has no default export`);
       }
-      runtime.environment.define(importStmt.defaultImport, defaultExport || new UndefinedValue());
+      runtime.environment.define(importStmt.defaultImport, defaultExport || new NullValue());
     }
     
     // Handle namespace import (import * as name from 'module')
@@ -249,7 +249,7 @@ export class ModuleSystem {
         throw new Error(`Module ${resolvedPath} has no export named '${exportName}'`);
       }
       
-      runtime.environment.define(localName, exportedValue || new UndefinedValue());
+      runtime.environment.define(localName, exportedValue || new NullValue());
     }
   }
   

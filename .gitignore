@@ -15,3 +15,22 @@ coverage/
 packages/*/dist/
 apps/*/dist/
 pnpm-lock.yaml
+
+# Lumina training artifacts
+packages/lumina/lumina_basic/datasets*/
+packages/lumina/lumina_basic/outputs*/
+packages/lumina/lumina_basic/logs/
+packages/lumina/lumina_basic/__pycache__/
+packages/lumina/lumina_basic/**/__pycache__/
+packages/lumina/lumina_basic/.venv/
+packages/lumina/lumina_basic/**/*.safetensors
+packages/lumina/lumina_basic/**/*.pt
+
+packages/lumina/lumina_multimodel/datasets*/
+packages/lumina/lumina_multimodel/outputs*/
+packages/lumina/lumina_multimodel/logs/
+packages/lumina/lumina_multimodel/__pycache__/
+packages/lumina/lumina_multimodel/**/__pycache__/
+packages/lumina/lumina_multimodel/.venv/
+packages/lumina/lumina_multimodel/**/*.safetensors
+packages/lumina/lumina_multimodel/**/*.pt

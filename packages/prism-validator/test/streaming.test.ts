@@ -125,10 +125,11 @@ describe('StreamingValidator', () => {
       expect(result.expectedNext).toContain('=');
     });
 
-    test('should expect number after @', () => {
+    test('should suggest operators after @', () => {
       validator.validatePartial('x = 42 ');
       const result = validator.validatePartial('@');
-      expect(result.expectedNext).toContain('number or identifier');
+      expect(result.expectedNext).toContain('~>');
+      expect(result.expectedNext).toContain('operator');
     });
 
     test('should expect identifier after ~', () => {

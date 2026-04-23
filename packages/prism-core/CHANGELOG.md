@@ -1,5 +1,74 @@
 # Changelog
 
+## 4.0.0
+
+### Major Changes
+
+- ddfe397: Add `fn` as a reserved keyword alias for `function` in function declarations. This is a breaking change — any code using `fn` as a variable or identifier name will need to be renamed.
+
+### Patch Changes
+
+- @prism-lang/llm@1.3.4
+
+## 3.0.2
+
+### Patch Changes
+
+- f207dbb: Bracket access on objects with missing keys now returns null instead of throwing, matching JS-like semantics for dynamic property lookups.
+  - @prism-lang/llm@1.3.3
+
+## 3.0.1
+
+### Patch Changes
+
+- Add dynamic object bracket access support (`object[key]`) to Prism runtime index evaluation, including confident object propagation.
+
+  Improve validator `IndexAccess` type analysis to:
+
+  - validate numeric indices for arrays,
+  - validate string indices for objects,
+  - report missing object properties for string-literal keys,
+  - support dynamic string-key object indexing.
+
+  Update core/validator changelogs and docs to document object index access syntax and behavior.
+
+  - @prism-lang/llm@1.3.2
+
+## Unreleased
+
+### Fixed
+
+- Added support for dynamic object index access with string keys (`object[key]`) in runtime `IndexAccess`.
+- Added support for confident object index access so container confidence propagates through `object[key]`.
+- Bracket access on objects with missing keys (e.g. `obj[""]` or `obj[missingVar]`) now returns `null` instead of throwing `Property '' does not exist`, matching JS-like semantics.
+
+## 3.0.0
+
+### Major Changes
+
+- Major release for core language and validation updates.
+
+  - Added Rust-style `match` expressions with guards and nested patterns.
+  - Added configurable runtime confidence strategy and provenance tracking.
+  - Added built-in confidence helpers (`consensus`, `aggregate`).
+  - Removed legacy `Agent` keyword requirement inside `agents` blocks.
+  - Updated validator behavior/docs to align with current Prism syntax and confidence semantics.
+
+### Patch Changes
+
+- @prism-lang/llm@1.3.1
+
+## 2.0.0
+
+### Major Changes
+
+- 90722f0: Major runtime and language update: strict scoping, module system overhaul, diagnostics with spans, `do…while` support, confident property access fixes, and builtins refactor.
+
+### Patch Changes
+
+- Updated dependencies [90722f0]
+  - @prism-lang/llm@1.3.0
+
 ## 1.3.0
 
 ### Minor Changes

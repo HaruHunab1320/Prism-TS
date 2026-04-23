@@ -89,25 +89,9 @@ export class NullValue extends Value {
   }
 }
 
-export class UndefinedValue extends Value {
-  type = 'undefined';
-  value = undefined;
-
-  constructor() {
-    super();
-  }
-
-  equals(other: Value): boolean {
-    return other instanceof UndefinedValue;
-  }
-
-  isTruthy(): boolean {
-    return false;
-  }
-
-  toString(): string {
-    return 'undefined';
-  }
+export interface ConfidenceProvenance {
+  rule: string;
+  inputs: number[];
 }
 
 export class ConfidenceValue extends Value {
@@ -115,7 +99,8 @@ export class ConfidenceValue extends Value {
 
   constructor(
     public value: Value,
-    public confidence: ConfidenceLib
+    public confidence: ConfidenceLib,
+    public provenance?: ConfidenceProvenance
   ) {
     super();
   }
@@ -185,7 +170,6 @@ export class ObjectValue extends Value {
 
   toString(): string {
     const props = Array.from(this.properties.entries())
-      .filter(([_, v]) => !(v instanceof UndefinedValue))
       .map(([k, v]) => `${k}: ${v.toString()}`)
       .join(', ');
     return props.length > 0 ? `{ ${props} }` : '{}';

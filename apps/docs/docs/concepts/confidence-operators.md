@@ -15,46 +15,46 @@ Prism provides a rich set of operators for working with confidence values, enabl
 
 The confidence annotation operator `~>` attaches a confidence value to any expression:
 
-```prism
+```javascript
 // Attach confidence to values
-sensorReading = 23.5 ~> 0.92
-userInput = "verified data" ~> 0.85
-prediction = calculatePrediction() ~> modelConfidence
+let sensorReading = 23.5 ~> 0.92
+let userInput = "verified data" ~> 0.85
+let prediction = calculatePrediction() ~> modelConfidence
 
 // Confidence values are in range [0, 1]
-highConfidence = "reliable" ~> 0.95
-mediumConfidence = "probable" ~> 0.6
-lowConfidence = "uncertain" ~> 0.3
+let highConfidence = "reliable" ~> 0.95
+let mediumConfidence = "probable" ~> 0.6
+let lowConfidence = "uncertain" ~> 0.3
 ```
 
 ### Confidence Extraction (`~`)
 
 The tilde operator `~` extracts the confidence value from a confident expression:
 
-```prism
-data = "important" ~> 0.87
-confidence = ~data  // 0.87
+```javascript
+let data = "important" ~> 0.87
+let confidence = ~data  // 0.87
 
 // Works with any confident expression
-result = (10 * 5) ~> 0.9
-conf = ~result  // 0.9
+let result = (10 * 5) ~> 0.9
+let conf = ~result  // 0.9
 
 // Non-confident values return 1.0
-plainValue = 42
-defaultConf = ~plainValue  // 1.0
+let plainValue = 42
+let defaultConf = ~plainValue  // 1.0
 ```
 
 ### Value Extraction (`<~`)
 
 The value extraction operator `<~` retrieves the underlying value without confidence:
 
-```prism
-confidentData = "hello" ~> 0.75
-plainData = <~ confidentData  // "hello"
+```javascript
+let confidentData = "hello" ~> 0.75
+let plainData = <~ confidentData  // "hello"
 
 // Useful for operations that need raw values
-measurement = 100 ~> 0.8
-doubled = (<~ measurement) * 2  // 200 (no confidence)
+let measurement = 100 ~> 0.8
+let doubled = (<~ measurement) * 2  // 200 (no confidence)
 ```
 
 ## Confident Arithmetic Operators
@@ -63,53 +63,53 @@ These operators perform arithmetic while propagating confidence values:
 
 ### Confident Addition (`~+`)
 
-```prism
-a = 10 ~> 0.9
-b = 20 ~> 0.8
+```javascript
+let a = 10 ~> 0.9
+let b = 20 ~> 0.8
 
 // Confident addition takes minimum confidence
-result = a ~+ b  // 30 (~72.0%)
+let result = a ~+ b  // 30 (~72.0%)
 
 // Chain multiple operations
-c = 5 ~> 0.95
-total = a ~+ b ~+ c  // 35 (~72.0%)
+let c = 5 ~> 0.95
+let total = a ~+ b ~+ c  // 35 (~72.0%)
 ```
 
 ### Confident Subtraction (`~-`)
 
-```prism
-x = 100 ~> 0.85
-y = 30 ~> 0.9
+```javascript
+let x = 100 ~> 0.85
+let y = 30 ~> 0.9
 
-result = x ~- y  // 70 (~85.0%)
+let result = x ~- y  // 70 (~85.0%)
 ```
 
 ### Confident Multiplication (`~*`)
 
-```prism
-price = 50 ~> 0.9
-quantity = 3 ~> 0.95
+```javascript
+let price = 50 ~> 0.9
+let quantity = 3 ~> 0.95
 
 // Multiplication multiplies confidences
-total = price ~* quantity  // 150 (~85.5%)
+let total = price ~* quantity  // 150 (~85.5%)
 ```
 
 ### Confident Division (`~/`)
 
-```prism
-total = 1000 ~> 0.8
-count = 10 ~> 0.9
+```javascript
+let total = 1000 ~> 0.8
+let count = 10 ~> 0.9
 
-average = total ~/ count  // 100 (~72.0%)
+let average = total ~/ count  // 100 (~72.0%)
 ```
 
 ## Confident Comparison Operators
 
 These operators compare values while considering their confidence:
 
-```prism
-a = 10 ~> 0.8
-b = 10 ~> 0.9
+```javascript
+let a = 10 ~> 0.8
+let b = 10 ~> 0.9
 
 // Confident equality
 a ~== b  // true (~72.0%)
@@ -118,8 +118,8 @@ a ~== b  // true (~72.0%)
 a ~!= b  // false (~72.0%)
 
 // Confident comparisons
-x = 5 ~> 0.7
-y = 10 ~> 0.8
+let x = 5 ~> 0.7
+let y = 10 ~> 0.8
 
 x ~< y   // true (~56.0%)
 x ~<= y  // true (~56.0%)
@@ -131,12 +131,12 @@ x ~>= y  // false (~56.0%)
 
 Access properties while preserving confidence:
 
-```prism
-user = {name: "Alice", age: 30} ~> 0.85
-userName = user~.name  // "Alice" (~85.0%)
+```javascript
+let user = {name: "Alice", age: 30} ~> 0.85
+let userName = user~.name  // "Alice" (~85.0%)
 
 // Chaining confident access
-data = {
+let data = {
   user: {
     profile: {
       email: "alice@example.com"
@@ -144,11 +144,11 @@ data = {
   }
 } ~> 0.9
 
-email = data~.user~.profile~.email  // "alice@example.com" (~90.0%)
+let email = data~.user~.profile~.email  // "alice@example.com" (~90.0%)
 
-// Handles null/undefined gracefully
-nullData = null ~> 0.9
-result = nullData~.property  // Returns confident null
+// Handles null gracefully
+let nullData = null ~> 0.9
+let result = nullData~.property  // Returns confident null
 ```
 
 ## Advanced Confidence Operators
@@ -157,48 +157,69 @@ result = nullData~.property  // Returns confident null
 
 The parallel confidence operator selects the option with the highest confidence:
 
-```prism
+```javascript
 // Model ensemble - select best prediction
-model1 = "rain" ~> 0.7
-model2 = "sunny" ~> 0.9
-model3 = "cloudy" ~> 0.8
+let model1 = "rain" ~> 0.7
+let model2 = "sunny" ~> 0.9
+let model3 = "cloudy" ~> 0.8
 
-prediction = model1 ~||> model2 ~||> model3  // "sunny" (~90.0%)
+let prediction = model1 ~||> model2 ~||> model3  // "sunny" (~90.0%)
 
 // Fallback to non-confident value
-primary = "uncertain" ~> 0.3
-fallback = "default"
-result = primary ~||> fallback  // "default" (100% confidence)
+let primary = "uncertain" ~> 0.3
+let fallback = "default"
+let result = primary ~||> fallback  // "default" (100% confidence)
 
 // Complex decision making
-option1 = calculateOption1() ~> confidence1
-option2 = calculateOption2() ~> confidence2
-option3 = calculateOption3() ~> confidence3
+let option1 = calculateOption1() ~> confidence1
+let option2 = calculateOption2() ~> confidence2
+let option3 = calculateOption3() ~> confidence3
 
-bestOption = option1 ~||> option2 ~||> option3
+let bestOption = option1 ~||> option2 ~||> option3
+```
+
+### Consensus & Aggregation Helpers
+
+Prism also provides built-in helpers to combine multiple confident values:
+
+```javascript
+// Pick the highest-confidence value (default)
+let winner = consensus([model1, model2, model3])
+
+// Pick the lowest-confidence value
+let pessimistic = consensus([model1, model2], { strategy: "min" })
+
+// Aggregate a list into a combined confidence
+let grouped = aggregate([model1, model2], { strategy: "average" })
+
+// Aggregate with a custom combiner
+let combined = aggregate([model1, model2], {
+  strategy: "product",
+  combine: values => values[0] + values[1]
+})
 ```
 
 ### Confident Ternary (`~?`)
 
 The confident ternary operator works like the regular ternary but propagates confidence from both the condition and the selected branch:
 
-```prism
+```javascript
 // Regular ternary - ignores confidence
-condition = true ~> 0.8
-regular = condition ? "yes" : "no"  // Result: "yes" (no confidence)
+let condition = true ~> 0.8
+let regular = condition ? "yes" : "no"  // Result: "yes" (no confidence)
 
 // Confident ternary - propagates confidence
-confident = condition ~? "yes" : "no"  // Result: "yes" ~> 0.8
+let confident = condition ~? "yes" : "no"  // Result: "yes" ~> 0.8
 
 // Combines confidences from condition and branch
 condition = true ~> 0.8
-yesOption = "YES" ~> 0.9
-noOption = "NO" ~> 0.7
-result = condition ~? yesOption : noOption  // Result: "YES" ~> 0.72 (0.8 * 0.9)
+let yesOption = "YES" ~> 0.9
+let noOption = "NO" ~> 0.7
+let result = condition ~? yesOption : noOption  // Result: "YES" ~> 0.72 (0.8 * 0.9)
 
 // Nested confident ternary
-a = true ~> 0.9
-b = false ~> 0.8
+let a = true ~> 0.9
+let b = false ~> 0.8
 result = a ~? (b ~? "both" : "just a") : "neither"
 // Result: "just a" ~> 0.72
 ```
@@ -208,35 +229,35 @@ result = a ~? (b ~? "both" : "just a") : "neither"
 Confident assignment operators provide syntactic sugar for updating variables while preserving confidence:
 
 #### Addition Assignment (~+=)
-```prism
+```javascript
 // Regular += with confident value
-balance = 1000 ~> 0.95
+let balance = 1000 ~> 0.95
 balance += 100  // 1100 ~> 0.95 (keeps original confidence)
 
 // Confident += combines confidences
 balance = 1000 ~> 0.95
-deposit = 100 ~> 0.8
+let deposit = 100 ~> 0.8
 balance ~+= deposit  // 1100 ~> 0.8 (min confidence)
 ```
 
 #### Subtraction Assignment (~-=)
-```prism
-inventory = 500 ~> 0.9
-withdrawal = 50 ~> 0.85
+```javascript
+let inventory = 500 ~> 0.9
+let withdrawal = 50 ~> 0.85
 inventory ~-= withdrawal  // 450 ~> 0.85
 ```
 
 #### Multiplication Assignment (~*=)
-```prism
-price = 100 ~> 0.9
-taxRate = 1.2 ~> 0.99
+```javascript
+let price = 100 ~> 0.9
+let taxRate = 1.2 ~> 0.99
 price ~*= taxRate  // 120 ~> 0.9
 ```
 
 #### Division Assignment (~/=)
-```prism
-total = 1000 ~> 0.9
-divisor = 4 ~> 0.95
+```javascript
+let total = 1000 ~> 0.9
+let divisor = 4 ~> 0.95
 total ~/= divisor  // 250 ~> 0.9
 ```
 
@@ -248,9 +269,9 @@ These operators are equivalent to:
 
 They're particularly useful for accumulating values with confidence tracking:
 
-```prism
+```javascript
 // Running total with confidence tracking
-total = 0 ~> 1.0
+let total = 0 ~> 1.0
 for measurement in measurements {
   total ~+= measurement  // Confidence degrades with each addition
 }
@@ -261,20 +282,20 @@ for measurement in measurements {
 
 The threshold gate operator passes values only if they meet a confidence threshold:
 
-```prism
+```javascript
 // Basic threshold gate
-data = "important" ~> 0.8
-threshold = 0.7
+let data = "important" ~> 0.8
+let threshold = 0.7
 
 // Passes through if confidence >= threshold
-result = data ~@> threshold  // "important" (~80.0%)
+let result = data ~@> threshold  // "important" (~80.0%)
 
 // Blocks low confidence
-uncertain = "maybe" ~> 0.4
-filtered = uncertain ~@> 0.6  // null (blocked)
+let uncertain = "maybe" ~> 0.4
+let filtered = uncertain ~@> 0.6  // null (blocked)
 
 // Use in data pipelines
-processedData = rawData 
+let processedData = rawData 
   |> validate 
   ~@> 0.8  // Only pass high-confidence results
   |> transform
@@ -284,15 +305,15 @@ processedData = rawData
 
 Propagate confidence through function pipelines:
 
-```prism
+```javascript
 // Functions that work with confidence
-addTax = x => x * 1.1
-applyDiscount = x => x * 0.9
-roundPrice = x => Math.round(x)
+let addTax = x => x * 1.1
+let applyDiscount = x => x * 0.9
+let roundPrice = x => Math.round(x)
 
-price = 100 ~> 0.85
+let price = 100 ~> 0.85
 
-finalPrice = price 
+let finalPrice = price 
   ~|> addTax 
   ~|> applyDiscount 
   ~|> roundPrice  // Result maintains confidence
@@ -300,35 +321,35 @@ finalPrice = price
 
 ### Confidence Coalesce (`~??`)
 
-Returns the first non-null/undefined value with its confidence:
+Returns the first non-null value with its confidence:
 
-```prism
+```javascript
 // Similar to ?? but confidence-aware
-primary = null ~> 0.9
-secondary = "backup" ~> 0.7
-tertiary = "default"
+let primary = null ~> 0.9
+let secondary = "backup" ~> 0.7
+let tertiary = "default"
 
-result = primary ~?? secondary ~?? tertiary  // "backup" (~70.0%)
+let result = primary ~?? secondary ~?? tertiary  // "backup" (~70.0%)
 
 // Useful for configuration cascading
-userPref = null ~> 0.95
-systemDefault = "dark" ~> 0.8
-hardcoded = "light"
+let userPref = null ~> 0.95
+let systemDefault = "dark" ~> 0.8
+let hardcoded = "light"
 
-theme = userPref ~?? systemDefault ~?? hardcoded
+let theme = userPref ~?? systemDefault ~?? hardcoded
 ```
 
 ### Confident Logical Operators
 
-```prism
+```javascript
 // Confident AND
-a = true ~> 0.8
-b = true ~> 0.9
-result = a ~&& b  // true (~72.0%)
+let a = true ~> 0.8
+let b = true ~> 0.9
+let result = a ~&& b  // true (~72.0%)
 
 // Confident OR  
-x = false ~> 0.7
-y = true ~> 0.9
+let x = false ~> 0.7
+let y = true ~> 0.9
 result = x ~|| y  // true (~90.0%)
 ```
 
@@ -336,18 +357,18 @@ result = x ~|| y  // true (~90.0%)
 
 Prism uses confidence thresholds to categorize values:
 
-```prism
+```javascript
 // Default thresholds
 // HIGH: >= 0.7
 // MEDIUM: >= 0.5 and < 0.7  
 // LOW: < 0.5
 
-highConf = "reliable" ~> 0.8     // HIGH confidence
-mediumConf = "probable" ~> 0.6   // MEDIUM confidence
-lowConf = "uncertain" ~> 0.3     // LOW confidence
+let highConf = "reliable" ~> 0.8     // HIGH confidence
+let mediumConf = "probable" ~> 0.6   // MEDIUM confidence
+let lowConf = "uncertain" ~> 0.3     // LOW confidence
 
 // Used in uncertain control flow
-data = fetchData() ~> 0.75
+let data = fetchData() ~> 0.75
 
 uncertain if data {
   high {
@@ -369,58 +390,58 @@ uncertain if data {
 
 When working with multiple confident values, Prism provides various strategies:
 
-```prism
+```javascript
 // Minimum confidence (default for most operations)
-a = 10 ~> 0.8
-b = 20 ~> 0.9
-sum = a ~+ b  // Uses min(0.8, 0.9) = 0.8
+let a = 10 ~> 0.8
+let b = 20 ~> 0.9
+let sum = a ~+ b  // Uses min(0.8, 0.9) = 0.8
 
 // Product confidence (for multiplication)
-x = 5 ~> 0.9
-y = 4 ~> 0.8
-product = x ~* y  // Uses 0.9 * 0.8 = 0.72
+let x = 5 ~> 0.9
+let y = 4 ~> 0.8
+let product = x ~* y  // Uses 0.9 * 0.8 = 0.72
 
 // Maximum confidence (parallel selection)
-opt1 = "A" ~> 0.6
-opt2 = "B" ~> 0.8
-best = opt1 ~||> opt2  // Selects opt2 with 0.8
+let opt1 = "A" ~> 0.6
+let opt2 = "B" ~> 0.8
+let best = opt1 ~||> opt2  // Selects opt2 with 0.8
 
 // Average confidence (custom combination)
-conf1 = 0.7
-conf2 = 0.9
-avgConf = (conf1 + conf2) / 2  // 0.8
+let conf1 = 0.7
+let conf2 = 0.9
+let avgConf = (conf1 + conf2) / 2  // 0.8
 ```
 
 ## Practical Examples
 
 ### Sensor Fusion
 
-```prism
+```javascript
 // Multiple sensors measuring temperature
-sensor1 = 23.5 ~> 0.85
-sensor2 = 24.1 ~> 0.92
-sensor3 = 23.8 ~> 0.78
+let sensor1 = 23.5 ~> 0.85
+let sensor2 = 24.1 ~> 0.92
+let sensor3 = 23.8 ~> 0.78
 
 // Select most confident reading
-bestReading = sensor1 ~||> sensor2 ~||> sensor3  // 24.1 (~92.0%)
+let bestReading = sensor1 ~||> sensor2 ~||> sensor3  // 24.1 (~92.0%)
 
 // Or average with confidence
-avgTemp = (sensor1 ~+ sensor2 ~+ sensor3) ~/ 3
+let avgTemp = (sensor1 ~+ sensor2 ~+ sensor3) ~/ 3
 ```
 
 ### Data Validation Pipeline
 
-```prism
+```javascript
 // Multi-stage validation with confidence
-validateEmail = email => {
-  hasAt = email.includes("@") ~> 0.9
-  hasDomain = email.includes(".") ~> 0.8
-  validFormat = hasAt ~&& hasDomain
+let validateEmail = email => {
+  let hasAt = email.includes("@") ~> 0.9
+  let hasDomain = email.includes(".") ~> 0.8
+  let validFormat = hasAt ~&& hasDomain
   validFormat
 }
 
-processUser = userData => {
-  validatedEmail = validateEmail(userData.email)
+let processUser = userData => {
+  let validatedEmail = validateEmail(userData.email)
   
   // Only process high-confidence data
   validatedEmail ~@> 0.7 ~|> storeInDatabase
@@ -429,14 +450,14 @@ processUser = userData => {
 
 ### Decision Making with Uncertainty
 
-```prism
+```javascript
 // Investment decision based on multiple factors
-marketTrend = "bullish" ~> 0.7
-companyHealth = "strong" ~> 0.85
-economicOutlook = "stable" ~> 0.6
+let marketTrend = "bullish" ~> 0.7
+let companyHealth = "strong" ~> 0.85
+let economicOutlook = "stable" ~> 0.6
 
 // Combine factors
-shouldInvest = marketTrend ~&& companyHealth ~&& economicOutlook
+let shouldInvest = marketTrend ~&& companyHealth ~&& economicOutlook
 
 uncertain if shouldInvest {
   high {
@@ -453,20 +474,20 @@ uncertain if shouldInvest {
 
 ### Model Ensemble
 
-```prism
+```javascript
 // Combine predictions from multiple models
-predict = (input) => {
+let predict = (input) => {
   // Different models with varying confidence
-  neuralNet = runNeuralNet(input) ~> 0.85
-  randomForest = runRandomForest(input) ~> 0.82
-  svm = runSVM(input) ~> 0.79
+  let neuralNet = runNeuralNet(input) ~> 0.85
+  let randomForest = runRandomForest(input) ~> 0.82
+  let svm = runSVM(input) ~> 0.79
   
   // Select best prediction
   neuralNet ~||> randomForest ~||> svm
 }
 
 // Use threshold to ensure quality
-finalPrediction = predict(data) ~@> 0.8
+let finalPrediction = predict(data) ~@> 0.8
 ```
 
 ## Best Practices

@@ -1,5 +1,49 @@
 # @prism-lang/llm
 
+## 1.3.4
+
+### Patch Changes
+
+- Updated dependencies [ddfe397]
+  - @prism-lang/core@4.0.0
+  - @prism-lang/confidence@1.2.8
+
+## 1.3.3
+
+### Patch Changes
+
+- Updated dependencies [f207dbb]
+  - @prism-lang/core@3.0.2
+  - @prism-lang/confidence@1.2.7
+
+## 1.3.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @prism-lang/core@3.0.1
+  - @prism-lang/confidence@1.2.6
+
+## 1.3.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @prism-lang/core@3.0.0
+  - @prism-lang/confidence@1.2.5
+
+## 1.3.0
+
+### Minor Changes
+
+- 90722f0: Diagnostics/streaming improvements across validator, CLI, REPL, and LLM provider integrations.
+
+### Patch Changes
+
+- Updated dependencies [90722f0]
+  - @prism-lang/core@2.0.0
+  - @prism-lang/confidence@1.2.4
+
 ## 1.2.3
 
 ### Patch Changes

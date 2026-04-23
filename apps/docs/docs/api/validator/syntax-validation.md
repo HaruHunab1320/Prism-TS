@@ -72,7 +72,7 @@ interface ValidationError {
 ### Common Errors
 
 #### Missing Initializer
-```prism
+```javascript
 // ❌ Error
 const x
 
@@ -81,7 +81,7 @@ const x = 0
 ```
 
 #### Invalid Confidence Syntax
-```prism
+```javascript
 // ❌ Error
 const x = 42 @ 1.5  // Confidence > 1
 
@@ -90,7 +90,7 @@ const x = 42 ~> 0.9
 ```
 
 #### Incomplete Uncertain Blocks
-```prism
+```javascript
 // ❌ Error
 uncertain if (condition) {
   high { action() }

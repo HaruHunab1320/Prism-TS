@@ -1,0 +1,25 @@
+project: argos-434718
+zone: us-central1-a
+machine_type: a2-highgpu-1g
+preemptible: false
+bucket: gs://lumina-checkpoints-argos-2026
+repo_url: https://github.com/HaruHunab1320/Prism-TS.git
+image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
+image_project: deeplearning-platform-release
+
+experiments:
+  - name: lumina-specialist-diversity-5000-003
+    commands:
+      - mkdir -p outputs_gen_tx_general outputs_gen_tx_math outputs_gen_tx_code outputs_router_fixed logs
+      - echo 'specialist diversity start' | tee logs/specialist_diversity_start.txt
+      - python -u scripts/analyze_specialist_diversity.py --help | tee logs/specialist_diversity_script_check.txt
+      - set -o pipefail; gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-general-uplift-tx-001/outputs_gen/ outputs_gen_tx_general/ 2>&1 | tee logs/specialist_diversity_sync_general.txt
+      - set -o pipefail; gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-math-uplift-robust-tx-5000-002/outputs_gen/ outputs_gen_tx_math/ 2>&1 | tee logs/specialist_diversity_sync_math.txt
+      - set -o pipefail; gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-code-uplift-tx-001/outputs_gen/ outputs_gen_tx_code/ 2>&1 | tee logs/specialist_diversity_sync_code.txt
+      - python -u scripts/build_router_dataset.py --data-root datasets_hq_med --max-train-per-domain 30000 --max-val-per-domain 3000 | tee logs/specialist_diversity_build_router.txt
+      - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m training.train_router --data-root datasets_hq_med --epochs 8 --batch-size 64 --max-len 128 --hidden-size 256 --dropout 0.1 --lr 3e-4 --output-dir outputs_router_fixed 2>&1 | tee logs/specialist_diversity_train_router.txt
+      - nvidia-smi | tee logs/specialist_diversity_nvidia_smi.txt
+      - free -h | tee logs/specialist_diversity_memory.txt
+      - echo '=== top2 current ===' > logs/specialist_diversity_top2_current.txt
+      - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m evaluation.eval_aggregator_minimal --data-root datasets_hq_med --domains general math code --weights outputs_gpt2/general_gpt2_confidence.pt outputs_gpt2/math_gpt2_confidence.pt outputs_gpt2/code_gpt2_confidence.pt --generator-domain-weights outputs_gen_tx_general/general_Qwen_Qwen2.5-1.5B-Instruct_gen outputs_gen_tx_math/math_Qwen_Qwen2.5-Math-1.5B-Instruct_gen outputs_gen_tx_code/code_Qwen_Qwen2.5-1.5B-Instruct_gen --generator-model Qwen/Qwen2.5-1.5B-Instruct --router-weights outputs_router_fixed/router.pt --router-labels outputs_router_fixed/labels.json --max-samples 5000 --max-new-tokens 24 --alpha 1.0 --top-k 2 --abstain-threshold 0.55 --conflict-margin 0.05 --seed 7 --conf-calibration outputs_gpt2/conf_calibration_mixed_qwen.json --debug-dump logs/specialist_diversity_top2_current_debug.jsonl --debug-limit 100000 2>&1 | tee -a logs/specialist_diversity_top2_current.txt
+      - python -u scripts/analyze_specialist_diversity.py --debug-jsonl logs/specialist_diversity_top2_current_debug.jsonl | tee logs/specialist_diversity_analysis_current.txt

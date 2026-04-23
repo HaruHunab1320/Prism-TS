@@ -5,7 +5,12 @@ Crawl-delay: 1
 # Sitemap location
 Sitemap: https://docs.prismlang.dev/sitemap.xml
 
-# Allow AI/ML crawlers
+# LLM context file (llms.txt standard)
+# See: https://llmstxt.org/
+# Provides structured context for AI assistants about Prism
+LLMs-Txt: https://docs.prismlang.dev/llms.txt
+
+# Allow AI/ML crawlers explicitly
 User-agent: GPTBot
 Allow: /
 
@@ -18,5 +23,29 @@ Allow: /
 User-agent: Claude-Web
 Allow: /
 
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Anthropic-AI
+Allow: /
+
 User-agent: PerplexityBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Cohere-AI
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: Applebot-Extended
 Allow: /

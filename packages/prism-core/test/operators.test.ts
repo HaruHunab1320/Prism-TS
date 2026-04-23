@@ -11,7 +11,7 @@ describe('Confidence Operators', () => {
   describe('Confidence Extraction (~)', () => {
     it('should extract confidence from confident values', async () => {
       const program = parse(`
-        measurement = 100 ~> 0.85
+        let measurement = 100 ~> 0.85
         <~ measurement
       `);
       const result = await runtime.execute(program);
@@ -21,7 +21,7 @@ describe('Confidence Operators', () => {
 
     it('should return 1.0 for regular values', async () => {
       const program = parse(`
-        value = 42
+        let value = 42
         <~ value
       `);
       const result = await runtime.execute(program);
@@ -33,8 +33,8 @@ describe('Confidence Operators', () => {
   describe('Confidence Chaining (~~)', () => {
     it('should chain confident values', async () => {
       const program = parse(`
-        input = 50 ~> 0.9
-        processed = 75 ~> 0.8
+        let input = 50 ~> 0.9
+        let processed = 75 ~> 0.8
         input ~~ processed
       `);
       const result = await runtime.execute(program);
@@ -44,8 +44,8 @@ describe('Confidence Operators', () => {
 
     it('should handle chaining with regular values', async () => {
       const program = parse(`
-        step1 = 42
-        step2 = 84 ~> 0.7
+        let step1 = 42
+        let step2 = 84 ~> 0.7
         step1 ~~ step2
       `);
       const result = await runtime.execute(program);
@@ -55,9 +55,9 @@ describe('Confidence Operators', () => {
 
     it('should support multiple chaining operations', async () => {
       const program = parse(`
-        data1 = 10 ~> 0.9
-        data2 = 20 ~> 0.8
-        data3 = 30 ~> 0.7
+        let data1 = 10 ~> 0.9
+        let data2 = 20 ~> 0.8
+        let data3 = 30 ~> 0.7
         data1 ~~ data2 ~~ data3
       `);
       const result = await runtime.execute(program);
@@ -69,8 +69,8 @@ describe('Confidence Operators', () => {
   describe('Confidence Coalesce (~??)', () => {
     it('should not coalesce high confidence values', async () => {
       const program = parse(`
-        primary = "good result" ~> 0.9
-        fallback = "backup" ~> 0.8
+        let primary = "good result" ~> 0.9
+        let fallback = "backup" ~> 0.8
         primary ~?? fallback
       `);
       const result = await runtime.execute(program);
@@ -80,8 +80,8 @@ describe('Confidence Operators', () => {
 
     it('should coalesce low confidence values', async () => {
       const program = parse(`
-        lowConf = "uncertain result" ~> 0.3
-        fallback = "reliable backup" ~> 0.8
+        let lowConf = "uncertain result" ~> 0.3
+        let fallback = "reliable backup" ~> 0.8
         lowConf ~?? fallback
       `);
       const result = await runtime.execute(program);
@@ -91,9 +91,9 @@ describe('Confidence Operators', () => {
 
     it('should support multiple coalesce operations', async () => {
       const program = parse(`
-        first = "low conf" ~> 0.2
-        second = "also low" ~> 0.3
-        third = "reliable" ~> 0.9
+        let first = "low conf" ~> 0.2
+        let second = "also low" ~> 0.3
+        let third = "reliable" ~> 0.9
         first ~?? second ~?? third
       `);
       const result = await runtime.execute(program);
@@ -103,8 +103,8 @@ describe('Confidence Operators', () => {
 
     it('should handle regular values with full confidence', async () => {
       const program = parse(`
-        regularValue = 42
-        backup = "fallback" ~> 0.7
+        let regularValue = 42
+        let backup = "fallback" ~> 0.7
         regularValue ~?? backup
       `);
       const result = await runtime.execute(program);
@@ -116,8 +116,8 @@ describe('Confidence Operators', () => {
   describe('Confident Logical Operators (~&&, ~||)', () => {
     it('should perform confident AND with both true values', async () => {
       const program = parse(`
-        condition1 = true ~> 0.9
-        condition2 = true ~> 0.8
+        let condition1 = true ~> 0.9
+        let condition2 = true ~> 0.8
         condition1 ~&& condition2
       `);
       const result = await runtime.execute(program);
@@ -127,8 +127,8 @@ describe('Confidence Operators', () => {
 
     it('should perform confident AND with one false value', async () => {
       const program = parse(`
-        condition1 = true ~> 0.9
-        condition2 = false ~> 0.8
+        let condition1 = true ~> 0.9
+        let condition2 = false ~> 0.8
         condition1 ~&& condition2
       `);
       const result = await runtime.execute(program);
@@ -138,8 +138,8 @@ describe('Confidence Operators', () => {
 
     it('should perform confident OR with both false values', async () => {
       const program = parse(`
-        condition1 = false ~> 0.7
-        condition2 = false ~> 0.9
+        let condition1 = false ~> 0.7
+        let condition2 = false ~> 0.9
         condition1 ~|| condition2
       `);
       const result = await runtime.execute(program);
@@ -149,8 +149,8 @@ describe('Confidence Operators', () => {
 
     it('should perform confident OR with one true value', async () => {
       const program = parse(`
-        condition1 = false ~> 0.7
-        condition2 = true ~> 0.6
+        let condition1 = false ~> 0.7
+        let condition2 = true ~> 0.6
         condition1 ~|| condition2
       `);
       const result = await runtime.execute(program);
@@ -160,8 +160,8 @@ describe('Confidence Operators', () => {
 
     it('should handle mixed confident and regular values', async () => {
       const program = parse(`
-        regularTrue = true
-        confidentFalse = false ~> 0.8
+        let regularTrue = true
+        let confidentFalse = false ~> 0.8
         regularTrue ~&& confidentFalse
       `);
       const result = await runtime.execute(program);
@@ -173,8 +173,8 @@ describe('Confidence Operators', () => {
   describe('Confident Arithmetic Operators (~+, ~-, ~*, ~/)', () => {
     it('should perform confident addition', async () => {
       const program = parse(`
-        measurement1 = 50 ~> 0.9
-        measurement2 = 30 ~> 0.8
+        let measurement1 = 50 ~> 0.9
+        let measurement2 = 30 ~> 0.8
         measurement1 ~+ measurement2
       `);
       const result = await runtime.execute(program);
@@ -184,8 +184,8 @@ describe('Confidence Operators', () => {
 
     it('should perform confident subtraction', async () => {
       const program = parse(`
-        total = 100 ~> 0.95
-        used = 35 ~> 0.7
+        let total = 100 ~> 0.95
+        let used = 35 ~> 0.7
         total ~- used
       `);
       const result = await runtime.execute(program);
@@ -195,8 +195,8 @@ describe('Confidence Operators', () => {
 
     it('should perform confident multiplication', async () => {
       const program = parse(`
-        length = 10 ~> 0.8
-        width = 5 ~> 0.9
+        let length = 10 ~> 0.8
+        let width = 5 ~> 0.9
         length ~* width
       `);
       const result = await runtime.execute(program);
@@ -206,8 +206,8 @@ describe('Confidence Operators', () => {
 
     it('should perform confident division', async () => {
       const program = parse(`
-        distance = 120 ~> 0.85
-        time = 4 ~> 0.9
+        let distance = 120 ~> 0.85
+        let time = 4 ~> 0.9
         distance ~/ time
       `);
       const result = await runtime.execute(program);
@@ -217,8 +217,8 @@ describe('Confidence Operators', () => {
 
     it('should handle mixed confident and regular values', async () => {
       const program = parse(`
-        confidentValue = 25 ~> 0.7
-        regularValue = 15
+        let confidentValue = 25 ~> 0.7
+        let regularValue = 15
         confidentValue ~+ regularValue
       `);
       const result = await runtime.execute(program);
@@ -228,9 +228,9 @@ describe('Confidence Operators', () => {
 
     it('should support chained arithmetic operations', async () => {
       const program = parse(`
-        a = 10 ~> 0.9
-        b = 5 ~> 0.8
-        c = 2 ~> 0.7
+        let a = 10 ~> 0.9
+        let b = 5 ~> 0.8
+        let c = 2 ~> 0.7
         a ~+ b ~* c
       `);
       const result = await runtime.execute(program);
@@ -242,8 +242,8 @@ describe('Confidence Operators', () => {
   describe('Confident Comparison Operators (~==, ~!=, ~<, ~>=, ~<=)', () => {
     it('should perform confident equality with same values', async () => {
       const program = parse(`
-        value1 = 42 ~> 0.9
-        value2 = 42 ~> 0.8
+        let value1 = 42 ~> 0.9
+        let value2 = 42 ~> 0.8
         value1 ~== value2
       `);
       const result = await runtime.execute(program);
@@ -253,8 +253,8 @@ describe('Confidence Operators', () => {
 
     it('should perform confident equality with different values', async () => {
       const program = parse(`
-        value1 = 42 ~> 0.9
-        value2 = 24 ~> 0.8
+        let value1 = 42 ~> 0.9
+        let value2 = 24 ~> 0.8
         value1 ~== value2
       `);
       const result = await runtime.execute(program);
@@ -264,8 +264,8 @@ describe('Confidence Operators', () => {
 
     it('should perform confident not equal', async () => {
       const program = parse(`
-        value1 = "hello" ~> 0.95
-        value2 = "world" ~> 0.7
+        let value1 = "hello" ~> 0.95
+        let value2 = "world" ~> 0.7
         value1 ~!= value2
       `);
       const result = await runtime.execute(program);
@@ -275,8 +275,8 @@ describe('Confidence Operators', () => {
 
     it('should perform confident less than', async () => {
       const program = parse(`
-        temp1 = 25 ~> 0.8
-        temp2 = 30 ~> 0.9
+        let temp1 = 25 ~> 0.8
+        let temp2 = 30 ~> 0.9
         temp1 ~< temp2
       `);
       const result = await runtime.execute(program);
@@ -286,8 +286,8 @@ describe('Confidence Operators', () => {
 
     it('should perform confident greater or equal', async () => {
       const program = parse(`
-        score = 85 ~> 0.75
-        threshold = 80 ~> 0.9
+        let score = 85 ~> 0.75
+        let threshold = 80 ~> 0.9
         score ~>= threshold
       `);
       const result = await runtime.execute(program);
@@ -297,8 +297,8 @@ describe('Confidence Operators', () => {
 
     it('should perform confident less or equal', async () => {
       const program = parse(`
-        usage = 45 ~> 0.85
-        limit = 50 ~> 0.8
+        let usage = 45 ~> 0.85
+        let limit = 50 ~> 0.8
         usage ~<= limit
       `);
       const result = await runtime.execute(program);
@@ -308,8 +308,8 @@ describe('Confidence Operators', () => {
 
     it('should handle mixed confident and regular values', async () => {
       const program = parse(`
-        confidentValue = 100 ~> 0.7
-        regularValue = 90
+        let confidentValue = 100 ~> 0.7
+        let regularValue = 90
         confidentValue ~>= regularValue
       `);
       const result = await runtime.execute(program);
@@ -321,8 +321,8 @@ describe('Confidence Operators', () => {
   describe('Threshold Gate Operator (~@>)', () => {
     it('should execute right operand when threshold is met', async () => {
       const program = parse(`
-        highConfidence = "condition met" ~> 0.9
-        action = "perform action" ~> 0.8
+        let highConfidence = "condition met" ~> 0.9
+        let action = "perform action" ~> 0.8
         highConfidence ~@> action
       `);
       const result = await runtime.execute(program);
@@ -332,8 +332,8 @@ describe('Confidence Operators', () => {
 
     it('should not execute right operand when threshold is not met', async () => {
       const program = parse(`
-        lowConfidence = "uncertain condition" ~> 0.5
-        action = "risky action" ~> 0.9
+        let lowConfidence = "uncertain condition" ~> 0.5
+        let action = "risky action" ~> 0.9
         lowConfidence ~@> action
       `);
       const result = await runtime.execute(program);
@@ -343,8 +343,8 @@ describe('Confidence Operators', () => {
 
     it('should handle regular values as full confidence', async () => {
       const program = parse(`
-        certainCondition = "definitely true"
-        action = "safe action" ~> 0.8
+        let certainCondition = "definitely true"
+        let action = "safe action" ~> 0.8
         certainCondition ~@> action
       `);
       const result = await runtime.execute(program);
@@ -354,8 +354,8 @@ describe('Confidence Operators', () => {
 
     it('should work with exactly threshold confidence', async () => {
       const program = parse(`
-        exactThreshold = "borderline case" ~> 0.7
-        action = "threshold action" ~> 0.6
+        let exactThreshold = "borderline case" ~> 0.7
+        let action = "threshold action" ~> 0.6
         exactThreshold ~@> action
       `);
       const result = await runtime.execute(program);
@@ -365,9 +365,9 @@ describe('Confidence Operators', () => {
 
     it('should support chained threshold gates', async () => {
       const program = parse(`
-        condition1 = "first check" ~> 0.9
-        condition2 = "second check" ~> 0.8
-        finalAction = "execute" ~> 0.7
+        let condition1 = "first check" ~> 0.9
+        let condition2 = "second check" ~> 0.8
+        let finalAction = "execute" ~> 0.7
         condition1 ~@> condition2 ~@> finalAction
       `);
       const result = await runtime.execute(program);
@@ -377,9 +377,9 @@ describe('Confidence Operators', () => {
 
     it('should handle AI model threshold patterns', async () => {
       const program = parse(`
-        modelConfidence = "AI prediction" ~> 0.85
-        humanReview = "needs review" ~> 0.6
-        autoApprove = "auto approved" ~> 0.95
+        let modelConfidence = "AI prediction" ~> 0.85
+        let humanReview = "needs review" ~> 0.6
+        let autoApprove = "auto approved" ~> 0.95
         modelConfidence ~@> autoApprove
       `);
       const result = await runtime.execute(program);

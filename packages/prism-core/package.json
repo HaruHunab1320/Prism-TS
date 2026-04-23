@@ -1,6 +1,6 @@
 {
   "name": "@prism-lang/core",
-  "version": "1.3.0",
+  "version": "4.0.0",
   "description": "A programming language for uncertainty",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

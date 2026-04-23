@@ -317,7 +317,7 @@ describe('Linter', () => {
         print(true)
         print(false)
         print(null)
-        print(undefined)
+        print(null)
         result = llm("test")
         mapped = map([1, 2, 3], x => x * 2)
       `;

@@ -11,13 +11,13 @@ Let's write a simple program that demonstrates Prism's unique features: confiden
 
 Create a file called `hello.prism`:
 
-```prism
+```javascript
 // Basic confidence assignment
-greeting = "Hello, World!" ~> 0.95
+let greeting = "Hello, World!" ~> 0.95
 console.log(greeting)
 
 // Working with uncertainty
-temperature = 72.5 ~> 0.9
+let temperature = 72.5 ~> 0.9
 if (temperature > 70) {
   console.log("It's warm today!")
 }
@@ -39,7 +39,16 @@ import { readFileSync } from 'fs';
 
 const code = readFileSync('hello.prism', 'utf-8');
 const ast = parse(code);
-const runtime = createRuntime();
+const runtime = createRuntime({
+  confidence: {
+    strategy: {
+      arithmetic: 'min',
+      logicalOr: 'max',
+      ternary: 'product'
+    },
+    trackProvenance: true
+  }
+});
 
 const result = await runtime.execute(ast);
 console.log(result);
@@ -49,12 +58,13 @@ console.log(result);
 
 Let's build a simple AI-powered decision maker:
 
-```prism
+```javascript
 // AI Analysis with Confidence
-analysis = llm("Should we deploy this code to production?")
-confidence = <~ analysis  // Extract confidence from LLM response
+let analysis = llm("Should we deploy this code to production?")
+let confidence = <~ analysis  // Extract confidence from LLM response
 
 // Multi-level decision making
+let deploy_status = "blocked"
 uncertain if (analysis ~> 0.8) {
   high {
     console.log("✅ High confidence - deploying to production")
@@ -71,11 +81,11 @@ uncertain if (analysis ~> 0.8) {
 }
 
 // Confidence combination
-security_check = llm("Any security vulnerabilities?") ~> 0.85
-performance_check = llm("Performance impact acceptable?") ~> 0.9
+let security_check = llm("Any security vulnerabilities?") ~> 0.85
+let performance_check = llm("Performance impact acceptable?") ~> 0.9
 
 // Parallel confidence selection (picks highest confidence)
-final_decision = security_check ~||> performance_check
+let final_decision = security_check ~||> performance_check
 
 console.log("Final deployment confidence: " + (<~ final_decision))
 ```

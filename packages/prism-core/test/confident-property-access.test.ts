@@ -29,7 +29,7 @@ describe('Confident Property Access (~.)', () => {
       expect(result.toString()).toBe('42 (~100.0%)');
     });
 
-    it('should return null for null/undefined objects', async () => {
+    it('should return null for null/null objects', async () => {
       const program = parse(`
         let obj = null
         let val = obj~.prop
@@ -39,14 +39,14 @@ describe('Confident Property Access (~.)', () => {
       expect(result.toString()).toBe('null (~100.0%)');
     });
 
-    it('should return undefined for missing properties', async () => {
+    it('should return null for missing properties', async () => {
       const program = parse(`
         let obj = { a: 1 } ~> 0.9
         let val = obj~.missing
         val
       `);
       const result = await runtime.execute(program);
-      expect(result.toString()).toBe('undefined (~90.0%)');
+      expect(result.toString()).toBe('null (~90.0%)');
     });
   });
 

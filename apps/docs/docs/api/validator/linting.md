@@ -37,7 +37,7 @@ const validator = createValidator({
 #### `no-unused-variables`
 Detects variables that are declared but never used.
 
-```prism
+```javascript
 // ❌ Lint Warning
 const unused = 42
 const used = 10
@@ -51,7 +51,7 @@ print(used)
 #### `no-unreachable-code`
 Identifies code that can never be executed.
 
-```prism
+```javascript
 // ❌ Lint Warning
 function example() {
   return 42
@@ -69,7 +69,7 @@ function example() {
 #### `no-empty-blocks`
 Warns about empty code blocks.
 
-```prism
+```javascript
 // ❌ Lint Warning
 if (condition) {
   // Empty block
@@ -87,7 +87,7 @@ if (condition) {
 #### `confidence-range`
 Ensures confidence values are between 0 and 1.
 
-```prism
+```javascript
 // ❌ Lint Error
 const x = 42 ~> 1.5    // Confidence > 1
 const y = 10 ~> -0.1   // Confidence < 0
@@ -100,7 +100,7 @@ const y = 10 ~> 0.1
 #### `consistent-confidence-usage`
 Enforces consistent use of confidence throughout related operations.
 
-```prism
+```javascript
 // ❌ Lint Warning
 const a = getValue() ~> 0.8
 const b = getValue()        // Missing confidence
@@ -115,7 +115,7 @@ const result = a ~+ b
 #### `prefer-confidence-operators`
 Suggests using confidence operators when working with confident values.
 
-```prism
+```javascript
 // ❌ Lint Suggestion
 const a = 10 ~> 0.8
 const b = 20 ~> 0.9
@@ -132,7 +132,7 @@ const sum = a ~+ b     // Confidence operator
 #### `uncertain-completeness`
 Ensures uncertain statements have all required branches.
 
-```prism
+```javascript
 // ❌ Lint Warning
 uncertain if (analysis) {
   high { process() }
@@ -150,7 +150,7 @@ uncertain if (analysis) {
 #### `require-confidence-in-uncertain`
 Requires confidence values in uncertain conditions.
 
-```prism
+```javascript
 // ❌ Lint Error
 uncertain if (result) {  // No confidence
   high { accept() }
@@ -167,7 +167,7 @@ uncertain if (result ~> 0.7) {
 #### `no-infinite-loops`
 Detects potentially infinite loops.
 
-```prism
+```javascript
 // ❌ Lint Warning
 while (true) {
   process()
@@ -187,7 +187,7 @@ while (count < 100) {
 #### `const-requires-initializer`
 Enforces that const declarations have initializers.
 
-```prism
+```javascript
 // ❌ Lint Error
 const x
 
@@ -198,7 +198,7 @@ const x = 0
 #### `function-requires-name`
 Requires functions to have names (no anonymous functions).
 
-```prism
+```javascript
 // ❌ Lint Warning
 const handler = function() {
   return 42
@@ -213,7 +213,7 @@ const handler = function calculate() {
 #### `no-duplicate-confidence-branches`
 Detects duplicate logic in confidence branches.
 
-```prism
+```javascript
 // ❌ Lint Warning
 uncertain if (score ~> 0.8) {
   high { print("Good") }

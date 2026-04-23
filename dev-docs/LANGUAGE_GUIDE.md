@@ -20,6 +20,8 @@ A comprehensive guide to programming in Prism - the AI orchestration language wi
 
 Prism is designed to make AI programming natural and intuitive. Unlike traditional programming languages, Prism treats uncertainty as a first-class citizen, allowing you to write code that elegantly handles the probabilistic nature of AI responses.
 
+Note: `undefined` is treated as an alias of `null`.
+
 ### Core Philosophy
 
 - **Uncertainty is Natural**: AI responses are inherently uncertain, and Prism embraces this
@@ -187,9 +189,9 @@ original = [1, 2, 3]
 expanded = original.push(4, 5)  // [1, 2, 3, 4, 5]
 // original is still [1, 2, 3]
 
-// ForEach - iterate over elements (returns undefined)
+// ForEach - iterate over elements (returns null)
 numbers.forEach(x => println(x))  // Prints each number
-result = numbers.forEach(x => x * 2)  // result is undefined
+result = numbers.forEach(x => x * 2)  // result is null
 
 // Chaining array methods
 result = numbers
@@ -283,7 +285,7 @@ The threshold gate operator provides conditional pipeline continuation based on 
 ```prism
 // Basic threshold gate
 value = prediction ~> 0.75
-result = value ~?> 0.8  // Returns undefined if confidence < 80%
+result = value ~?> 0.8  // Returns null if confidence < 80%
 
 // Threshold with default value
 value = analysis ~> 0.4
@@ -370,8 +372,8 @@ value = null
 isNull = value == null  // true
 notNull = value != null // false
 
-// Nullish coalescing - only replaces null/undefined
-port = process.env.PORT ?? 3000  // Uses 3000 only if PORT is null/undefined
+// Nullish coalescing - only replaces null
+port = process.env.PORT ?? 3000  // Uses 3000 only if PORT is null
 enabled = config.enabled ?? true  // Keeps false if explicitly set
 retries = options.retries ?? 0    // Keeps 0 if specified
 ```
@@ -380,23 +382,23 @@ retries = options.retries ?? 0    // Keeps 0 if specified
 
 ```prism
 // Undefined represents a value that hasn't been assigned
-unassigned = undefined
+unassigned = null
 
 // Undefined is also falsy
-if (undefined) {
+if (null) {
   // This won't execute
 } else {
   // This will execute
 }
 
 // Undefined is distinct from null
-isNull = undefined == null      // false
-isUndefined = undefined == undefined  // true
+isNull = null == null      // false
+isUndefined = null == null  // true
 
 // Both are falsy but different
 nullValue = null
-undefinedValue = undefined
-areSame = nullValue == undefinedValue  // false
+nullValue = null
+areSame = nullValue == nullValue  // false
 ```
 
 ### Arrays
@@ -429,8 +431,8 @@ person_age = person["age"]  // 30
 user = { profile: null }
 safeName = user?.profile?.name  // Returns null instead of throwing
 
-// Works with undefined too
-data = { value: undefined }
+// Works with null too
+data = { value: null }
 result = data?.value?.nested  // Returns null
 
 // Nested objects
@@ -572,12 +574,12 @@ Prism provides a comprehensive set of operators designed specifically for uncert
 
 #### Nullish Coalescing Operator (`??`)
 
-Returns the right operand only when the left is null or undefined (unlike `||` which replaces all falsy values):
+Returns the right operand only when the left is null or null (unlike `||` which replaces all falsy values):
 
 ```prism
 // Basic nullish coalescing
 value = null ?? "default"  // "default"
-result = undefined ?? "fallback"  // "fallback"
+result = null ?? "fallback"  // "fallback"
 
 // Preserves falsy values
 zero = 0 ?? 10  // 0 (not 10!)
@@ -680,7 +682,7 @@ As of v1.0.19, Prism's logical operators work like JavaScript, returning actual 
 // || returns first truthy value or last value
 name = userInput || "Anonymous"  // Common default pattern
 result = 0 || false || "found"   // "found"
-value = null || undefined || 0   // 0 (last value)
+value = null || null || 0   // 0 (last value)
 
 // && returns first falsy value or last value  
 result = true && "value"          // "value"
@@ -818,8 +820,8 @@ length = arr?.length  // Returns null
 data = { user: { name: "Alice" } }
 result = data.user?.name  // "Alice"
 
-// Handles undefined too
-obj = { value: undefined }
+// Handles null too
+obj = { value: null }
 nested = obj?.value?.property  // Returns null
 ```
 
@@ -934,7 +936,7 @@ user_preference = user ~. settings ~. theme ~?? "default" ~@> apply_theme()
 
 ### Confidence-Based Destructuring
 
-Prism allows you to filter values during destructuring based on their confidence levels. Values below the threshold are assigned as `undefined`.
+Prism allows you to filter values during destructuring based on their confidence levels. Values below the threshold are assigned as `null`.
 
 #### Global Threshold
 
@@ -944,8 +946,11 @@ Apply a single confidence threshold to all destructured values:
 data = [10 ~> 0.9, 20 ~> 0.6, 30 ~> 0.8]
 
 // Only values with confidence >= 0.7 are assigned
+let a = null
+let b = null
+let c = null
 [a, b, c] ~> 0.7 = data
-// a = 10, b = undefined, c = 30
+// a = 10, b = null, c = 30
 
 // Object destructuring with threshold
 userData = {
@@ -954,8 +959,11 @@ userData = {
   age: 30 ~> 0.85
 }
 
+let name = null
+let email = null
+let age = null
 {name, email, age} ~> 0.8 = userData
-// name = "Alice", email = undefined, age = 30
+// name = "Alice", email = null, age = 30
 ```
 
 #### Per-Element Threshold
@@ -964,17 +972,17 @@ Apply individual thresholds to specific elements:
 
 ```prism
 // Array with per-element thresholds
-[critical ~> 0.9, important ~> 0.7, optional ~> 0.5] = sensorData
+let [critical ~> 0.9, important ~> 0.7, optional ~> 0.5] = sensorData
 
 // Object with per-property thresholds
-{
+let {
   userId: id ~> 0.95,      // Require very high confidence for ID
   userName: name ~> 0.8,   // High confidence for name
   userPrefs: prefs ~> 0.5  // Lower threshold for preferences
 } = apiResponse
 
 // Mixed approach
-{name ~> 0.9, age, email ~> 0.8} = userData
+let {name ~> 0.9, age, email ~> 0.8} = userData
 // name requires 90%, email requires 80%, age has no threshold
 ```
 
@@ -986,10 +994,14 @@ Rest elements only collect values that meet the confidence threshold:
 values = [1 ~> 0.9, 2 ~> 0.5, 3 ~> 0.8, 4 ~> 0.6, 5 ~> 0.95]
 
 // Global threshold affects rest collection
+let first = null
+let rest = []
 [first, ...rest] ~> 0.7 = values
 // first = 1, rest = [3, 5] (only values with confidence >= 0.7)
 
 // Object rest with threshold
+let critical = null
+let others = {}
 {critical ~> 0.9, ...others} ~> 0.7 = measurements
 // critical assigned if >= 0.9, others contains properties >= 0.7
 ```
@@ -1058,6 +1070,18 @@ uncertain if (primary_diagnosis ~> 0.8) {
   low {
     confidence_level = "very_low"
   }
+}
+```
+
+### Match Expressions
+
+```prism
+let outcome = match input {
+  0 => "zero",
+  [x, y, ...rest] => rest,
+  {type: "error", message} => message,
+  x if x > 10 => "large",
+  _ => "fallback"
 }
 ```
 

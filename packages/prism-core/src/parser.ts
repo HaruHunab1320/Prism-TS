@@ -10,7 +10,6 @@ import {
   InterpolatedString,
   BooleanLiteral,
   NullLiteral,
-  UndefinedLiteral,
   BinaryExpression,
   UnaryExpression,
   CallExpression,
@@ -50,6 +49,8 @@ import {
   ObjectPattern,
   RestElement,
   DestructuringAssignment,
+  MatchExpression,
+  MatchArm,
   ImportStatement,
   ExportStatement,
   ImportSpecifier,
@@ -396,7 +397,6 @@ export class Parser {
     while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
       const nameToken = this.consume(TokenType.IDENTIFIER, 'Expected agent name');
       this.consume(TokenType.COLON, "Expected ':' after agent name");
-      this.consume(TokenType.AGENT, "Expected 'Agent' keyword");
       const config = this.parseAgentConfig();
       declarations.push(new AgentDeclaration(nameToken.value, config));
 
@@ -576,7 +576,9 @@ export class Parser {
     
     // Parse init
     if (!this.check(TokenType.SEMICOLON)) {
-      if (this.check(TokenType.IDENTIFIER) && this.peekNext().type === TokenType.EQUAL) {
+      if (this.match(TokenType.LET, TokenType.CONST)) {
+        init = this.variableDeclaration(false);
+      } else if (this.check(TokenType.IDENTIFIER) && this.peekNext().type === TokenType.EQUAL) {
         // Variable assignment
         const identifier = this.advance().value;
         this.consume(TokenType.EQUAL, "Expected '=' in assignment");
@@ -731,7 +733,9 @@ export class Parser {
     
     // Parse init
     if (!this.check(TokenType.SEMICOLON)) {
-      if (this.check(TokenType.IDENTIFIER) && this.peekNext().type === TokenType.EQUAL) {
+      if (this.match(TokenType.LET, TokenType.CONST)) {
+        init = this.variableDeclaration(false);
+      } else if (this.check(TokenType.IDENTIFIER) && this.peekNext().type === TokenType.EQUAL) {
         const identifier = this.advance().value;
         this.consume(TokenType.EQUAL, "Expected '=' in assignment");
         const value = this.expression();
@@ -1078,7 +1082,7 @@ export class Parser {
     return new ReturnStatement(value);
   }
 
-  private variableDeclaration(): VariableDeclaration {
+  private variableDeclaration(allowSemicolon: boolean = true): VariableDeclaration {
     // Get the declaration kind (const or let)
     const kind = this.previous().value as 'const' | 'let';
     
@@ -1092,7 +1096,9 @@ export class Parser {
         if (!initializer) {
           throw new ParseError("Expected expression after '='", this.peek(), this.sourceCode);
         }
-        this.match(TokenType.SEMICOLON); // Optional semicolon
+        if (allowSemicolon) {
+          this.match(TokenType.SEMICOLON); // Optional semicolon
+        }
         return new VariableDeclaration(kind, '', initializer, pattern);
       }
     }
@@ -1112,7 +1118,9 @@ export class Parser {
       throw new ParseError("const declarations must have an initializer", this.peek(), this.sourceCode);
     }
     
-    this.match(TokenType.SEMICOLON); // Optional semicolon
+    if (allowSemicolon) {
+      this.match(TokenType.SEMICOLON); // Optional semicolon
+    }
     return new VariableDeclaration(kind, identifier, initializer);
   }
 
@@ -1435,6 +1443,10 @@ export class Parser {
   }
 
   private primary(): Expression | null {
+    if (this.match(TokenType.MATCH)) {
+      return this.matchExpression();
+    }
+
     if (this.match(TokenType.NUMBER)) {
       return new NumberLiteral(parseFloat(this.previous().value));
     }
@@ -1458,9 +1470,9 @@ export class Parser {
     if (this.match(TokenType.NULL)) {
       return new NullLiteral();
     }
-    
     if (this.match(TokenType.UNDEFINED)) {
-      return new UndefinedLiteral();
+      // "undefined" is now treated as an alias for null
+      return new NullLiteral();
     }
     
     if (this.match(TokenType.PLACEHOLDER)) {
@@ -1626,6 +1638,194 @@ export class Parser {
     }
     
     throw new ParseError("Expected expression", this.peek(), this.sourceCode);
+  }
+
+  private matchExpression(): Expression {
+    const value = this.expression();
+    if (!value) {
+      throw new ParseError("Expected expression after 'match'", this.peek(), this.sourceCode);
+    }
+
+    this.consume(TokenType.LEFT_BRACE, "Expected '{' after match expression");
+
+    const arms: MatchArm[] = [];
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      const pattern = this.parseMatchPattern();
+      if (!pattern) {
+        throw new ParseError("Expected match pattern", this.peek(), this.sourceCode);
+      }
+
+      let confidenceThreshold: Expression | undefined;
+      if (this.match(TokenType.CONFIDENCE_ARROW)) {
+        const threshold = this.expression();
+        if (!threshold) {
+          throw new ParseError("Expected confidence threshold expression after '~>'", this.peek(), this.sourceCode);
+        }
+        confidenceThreshold = threshold;
+      }
+
+      let guard: Expression | undefined;
+      if (this.match(TokenType.IF)) {
+        const guardExpr = this.expression();
+        if (!guardExpr) {
+          throw new ParseError("Expected guard expression after 'if'", this.peek(), this.sourceCode);
+        }
+        guard = guardExpr;
+      }
+
+      this.consume(TokenType.ARROW, "Expected '=>' after match pattern");
+
+      let body: Expression | BlockStatement;
+      if (this.check(TokenType.LEFT_BRACE)) {
+        this.advance(); // consume {
+        body = this.blockStatement();
+      } else {
+        const expr = this.expression();
+        if (!expr) {
+          throw new ParseError("Expected expression after '=>'", this.peek(), this.sourceCode);
+        }
+        body = expr;
+      }
+
+      arms.push(new MatchArm(pattern, body, guard, confidenceThreshold));
+
+      if (this.match(TokenType.COMMA) || this.match(TokenType.SEMICOLON)) {
+        continue;
+      }
+      if (!this.check(TokenType.RIGHT_BRACE)) {
+        throw new ParseError("Expected ',' or '}' after match arm", this.peek(), this.sourceCode);
+      }
+    }
+
+    this.consume(TokenType.RIGHT_BRACE, "Expected '}' after match arms");
+    return new MatchExpression(value, arms);
+  }
+
+  private parseMatchPattern(): Expression {
+    if (this.check(TokenType.LEFT_BRACKET)) {
+      return this.parseMatchArrayPattern();
+    }
+    if (this.check(TokenType.LEFT_BRACE)) {
+      return this.parseMatchObjectPattern();
+    }
+    if (this.match(TokenType.NUMBER)) {
+      return new NumberLiteral(parseFloat(this.previous().value));
+    }
+    if (this.match(TokenType.STRING)) {
+      return new StringLiteral(this.previous().value);
+    }
+    if (this.match(TokenType.TRUE)) {
+      return new BooleanLiteral(true);
+    }
+    if (this.match(TokenType.FALSE)) {
+      return new BooleanLiteral(false);
+    }
+    if (this.match(TokenType.NULL) || this.match(TokenType.UNDEFINED)) {
+      return new NullLiteral();
+    }
+    if (this.match(TokenType.PLACEHOLDER)) {
+      return new IdentifierExpression('_');
+    }
+    if (this.match(TokenType.IDENTIFIER)) {
+      return new IdentifierExpression(this.previous().value);
+    }
+
+    throw new ParseError("Expected match pattern", this.peek(), this.sourceCode);
+  }
+
+  private parseMatchArrayPattern(): ArrayPattern {
+    this.consume(TokenType.LEFT_BRACKET, "Expected '['");
+    const elements: (Expression | RestElement | null)[] = [];
+    const elementThresholds: (Expression | null)[] = [];
+
+    while (!this.check(TokenType.RIGHT_BRACKET) && !this.isAtEnd()) {
+      if (this.check(TokenType.COMMA)) {
+        elements.push(null);
+        elementThresholds.push(null);
+        this.advance();
+        continue;
+      }
+
+      if (this.match(TokenType.SPREAD)) {
+        const identifier = this.consume(TokenType.IDENTIFIER, "Expected identifier after '...'");
+        elements.push(new RestElement(new IdentifierExpression(identifier.value)));
+        elementThresholds.push(null);
+        if (!this.check(TokenType.RIGHT_BRACKET)) {
+          this.consume(TokenType.COMMA, "Rest element must be last element");
+        }
+      } else if (this.check(TokenType.LEFT_BRACKET) || this.check(TokenType.LEFT_BRACE)) {
+        const nested = this.parseMatchPattern();
+        elements.push(nested);
+        if (this.match(TokenType.CONFIDENCE_ARROW)) {
+          const threshold = this.expression();
+          elementThresholds.push(threshold);
+        } else {
+          elementThresholds.push(null);
+        }
+      } else {
+        const element = this.parseMatchPattern();
+        elements.push(element);
+        if (this.match(TokenType.CONFIDENCE_ARROW)) {
+          const threshold = this.expression();
+          elementThresholds.push(threshold);
+        } else {
+          elementThresholds.push(null);
+        }
+      }
+
+      if (!this.check(TokenType.RIGHT_BRACKET)) {
+        this.consume(TokenType.COMMA, "Expected ',' or ']'");
+      }
+    }
+
+    this.consume(TokenType.RIGHT_BRACKET, "Expected ']'");
+    const hasThresholds = elementThresholds.some(t => t !== null);
+    return new ArrayPattern(elements, hasThresholds ? elementThresholds : undefined);
+  }
+
+  private parseMatchObjectPattern(): ObjectPattern {
+    this.consume(TokenType.LEFT_BRACE, "Expected '{'");
+    const properties: Array<{
+      key: string;
+      value: Expression;
+      defaultValue?: Expression;
+      confidenceThreshold?: Expression;
+    }> = [];
+    let rest: RestElement | undefined;
+
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      if (this.match(TokenType.SPREAD)) {
+        const identifier = this.consume(TokenType.IDENTIFIER, "Expected identifier after '...'");
+        rest = new RestElement(new IdentifierExpression(identifier.value));
+        break;
+      }
+
+      const key = this.consume(TokenType.IDENTIFIER, "Expected property name").value;
+      let value: Expression;
+
+      if (this.match(TokenType.COLON)) {
+        value = this.parseMatchPattern();
+      } else {
+        value = new IdentifierExpression(key);
+      }
+
+      let confidenceThreshold: Expression | undefined;
+      if (this.match(TokenType.CONFIDENCE_ARROW)) {
+        const threshold = this.expression();
+        if (threshold) {
+          confidenceThreshold = threshold;
+        }
+      }
+
+      properties.push({ key, value, confidenceThreshold });
+
+      if (!this.check(TokenType.RIGHT_BRACE)) {
+        this.consume(TokenType.COMMA, "Expected ',' or '}'");
+      }
+    }
+
+    this.consume(TokenType.RIGHT_BRACE, "Expected '}'");
+    return new ObjectPattern(properties, rest);
   }
   
   private arrayLiteral(): ArrayLiteral {

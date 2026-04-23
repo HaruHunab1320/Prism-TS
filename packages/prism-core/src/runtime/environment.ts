@@ -1,10 +1,11 @@
 import { RuntimeError } from './errors';
-import { Value } from './values';
+import { Value, NullValue } from './values';
 
 interface VariableInfo {
   value: Value;
   mutable: boolean;
   declared: boolean;
+  initialized: boolean;
 }
 
 export class Environment {
@@ -19,11 +20,23 @@ export class Environment {
     return this.parent?.findEnvironment(name);
   }
 
-  define(name: string, value: Value, mutable: boolean = true, declared: boolean = false): void {
+  declare(name: string, mutable: boolean = true): void {
     if (this.variables.has(name) && this.variables.get(name)!.declared) {
       throw new RuntimeError(`Variable '${name}' already declared in this scope`);
     }
-    this.variables.set(name, { value, mutable, declared });
+    this.variables.set(name, { value: new NullValue(), mutable, declared: true, initialized: false });
+  }
+
+  define(name: string, value: Value, mutable: boolean = true, declared: boolean = false): void {
+    const existing = this.variables.get(name);
+    if (existing?.declared) {
+      if (existing.initialized) {
+        throw new RuntimeError(`Variable '${name}' already declared in this scope`);
+      }
+      this.variables.set(name, { value, mutable, declared: true, initialized: true });
+      return;
+    }
+    this.variables.set(name, { value, mutable, declared, initialized: true });
   }
 
   has(name: string): boolean {
@@ -35,6 +48,9 @@ export class Environment {
     if (!resolved) {
       throw new RuntimeError(`Undefined variable: ${name}`, undefined, undefined);
     }
+    if (!resolved.info.initialized) {
+      throw new RuntimeError(`Cannot access '${name}' before initialization`);
+    }
     return resolved.info.value;
   }
 
@@ -43,18 +59,23 @@ export class Environment {
     if (!resolved) {
       throw new RuntimeError(`Undefined variable: ${name}`, undefined, undefined);
     }
+    if (!resolved.info.initialized) {
+      throw new RuntimeError(`Cannot assign to '${name}' before initialization`);
+    }
 
     if (!resolved.info.mutable) {
       throw new RuntimeError(`Cannot assign to const variable '${name}'`);
     }
 
-    resolved.env.variables.set(name, { ...resolved.info, value });
+    resolved.env.variables.set(name, { ...resolved.info, value, initialized: true });
   }
 
   getAllVariables(): Map<string, Value> {
     const result = new Map<string, Value>();
     for (const [name, info] of this.variables) {
-      result.set(name, info.value);
+      if (info.initialized) {
+        result.set(name, info.value);
+      }
     }
     return result;
   }

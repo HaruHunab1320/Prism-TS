@@ -21,8 +21,8 @@ describe('Loop Statements', () => {
   describe('C-style For Loops', () => {
     it('should execute basic for loop', async () => {
       const code = `
-        sum = 0
-        for i = 0; i < 5; i = i + 1 {
+        let sum = 0
+        for let i = 0; i < 5; i = i + 1 {
           sum = sum + i
         }
         sum
@@ -34,9 +34,9 @@ describe('Loop Statements', () => {
 
     it('should handle for loop with array access', async () => {
       const code = `
-        arr = [1, 2, 3, 4, 5]
-        sum = 0
-        for i = 0; i < arr.length; i = i + 1 {
+        let arr = [1, 2, 3, 4, 5]
+        let sum = 0
+        for let i = 0; i < arr.length; i = i + 1 {
           sum = sum + arr[i]
         }
         sum
@@ -48,8 +48,8 @@ describe('Loop Statements', () => {
 
     it('should handle empty for loop', async () => {
       const code = `
-        count = 0
-        for i = 0; i < 0; i = i + 1 {
+        let count = 0
+        for let i = 0; i < 0; i = i + 1 {
           count = count + 1
         }
         count
@@ -61,8 +61,8 @@ describe('Loop Statements', () => {
 
     it('should handle for loop without init', async () => {
       const code = `
-        i = 0
-        sum = 0
+        let i = 0
+        let sum = 0
         for ; i < 3; i = i + 1 {
           sum = sum + i
         }
@@ -75,8 +75,8 @@ describe('Loop Statements', () => {
 
     it('should handle for loop without condition (infinite loop with break)', async () => {
       const code = `
-        count = 0
-        for i = 0; ; i = i + 1 {
+        let count = 0
+        for let i = 0; ; i = i + 1 {
           if (i >= 3) {
             break
           }
@@ -91,8 +91,8 @@ describe('Loop Statements', () => {
 
     it('should handle for loop without update', async () => {
       const code = `
-        sum = 0
-        for i = 0; i < 3; {
+        let sum = 0
+        for let i = 0; i < 3; {
           sum = sum + i
           i = i + 1
         }
@@ -105,8 +105,8 @@ describe('Loop Statements', () => {
 
     it('should handle break statement', async () => {
       const code = `
-        sum = 0
-        for i = 0; i < 10; i = i + 1 {
+        let sum = 0
+        for let i = 0; i < 10; i = i + 1 {
           if (i == 5) {
             break
           }
@@ -121,8 +121,8 @@ describe('Loop Statements', () => {
 
     it('should handle continue statement', async () => {
       const code = `
-        sum = 0
-        for i = 0; i < 5; i = i + 1 {
+        let sum = 0
+        for let i = 0; i < 5; i = i + 1 {
           if (i == 2) {
             continue
           }
@@ -137,8 +137,8 @@ describe('Loop Statements', () => {
 
     it('should use existing scope for loop variable', async () => {
       const code = `
-        i = 100
-        sum = 0
+        let i = 100
+        let sum = 0
         for i = 0; i < 3; i = i + 1 {
           sum = sum + i
         }
@@ -153,8 +153,8 @@ describe('Loop Statements', () => {
   describe('For-In Loops', () => {
     it('should iterate over array elements', async () => {
       const code = `
-        arr = [10, 20, 30]
-        sum = 0
+        let arr = [10, 20, 30]
+        let sum = 0
         for item in arr {
           sum = sum + item
         }
@@ -167,8 +167,8 @@ describe('Loop Statements', () => {
 
     it('should iterate with index', async () => {
       const code = `
-        arr = ["a", "b", "c"]
-        result = ""
+        let arr = ["a", "b", "c"]
+        let result = ""
         for item, idx in arr {
           result = result + item + idx
         }
@@ -181,8 +181,8 @@ describe('Loop Statements', () => {
 
     it('should handle empty array', async () => {
       const code = `
-        arr = []
-        count = 0
+        let arr = []
+        let count = 0
         for item in arr {
           count = count + 1
         }
@@ -195,8 +195,8 @@ describe('Loop Statements', () => {
 
     it('should handle break in for-in loop', async () => {
       const code = `
-        arr = [1, 2, 3, 4, 5]
-        sum = 0
+        let arr = [1, 2, 3, 4, 5]
+        let sum = 0
         for item in arr {
           if (item == 3) {
             break
@@ -212,8 +212,8 @@ describe('Loop Statements', () => {
 
     it('should handle continue in for-in loop', async () => {
       const code = `
-        arr = [1, 2, 3, 4, 5]
-        sum = 0
+        let arr = [1, 2, 3, 4, 5]
+        let sum = 0
         for item in arr {
           if (item == 3) {
             continue
@@ -229,8 +229,8 @@ describe('Loop Statements', () => {
 
     it('should work with confident arrays', async () => {
       const code = `
-        arr = [1, 2, 3] ~> 0.8
-        sum = 0
+        let arr = [1, 2, 3] ~> 0.8
+        let sum = 0
         for item in arr {
           sum = sum + item
         }
@@ -243,9 +243,9 @@ describe('Loop Statements', () => {
 
     it('should create new scope for loop variables', async () => {
       const code = `
-        item = "outer";
-        idx = 999;
-        arr = ["a", "b"];
+        let item = "outer";
+        let idx = 999;
+        let arr = ["a", "b"];
         for item, idx in arr {
           // item and idx are local to loop
         };
@@ -261,8 +261,8 @@ describe('Loop Statements', () => {
   describe('While Loops', () => {
     it('should execute basic while loop', async () => {
       const code = `
-        i = 0
-        sum = 0
+        let i = 0
+        let sum = 0
         while i < 5 {
           sum = sum + i
           i = i + 1
@@ -276,7 +276,7 @@ describe('Loop Statements', () => {
 
     it('should handle false condition', async () => {
       const code = `
-        count = 0
+        let count = 0
         while false {
           count = count + 1
         }
@@ -289,7 +289,7 @@ describe('Loop Statements', () => {
 
     it('should handle break statement', async () => {
       const code = `
-        i = 0
+        let i = 0
         while true {
           if (i == 3) {
             break
@@ -305,8 +305,8 @@ describe('Loop Statements', () => {
 
     it('should handle continue statement', async () => {
       const code = `
-        i = 0
-        sum = 0
+        let i = 0
+        let sum = 0
         while i < 5 {
           i = i + 1
           if (i == 3) {
@@ -325,7 +325,7 @@ describe('Loop Statements', () => {
   describe.skip('Do-While Loops (removed from language)', () => {
     it('should execute at least once', async () => {
       const code = `
-        count = 0
+        let count = 0
         do {
           count = count + 1
         } while false
@@ -338,8 +338,8 @@ describe('Loop Statements', () => {
 
     it('should execute multiple times', async () => {
       const code = `
-        i = 0
-        sum = 0
+        let i = 0
+        let sum = 0
         do {
           sum = sum + i
           i = i + 1
@@ -353,7 +353,7 @@ describe('Loop Statements', () => {
 
     it('should handle break statement', async () => {
       const code = `
-        i = 0
+        let i = 0
         do {
           if (i == 2) {
             break
@@ -369,8 +369,8 @@ describe('Loop Statements', () => {
 
     it('should handle continue statement', async () => {
       const code = `
-        i = 0
-        sum = 0
+        let i = 0
+        let sum = 0
         do {
           i = i + 1
           if (i == 2) {
@@ -389,9 +389,9 @@ describe('Loop Statements', () => {
   describe('Nested Loops', () => {
     it('should handle nested for loops', async () => {
       const code = `
-        result = ""
-        for i = 0; i < 3; i = i + 1 {
-          for j = 0; j < 2; j = j + 1 {
+        let result = ""
+        for let i = 0; i < 3; i = i + 1 {
+          for let j = 0; j < 2; j = j + 1 {
             result = result + i + "," + j + ";"
           }
         }
@@ -404,11 +404,11 @@ describe('Loop Statements', () => {
 
     it('should handle break in nested loops', async () => {
       const code = `
-        outer = 0
-        inner = 0
-        for i = 0; i < 5; i = i + 1 {
+        let outer = 0
+        let inner = 0
+        for let i = 0; i < 5; i = i + 1 {
           outer = outer + 1
-          for j = 0; j < 5; j = j + 1 {
+          for let j = 0; j < 5; j = j + 1 {
             if (j == 2) {
               break // Only breaks inner loop
             }
@@ -427,10 +427,10 @@ describe('Loop Statements', () => {
   describe('Loop with Complex Expressions', () => {
     it('should work with array methods in loops', async () => {
       const code = `
-        arrays = [[1, 2], [3, 4], [5, 6]]
-        sums = []
+        let arrays = [[1, 2], [3, 4], [5, 6]]
+        let sums = []
         for arr in arrays {
-          sum = reduce(arr, (a, b) => a + b, 0)
+          let sum = reduce(arr, (a, b) => a + b, 0)
           sums = [...sums, sum]
         }
         sums
@@ -445,11 +445,11 @@ describe('Loop Statements', () => {
 
     it('should work with confidence in loop conditions', async () => {
       const code = `
-        values = [1, 2, 3] ~> 0.8
-        sum = 0
-        i = 0
+        let values = [1, 2, 3] ~> 0.8
+        let sum = 0
+        let i = 0
         while i < values.length {
-          item = values[i]
+          let item = values[i]
           sum = sum + item
           i = i + 1
         }
@@ -464,7 +464,7 @@ describe('Loop Statements', () => {
   describe('Error Handling', () => {
     it('should error on non-array in for-in loop', async () => {
       const code = `
-        notArray = 42
+        let notArray = 42
         for item in notArray {
           // Should not execute
         }

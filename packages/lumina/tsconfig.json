@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "types": ["jest", "node"],
+    "paths": {
+      "@prism-lang/confidence": ["../prism-confidence/src"],
+      "@prism-lang/confidence/*": ["../prism-confidence/src/*"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "test/**/*"
+  ],
+  "references": [
+    { "path": "../prism-confidence" }
+  ]
+}

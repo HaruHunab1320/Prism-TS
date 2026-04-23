@@ -1,0 +1,22 @@
+{
+  "model": "distilgpt2",
+  "num_conf_heads": 3,
+  "baseline": {
+    "samples": 10,
+    "answered": 10,
+    "abstained": 0,
+    "answered_rate": 1.0,
+    "em_answered": 0.0,
+    "em_overall": 0.0,
+    "token_f1_answered": 0.011764705882352941
+  },
+  "branching": {
+    "samples": 10,
+    "answered": 10,
+    "abstained": 0,
+    "answered_rate": 1.0,
+    "em_answered": 0.0,
+    "em_overall": 0.0,
+    "token_f1_answered": 0.0
+  }
+}

@@ -13,7 +13,7 @@ Prism is a probabilistic programming language that extends familiar JavaScript-l
 
 Prism supports standard literal types with optional confidence annotations:
 
-```prism
+```javascript
 // Numbers
 42
 3.14
@@ -24,15 +24,16 @@ Prism supports standard literal types with optional confidence annotations:
 'Single quotes work too'
 
 // String interpolation
-name = "Alice"
-greeting = `Hello, ${name}!`
+let name = "Alice"
+let greeting = `Hello, ${name}!`
 
 // Booleans
 true
 false
 
-// Null and undefined
+// Null (absence of a value)
 null
+// "undefined" is treated as an alias for null
 undefined
 
 // Arrays
@@ -46,7 +47,7 @@ undefined
 
 ### Comments
 
-```prism
+```javascript
 // Single-line comment
 
 /* 
@@ -59,15 +60,15 @@ undefined
 
 Prism supports both traditional assignment syntax and modern declaration keywords:
 
-### Basic Assignment
-```prism
+### Assignment (Requires Declaration)
+```javascript
 // Simple assignment
-x = 10
-name = "Alice"
-isReady = true
+let x = 10
+let name = "Alice"
+let isReady = true
 
 // Compound assignments
-count = 0
+let count = 0
 count += 1    // count = count + 1
 count -= 1    // count = count - 1
 count *= 2    // count = count * 2
@@ -75,7 +76,7 @@ count /= 2    // count = count / 2
 count %= 3    // count = count % 3
 
 // Confident compound assignments (preserve confidence)
-balance = 1000 ~> 0.9
+let balance = 1000 ~> 0.9
 balance ~+= 100 ~> 0.8   // balance = balance ~+ (100 ~> 0.8)
 balance ~-= 50 ~> 0.95   // balance = balance ~- (50 ~> 0.95)
 balance ~*= 1.1 ~> 0.85  // balance = balance ~* (1.1 ~> 0.85)
@@ -83,7 +84,7 @@ balance ~/= 2 ~> 0.9     // balance = balance ~/ (2 ~> 0.9)
 ```
 
 ### Declaration Keywords (const/let)
-```prism
+```javascript
 // Immutable bindings with const
 const PI = 3.14159
 const users = ["alice", "bob"]  // Reference is immutable, contents can change
@@ -109,7 +110,7 @@ const name = "Alice"  // ✓ Valid
 // const age             // ✗ Error: const declarations must have an initializer
 
 // let allows optional initializer
-let score              // ✓ Valid, defaults to 0
+let score              // ✓ Valid, defaults to null
 let rating = 85        // ✓ Valid with explicit value
 
 // Destructuring with const/let
@@ -121,7 +122,7 @@ let {name, age} = user
 
 ### Arithmetic Operators
 
-```prism
+```javascript
 // Basic arithmetic
 a + b    // Addition
 a - b    // Subtraction
@@ -132,11 +133,25 @@ a ** b   // Exponentiation
 
 // Unary operators
 -x       // Negation
++x       // Unary plus (converts to number)
+
+// Increment/Decrement operators
+i++      // Post-increment (returns value, then increments)
+i--      // Post-decrement (returns value, then decrements)
+++i      // Pre-increment (increments, then returns value)
+--i      // Pre-decrement (decrements, then returns value)
+
+// Example usage
+let counter = 0
+print(counter++)  // Prints 0, counter is now 1
+print(++counter)  // Prints 2, counter is now 2
+print(counter--)  // Prints 2, counter is now 1
+print(--counter)  // Prints 0, counter is now 0
 ```
 
 ### Comparison Operators
 
-```prism
+```javascript
 // Loose equality (with type coercion)
 a == b   // Equality with type coercion
 a != b   // Inequality with type coercion
@@ -155,30 +170,29 @@ a >= b   // Greater than or equal
 #### Type Coercion in Comparisons
 
 Loose equality (`==`) performs type coercion:
-```prism
+```javascript
 5 == "5"          // true - number to string coercion
 0 == false        // true - number to boolean coercion
-null == undefined // true - null equals undefined
 "" == false       // true - empty string is falsy
 
 // Strict equality does not coerce
 5 === "5"         // false - different types
 0 === false       // false - different types
-null === undefined // false - different types
+null == null      // true
 ```
 
 ### Logical Operators
 
-```prism
+```javascript
 a && b   // Logical AND
 a || b   // Logical OR
 !a       // Logical NOT
-a ?? b   // Nullish coalescing (returns b if a is null/undefined)
+a ?? b   // Nullish coalescing (returns b if a is null)
 ```
 
 ### Type Operators
 
-```prism
+```javascript
 typeof x          // Returns type as string
 x instanceof Y    // Checks if x is instance of Y
 ```
@@ -187,13 +201,14 @@ x instanceof Y    // Checks if x is instance of Y
 
 ### Conditional Statements
 
-```prism
+```javascript
 // Basic if statement
 if x > 0 {
   // positive case
 }
 
 // If-else statement
+let status = "cool"
 if temperature > 30 {
   status = "hot"
 } else {
@@ -201,33 +216,44 @@ if temperature > 30 {
 }
 
 // Multiple conditions
+let grade = "F"
 if score >= 90 {
   grade = "A"
 } else if score >= 80 {
   grade = "B"
 } else if score >= 70 {
   grade = "C"
-} else {
-  grade = "F"
 }
 
 // Ternary operator
-result = condition ? valueIfTrue : valueIfFalse
+let result = condition ? valueIfTrue : valueIfFalse
 
 // Confident ternary operator (propagates confidence)
-confident = condition ~? valueIfTrue : valueIfFalse
+let confident = condition ~? valueIfTrue : valueIfFalse
+```
+
+### Match Expressions
+
+```javascript
+let result = match value {
+  0 => "zero",
+  [x, y, ...rest] => rest,
+  {type: "error", message} => message,
+  x if x > 10 => "large",
+  _ => "fallback"
+}
 ```
 
 ### Loops
 
-```prism
+```javascript
 // For loop
-for i = 0; i < 10; i = i + 1 {
+for let i = 0; i < 10; i = i + 1 {
   // loop body
 }
 
 // For-in loop (iterating over arrays)
-arr = [1, 2, 3, 4, 5]
+let arr = [1, 2, 3, 4, 5]
 for value in arr {
   // process value
 }
@@ -248,7 +274,7 @@ do {
 } while condition
 
 // Loop control
-for i = 0; i < 100; i = i + 1 {
+for let i = 0; i < 100; i = i + 1 {
   if i == 50 {
     break    // Exit loop
   }
@@ -259,23 +285,91 @@ for i = 0; i < 100; i = i + 1 {
 }
 ```
 
+### Exception Handling
+
+Prism supports try/catch/finally for handling errors and ensuring cleanup:
+
+```javascript
+// Basic try/catch
+try {
+  let result = riskyOperation()
+  processResult(result)
+} catch (error) {
+  console.error("Operation failed:", error)
+}
+
+// Try/catch/finally - finally always executes
+try {
+  let connection = openConnection()
+  let data = fetchData(connection)
+  return data
+} catch (error) {
+  console.error("Failed to fetch data:", error)
+  return null
+} finally {
+  // Cleanup - runs whether or not an error occurred
+  closeConnection(connection)
+}
+
+// Catching specific error handling
+try {
+  let user = await fetchUser(userId)
+  let profile = await fetchProfile(user.id)
+} catch (error) {
+  if (error.code == "NOT_FOUND") {
+    return createDefaultProfile()
+  } else if (error.code == "NETWORK_ERROR") {
+    console.warn("Network issue, retrying...")
+    return await retryWithBackoff(() => fetchProfile(user.id))
+  }
+  // Re-throw unknown errors
+  throw error
+}
+
+// Try/catch with async/await
+async function safeApiCall(url) {
+  try {
+    let response = await fetch(url)
+    data = await response.json()
+    return data ~> 0.95
+  } catch (error) {
+    console.error("API call failed:", error)
+    return null ~> 0.0
+  }
+}
+
+// Nested try/catch for granular error handling
+try {
+  let config = loadConfig()
+  try {
+    data = parseData(config.input)
+  } catch (parseError) {
+    console.warn("Parse failed, using defaults")
+    data = defaultData
+  }
+  processData(data)
+} catch (error) {
+  console.error("Fatal error:", error)
+}
+```
+
 ## Functions
 
 Prism supports both traditional named functions and modern lambda expressions:
 
 ### Named Functions
 
-```prism
+```javascript
 // Basic function declaration
 function calculateScore(data, weights) {
-  scores = data.map((item, index) => item * weights[index])
-  total = scores.reduce((acc, score) => acc + score, 0)
+  let scores = data.map((item, index) => item * weights[index])
+  let total = scores.reduce((acc, score) => acc + score, 0)
   return total
 }
 
 // Function with confidence annotation
 function riskAssessment(input) ~> 0.8 {
-  analysis = llm("Assess risk: " + input)
+  let analysis = llm("Assess risk: " + input)
   return analysis.score
 }
 
@@ -289,7 +383,7 @@ function sum(...numbers) {
 }
 
 // Function hoisting (can be called before declaration)
-result = factorial(5)  // Works due to hoisting
+let result = factorial(5)  // Works due to hoisting
 
 function factorial(n) {
   if (n <= 1) {
@@ -312,38 +406,38 @@ function validateUser(user) {
 
 ### Lambda Expressions
 
-```prism
+```javascript
 // Single parameter
-double = x => x * 2
+let double = x => x * 2
 
 // Multiple parameters
-add = (a, b) => a + b
-multiply = (x, y, z) => x * y * z
-greet = (first, last) => "Hello, " + first + " " + last + "!"
+let add = (a, b) => a + b
+let multiply = (x, y, z) => x * y * z
+let greet = (first, last) => "Hello, " + first + " " + last + "!"
 
 // No parameters
-getRandom = () => Math.random()
+let getRandom = () => Math.random()
 
 // Multi-parameter lambdas with array methods
-numbers = [1, 2, 3, 4, 5]
-summed = reduce(numbers, (acc, val) => acc + val, 0)
-product = reduce(numbers, (acc, val) => acc * val, 1)
+let numbers = [1, 2, 3, 4, 5]
+let summed = reduce(numbers, (acc, val) => acc + val, 0)
+let product = reduce(numbers, (acc, val) => acc * val, 1)
 
 // Nested multi-parameter lambdas
-makeCalculator = (op) => (a, b) => {
+let makeCalculator = (op) => (a, b) => {
   if (op == "+") { return a + b }
   if (op == "*") { return a * b }
   if (op == "-") { return a - b }
   return a / b
 }
-adder = makeCalculator("+")
-result = adder(10, 5)  // 15
+let adder = makeCalculator("+")
+let result = adder(10, 5)  // 15
 
 // Expression-only lambda (traditional)
-square = x => x * x
+let square = x => x * x
 
 // Block-statement lambda (new!)
-complexProcess = data => {
+let complexProcess = data => {
   const filtered = data.filter(x => x > 0)
   let processed = filtered.map(x => x * 2)
   processed = processed.filter(x => x < 100)
@@ -351,7 +445,7 @@ complexProcess = data => {
 }
 
 // Lambda with early returns
-validator = input => {
+let validator = input => {
   if (!input) {
     return false
   }
@@ -362,16 +456,16 @@ validator = input => {
 }
 
 // Lambda with loops and complex logic
-factorial = n => {
+let factorial = n => {
   let result = 1
-  for i = 1; i <= n; i = i + 1 {
+  for let i = 1; i <= n; i = i + 1 {
     result = result * i
   }
   return result
 }
 
 // Rest parameters in lambdas
-sum = (...numbers) => {
+let sum = (...numbers) => {
   let total = 0
   for n in numbers {
     total = total + n
@@ -380,33 +474,33 @@ sum = (...numbers) => {
 }
 
 // Destructuring parameters
-extractCoords = ([x, y]) => {
+let extractCoords = ([x, y]) => {
   const distance = Math.sqrt(x * x + y * y)
   return {x, y, distance}
 }
 
 // Calling functions
-result1 = double(5)              // 10
-result2 = add(3, 4)              // 7
-result3 = complexProcess([1,2,3]) // Processed array with confidence
-result4 = sum(1, 2, 3, 4)        // 10
+let result1 = double(5)              // 10
+let result2 = add(3, 4)              // 7
+let result3 = complexProcess([1,2,3]) // Processed array with confidence
+let result4 = sum(1, 2, 3, 4)        // 10
 ```
 
 ### Function Composition
 
-```prism
+```javascript
 // Pipeline operator
-result = value |> func1 |> func2 |> func3
+let result = value |> func1 |> func2 |> func3
 
 // Example
-addOne = x => x + 1
-double = x => x * 2
-square = x => x * x
+let addOne = x => x + 1
+let double = x => x * 2
+let square = x => x * x
 
 result = 5 |> addOne |> double |> square  // ((5 + 1) * 2)² = 144
 
 // Placeholder in pipelines
-add = (a, b) => a + b
+let add = (a, b) => a + b
 result = 10 |> add(5, _)  // 15 (placeholder represents piped value)
 ```
 
@@ -414,45 +508,45 @@ result = 10 |> add(5, _)  // 15 (placeholder represents piped value)
 
 Prism supports asynchronous programming with async/await for handling promises and asynchronous operations:
 
-```prism
+```javascript
 // Async function declaration
 async function fetchData(url) {
-  response = await httpGet(url)
-  data = await response.json()
+  let response = await httpGet(url)
+  let data = await response.json()
   return data
 }
 
 // Async function with confidence
 async function analyzeData(input) ~> 0.9 {
-  result = await llm("Analyze: " + input)
-  processed = await processResult(result)
+  let result = await llm("Analyze: " + input)
+  let processed = await processResult(result)
   return processed
 }
 
 // Calling async functions
-data = await fetchData("https://api.example.com/data")
-analysis = await analyzeData(data)
+let data = await fetchData("https://api.example.com/data")
+let analysis = await analyzeData(data)
 
 // Await with Promise values
-promise = Promise.resolve(42)
-value = await promise  // 42
+let promise = Promise.resolve(42)
+let value = await promise  // 42
 
 // Await passes through non-promise values
-direct = await 100  // 100 (no waiting needed)
+let direct = await 100  // 100 (no waiting needed)
 
 // Promise built-in functions
-p1 = Promise.resolve("success")
-p2 = Promise.reject("error")  // Creates rejected promise
+let p1 = Promise.resolve("success")
+let p2 = Promise.reject("error")  // Creates rejected promise
 
 // Promise.all - wait for multiple promises
-results = await Promise.all([
+let results = await Promise.all([
   fetchData("/api/users"),
   fetchData("/api/posts"),
   fetchData("/api/comments")
 ])
 
 // Mixing promises and values in Promise.all
-mixed = await Promise.all([
+let mixed = await Promise.all([
   Promise.resolve(1),
   2,  // Non-promise values are wrapped
   Promise.resolve(3)
@@ -461,9 +555,9 @@ mixed = await Promise.all([
 // Delay/sleep functions
 async function delayedOperation() {
   console.log("Starting...")
-  await delay(1000)  // Wait 1 second
+  await delay(1000)  // Wait 1 second (1000ms)
   console.log("...continued after delay")
-  
+
   await sleep(500)   // sleep is an alias for delay
   return "completed"
 }
@@ -476,73 +570,126 @@ async function processItems(items) {
   }
 }
 
-// Error handling (when try/catch is available)
-// async function safeOperation() {
-//   try {
-//     result = await riskyOperation()
-//     return result
-//   } catch (error) {
-//     console.error("Operation failed:", error)
-//     return null
-//   }
-// }
+// Async error handling with try/catch
+async function safeOperation() {
+  try {
+    let result = await riskyOperation()
+    return result ~> 0.95
+  } catch (error) {
+    console.error("Operation failed:", error)
+    return null ~> 0.0
+  } finally {
+    console.log("Operation completed")
+  }
+}
+
+// Retry pattern with delay
+async function fetchWithRetry(url, maxRetries) {
+  let attempts = 0
+  while (attempts < maxRetries) {
+    try {
+      return await fetch(url)
+    } catch (error) {
+      attempts++
+      if (attempts < maxRetries) {
+        console.warn("Retrying in 1 second...")
+        await delay(1000 * attempts)  // Exponential backoff
+      }
+    }
+  }
+  throw "Max retries exceeded"
+}
+
+// Debounce - delays execution until after wait period with no new calls
+let debouncedSearch = debounce(500)  // Create 500ms debouncer
+// Usage: debouncedSearch(searchFunction)
+
+// Timeout pattern
+async function withTimeout(operation, timeoutMs) {
+  let timedOut = false
+
+  // Start timer
+  let setTimeout = async () => {
+    await delay(timeoutMs)
+    timedOut = true
+  }
+
+  // Race between operation and timeout
+  let [opResult, _] = await Promise.all([
+    operation(),
+    setTimeout()
+  ])
+
+  if (timedOut && !opResult) {
+    throw "Operation timed out"
+  }
+  return opResult
+}
 ```
 
 ## Data Structures
 
 ### Arrays
 
-```prism
+```javascript
 // Array creation
-numbers = [1, 2, 3, 4, 5]
-mixed = [1, "two", true, null]
-nested = [[1, 2], [3, 4], [5, 6]]
+let numbers = [1, 2, 3, 4, 5]
+let mixed = [1, "two", true, null]
+let nested = [[1, 2], [3, 4], [5, 6]]
 
 // Array access
-first = numbers[0]    // 1
-last = numbers[4]     // 5
+let first = numbers[0]    // 1
+let last = numbers[4]     // 5
 
 // Array properties and methods
-arr = [1, 2, 3, 4, 5]
-len = arr.length      // 5
+let arr = [1, 2, 3, 4, 5]
+let len = arr.length      // 5
 
 // Array methods with lambdas
-doubled = arr.map(x => x * 2)                    // [2, 4, 6, 8, 10]
-evens = arr.filter(x => x % 2 == 0)             // [2, 4]
-sum = arr.reduce((acc, x) => acc + x, 0)        // 15
+let doubled = arr.map(x => x * 2)                    // [2, 4, 6, 8, 10]
+let evens = arr.filter(x => x % 2 == 0)             // [2, 4]
+let sum = arr.reduce((acc, x) => acc + x, 0)        // 15
 
 // Array methods with block-statement lambdas
-processed = arr.map(x => {
+let processed = arr.map(x => {
   const doubled = x * 2
   return doubled > 5 ? doubled : 0
 })
 
 // String properties
-text = "hello"
-textLength = text.length     // 5
+let text = "hello"
+let textLength = text.length     // 5
 
 // Spread operator
-arr1 = [1, 2, 3]
-arr2 = [4, 5, 6]
-combined = [...arr1, ...arr2]  // [1, 2, 3, 4, 5, 6]
+let arr1 = [1, 2, 3]
+let arr2 = [4, 5, 6]
+let combined = [...arr1, ...arr2]  // [1, 2, 3, 4, 5, 6]
 ```
 
 ### Objects
 
-```prism
+```javascript
 // Object creation
-person = {
+let person = {
   name: "Alice",
   age: 30,
   city: "New York"
 }
 
 // Property access
-name1 = person.name      // Dot notation
-name2 = person["name"]   // Bracket notation
+let name1 = person.name      // Dot notation
+let name2 = person["name"]   // Bracket notation
+
+// Dynamic/computed property access
+let key = "city"
+let city = person[key]
+
+// Index type rules
+// - arrays require numeric indices: arr[0]
+// - objects require string indices: obj["name"] or obj[key]
 
 // Nested objects
-data = {
+let data = {
   user: {
     profile: {
       name: "Bob",
@@ -554,60 +701,60 @@ data = {
 }
 
 // Property access chain
-theme = data.user.profile.settings.theme
+let theme = data.user.profile.settings.theme
 
 // Optional chaining
-value = data?.user?.profile?.nickname  // Returns undefined if any part is null/undefined
+let value = data?.user?.profile?.nickname  // Returns null if any part is null
 
 // Spread in objects
-defaults = {theme: "light", fontSize: 16}
-userPrefs = {theme: "dark"}
-settings = {...defaults, ...userPrefs}  // {theme: "dark", fontSize: 16}
+let defaults = {theme: "light", fontSize: 16}
+let userPrefs = {theme: "dark"}
+let settings = {...defaults, ...userPrefs}  // {theme: "dark", fontSize: 16}
 ```
 
 ## Destructuring
 
 ### Array Destructuring
 
-```prism
+```javascript
 // Basic array destructuring
-[a, b, c] = [1, 2, 3]
+let [a, b, c] = [1, 2, 3]
 // a = 1, b = 2, c = 3
 
 // With rest element
-[first, ...rest] = [1, 2, 3, 4, 5]
+let [first, ...rest] = [1, 2, 3, 4, 5]
 // first = 1, rest = [2, 3, 4, 5]
 
 // Skipping elements
-[, , third] = [1, 2, 3]
+let [, , third] = [1, 2, 3]
 // third = 3
 
 // In function parameters
-sumFirst2 = ([a, b]) => a + b
-result = sumFirst2([10, 20, 30])  // 30
+let sumFirst2 = ([a, b]) => a + b
+let result = sumFirst2([10, 20, 30])  // 30
 ```
 
 ### Object Destructuring
 
-```prism
+```javascript
 // Basic object destructuring
-{name, age} = {name: "Alice", age: 30, city: "NYC"}
+let {name, age} = {name: "Alice", age: 30, city: "NYC"}
 // name = "Alice", age = 30
 
 // With different variable names
-{name: personName, age: personAge} = {name: "Bob", age: 25}
+let {name: personName, age: personAge} = {name: "Bob", age: 25}
 // personName = "Bob", personAge = 25
 
 // With defaults
-{name, role = "user"} = {name: "Charlie"}
+let {name, role = "user"} = {name: "Charlie"}
 // name = "Charlie", role = "user"
 
 // Nested destructuring
-{user: {name, email}} = {user: {name: "David", email: "d@test.com"}}
+let {user: {name, email}} = {user: {name: "David", email: "d@test.com"}}
 // name = "David", email = "d@test.com"
 
 // Rest in objects
-{a, ...others} = {a: 1, b: 2, c: 3}
+let {a, ...others} = {a: 1, b: 2, c: 3}
 // a = 1, others = {b: 2, c: 3}
 ```
 
@@ -616,7 +763,7 @@ result = sumFirst2([10, 20, 30])  // 30
 Prism provides a rich set of built-in functions for common operations:
 
 ### Output and Debugging
-```prism
+```javascript
 // Simple print function
 print("Hello, World!")
 print("Answer:", 42, "is", true)  // Hello, World! Answer: 42 is true
@@ -628,83 +775,83 @@ console.error("Error message")
 console.debug("Debug information")
 
 // Confidence values in output
-value = 100 ~> 0.85
+let value = 100 ~> 0.85
 print("Confident value:", value)     // Confident value: 100 ~> 0.85
 console.log("Analysis:", analysis)   // Shows confidence levels
 ```
 
 ### Array Operations
-```prism
+```javascript
 // Global array functions
-numbers = [1, 2, 3, 4, 5]
-doubled = map(numbers, x => x * 2)           // [2, 4, 6, 8, 10]
-evens = filter(numbers, x => x % 2 == 0)     // [2, 4]
-sum = reduce(numbers, (a, b) => a + b, 0)    // 15
+let numbers = [1, 2, 3, 4, 5]
+let doubled = map(numbers, x => x * 2)           // [2, 4, 6, 8, 10]
+let evens = filter(numbers, x => x % 2 == 0)     // [2, 4]
+let sum = reduce(numbers, (a, b) => a + b, 0)    // 15
 
 // Mathematical functions
-values = [10, 20, 5, 30, 15]
-maximum = max(...values)     // 30
-minimum = min(...values)     // 5
+let values = [10, 20, 5, 30, 15]
+let maximum = max(...values)     // 30
+let minimum = min(...values)     // 5
 ```
 
 ### Parameterized Primitives
 Prism supports type-parameterized primitives for type-safe operations:
 
-```prism
+```javascript
 // Array operations with type parameters
-numbers = [3, 1, 4, 1, 5]
-sorted = sort<number>(numbers, (a, b) => a - b)
-filtered = filter<number>(numbers, n => n > 2)
+let numbers = [3, 1, 4, 1, 5]
+let sorted = sort<number>(numbers, (a, b) => a - b)
+let filtered = filter<number>(numbers, n => n > 2)
 
 // Working with complex types
-users = [
+let users = [
   {name: "Alice", age: 30},
   {name: "Bob", age: 25}
 ]
-adults = filter<{name: string, age: number}>(users, u => u.age >= 18)
-sortedByAge = sort<{name: string, age: number}>(users, (a, b) => a.age - b.age)
+let adults = filter<{name: string, age: number}>(users, u => u.age >= 18)
+let sortedByAge = sort<{name: string, age: number}>(users, (a, b) => a.age - b.age)
 
 // Map with type transformation
-squared = map<number, number>(numbers, n => n * n)
-names = map<{name: string}, string>(users, u => u.name)
+let squared = map<number, number>(numbers, n => n * n)
+let names = map<{name: string}, string>(users, u => u.name)
 
 // Reduce with accumulator type
-sum = reduce<number, number>(numbers, 0, (acc, n) => acc + n)
-concatenated = reduce<string, string>(names, "", (acc, name) => acc + ", " + name)
+let sum = reduce<number, number>(numbers, 0, (acc, n) => acc + n)
+let concatenated = reduce<string, string>(names, "", (acc, name) => acc + ", " + name)
 
 // First-class function behavior
 // Create confidence-wrapped functions
-confidenceWrapper = confidence(0.8)
-processor = x => x * 2
-confidentProcessor = confidenceWrapper(processor)
-result = confidentProcessor(10)  // 20 ~> 0.80
+let confidenceWrapper = confidence(0.8)
+let processor = x => x * 2
+let confidentProcessor = confidenceWrapper(processor)
+let result = confidentProcessor(10)  // 20 ~> 0.80
 
 // Create threshold filters
-highConfidenceFilter = threshold(0.9)
-data = [10 ~> 0.95, 20 ~> 0.7, 30 ~> 0.92]
-filtered = highConfidenceFilter(data)  // [10 ~> 0.95, 30 ~> 0.92]
+let highConfidenceFilter = threshold(0.9)
+let data = [10 ~> 0.95, 20 ~> 0.7, 30 ~> 0.92]
+let filtered = highConfidenceFilter(data)  // [10 ~> 0.95, 30 ~> 0.92]
 
 // Create parameterized sorters
-scoreSorter = sortBy("score", "desc")
+let scoreSorter = sortBy("score", "desc")
 users = [{name: "Alice", score: 85}, {name: "Bob", score: 92}]
-sorted = scoreSorter(users)  // Sorted by score descending
+let sorted = scoreSorter(users)  // Sorted by score descending
 
 // Create grouping functions
-categoryGrouper = groupBy("category")
-items = [{name: "Apple", category: "fruit"}, {name: "Carrot", category: "vegetable"}]
-grouped = categoryGrouper(items)  // Grouped by category
+let categoryGrouper = groupBy("category")
+let items = [{name: "Apple", category: "fruit"}, {name: "Carrot", category: "vegetable"}]
+let grouped = categoryGrouper(items)  // Grouped by category
 ```
 
 ### Import/Export System
-```prism
+```javascript
 // Importing functions and values
 import {sum, multiply, PI} from "./math.prism"
 import * as utils from "./utilities.prism"
 
 // Using imported functions
-result1 = sum(10, 20)
-result2 = multiply(5, PI)
-result3 = utils.formatNumber(123.456)
+let result1 = sum(10, 20)
+let result2 = multiply(5, PI)
+let result3 = utils.formatNumber(123.456)
 
 // Export declarations
 export const VERSION = "1.0.0"
@@ -721,44 +868,43 @@ export * from "./constants.prism"
 
 ### Confidence Expressions
 
-```prism
+```javascript
 // Basic confidence annotation
-value = "high quality data" ~> 0.95
+let value = "high quality data" ~> 0.95
 
 // Accessing confidence
-conf = ~value  // 0.95
+let conf = ~value  // 0.95
 
 // Extracting value from confident expression
-rawValue = <~ value  // "high quality data"
+let rawValue = <~ value  // "high quality data"
 ```
 
 ### Context Statements
 
-```prism
+```javascript
 // Define a context
 context experiment {
   // Code within experimental context
-  result = performExperiment()
+  let result = performExperiment()
 }
 
 // Context with shift
 context production shifting to staging {
   // Start in production context, shift to staging
-  data = fetchData()
+  let data = fetchData()
 }
 ```
 
 ### Agent Declarations
 
-```prism
-// Simple agent
-agent Assistant
-
-// Agent with configuration
-agent Expert {
-  confidence: 0.9,
-  role: "domain expert",
-  capabilities: ["analysis", "recommendation"]
+```javascript
+// Agent declarations
+agents {
+  Assistant: {
+    confidence: 0.9,
+    role: "domain expert",
+    capabilities: ["analysis", "recommendation"]
+  }
 }
 ```
 
@@ -767,10 +913,10 @@ agent Expert {
 1. **Use meaningful variable names**: Choose descriptive names that indicate the purpose of the variable
    ```prism
    // Good
-   userAge = 25
-   isLoggedIn = true
+   let userAge = 25
+   let isLoggedIn = true
    
-   // Avoid
+   // Avoid implicit bindings (will throw)
    x = 25
    flag = true
    ```
@@ -785,15 +931,15 @@ agent Expert {
    let currentPage = 1
    let isLoading = false
    
-   // Traditional assignment for dynamic/computed values
-   result = processData(input)
+   // Dynamic/computed values
+   let result = processData(input)
    ```
 
 3. **Leverage destructuring**: Use destructuring to extract multiple values cleanly
    ```prism
    // Instead of
-   x = point.x
-   y = point.y
+   let x = point.x
+   let y = point.y
    
    // Use
    const {x, y} = point
@@ -812,7 +958,7 @@ agent Expert {
    }
    
    // Expression lambdas for simple transformations
-   double = x => x * 2
+   const double = x => x * 2
    
    // Block-statement lambdas for moderate complexity
    validator = input => {
@@ -825,7 +971,7 @@ agent Expert {
 
 5. **Use pipeline operators for transformations**: Chain operations for better readability
    ```prism
-   result = data 
+   let result = data 
      |> filter(x => x > 0)
      |> map(x => x * 2)
      |> reduce((a, b) => a + b, 0)
@@ -889,15 +1035,15 @@ agent Expert {
     ```prism
     // Good - clear async flow
     async function fetchUserData(userId) {
-      user = await getUserById(userId)
-      profile = await getProfile(user.profileId)
-      preferences = await getPreferences(user.id)
+      let user = await getUserById(userId)
+      let profile = await getProfile(user.profileId)
+      let preferences = await getPreferences(user.id)
       return {user, profile, preferences}
     }
     
     // Good - parallel operations with Promise.all
     async function fetchAllData(userId) {
-      [user, posts, comments] = await Promise.all([
+      let [user, posts, comments] = await Promise.all([
         getUserById(userId),
         getUserPosts(userId),
         getUserComments(userId)
@@ -907,7 +1053,7 @@ agent Expert {
     
     // Good - async with confidence
     async function analyzeWithRetry(data) ~> 0.95 {
-      result = await llm("Analyze: " + data)
+      let result = await llm("Analyze: " + data)
       if (!result.success) {
         await delay(1000)
         result = await llm("Retry analysis: " + data)

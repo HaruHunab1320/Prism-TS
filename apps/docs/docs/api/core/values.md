@@ -154,27 +154,6 @@ console.log(nullVal.toString()); // "null"
 console.log(nullVal.isTruthy()); // false
 ```
 
-### UndefinedValue
-
-```typescript
-class UndefinedValue extends Value {
-  type = 'undefined';
-  value = undefined;
-  constructor()
-}
-```
-
-**Equality:** Only equal to other undefined values
-**Truthy:** Always false
-**String:** "undefined"
-
-**Example:**
-```typescript
-const undef = new UndefinedValue();
-console.log(undef.toString()); // "undefined"
-console.log(undef.isTruthy()); // false
-```
-
 ## Collection Value Types
 
 ### ArrayValue
@@ -296,7 +275,11 @@ class ConfidenceValue extends Value {
   type = 'confident';
   constructor(
     public value: Value,
-    public confidence: ConfidenceLib
+    public confidence: ConfidenceLib,
+    public provenance?: {
+      rule: string;
+      inputs: number[];
+    }
   )
 }
 ```
@@ -304,6 +287,7 @@ class ConfidenceValue extends Value {
 **Properties:**
 - `value`: The wrapped value
 - `confidence`: Confidence score (0-1)
+- `provenance` (optional): Confidence derivation metadata
 
 **Equality:** Both value and confidence must match
 **Truthy:** Based on wrapped value
@@ -365,7 +349,7 @@ function fromJS(value: any): Value {
   } else if (value === null) {
     return new NullValue();
   } else if (value === undefined) {
-    return new UndefinedValue();
+    return new NullValue();
   } else if (Array.isArray(value)) {
     return new ArrayValue(value.map(fromJS));
   } else if (typeof value === 'object') {
@@ -397,8 +381,6 @@ function toJS(value: Value): any {
       return (value as BooleanValue).value;
     case 'null':
       return null;
-    case 'undefined':
-      return undefined;
     case 'array':
       return (value as ArrayValue).elements.map(toJS);
     case 'object':

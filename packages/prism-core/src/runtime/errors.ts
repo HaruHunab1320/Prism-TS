@@ -1,9 +1,11 @@
 import { ASTNode } from '../ast';
+import type { Diagnostic } from '../diagnostics';
 import type { Value } from './values';
 
 export class RuntimeError extends Error {
   public line?: number;
   public column?: number;
+  public diagnostic?: Diagnostic;
 
   constructor(message: string, public node?: ASTNode, location?: { line: number; column: number }) {
     const enhancedMessage = location
@@ -13,9 +15,21 @@ export class RuntimeError extends Error {
     super(enhancedMessage);
     this.name = 'RuntimeError';
 
-    if (location) {
-      this.line = location.line;
-      this.column = location.column;
+    const resolvedLocation = location ?? node?.location;
+    if (resolvedLocation) {
+      this.line = resolvedLocation.line;
+      this.column = resolvedLocation.column;
+      this.diagnostic = {
+        level: 'error',
+        message,
+        span: {
+          start: resolvedLocation,
+          end: {
+            line: resolvedLocation.line,
+            column: resolvedLocation.column + 1,
+          },
+        },
+      };
     }
   }
 }

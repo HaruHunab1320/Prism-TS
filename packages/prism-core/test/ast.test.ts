@@ -130,7 +130,7 @@ describe('AST Nodes', () => {
         new IfStatement(
           new BinaryExpression('>', new IdentifierExpression('x'), new NumberLiteral(5)),
           new BlockStatement([]),
-          undefined
+          null
         ),
       ];
       const program = new Program(statements);

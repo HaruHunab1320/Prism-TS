@@ -1,6 +1,7 @@
 import { createRuntime } from '../src/runtime';
 import { parse } from '../src/parser';
 import { RuntimeError } from '../src/runtime';
+import { NullValue } from '../src/runtime/values';
 
 describe('Runtime Error Handling', () => {
   let runtime: ReturnType<typeof createRuntime>;
@@ -10,18 +11,18 @@ describe('Runtime Error Handling', () => {
   });
 
   describe('Variable Errors', () => {
-    it('should throw error for undefined variable', async () => {
+    it('should throw error for null variable', async () => {
       const program = parse('x + 1');
       await expect(runtime.execute(program)).rejects.toThrow('Undefined variable: x');
     });
 
-    it('should throw error for undefined variable in assignment', async () => {
-      const program = parse('y = x + 1');
+    it('should throw error for null variable in assignment', async () => {
+      const program = parse('let y = x + 1');
       await expect(runtime.execute(program)).rejects.toThrow('Undefined variable: x');
     });
 
-    it('should include location info in undefined variable error', async () => {
-      const program = parse('a = 1\nb = c + 1');
+    it('should include location info in null variable error', async () => {
+      const program = parse('let a = 1\nlet b = c + 1');
       try {
         await runtime.execute(program);
         fail('Expected error');
@@ -91,20 +92,15 @@ describe('Runtime Error Handling', () => {
     });
 
     it('should throw error for incomparable types in greater equal', async () => {
-      const program = parse('undefined >= 5');
-      await expect(runtime.execute(program)).rejects.toThrow('Cannot compare undefined and number');
+      const program = parse('null >= 5');
+      await expect(runtime.execute(program)).rejects.toThrow('Cannot compare null and number');
     });
   });
 
   describe('Function Call Errors', () => {
     it('should throw error for calling non-function', async () => {
-      const program = parse('x = 5\nx()');
+      const program = parse('let x = 5\nx()');
       await expect(runtime.execute(program)).rejects.toThrow('Cannot call non-function value: number');
-    });
-
-    it('should throw error for calling undefined as function', async () => {
-      const program = parse('undefined()');
-      await expect(runtime.execute(program)).rejects.toThrow('Cannot call non-function value: undefined');
     });
 
     it('should throw error for calling null as function', async () => {
@@ -115,40 +111,51 @@ describe('Runtime Error Handling', () => {
 
   describe('Property Access Errors', () => {
     it('should throw error for non-existent property', async () => {
-      const program = parse('obj = {a: 1}\nobj.b');
+      const program = parse('let obj = {a: 1}\nobj.b');
       await expect(runtime.execute(program)).rejects.toThrow("Property 'b' does not exist");
     });
 
     it('should throw error for property access on number', async () => {
-      const program = parse('x = 5\nx.prop');
+      const program = parse('let x = 5\nx.prop');
       await expect(runtime.execute(program)).rejects.toThrow("Cannot access property 'prop' on number");
     });
 
     it('should throw error for property access on boolean', async () => {
-      const program = parse('x = true\nx.prop');
+      const program = parse('let x = true\nx.prop');
       await expect(runtime.execute(program)).rejects.toThrow("Cannot access property 'prop' on boolean");
     });
   });
 
   describe('Array Index Errors', () => {
     it('should throw error for non-numeric array index', async () => {
-      const program = parse('arr = [1, 2, 3]\narr["hello"]');
+      const program = parse('let arr = [1, 2, 3]\narr["hello"]');
       await expect(runtime.execute(program)).rejects.toThrow('Array index must be a number');
     });
 
     it('should throw error for array index out of bounds', async () => {
-      const program = parse('arr = [1, 2, 3]\narr[5]');
+      const program = parse('let arr = [1, 2, 3]\narr[5]');
       await expect(runtime.execute(program)).rejects.toThrow('Array index 5 out of bounds');
     });
 
     it('should throw error for negative array index', async () => {
-      const program = parse('arr = [1, 2, 3]\narr[-1]');
+      const program = parse('let arr = [1, 2, 3]\narr[-1]');
       await expect(runtime.execute(program)).rejects.toThrow('Array index -1 out of bounds');
     });
 
     it('should throw error for indexing non-array', async () => {
-      const program = parse('x = 5\nx[0]');
+      const program = parse('let x = 5\nx[0]');
       await expect(runtime.execute(program)).rejects.toThrow('Cannot index number');
+    });
+
+    it('should throw error for non-string object index', async () => {
+      const program = parse('let obj = {a: 1}\nobj[0]');
+      await expect(runtime.execute(program)).rejects.toThrow('Object index must be a string');
+    });
+
+    it('should return null for missing object property by index', async () => {
+      const program = parse('let obj = {a: 1}\nobj["b"]');
+      const result = await runtime.execute(program);
+      expect(result).toBeInstanceOf(NullValue);
     });
   });
 
@@ -252,76 +259,76 @@ describe('Runtime Error Handling', () => {
 
   describe('Array Method Errors', () => {
     it('should throw error for array.map() with wrong arguments', async () => {
-      const program = parse('arr = [1, 2]\narr.map()');
+      const program = parse('let arr = [1, 2]\narr.map()');
       await expect(runtime.execute(program)).rejects.toThrow('Array.map() requires exactly 1 argument');
     });
 
     it('should throw error for array.map() with non-function argument', async () => {
-      const program = parse('arr = [1, 2]\narr.map(5)');
+      const program = parse('let arr = [1, 2]\narr.map(5)');
       await expect(runtime.execute(program)).rejects.toThrow('Argument to map() must be a function');
     });
 
     it('should throw error for array.filter() with wrong arguments', async () => {
-      const program = parse('arr = [1, 2]\narr.filter()');
+      const program = parse('let arr = [1, 2]\narr.filter()');
       await expect(runtime.execute(program)).rejects.toThrow('Array.filter() requires exactly 1 argument');
     });
 
     it('should throw error for array.filter() with non-function argument', async () => {
-      const program = parse('arr = [1, 2]\narr.filter("not a function")');
+      const program = parse('let arr = [1, 2]\narr.filter("not a function")');
       await expect(runtime.execute(program)).rejects.toThrow('Argument to filter() must be a function');
     });
 
     it('should throw error for array.reduce() with no arguments', async () => {
-      const program = parse('arr = [1, 2]\narr.reduce()');
+      const program = parse('let arr = [1, 2]\narr.reduce()');
       await expect(runtime.execute(program)).rejects.toThrow('Array.reduce() requires 1 or 2 arguments');
     });
 
     it('should throw error for array.reduce() with non-function first argument', async () => {
-      const program = parse('arr = [1, 2]\narr.reduce(null)');
+      const program = parse('let arr = [1, 2]\narr.reduce(null)');
       await expect(runtime.execute(program)).rejects.toThrow('First argument to reduce() must be a function');
     });
 
     it('should throw error for empty array.reduce() with no initial value', async () => {
-      const program = parse('arr = []\narr.reduce((a, b) => a + b)');
+      const program = parse('let arr = []\narr.reduce((a, b) => a + b)');
       await expect(runtime.execute(program)).rejects.toThrow('reduce() of empty array with no initial value');
     });
 
     it('should throw error for array.forEach() with wrong arguments', async () => {
-      const program = parse('arr = [1, 2]\narr.forEach()');
+      const program = parse('let arr = [1, 2]\narr.forEach()');
       await expect(runtime.execute(program)).rejects.toThrow('Array.forEach() requires exactly 1 argument');
     });
 
     it('should throw error for array.forEach() with non-function argument', async () => {
-      const program = parse('arr = [1, 2]\narr.forEach(123)');
+      const program = parse('let arr = [1, 2]\narr.forEach(123)');
       await expect(runtime.execute(program)).rejects.toThrow('Argument to forEach() must be a function');
     });
 
     it('should throw error for array.join() with non-string separator', async () => {
-      const program = parse('arr = [1, 2]\narr.join(123)');
+      const program = parse('let arr = [1, 2]\narr.join(123)');
       await expect(runtime.execute(program)).rejects.toThrow('Array.join() separator must be a string');
     });
 
     it('should throw error for array.push() with no arguments', async () => {
-      const program = parse('arr = [1, 2]\narr.push()');
+      const program = parse('let arr = [1, 2]\narr.push()');
       await expect(runtime.execute(program)).rejects.toThrow('Array.push() requires at least 1 argument');
     });
   });
 
   describe('Lambda Expression Errors', () => {
     it('should throw error for lambda with too few arguments', async () => {
-      const program = parse('fn = (a, b) => a + b\nfn(1)');
+      const program = parse('let func = (a, b) => a + b\nfunc(1)');
       await expect(runtime.execute(program)).rejects.toThrow('Lambda expects 2 arguments, got 1');
     });
 
     it('should throw error for lambda with too many arguments (no rest)', async () => {
-      const program = parse('fn = (a, b) => a + b\nfn(1, 2, 3)');
+      const program = parse('let func = (a, b) => a + b\nfunc(1, 2, 3)');
       await expect(runtime.execute(program)).rejects.toThrow('Lambda expects 2 arguments, got 3');
     });
   });
 
   describe('Spread Operator Errors', () => {
     it('should throw error for spreading non-array in call', async () => {
-      const program = parse('fn = (a, b) => a + b\nfn(...5)');
+      const program = parse('let func = (a, b) => a + b\nfunc(...5)');
       await expect(runtime.execute(program)).rejects.toThrow('Cannot spread non-array value: number');
     });
 
@@ -338,44 +345,44 @@ describe('Runtime Error Handling', () => {
 
   describe('Confidence Operator Errors', () => {
     it('should throw error for invalid confidence value', async () => {
-      const program = parse('x = 5 ~> "not a number"');
+      const program = parse('let x = 5 ~> "not a number"');
       await expect(runtime.execute(program)).rejects.toThrow('Confidence value must be a number');
     });
 
     it('should clamp confidence value when out of range', async () => {
-      const program = parse('x = 5 ~> 1.5\n<~ x');
+      const program = parse('let x = 5 ~> 1.5\n<~ x');
       const result = await runtime.execute(program);
       expect(result.value).toBe(1); // Clamped to 1
     });
 
     it('should clamp negative confidence value to 0', async () => {
-      const program = parse('neg = -0.5\nx = 5 ~> neg\n<~ x');
+      const program = parse('let neg = -0.5\nlet x = 5 ~> neg\n<~ x');
       const result = await runtime.execute(program);
       expect(result.value).toBe(0); // Clamped to 0
     });
 
     it('should throw error for confident arithmetic with non-numbers', async () => {
-      const program = parse('a = "hello" ~> 0.8\nb = true ~> 0.9\na ~+ b');
+      const program = parse('let a = "hello" ~> 0.8\nlet b = true ~> 0.9\na ~+ b');
       await expect(runtime.execute(program)).rejects.toThrow('Confident arithmetic requires numeric values');
     });
 
     it('should throw error for confident division by zero', async () => {
-      const program = parse('a = 10 ~> 0.8\nb = 0 ~> 0.9\na ~/ b');
+      const program = parse('let a = 10 ~> 0.8\nlet b = 0 ~> 0.9\na ~/ b');
       await expect(runtime.execute(program)).rejects.toThrow('Division by zero in confident arithmetic');
     });
 
     it('should throw error for confident comparison with non-numbers', async () => {
-      const program = parse('a = "hello" ~> 0.8\nb = true ~> 0.9\na ~< b');
+      const program = parse('let a = "hello" ~> 0.8\nlet b = true ~> 0.9\na ~< b');
       await expect(runtime.execute(program)).rejects.toThrow('Confident less than requires numeric values');
     });
 
     it('should throw error for threshold gate with non-numeric threshold', async () => {
-      const program = parse('x = 5 ~> 0.8\nx ~?> "not a number"');
+      const program = parse('let x = 5 ~> 0.8\nx ~?> "not a number"');
       await expect(runtime.execute(program)).rejects.toThrow('Threshold gate expects a number');
     });
 
     it('should throw error for threshold gate array with non-numeric first element', async () => {
-      const program = parse('x = 5 ~> 0.8\ny = ["not a number", 10]\nx ~?> y');
+      const program = parse('let x = 5 ~> 0.8\nlet y = ["not a number", 10]\nx ~?> y');
       await expect(runtime.execute(program)).rejects.toThrow('Threshold gate array first element must be a number');
     });
   });
@@ -392,7 +399,7 @@ describe('Runtime Error Handling', () => {
     });
 
     it('should throw error for non-numeric confidence threshold in destructuring', async () => {
-      const program = parse('data = {x: 10, y: 20} ~> 0.8\n{x, y} ~> "not a number" = data');
+      const program = parse('let data = {x: 10, y: 20} ~> 0.8\n{x, y} ~> "not a number" = data');
       await expect(runtime.execute(program)).rejects.toThrow('Confidence threshold must be a number');
     });
 
@@ -420,7 +427,7 @@ describe('Runtime Error Handling', () => {
     });
 
     it('should throw error for instanceof with function (not yet supported)', async () => {
-      const program = parse('fn = x => x\n5 instanceof fn');
+      const program = parse('let func = x => x\n5 instanceof func');
       await expect(runtime.execute(program)).rejects.toThrow('instanceof with constructor functions not yet supported');
     });
 
@@ -464,21 +471,21 @@ describe('Runtime Error Handling', () => {
     // These are internal errors that shouldn't happen with proper parser
     // but we test them for completeness
     it('should handle missing left/right operands gracefully', async () => {
-      const program = parse('x = null || 5');
+      const program = parse('let x = null || 5\nx');
       const result = await runtime.execute(program);
       expect(result.value).toBe(5);
     });
 
-    it('should handle undefined in logical expressions', async () => {
-      const program = parse('x = undefined && 5');
+    it('should handle null in logical expressions', async () => {
+      const program = parse('let x = null && 5\nx');
       const result = await runtime.execute(program);
-      expect(result.value).toBe(undefined); // && returns first falsy value
+      expect(result.value).toBe(null); // && returns first falsy value
     });
   });
 
   describe('Error Location Information', () => {
     it('should include line and column in arithmetic errors', async () => {
-      const program = parse('a = 1\nb = 2\nc = a / 0');
+      const program = parse('let a = 1\nlet b = 2\nlet c = a / 0');
       try {
         await runtime.execute(program);
         fail('Expected error');
@@ -491,7 +498,7 @@ describe('Runtime Error Handling', () => {
     });
 
     it('should include location in function call errors', async () => {
-      const program = parse('x = 5\ny = x()');
+      const program = parse('let x = 5\nlet y = x()');
       try {
         await runtime.execute(program);
         fail('Expected error');
@@ -505,31 +512,31 @@ describe('Runtime Error Handling', () => {
   describe('Edge Cases', () => {
     it('should handle complex error scenarios', async () => {
       const program = parse(`
-        arr = [1, 2, 3]
-        fn = x => x / 0
-        arr.map(fn)
+        let arr = [1, 2, 3]
+        let func = x => x / 0
+        arr.map(func)
       `);
       await expect(runtime.execute(program)).rejects.toThrow('Division by zero');
     });
 
     it('should handle errors in nested function calls', async () => {
       const program = parse(`
-        outer = inner => inner()
+        let outer = inner => inner()
         outer(5)
       `);
       await expect(runtime.execute(program)).rejects.toThrow('Cannot call non-function value');
     });
 
     it('should handle errors in ternary expressions', async () => {
-      const program = parse('x = true ? (5 / 0) : 10');
+      const program = parse('let x = true ? (5 / 0) : 10');
       await expect(runtime.execute(program)).rejects.toThrow('Division by zero');
     });
 
     it('should handle errors in spread operations', async () => {
       const program = parse(`
-        fn = (a, b, c) => a + b + c
-        badValue = "not an array"
-        fn(...badValue)
+        let func = (a, b, c) => a + b + c
+        let badValue = "not an array"
+        func(...badValue)
       `);
       await expect(runtime.execute(program)).rejects.toThrow('Cannot spread non-array value');
     });

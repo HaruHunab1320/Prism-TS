@@ -1,0 +1,19 @@
+project: argos-434718
+zone: us-central1-f
+machine_type: a2-highgpu-1g
+preemptible: false
+bucket: gs://lumina-checkpoints-argos-2026
+repo_url: https://github.com/HaruHunab1320/Prism-TS.git
+image_family: pytorch-2-9-cu129-ubuntu-2204-nvidia-580
+image_project: deeplearning-platform-release
+
+experiments:
+  - name: lumina-micro-js-reduce-index-baseline-001
+    preflight_commands:
+      - for i in $(seq 1 30); do sudo apt-get update -y && sudo apt-get install -y nodejs npm && exit 0; echo "apt lock busy, retrying in 10s"; sleep 10; done; exit 1
+      - node --version
+      - cd .. && python -m py_compile lumina_micro_specialists/data/build_js_reduce_object_index_builder_dataset.py lumina_micro_specialists/runtime/router_js_reduce_object_index_builder.py lumina_micro_specialists/evaluation/verify_js_reduce_object_index_builder.py lumina_micro_specialists/evaluation/eval_js_reduce_object_index_builder.py 2>&1 | tee lumina_multimodel/logs/lumina_micro_js_reduce_index_preflight.txt
+      - test -f /root/.cache/huggingface/flat_models/Qwen_Qwen2.5-Coder-1.5B-Instruct_flat/config.json
+    commands:
+      - cd .. && python -m lumina_micro_specialists.data.build_js_reduce_object_index_builder_dataset --output-dir lumina_micro_specialists/data/datasets/js_reduce_object_index_builder_v1 --train-size 320 --val-size 64 | tee lumina_multimodel/logs/lumina_micro_js_reduce_index_build_dataset.txt
+      - cd .. && set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -u -m lumina_micro_specialists.evaluation.eval_js_reduce_object_index_builder --dataset lumina_micro_specialists/data/datasets/js_reduce_object_index_builder_v1/val.jsonl --candidate-source model --model /root/.cache/huggingface/flat_models/Qwen_Qwen2.5-Coder-1.5B-Instruct_flat --max-samples 64 --output-json lumina_multimodel/logs/lumina_micro_js_reduce_index_baseline_eval.json 2>&1 | tee lumina_multimodel/logs/lumina_micro_js_reduce_index_baseline_eval.txt

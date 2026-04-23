@@ -1,38 +1,28 @@
 # Publishing Packages
 
-We use pnpm workspaces + Turborepo. Here's how to publish:
+We standardize on **Changesets** for versioning and publishing in this monorepo.
 
-## Quick Commands
+## Release Workflow (Recommended)
 
 ```bash
-# Build all packages with Turbo
-pnpm turbo run build
+# 1) Create a changeset
+pnpm release:create
 
-# Publish a single package
-pnpm publish --filter @prism-lang/core --access public
+# 2) Check what will be released
+pnpm release:check
 
-# Publish all packages
-pnpm publish -r --access public
+# 3) Apply version bumps + changelogs
+pnpm release:version
 
-# Bump version and publish
-pnpm --filter @prism-lang/core version patch
-pnpm publish --filter @prism-lang/core --access public
+# 4) Build + publish + push tags
+pnpm release:publish
 ```
 
-## That's it! 
+## Notes
 
-pnpm automatically handles `workspace:*` → version conversion during publish.
-
-## Publishing Order
-
-If you need to publish in order due to dependencies:
-```bash
-pnpm publish --filter @prism-lang/core --access public
-pnpm publish --filter @prism-lang/confidence --access public  
-pnpm publish --filter @prism-lang/llm --access public
-pnpm publish --filter @prism-lang/repl --access public
-pnpm publish --filter @prism-lang/cli --access public
-```
+- Do **not** run `pnpm publish` directly. It will not manage workspace protocols correctly.
+- Changesets handles `workspace:*` dependency replacement during publishing.
+- All @prism-lang/* packages should remain in sync via Changesets.
 
 ## Verify Published Packages
 

@@ -9,20 +9,20 @@ describe('Enhanced Error Messages', () => {
   });
 
   describe('Runtime errors with line numbers', () => {
-    it('should show line and column for undefined variables', async () => {
+    it('should show line and column for null variables', async () => {
       const program = parse(`
-        x = 10
-        y = undefinedVar
+        let x = 10
+        let y = undefinedVar
       `);
       
-      // For now, just check that the error mentions the undefined variable
+      // For now, just check that the error mentions the null variable
       await expect(runtime.execute(program)).rejects.toThrow(/Undefined variable: undefinedVar/);
     });
 
     it('should show type errors for invalid operations', async () => {
       const program = parse(`
-        name = "hello"
-        result = name - 42
+        let name = "hello"
+        let result = name - 42
       `);
       
       // String - number should throw an error
@@ -31,9 +31,10 @@ describe('Enhanced Error Messages', () => {
 
     it('should show line and column for logical operator errors', async () => {
       const program = parse(`
-        x = 10
-        y = 20
-        result = x && y
+        let x = 10
+        let y = 20
+        let result = x && y
+        result
       `);
       
       // This should work now with type coercion
@@ -52,9 +53,9 @@ describe('Enhanced Error Messages', () => {
 
     it('should include variable values in error messages when possible', async () => {
       const program = parse(`
-        text = "hello"
-        num = 42
-        result = text - num
+        let text = "hello"
+        let num = 42
+        let result = text - num
       `);
       
       // For now, just check the basic error format
@@ -65,9 +66,9 @@ describe('Enhanced Error Messages', () => {
   describe('Parse errors already have line numbers', () => {
     it('should show parse error with line and column', () => {
       expect(() => parse(`
-        x = 10
-        y = 
-      `)).toThrow(/ParseError at line 4/);
+        let x = 10
+        let y = 
+      `)).toThrow(/ERROR: \[PARSER_ERROR\]/);
     });
 
     it('should show parse error for invalid syntax', () => {
@@ -75,7 +76,7 @@ describe('Enhanced Error Messages', () => {
         if x == 10
           "missing parentheses"
         }
-      `)).toThrow(/ParseError/);
+      `)).toThrow(/ERROR: \[PARSER_ERROR\]/);
     });
   });
 });

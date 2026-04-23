@@ -7,7 +7,7 @@ describe('Comments', () => {
     it('should skip single-line comments', () => {
       const tokens = tokenize(`
         // This is a comment
-        x = 5
+        let x = 5
       `);
       
       // Should not include comment tokens
@@ -22,9 +22,9 @@ describe('Comments', () => {
     it('should handle multiple single-line comments', () => {
       const tokens = tokenize(`
         // First comment
-        x = 5
+        let x = 5
         // Second comment
-        y = 10
+        let y = 10
         // Third comment
       `);
       
@@ -36,8 +36,8 @@ describe('Comments', () => {
 
     it('should handle comments at end of line', () => {
       const tokens = tokenize(`
-        x = 5 // inline comment
-        y = 10 // another inline comment
+        let x = 5 // inline comment
+        let y = 10 // another inline comment
       `);
       
       const numbers = tokens.filter(t => t.type === TokenType.NUMBER);
@@ -52,7 +52,7 @@ describe('Comments', () => {
       const tokens = tokenize(`
         /* This is a
            multiline comment */
-        x = 5
+        let x = 5
       `);
       
       const identifierToken = tokens.find(t => t.type === TokenType.IDENTIFIER && t.value === 'x');
@@ -66,7 +66,7 @@ describe('Comments', () => {
     it('should handle nested asterisks in multiline comments', () => {
       const tokens = tokenize(`
         /* This comment has * asterisks * in it */
-        x = 5
+        let x = 5
       `);
       
       const identifierToken = tokens.find(t => t.type === TokenType.IDENTIFIER && t.value === 'x');
@@ -80,7 +80,7 @@ describe('Comments', () => {
          * that spans multiple lines
          * with asterisks on each line
          */
-        x = 5
+        let x = 5
       `);
       
       const identifierToken = tokens.find(t => t.type === TokenType.IDENTIFIER && t.value === 'x');
@@ -90,8 +90,8 @@ describe('Comments', () => {
 
     it('should handle inline multiline comments', () => {
       const tokens = tokenize(`
-        x = /* inline */ 5
-        y = 10 /* another */ + /* and another */ 20
+        let x = /* inline */ 5
+        let y = 10 /* another */ + /* and another */ 20
       `);
       
       const numbers = tokens.filter(t => t.type === TokenType.NUMBER);
@@ -130,7 +130,7 @@ describe('Comments', () => {
          * const result = calculate(5, 10);
          * console.log(result); // Output: 15
          */
-        x = 5
+        let x = 5
       `);
       
       const identifierToken = tokens.find(t => t.type === TokenType.IDENTIFIER && t.value === 'x');
@@ -140,13 +140,13 @@ describe('Comments', () => {
     it('should distinguish between JSDoc and regular multiline comments', () => {
       const code = `
         /** JSDoc comment */
-        x = 5
+        let x = 5
         
         /* Regular multiline comment */
-        y = 10
+        let y = 10
         
         /*** Another JSDoc style ***/
-        z = 15
+        let z = 15
       `;
       
       const tokens = tokenize(code);
@@ -160,7 +160,7 @@ describe('Comments', () => {
       const tokens = tokenize(`
         // Comment with ~!@#$%^&*()_+-={}[]|\\:";'<>?,./
         /* Multiline with ~!@#$%^&*()_+-={}[]|\\:";'<>?,./ */
-        x = 5
+        let x = 5
       `);
       
       const identifierToken = tokens.find(t => t.type === TokenType.IDENTIFIER && t.value === 'x');
@@ -172,7 +172,7 @@ describe('Comments', () => {
         //
         /**/
         /***/
-        x = 5
+        let x = 5
       `);
       
       const identifierToken = tokens.find(t => t.type === TokenType.IDENTIFIER && t.value === 'x');
@@ -181,9 +181,9 @@ describe('Comments', () => {
 
     it('should handle comment-like content in strings', () => {
       const tokens = tokenize(`
-        message = "This is not // a comment"
-        url = "https://example.com"
-        regex = "/* not a comment */"
+        let message = "This is not // a comment"
+        let url = "https://example.com"
+        let regex = "/* not a comment */"
       `);
       
       const strings = tokens.filter(t => t.type === TokenType.STRING);
@@ -195,13 +195,13 @@ describe('Comments', () => {
 
     it('should handle division operator vs comment start', () => {
       const tokens = tokenize(`
-        x = 10 / 5
-        y = 20 /= 2
-        z = a / b / c
+        let x = 10 / 5
+        let y = 20 /= 2
+        let z = a / b / c
       `);
       
       const divisionTokens = tokens.filter(t => t.type === TokenType.SLASH || t.type === TokenType.SLASH_EQUAL);
-      expect(divisionTokens.length).toBe(3); // Two / and one /=
+      expect(divisionTokens.length).toBe(4); // Three / and one /=
     });
   });
 
@@ -210,11 +210,11 @@ describe('Comments', () => {
       const runtime = createRuntime();
       const program = parse(`
         // Initialize variables
-        x = 5 // First variable
+        let x = 5 // First variable
         
         /* Calculate result
            using multiplication */
-        y = x * 2
+        let y = x * 2
         
         /**
          * Return the final result

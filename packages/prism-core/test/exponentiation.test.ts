@@ -21,7 +21,7 @@ describe('Exponentiation Operator', () => {
   describe('Basic exponentiation', () => {
     it('should calculate powers of numbers', async () => {
       const code = `
-        result = 2 ** 3
+        let result = 2 ** 3
         result
       `;
       const result = await execute(code);
@@ -30,7 +30,7 @@ describe('Exponentiation Operator', () => {
 
     it('should handle base 10 powers', async () => {
       const code = `
-        result = 10 ** 3
+        let result = 10 ** 3
         result
       `;
       const result = await execute(code);
@@ -39,7 +39,7 @@ describe('Exponentiation Operator', () => {
 
     it('should handle fractional exponents', async () => {
       const code = `
-        result = 4 ** 0.5
+        let result = 4 ** 0.5
         result
       `;
       const result = await execute(code);
@@ -48,7 +48,7 @@ describe('Exponentiation Operator', () => {
 
     it('should handle negative exponents', async () => {
       const code = `
-        result = 2 ** -3
+        let result = 2 ** -3
         result
       `;
       const result = await execute(code);
@@ -57,7 +57,7 @@ describe('Exponentiation Operator', () => {
 
     it('should handle zero exponent', async () => {
       const code = `
-        result = 5 ** 0
+        let result = 5 ** 0
         result
       `;
       const result = await execute(code);
@@ -68,7 +68,7 @@ describe('Exponentiation Operator', () => {
   describe('Right associativity', () => {
     it('should be right-associative', async () => {
       const code = `
-        result = 2 ** 3 ** 2
+        let result = 2 ** 3 ** 2
         result
       `;
       const result = await execute(code);
@@ -78,7 +78,7 @@ describe('Exponentiation Operator', () => {
 
     it('should handle multiple exponentiations', async () => {
       const code = `
-        result = 2 ** 2 ** 2 ** 2
+        let result = 2 ** 2 ** 2 ** 2
         result
       `;
       const result = await execute(code);
@@ -90,7 +90,7 @@ describe('Exponentiation Operator', () => {
   describe('Precedence', () => {
     it('should have higher precedence than multiplication', async () => {
       const code = `
-        result = 2 * 3 ** 2
+        let result = 2 * 3 ** 2
         result
       `;
       const result = await execute(code);
@@ -100,7 +100,7 @@ describe('Exponentiation Operator', () => {
 
     it('should have higher precedence than division', async () => {
       const code = `
-        result = 16 / 2 ** 3
+        let result = 16 / 2 ** 3
         result
       `;
       const result = await execute(code);
@@ -110,7 +110,7 @@ describe('Exponentiation Operator', () => {
 
     it('should work with parentheses', async () => {
       const code = `
-        result = (2 + 3) ** 2
+        let result = (2 + 3) ** 2
         result
       `;
       const result = await execute(code);
@@ -121,9 +121,9 @@ describe('Exponentiation Operator', () => {
   describe('With variables', () => {
     it('should work with variables', async () => {
       const code = `
-        base = 3
-        exponent = 4
-        result = base ** exponent
+        let base = 3
+        let exponent = 4
+        let result = base ** exponent
         result
       `;
       const result = await execute(code);
@@ -132,9 +132,9 @@ describe('Exponentiation Operator', () => {
 
     it('should work in expressions', async () => {
       const code = `
-        x = 2
-        y = 3
-        result = x ** y + 1
+        let x = 2
+        let y = 3
+        let result = x ** y + 1
         result
       `;
       const result = await execute(code);
@@ -145,8 +145,8 @@ describe('Exponentiation Operator', () => {
   describe('With confidence', () => {
     it('should propagate confidence', async () => {
       const code = `
-        base = 2 ~> 0.9
-        result = base ** 3
+        let base = 2 ~> 0.9
+        let result = base ** 3
         <~ result
       `;
       const result = await execute(code);
@@ -155,9 +155,9 @@ describe('Exponentiation Operator', () => {
 
     it('should use minimum confidence for both operands', async () => {
       const code = `
-        base = 2 ~> 0.8
-        exp = 3 ~> 0.6
-        result = base ** exp
+        let base = 2 ~> 0.8
+        let exp = 3 ~> 0.6
+        let result = base ** exp
         <~ result
       `;
       const result = await execute(code);
@@ -168,7 +168,7 @@ describe('Exponentiation Operator', () => {
   describe('Edge cases', () => {
     it('should handle 0 ** 0', async () => {
       const code = `
-        result = 0 ** 0
+        let result = 0 ** 0
         result
       `;
       const result = await execute(code);
@@ -178,7 +178,7 @@ describe('Exponentiation Operator', () => {
 
     it('should handle negative base with integer exponent', async () => {
       const code = `
-        result = (-2) ** 3
+        let result = (-2) ** 3
         result
       `;
       const result = await execute(code);
@@ -187,7 +187,7 @@ describe('Exponentiation Operator', () => {
 
     it('should handle very large results', async () => {
       const code = `
-        result = 10 ** 10
+        let result = 10 ** 10
         result
       `;
       const result = await execute(code);
@@ -198,14 +198,14 @@ describe('Exponentiation Operator', () => {
   describe('Error cases', () => {
     it('should error on non-numeric operands', async () => {
       const code = `
-        result = "2" ** 3
+        let result = "2" ** 3
       `;
       await expect(execute(code)).rejects.toThrow('Cannot apply ** to string and number');
     });
 
     it('should error on null operands', async () => {
       const code = `
-        result = null ** 2
+        let result = null ** 2
       `;
       await expect(execute(code)).rejects.toThrow('Cannot apply ** to null and number');
     });

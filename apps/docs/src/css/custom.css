@@ -84,38 +84,20 @@ body {
   position: relative;
 }
 
-/* Cyberpunk-inspired theme variables */
+/* Confidence semantic colors */
 :root {
-  --prism-glow-cyan: #22d3ee;
-  --prism-glow-green: #10b981;
-  --prism-glow-amber: #f59e0b;
-  --prism-matrix-opacity: 0.06;
+  --prism-confidence-high: #10b981;
+  --prism-confidence-medium: #f59e0b;
+  --prism-confidence-low: #ef4444;
 }
 
 [data-theme='dark'] {
-  --prism-glow-cyan: #67e8f9;
-  --prism-glow-green: #34d399;
-  --prism-glow-amber: #fbbf24;
-  --prism-matrix-opacity: 0.08;
+  --prism-confidence-high: #34d399;
+  --prism-confidence-medium: #fbbf24;
+  --prism-confidence-low: #f87171;
 }
 
-/* Matrix pattern background for all pages */
-/* Apply pattern to a pseudo-element that won't interfere with layout */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><text x="50%25" y="50%25" font-family="monospace" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="%230891b2" opacity="0.3">01</text></svg>');
-  background-size: 50px 50px;
-  opacity: 0.08;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Dark mode matrix pattern */
+/* Clean background - no patterns */
 
 
 /* Navbar styling */
@@ -133,6 +115,34 @@ body::before {
 .navbar__title {
   font-weight: 700;
   font-size: 1.25rem;
+}
+
+/* Navbar links - neutral by default, subtle hover */
+.navbar__link {
+  color: #4b5563 !important;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: color 0.15s ease;
+}
+
+.navbar__link:hover {
+  color: var(--ifm-color-primary) !important;
+}
+
+.navbar__link--active {
+  color: var(--ifm-color-primary) !important;
+}
+
+[data-theme='dark'] .navbar__link {
+  color: #9ca3af !important;
+}
+
+[data-theme='dark'] .navbar__link:hover {
+  color: #22d3ee !important;
+}
+
+[data-theme='dark'] .navbar__link--active {
+  color: #22d3ee !important;
 }
 
 /* Footer styling */
@@ -155,83 +165,85 @@ body::before {
   border-right: 1px solid #334155 !important;
 }
 
-/* Sidebar category headers - make them blue and bold */
-.menu__list-item > .menu__link--sublist {
-  color: var(--ifm-color-primary) !important;
-  font-weight: 600;
-  font-size: 0.95rem;
-  letter-spacing: 0.02em;
-}
-
-[data-theme='dark'] .menu__list-item > .menu__link--sublist {
-  color: var(--ifm-color-primary-light) !important;
-}
-
-/* Sidebar category headers on hover */
-.menu__list-item > .menu__link--sublist:hover {
-  color: var(--ifm-color-primary-dark) !important;
-  background: rgba(8, 145, 178, 0.05);
-}
-
-[data-theme='dark'] .menu__list-item > .menu__link--sublist:hover {
-  color: var(--ifm-color-primary-lighter) !important;
-  background: rgba(34, 211, 238, 0.05);
-}
-
-/* Sidebar sub-pages - lighter color */
-.menu__list .menu__list .menu__link {
-  color: #6b7280 !important;
-  font-weight: 400;
+/* BASE: All sidebar links neutral gray */
+.menu__link {
+  color: #4b5563 !important;
+  font-weight: 500;
   font-size: 0.875rem;
 }
 
-[data-theme='dark'] .menu__list .menu__list .menu__link {
+[data-theme='dark'] .menu__link {
   color: #9ca3af !important;
 }
 
-/* Active sub-page */
-.menu__list .menu__list .menu__link--active {
-  color: var(--ifm-color-primary) !important;
-  font-weight: 500;
-  background: rgba(8, 145, 178, 0.1);
+/* Top-level items (Introduction, categories) - bolder */
+.theme-doc-sidebar-menu > .menu__list-item > .menu__link {
+  color: #374151 !important;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
-[data-theme='dark'] .menu__list .menu__list .menu__link--active {
-  color: var(--ifm-color-primary-light) !important;
+[data-theme='dark'] .theme-doc-sidebar-menu > .menu__list-item > .menu__link {
+  color: #d1d5db !important;
+}
+
+/* Hover state - subtle, no color */
+.menu__link:hover {
+  color: #1f2937 !important;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme='dark'] .menu__link:hover {
+  color: #e5e7eb !important;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Active page link - blue with background */
+.menu__link--active:not(.menu__link--sublist) {
+  color: var(--ifm-color-primary) !important;
+  font-weight: 500;
+  background: rgba(8, 145, 178, 0.08);
+  border-radius: 0.375rem;
+}
+
+[data-theme='dark'] .menu__link--active:not(.menu__link--sublist) {
+  color: #22d3ee !important;
   background: rgba(34, 211, 238, 0.1);
 }
 
-/* Sub-page hover */
-.menu__list .menu__list .menu__link:hover {
+/* Active top-level item (like Introduction when selected) */
+.theme-doc-sidebar-menu > .menu__list-item > .menu__link--active {
   color: var(--ifm-color-primary) !important;
-  background: rgba(8, 145, 178, 0.05);
+  background: rgba(8, 145, 178, 0.08);
+  border-radius: 0.375rem;
 }
 
-[data-theme='dark'] .menu__list .menu__list .menu__link:hover {
-  color: var(--ifm-color-primary-light) !important;
-  background: rgba(34, 211, 238, 0.05);
+[data-theme='dark'] .theme-doc-sidebar-menu > .menu__list-item > .menu__link--active {
+  color: #22d3ee !important;
+  background: rgba(34, 211, 238, 0.1);
 }
 
-/* Category expand/collapse arrow */
-.menu__link--sublist-caret:after {
-  background: var(--ifm-menu-link-sublist-icon) 50% / 1.5rem 1.5rem;
-  filter: var(--ifm-color-primary-filter);
-  opacity: 1;
+/* Active category header (contains the current page) - blue text, no background */
+.menu__link--sublist.menu__link--active {
+  color: var(--ifm-color-primary) !important;
 }
 
-[data-theme='dark'] .menu__link--sublist-caret:after {
-  filter: var(--ifm-color-primary-light-filter);
-  opacity: 1;
+[data-theme='dark'] .menu__link--sublist.menu__link--active {
+  color: #22d3ee !important;
 }
 
-/* Color the arrow to match the header */
+[data-theme='dark'] .menu__link--active:not(.menu__link--sublist) {
+  color: #22d3ee !important;
+  background: rgba(34, 211, 238, 0.1);
+}
+
+/* Category expand/collapse arrow - neutral */
 .menu__link--sublist:after {
-  background: var(--ifm-menu-link-sublist-icon) 50% / 1.5rem 1.5rem;
-  filter: brightness(0) saturate(100%) invert(34%) sepia(94%) saturate(1352%) hue-rotate(166deg) brightness(90%) contrast(101%);
+  opacity: 0.5;
 }
 
 [data-theme='dark'] .menu__link--sublist:after {
-  filter: brightness(0) saturate(100%) invert(71%) sepia(52%) saturate(1717%) hue-rotate(165deg) brightness(103%) contrast(95%);
+  opacity: 0.6;
 }
 
 /* Content styling */
@@ -246,174 +258,184 @@ article {
   z-index: 1;
 }
 
-/* Terminal-style headers */
+/* Clean, modern headers */
 .markdown h1 {
   font-size: 2.5rem;
   font-weight: 800;
-  font-family: var(--ifm-font-family-monospace);
-  letter-spacing: 0.05em;
-  position: relative;
-}
-
-.markdown h1::after {
-  content: '_';
-  position: absolute;
-  animation: blink 1.5s infinite;
-  color: var(--ifm-color-primary);
-  margin-left: 0.25em;
-}
-
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
+  letter-spacing: -0.02em;
+  color: var(--ifm-heading-color);
 }
 
 .markdown h2 {
-  font-size: 2rem;
+  font-size: 1.875rem;
   font-weight: 700;
-  margin-top: 3rem;
-  font-family: var(--ifm-font-family-monospace);
-  letter-spacing: 0.03em;
+  margin-top: 2.5rem;
+  letter-spacing: -0.01em;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--ifm-toc-border-color);
 }
 
 .markdown h3 {
-  font-size: 1.5rem;
+  font-size: 1.375rem;
   font-weight: 600;
-  font-family: var(--ifm-font-family-monospace);
+  margin-top: 2rem;
+  color: var(--ifm-heading-color);
 }
 
-/* Code blocks */
+.markdown h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+}
+
+/* Modern code blocks */
+pre {
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 0.5rem;
+}
+
 pre code {
   background: transparent !important;
 }
 
-/* Cyberpunk-inspired buttons */
-.button {
-  font-weight: 600;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.button--primary {
-  background: transparent;
-  border: 1px solid #0891b2;
-  color: #0891b2;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.button--primary:hover {
-  background: #0891b2;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 
-    0 0 20px rgba(8, 145, 178, 0.5),
-    inset 0 0 20px rgba(8, 145, 178, 0.1),
-    0 4px 12px rgba(8, 145, 178, 0.25);
-}
-
-[data-theme='dark'] .button--primary {
-  border-color: #22d3ee;
-  color: #22d3ee;
-}
-
-[data-theme='dark'] .button--primary:hover {
-  background: #22d3ee;
-  color: #0f172a;
-  box-shadow: 
-    0 0 20px rgba(34, 211, 238, 0.5),
-    inset 0 0 20px rgba(34, 211, 238, 0.1),
-    0 4px 12px rgba(34, 211, 238, 0.25);
-}
-
-/* Cyberpunk-inspired links */
-a {
-  color: #0891b2;
-  transition: all 0.3s ease;
-}
-
-a:hover {
-  color: #0e7490;
-  text-shadow: 0 0 8px rgba(8, 145, 178, 0.5);
-}
-
-[data-theme='dark'] a {
-  color: #22d3ee;
-}
-
-[data-theme='dark'] a:hover {
-  color: #67e8f9;
-  text-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
-}
-
-/* Cyberpunk-inspired cards */
-.card {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(8, 145, 178, 0.2);
+/* Code block header with language label */
+div[class*='codeBlockContainer'] {
   border-radius: 0.5rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  position: relative;
   overflow: hidden;
+  border: 1px solid var(--ifm-toc-border-color);
+  margin-bottom: 0rem;
 }
 
-.card::before,
-.card::after {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  border: 2px solid #0891b2;
+div[class*='codeBlockContainer'] pre {
+  border: none;
+  border-radius: 0;
+  margin: 0;
+}
+
+/* Copy button styling */
+button[class*='copyButton'] {
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.75rem;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.15s ease, background 0.15s ease;
 }
 
-.card::before {
-  top: -1px;
-  left: -1px;
-  border-right: none;
-  border-bottom: none;
-}
-
-.card::after {
-  bottom: -1px;
-  right: -1px;
-  border-left: none;
-  border-top: none;
-}
-
-.card:hover::before,
-.card:hover::after {
+div[class*='codeBlockContainer']:hover button[class*='copyButton'] {
   opacity: 1;
 }
 
+button[class*='copyButton']:hover {
+  background: var(--ifm-color-primary);
+  color: white;
+  border-color: var(--ifm-color-primary);
+}
+
+/* Inline code */
+code {
+  background: var(--ifm-code-background);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.875em;
+  border: 1px solid var(--ifm-toc-border-color);
+}
+
+/* Don't double-style code in pre blocks */
+pre code {
+  border: none;
+  padding: 0;
+  font-size: 0.875rem;
+}
+
+/* Modern, clean buttons */
+.button {
+  font-weight: 500;
+  transition: all 0.15s ease;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.button--primary {
+  background: var(--ifm-color-primary);
+  border: none;
+  color: white;
+}
+
+.button--primary:hover {
+  background: var(--ifm-color-primary-dark);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25);
+}
+
+.button--secondary {
+  background: transparent;
+  border: 1px solid var(--ifm-toc-border-color);
+  color: var(--ifm-color-content);
+}
+
+.button--secondary:hover {
+  background: var(--ifm-background-surface-color);
+  border-color: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .button--primary {
+  background: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .button--primary:hover {
+  background: var(--ifm-color-primary-light);
+  color: #0f172a;
+}
+
+/* Clean, professional links */
+a {
+  color: var(--ifm-color-primary);
+  transition: color 0.15s ease;
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--ifm-color-primary-dark);
+  text-decoration: underline;
+}
+
+[data-theme='dark'] a {
+  color: var(--ifm-color-primary-light);
+}
+
+[data-theme='dark'] a:hover {
+  color: var(--ifm-color-primary-lighter);
+}
+
+/* Modern cards */
+.card {
+  background: var(--ifm-background-color);
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 0.75rem;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
 .card:hover {
-  border-color: rgba(8, 145, 178, 0.5);
-  box-shadow: 
-    0 0 20px rgba(8, 145, 178, 0.1),
-    0 4px 12px 0 rgba(0, 0, 0, 0.1);
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
 
 [data-theme='dark'] .card {
-  background: rgba(30, 41, 59, 0.95);
-  border: 1px solid rgba(34, 211, 238, 0.2);
-}
-
-[data-theme='dark'] .card::before,
-[data-theme='dark'] .card::after {
-  border-color: #22d3ee;
+  background: var(--ifm-background-surface-color);
+  border-color: var(--ifm-toc-border-color);
 }
 
 [data-theme='dark'] .card:hover {
-  border-color: rgba(34, 211, 238, 0.5);
-  box-shadow: 
-    0 0 20px rgba(34, 211, 238, 0.1),
-    0 4px 12px 0 rgba(0, 0, 0, 0.3);
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Table of contents */
+/* Table of contents - right sidebar */
 .table-of-contents__link {
   color: #6b7280;
   transition: color 0.2s ease;
@@ -421,7 +443,16 @@ a:hover {
 
 .table-of-contents__link:hover,
 .table-of-contents__link--active {
-  color: #7c3aed;
+  color: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .table-of-contents__link {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .table-of-contents__link:hover,
+[data-theme='dark'] .table-of-contents__link--active {
+  color: #22d3ee;
 }
 
 /* Admonitions */

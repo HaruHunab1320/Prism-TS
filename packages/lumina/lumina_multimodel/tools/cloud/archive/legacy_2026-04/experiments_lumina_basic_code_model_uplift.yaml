@@ -1,0 +1,28 @@
+project: argos-434718
+zone: us-central1-b
+machine_type: a2-highgpu-1g
+preemptible: false
+bucket: gs://lumina-checkpoints-argos-2026
+repo_url: https://github.com/HaruHunab1320/Prism-TS.git
+image_family: pytorch-2-7-cu128-ubuntu-2204-nvidia-570
+image_project: deeplearning-platform-release
+
+experiments:
+  - name: lumina-basic-code-model-uplift-control-001
+    preflight_commands:
+      - set -o pipefail; cd .. && test -f lumina_multimodel/benchmarks/code_exec/mbpp_test.jsonl && test -f lumina_multimodel/benchmarks/code_exec/humaneval_test.jsonl && python -m py_compile lumina_basic/evaluation/eval_code_confidence.py 2>&1 | tee lumina_multimodel/logs/lumina_basic_code_model_uplift_control_preflight.txt
+    commands:
+      - mkdir -p logs outputs_gen_base
+      - echo 'lumina_basic code model uplift control start' | tee logs/lumina_basic_code_model_uplift_control_start.txt
+      - set -o pipefail; gsutil -m rsync -r gs://lumina-checkpoints-argos-2026/runs/lumina-code-uplift-tx-001/outputs_gen/ outputs_gen_base/ 2>&1 | tee logs/lumina_basic_code_model_uplift_control_sync_base.txt
+      - set -o pipefail; cd .. && DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m lumina_basic.evaluation.eval_code_confidence --model lumina_multimodel/outputs_gen_base/code_Qwen_Qwen2.5-1.5B-Instruct_gen --benchmark both --fixture-root lumina_multimodel/benchmarks/code_exec --max-samples 100 --max-new-tokens 128 --timeout-sec 4.0 --strict-code-contract --output-json lumina_multimodel/logs/lumina_basic_code_model_uplift_control.json 2>&1 | tee lumina_multimodel/logs/lumina_basic_code_model_uplift_control.txt
+
+  - name: lumina-basic-code-model-uplift-tx-001
+    preflight_commands:
+      - set -o pipefail; cd .. && test -f lumina_multimodel/benchmarks/code_exec/mbpp_test.jsonl && test -f lumina_multimodel/benchmarks/code_exec/humaneval_test.jsonl && python -m py_compile lumina_basic/evaluation/eval_code_confidence.py 2>&1 | tee lumina_multimodel/logs/lumina_basic_code_model_uplift_tx_preflight.txt
+    commands:
+      - mkdir -p logs outputs_gen
+      - echo 'lumina_basic code model uplift treatment start' | tee logs/lumina_basic_code_model_uplift_tx_start.txt
+      - python -u data/build_code_exec_slice.py --in-root datasets_hq_v2_curated --out-root datasets_code_exec_v1 --max-train-codealpaca 8000 --max-val-codealpaca 400 | tee logs/lumina_basic_code_model_uplift_tx_build_slice.txt
+      - set -o pipefail; DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m training.train_gpt2_generator --data-root datasets_code_exec_v1 --domain code --model-name Qwen/Qwen2.5-Coder-1.5B-Instruct --epochs 1 --batch-size 2 --lr 8e-6 --max-len 384 --answer-max-tokens 128 --max-train-samples 9000 --max-val-samples 464 --unfreeze-n 2 --output-dir outputs_gen 2>&1 | tee logs/lumina_basic_code_model_uplift_tx_train.txt
+      - set -o pipefail; cd .. && DEVICE=cuda TRANSFORMERS_OFFLINE=0 HF_DATASETS_OFFLINE=0 python -u -m lumina_basic.evaluation.eval_code_confidence --model lumina_multimodel/outputs_gen/code_Qwen_Qwen2.5-Coder-1.5B-Instruct_gen --benchmark both --fixture-root lumina_multimodel/benchmarks/code_exec --max-samples 100 --max-new-tokens 128 --timeout-sec 4.0 --strict-code-contract --output-json lumina_multimodel/logs/lumina_basic_code_model_uplift_tx.json 2>&1 | tee lumina_multimodel/logs/lumina_basic_code_model_uplift_tx.txt
