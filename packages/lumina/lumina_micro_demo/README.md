@@ -21,6 +21,9 @@ Active documents:
 - `notes/local_runtime_architecture.md`
 - `notes/demo_flow.md`
 - `paper/research_note.md`
+- `paper/appendix_methods.md`
+- `paper/results_table.md`
+- `paper/case_gallery.md`
 
 Current scaffold:
 - `runtime/schema.py` - execution trace types

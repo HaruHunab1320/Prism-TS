@@ -50,11 +50,14 @@ Read in this order:
 
 1. `docs/what_this_bundle_is.md`
 2. `docs/research_note.md`
-3. `docs/validated_micro_specialist_evidence.md`
-4. `artifacts/demo_input.js`
-5. `artifacts/mock_demo_output.txt`
-6. `artifacts/ollama_demo_output.txt`
-7. `artifacts/ollama_benchmark.json`
+3. `docs/appendix_methods.md`
+4. `docs/results_table.md`
+5. `docs/case_gallery.md`
+6. `docs/validated_micro_specialist_evidence.md`
+7. `artifacts/demo_input.js`
+8. `artifacts/mock_demo_output.txt`
+9. `artifacts/ollama_demo_output.txt`
+10. `artifacts/ollama_benchmark.json`
 
 ## Run commands
 

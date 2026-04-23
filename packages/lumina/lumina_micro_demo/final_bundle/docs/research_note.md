@@ -106,7 +106,7 @@ Frozen control policies:
 - selective accuracy mean: `1.000`
 - overall accuracy mean: `0.414`
 
-The important point is not that these coverage numbers are uniformly high. It is that the confidence signal was strong enough to support stable selective acceptance on each exact contract once the training and evaluation data were aligned.
+These numbers should be read as high-precision selective transformation, not universal task solving. Coverage matters. The object-index contract is the clearest case: it reaches `1.000` selective accuracy only by being conservative at `0.414` coverage. The important point is that the confidence signal was strong enough to support stable selective acceptance on each exact contract once the training and evaluation data were aligned.
 
 ### 4.3 Local runtime result
 
@@ -126,6 +126,8 @@ Validated local benchmark on Mac via Ollama (`llama3.1:latest`):
 This validates the local runtime shape:
 
 prompt -> span extraction -> routing -> specialist generation -> verification -> threshold gate -> composition
+
+It does not validate the final deployment architecture. The local demo currently runs through a single Ollama backend and uses runtime heuristics shaped by the frozen contracts rather than loading the persisted research heads directly.
 
 ## 5. Main Findings
 

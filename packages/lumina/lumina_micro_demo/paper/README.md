@@ -6,6 +6,12 @@ Primary document:
 
 - `research_note.md`
 
+Supporting audit documents:
+
+- `appendix_methods.md`
+- `results_table.md`
+- `case_gallery.md`
+
 This note is intentionally scoped as a technical report, not a polished publication draft. It records:
 
 - the problem framing
